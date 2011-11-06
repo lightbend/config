@@ -11,6 +11,10 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 
+/**
+ * This is unused for now, decided that it was too annoying to "lazy merge" and
+ * better to do the full merge up-front.
+ */
 final class StackConfigObject extends AbstractConfigObject {
 
     private List<AbstractConfigObject> stack;

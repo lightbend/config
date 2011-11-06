@@ -15,7 +15,7 @@ import com.typesafe.config.ConfigValue;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigFactory {
-    public static ConfigObject getConfig(ConfigConfig configConfig) {
+    public static ConfigObject loadConfig(ConfigConfig configConfig) {
         AbstractConfigObject system = null;
         try {
             system = systemPropertiesConfig()
@@ -29,23 +29,36 @@ public class ConfigFactory {
         if (system != null)
             stack.add(system);
 
-        List<ConfigTransformer> transformerStack = new ArrayList<ConfigTransformer>();
-        transformerStack.add(defaultConfigTransformer());
-        ConfigTransformer extraTransformer = configConfig.extraTransformer();
-        if (extraTransformer != null)
-            transformerStack.add(extraTransformer);
-        ConfigTransformer transformer = new StackTransformer(transformerStack);
+        ConfigTransformer transformer = withExtraTransformer(configConfig
+                .extraTransformer());
 
-        StackConfigObject stackConfig = new StackConfigObject(
-                new SimpleConfigOrigin("config for " + configConfig.rootPath()),
-                transformer,
-                stack);
+        AbstractConfigObject merged = AbstractConfigObject
+                .merge(new SimpleConfigOrigin("config for "
+                        + configConfig.rootPath()), stack, transformer);
 
-        return stackConfig;
+        return merged;
     }
 
-    public static ConfigObject getEnvironmentAsConfig() {
-        return envVariablesConfig();
+    public static ConfigObject getEnvironmentAsConfig(
+            ConfigTransformer extraTransformer) {
+        // This should not need to create a new config object
+        // as long as the transformer is just the default transformer.
+        return AbstractConfigObject.transformed(envVariablesConfig(),
+                withExtraTransformer(extraTransformer));
+    }
+
+    private static ConfigTransformer withExtraTransformer(
+            ConfigTransformer extraTransformer) {
+        // idea is to avoid creating a new, unique transformer if there's no
+        // extraTransformer
+        if (extraTransformer != null) {
+            List<ConfigTransformer> transformerStack = new ArrayList<ConfigTransformer>();
+            transformerStack.add(defaultConfigTransformer());
+            transformerStack.add(extraTransformer);
+            return new StackTransformer(transformerStack);
+        } else {
+            return defaultConfigTransformer();
+        }
     }
 
     private static ConfigTransformer defaultTransformer = null;

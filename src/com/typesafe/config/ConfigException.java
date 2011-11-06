@@ -81,6 +81,27 @@ public class ConfigException extends RuntimeException {
         }
     }
 
+    public static class BadValue extends ConfigException {
+        private static final long serialVersionUID = 1L;
+
+        public BadValue(ConfigOrigin origin, String path, String message,
+                Throwable cause) {
+            super(origin, "Invalid value at '" + path + "': " + message, cause);
+        }
+
+        public BadValue(ConfigOrigin origin, String path, String message) {
+            this(origin, path, message, null);
+        }
+
+        public BadValue(String path, String message, Throwable cause) {
+            super("Invalid value at '" + path + "': " + message, cause);
+        }
+
+        public BadValue(String path, String message) {
+            this(path, message, null);
+        }
+    }
+
     public static class BadPath extends ConfigException {
         private static final long serialVersionUID = 1L;
 

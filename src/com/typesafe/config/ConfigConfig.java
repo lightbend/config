@@ -3,7 +3,7 @@ package com.typesafe.config;
 /**
  * Configuration for a configuration!
  */
-public class ConfigConfig {
+public final class ConfigConfig {
 
     private String rootPath;
     private ConfigTransformer extraTransformer;

@@ -30,6 +30,23 @@ public interface ConfigObject extends ConfigValue {
 
     ConfigValue get(String path);
 
+    /** Get value as a size in bytes (parses special strings like "128M") */
+    Long getMemorySize(String path);
+
+    /**
+     * Get value as a duration in milliseconds. If the value is already a
+     * number, then it's left alone; if it's a string, it's parsed understanding
+     * units suffixes like "10m" or "5ns"
+     */
+    Long getMilliseconds(String path);
+
+    /**
+     * Get value as a duration in nanoseconds. If the value is already a number
+     * it's taken as milliseconds. If it's a string, it's parsed understanding
+     * unit suffixes.
+     */
+    Long getNanoseconds(String path);
+
     List<ConfigValue> getList(String path);
 
     List<Boolean> getBooleanList(String path);
@@ -45,6 +62,12 @@ public interface ConfigObject extends ConfigValue {
     List<ConfigObject> getObjectList(String path);
 
     List<Object> getAnyList(String path);
+
+    List<Long> getMemorySizeList(String path);
+
+    List<Long> getMillisecondsList(String path);
+
+    List<Long> getNanosecondsList(String path);
 
     boolean containsKey(String key);
 

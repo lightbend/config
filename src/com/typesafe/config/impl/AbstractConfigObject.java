@@ -1,7 +1,13 @@
 package com.typesafe.config.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
@@ -19,11 +25,30 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         this.transformer = transformer;
     }
 
+    /**
+     * This looks up the key with no transformation or type conversion of any
+     * kind, and returns null if the key is not present.
+     *
+     * @param key
+     * @return the unmodified raw value or null
+     */
     protected abstract ConfigValue peek(String key);
 
     @Override
     public ConfigValueType valueType() {
         return ConfigValueType.OBJECT;
+    }
+
+    static AbstractConfigObject transformed(AbstractConfigObject obj,
+            ConfigTransformer transformer) {
+        if (obj.transformer != transformer)
+            return new TransformedConfigObject(transformer, obj);
+        else
+            return obj;
+    }
+
+    private AbstractConfigObject transformed(AbstractConfigObject obj) {
+        return transformed(obj, transformer);
     }
 
     static private ConfigValue resolve(AbstractConfigObject self, String path,
@@ -57,6 +82,58 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     private ConfigValue resolve(String path, ConfigValueType expected,
             String originalPath) {
         return resolve(this, path, expected, transformer, originalPath);
+    }
+
+    /**
+     * Stack should be from overrides to fallbacks (earlier items win). Test
+     * suite should check: merging of objects with a non-object in the middle.
+     * Override of object with non-object, override of non-object with object.
+     * Merging 0, 1, N objects.
+     */
+    static AbstractConfigObject merge(ConfigOrigin origin,
+            List<AbstractConfigObject> stack,
+            ConfigTransformer transformer) {
+        if (stack.isEmpty()) {
+            return new SimpleConfigObject(origin, transformer,
+                    Collections.<String, ConfigValue> emptyMap());
+        } else if (stack.size() == 1) {
+            return transformed(stack.get(0), transformer);
+        } else {
+            // for non-objects, we just take the first value; but for objects we
+            // have to do work to combine them.
+            Map<String, ConfigValue> merged = new HashMap<String, ConfigValue>();
+            Map<String, List<AbstractConfigObject>> objects = new HashMap<String, List<AbstractConfigObject>>();
+            for (AbstractConfigObject obj : stack) {
+                for (String key : obj.keySet()) {
+                    ConfigValue v = obj.peek(key);
+                    if (!merged.containsKey(key)) {
+                        if (v.valueType() == ConfigValueType.OBJECT) {
+                            // requires recursive merge and transformer fixup
+                            List<AbstractConfigObject> stackForKey = null;
+                            if (objects.containsKey(key)) {
+                                stackForKey = objects.get(key);
+                            } else {
+                                stackForKey = new ArrayList<AbstractConfigObject>();
+                            }
+                            stackForKey.add(transformed(
+                                    (AbstractConfigObject) v,
+                                    transformer));
+                        } else {
+                            if (!objects.containsKey(key)) {
+                                merged.put(key, v);
+                            }
+                        }
+                    }
+                }
+            }
+            for (String key : objects.keySet()) {
+                List<AbstractConfigObject> stackForKey = objects.get(key);
+                AbstractConfigObject obj = merge(origin, stackForKey, transformer);
+                merged.put(key, obj);
+            }
+
+            return new SimpleConfigObject(origin, transformer, merged);
+        }
     }
 
     @Override
@@ -105,14 +182,45 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     public AbstractConfigObject getObject(String path) {
-        ConfigValue v = resolve(path, ConfigValueType.OBJECT, path);
-        return (AbstractConfigObject) v;
+        AbstractConfigObject obj = (AbstractConfigObject) resolve(path,
+                ConfigValueType.OBJECT, path);
+        return transformed(obj);
     }
 
     @Override
     public Object getAny(String path) {
         ConfigValue v = resolve(path, null, path);
         return v.unwrapped();
+    }
+
+    @Override
+    public Long getMemorySize(String path) {
+        Long size = null;
+        try {
+            size = getLong(path);
+        } catch (ConfigException.WrongType e) {
+            ConfigValue v = resolve(path, ConfigValueType.STRING, path);
+            size = Config.parseMemorySize((String) v.unwrapped(), v.origin(),
+                    path);
+        }
+        return size;
+    }
+
+    @Override
+    public Long getMilliseconds(String path) {
+        return TimeUnit.NANOSECONDS.toMillis(getNanoseconds(path));
+    }
+
+    @Override
+    public Long getNanoseconds(String path) {
+        Long ns = null;
+        try {
+            ns = getLong(path);
+        } catch (ConfigException.WrongType e) {
+            ConfigValue v = resolve(path, ConfigValueType.STRING, path);
+            ns = Config.parseDuration((String) v.unwrapped(), v.origin(), path);
+        }
+        return ns;
     }
 
     @SuppressWarnings("unchecked")
@@ -177,7 +285,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             if (v.valueType() != ConfigValueType.OBJECT)
                 throw new ConfigException.WrongType(v.origin(), path,
                         ConfigValueType.OBJECT.name(), v.valueType().name());
-            l.add((ConfigObject) v);
+            l.add(transformed((AbstractConfigObject) v));
         }
         return l;
     }
@@ -191,4 +299,55 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         }
         return l;
     }
+
+    @Override
+    public List<Long> getMemorySizeList(String path) {
+        List<Long> l = new ArrayList<Long>();
+        List<ConfigValue> list = getList(path);
+        for (ConfigValue v : list) {
+            if (v.valueType() == ConfigValueType.NUMBER) {
+                l.add(((Number) v.unwrapped()).longValue());
+            } else if (v.valueType() == ConfigValueType.STRING) {
+                String s = (String) v.unwrapped();
+                Long n = Config.parseMemorySize(s, v.origin(), path);
+                l.add(n);
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                        "memory size string or number of bytes", v.valueType()
+                                .name());
+            }
+        }
+        return l;
+    }
+
+    @Override
+    public List<Long> getMillisecondsList(String path) {
+        List<Long> nanos = getNanosecondsList(path);
+        List<Long> l = new ArrayList<Long>();
+        for (Long n : nanos) {
+            l.add(TimeUnit.NANOSECONDS.toMillis(n));
+        }
+        return l;
+    }
+
+    @Override
+    public List<Long> getNanosecondsList(String path) {
+        List<Long> l = new ArrayList<Long>();
+        List<ConfigValue> list = getList(path);
+        for (ConfigValue v : list) {
+            if (v.valueType() == ConfigValueType.NUMBER) {
+                l.add(((Number) v.unwrapped()).longValue());
+            } else if (v.valueType() == ConfigValueType.STRING) {
+                String s = (String) v.unwrapped();
+                Long n = Config.parseDuration(s, v.origin(), path);
+                l.add(n);
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                        "duration string or number of nanoseconds", v
+                                .valueType().name());
+            }
+        }
+        return l;
+    }
+
 }
