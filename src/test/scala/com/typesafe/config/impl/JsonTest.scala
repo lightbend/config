@@ -23,7 +23,10 @@ class JsonTest extends TestUtils {
     }
 
     def tokenize(s: String): java.util.Iterator[Token] = {
-        tokenize(new StringReader(s))
+        val reader = new StringReader(s)
+        val result = tokenize(reader)
+        // reader.close() // can't close until the iterator is traversed, so this tokenize() flavor is inherently broken
+        result
     }
 
     def tokenizeAsList(s: String) = {

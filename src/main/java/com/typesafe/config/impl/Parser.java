@@ -1,5 +1,9 @@
 package com.typesafe.config.impl;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -42,6 +46,26 @@ final class Parser {
     static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
             String input) {
         return parse(flavor, origin, new StringReader(input));
+    }
+
+    static AbstractConfigValue parse(File f) {
+        ConfigOrigin origin = new SimpleConfigOrigin(f.getPath());
+        SyntaxFlavor flavor = null;
+        if (f.getName().endsWith(".json"))
+            flavor = SyntaxFlavor.JSON;
+        else if (f.getName().endsWith(".conf"))
+            flavor = SyntaxFlavor.HOCON;
+        else
+            throw new ConfigException.IO(origin, "Unknown filename extension");
+        AbstractConfigValue result = null;
+        try {
+            InputStream stream = new BufferedInputStream(new FileInputStream(f));
+            result = parse(flavor, origin, stream);
+            stream.close();
+        } catch (IOException e) {
+            throw new ConfigException.IO(origin, "failed to read file", e);
+        }
+        return result;
     }
 
     static private final class ParseContext {
