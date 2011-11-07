@@ -18,7 +18,7 @@ final class ConfigDouble extends AbstractConfigValue {
     }
 
     @Override
-    public Object unwrapped() {
+    public Double unwrapped() {
         return value;
     }
 }

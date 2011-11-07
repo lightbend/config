@@ -18,7 +18,7 @@ final class ConfigString extends AbstractConfigValue {
     }
 
     @Override
-    public Object unwrapped() {
+    public String unwrapped() {
         return value;
     }
 }

@@ -18,7 +18,7 @@ final class ConfigBoolean extends AbstractConfigValue {
     }
 
     @Override
-    public Object unwrapped() {
+    public Boolean unwrapped() {
         return value;
     }
 }

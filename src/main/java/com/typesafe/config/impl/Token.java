@@ -15,4 +15,23 @@ class Token {
     public String toString() {
         return tokenType.name();
     }
+
+    protected boolean canEqual(Object other) {
+        return other instanceof Token;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof Token) {
+            return canEqual(other)
+                    && this.tokenType == ((Token) other).tokenType;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return tokenType.hashCode();
+    }
 }

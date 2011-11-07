@@ -3,6 +3,7 @@ package com.typesafe.config.impl;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,6 +35,10 @@ final class Parser {
     static AbstractConfigValue parse(ConfigOrigin origin, Reader input) {
         Iterator<Token> tokens = Tokenizer.tokenize(origin, input);
         return parse(origin, tokens);
+    }
+
+    static AbstractConfigValue parse(ConfigOrigin origin, String input) {
+        return parse(origin, new StringReader(input));
     }
 
     static private final class ParseContext {

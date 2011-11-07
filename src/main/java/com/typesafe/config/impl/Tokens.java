@@ -29,6 +29,21 @@ final class Tokens {
                 return s + "='" + value().unwrapped() + "'";
             }
         }
+
+        @Override
+        protected boolean canEqual(Object other) {
+            return other instanceof Value;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return super.equals(other) && ((Value) other).value.equals(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return 41 * (41 + super.hashCode()) + value.hashCode();
+        }
     }
 
     static private class Line extends Token {
@@ -46,6 +61,22 @@ final class Tokens {
         @Override
         public String toString() {
             return "NEWLINE@" + lineNumber;
+        }
+
+        @Override
+        protected boolean canEqual(Object other) {
+            return other instanceof Line;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return super.equals(other)
+                    && ((Line) other).lineNumber == lineNumber;
+        }
+
+        @Override
+        public int hashCode() {
+            return 41 * (41 + super.hashCode()) + lineNumber;
         }
     }
 

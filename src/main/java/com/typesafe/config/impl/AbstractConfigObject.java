@@ -17,7 +17,7 @@ import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements
         ConfigObject {
-    private ConfigTransformer transformer;
+    protected ConfigTransformer transformer;
 
     protected AbstractConfigObject(ConfigOrigin origin,
             ConfigTransformer transformer) {
@@ -353,4 +353,20 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return l;
     }
 
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(valueType().name());
+        sb.append("(");
+        for (String k : keySet()) {
+            sb.append(k);
+            sb.append("->");
+            sb.append(get(k).toString());
+            sb.append(",");
+        }
+        if (!keySet().isEmpty())
+            sb.setLength(sb.length() - 1); // chop comma
+        sb.append(")");
+        return sb.toString();
+    }
 }

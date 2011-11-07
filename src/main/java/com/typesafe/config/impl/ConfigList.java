@@ -26,11 +26,47 @@ final class ConfigList extends AbstractConfigValue {
     }
 
     @Override
-    public Object unwrapped() {
+    public List<Object> unwrapped() {
         List<Object> list = new ArrayList<Object>();
         for (ConfigValue v : value) {
             list.add(v.unwrapped());
         }
         return list;
+    }
+
+    protected boolean canEqual(Object other) {
+        return other instanceof ConfigList;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // note that "origin" is deliberately NOT part of equality
+        if (other instanceof ConfigList) {
+            // optimization to avoid unwrapped() for two ConfigList
+            return canEqual(other) && value.equals(((ConfigList) other).value);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        // note that "origin" is deliberately NOT part of equality
+        return value.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(valueType().name());
+        sb.append("(");
+        for (ConfigValue e : value) {
+            sb.append(e.toString());
+            sb.append(",");
+        }
+        if (!value.isEmpty())
+            sb.setLength(sb.length() - 1); // chop comma
+        sb.append(")");
+        return sb.toString();
     }
 }

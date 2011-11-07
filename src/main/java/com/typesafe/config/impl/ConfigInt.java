@@ -12,14 +12,36 @@ final class ConfigInt extends AbstractConfigValue {
         this.value = value;
     }
 
-
     @Override
     public ConfigValueType valueType() {
         return ConfigValueType.NUMBER;
     }
 
     @Override
-    public Object unwrapped() {
+    public Integer unwrapped() {
+        return value;
+    }
+
+    protected boolean canEqual(Object other) {
+        return other instanceof ConfigInt || other instanceof ConfigLong;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // note that "origin" is deliberately NOT part of equality
+        if (other instanceof ConfigInt) {
+            return this.value == ((ConfigInt) other).value;
+        } else if (other instanceof ConfigLong) {
+            Long l = ((ConfigLong) other).unwrapped();
+            return ((long) l.intValue()) == l && this.value == l.intValue();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        // note that "origin" is deliberately NOT part of equality
         return value;
     }
 }

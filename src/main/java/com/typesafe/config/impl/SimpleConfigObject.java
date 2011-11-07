@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
@@ -41,5 +42,55 @@ class SimpleConfigObject extends AbstractConfigObject {
     @Override
     public Set<String> keySet() {
         return value.keySet();
+    }
+
+    private static boolean mapEquals(Map<String, ConfigValue> a,
+            Map<String, ConfigValue> b) {
+        Set<String> aKeys = a.keySet();
+        Set<String> bKeys = b.keySet();
+
+        if (!aKeys.equals(bKeys))
+            return false;
+
+        for (String key : aKeys) {
+            if (!a.get(key).equals(b.get(key)))
+                return false;
+        }
+        return true;
+    }
+
+    private static int mapHash(Map<String, ConfigValue> m) {
+        Set<String> keys = m.keySet();
+        int valuesHash = 0;
+        for (String k : keys) {
+            valuesHash += m.get(k).hashCode();
+        }
+        return 41 * (41 + keys.hashCode()) + valuesHash;
+    }
+
+    protected boolean canEqual(Object other) {
+        return other instanceof ConfigObject;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // note that "origin" is deliberately NOT part of equality
+        if (other instanceof SimpleConfigObject) {
+            // optimization to avoid unwrapped() for two SimpleConfigObject
+            // note: if this included "transformer" then we could never be
+            // equal to a non-SimpleConfigObject ConfigObject.
+            return canEqual(other)
+                    && mapEquals(value, ((SimpleConfigObject) other).value);
+        } else if (other instanceof ConfigObject) {
+            return super.equals(other);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        // note that "origin" is deliberately NOT part of equality
+        return mapHash(this.value);
     }
 }

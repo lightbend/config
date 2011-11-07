@@ -18,7 +18,35 @@ final class ConfigLong extends AbstractConfigValue {
     }
 
     @Override
-    public Object unwrapped() {
+    public Long unwrapped() {
         return value;
+    }
+
+    protected boolean canEqual(Object other) {
+        return other instanceof ConfigInt || other instanceof ConfigLong;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // note that "origin" is deliberately NOT part of equality
+        if (other instanceof ConfigLong) {
+            return this.value == ((ConfigLong) other).value;
+        } else if (other instanceof ConfigInt) {
+            Long l = this.unwrapped();
+            return ((long) l.intValue()) == l
+                    && ((ConfigInt) other).unwrapped() == l.intValue();
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        // note that "origin" is deliberately NOT part of equality
+        if (value <= Integer.MAX_VALUE && value >= Integer.MIN_VALUE)
+            return unwrapped().intValue(); // match the ConfigInt hashCode for
+                                           // any valid Integer
+        else
+            return unwrapped().hashCode(); // use Long.hashCode()
     }
 }
