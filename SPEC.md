@@ -8,6 +8,8 @@ defining a configuration, such as Akka"
 Some Java-specific stuff is in here, though a Java-independent version would
 also be possible, without the system properties parts.
 
+Many existing akka.conf and Play application.conf would probably parse in this format, though details would be a little different (encoding, escaping, whitespace) and that could affect some configurations.
+
 ## Goals
 
 The primary goal is: keep the semantics (tree structure; set of types;
@@ -41,6 +43,7 @@ The first implementation should have these properties:
    strings yes/no/y/n as booleans, integer to and from float,
    any number or boolean to a string. This puts "figure out
    what people mean" in the API rather than in the syntax spec.
+ - API should support reloading the config dynamically (some kind of reload listener functionality)
 
 ## Syntax
 
@@ -131,10 +134,10 @@ Different from JSON:
    directories in the filesystem) will be application-defined.
  - An included filename can refer to any of a HOCON file or a JSON file or a
    Java properties file. These are distinguished by extension:
-    - `.properties` for Java properties
-    - `.json` for JSON
+    - `.properties` for Java properties (parser built into the JDK)
+    - `.json` for JSON  (can be parsed with a slightly modified HOCON parser)
     - `.conf` or `.hocon` for HOCON
-   If the included filename has no extension, then any of the above
+ - If the included filename has no extension, then any of the above
    extensions are allowed. If the included filename has an extension
    already then it refers to precisely that filename and the format
    is not flexible.
@@ -167,6 +170,7 @@ simplified HOCON value when merged:
  - valid boolean, null, and number literals become those types
  - anything else is a string
  - no substitution, unescaping, unquoting is performed
+ - the idea here is to avoid "doubling" the string escaping/encoding rules and making it hard to put a string in a property, but the price is that you can't put objects and arrays in properties. FIXME: alternative is to key off whether the property starts with a `[` or `{` or to do a delayed parse when we see what type the app asks for.
 
 ### Substitutions
 
@@ -296,3 +300,12 @@ or
     foo {
       bar=12
     }
+
+## application.conf
+
+It might be nice if the API by default loaded an `application.{conf,properties,json}` which would be merged into any config and rooted at the true global root.
+
+So for example, if Akka said its config root was `akka`, then by default an `akka.conf` is loaded and for conversion to and from system properties, it's rooted at `akka.`.  Then inside `application.conf`, you could have an `akka { timeout=5 }` sort of section. The `application.conf` would load later, after `akka.conf`, and then system properties would override everything.
+
+The purpose of `application.conf` is to allow apps to config everything in a single file.
+

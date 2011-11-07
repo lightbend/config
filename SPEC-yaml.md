@@ -17,12 +17,12 @@ human-editable config file format.
 The following features are provided by YAML:
 
  - less noisy / less pedantic syntax
- - ability to refer to another part of the configuration (set a value to
-   another value)
  - ability to write comments
 
 The following features are defined on top of YAML:
 
+ - ability to refer to another part of the configuration (set a value to
+   another value)
  - import/include another configuration file into the current file
  - a mapping to a flat properties hierarchy such as Java's System.properties
  - ability to get values from environment variables
