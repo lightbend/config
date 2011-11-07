@@ -122,4 +122,46 @@ public class ConfigException extends RuntimeException {
             this(path, message, null);
         }
     }
+
+    /**
+     * Exception indicating that there's a bug in something or the runtime
+     * environment is broken. This exception should never be handled; instead,
+     * something should be fixed to keep the exception from occurring.
+     *
+     */
+    public static class BugOrBroken extends ConfigException {
+        private static final long serialVersionUID = 1L;
+
+        public BugOrBroken(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public BugOrBroken(String message) {
+            this(message, null);
+        }
+    }
+
+    public static class IO extends ConfigException {
+        private static final long serialVersionUID = 1L;
+
+        public IO(ConfigOrigin origin, String message, Throwable cause) {
+            super(origin, message, cause);
+        }
+
+        public IO(ConfigOrigin origin, String message) {
+            this(origin, message, null);
+        }
+    }
+
+    public static class Parse extends ConfigException {
+        private static final long serialVersionUID = 1L;
+
+        public Parse(ConfigOrigin origin, String message, Throwable cause) {
+            super(origin, message, cause);
+        }
+
+        public Parse(ConfigOrigin origin, String message) {
+            this(origin, message, null);
+        }
+    }
 }
