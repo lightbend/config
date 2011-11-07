@@ -3,3 +3,4 @@
 /.cache
 /project
 /bin
+target/
