@@ -14,7 +14,7 @@ import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 
 /** This is public but is only supposed to be used by the "config" package */
-public class ConfigFactory {
+public class ConfigImpl {
     public static ConfigObject loadConfig(ConfigConfig configConfig) {
         AbstractConfigObject system = null;
         try {

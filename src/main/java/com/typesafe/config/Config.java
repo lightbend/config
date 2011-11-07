@@ -2,15 +2,15 @@ package com.typesafe.config;
 
 import java.util.concurrent.TimeUnit;
 
-import com.typesafe.config.impl.ConfigFactory;
+import com.typesafe.config.impl.ConfigImpl;
 
 public final class Config {
     public static ConfigObject load(ConfigConfig configConfig) {
-        return ConfigFactory.loadConfig(configConfig);
+        return ConfigImpl.loadConfig(configConfig);
     }
 
     public static ConfigObject load(String rootPath) {
-        return ConfigFactory.loadConfig(new ConfigConfig(rootPath, null));
+        return ConfigImpl.loadConfig(new ConfigConfig(rootPath, null));
     }
 
     private static String getUnits(String s) {
