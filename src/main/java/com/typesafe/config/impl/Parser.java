@@ -23,31 +23,36 @@ final class Parser {
      * buffered. Does not close the stream; you have to arrange to do that
      * yourself.
      */
-    static AbstractConfigValue parse(ConfigOrigin origin, InputStream input) {
+    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
+            InputStream input) {
         try {
-            return parse(origin, new InputStreamReader(input, "UTF-8"));
+            return parse(flavor, origin, new InputStreamReader(input, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
             throw new ConfigException.BugOrBroken(
                     "Java runtime does not support UTF-8");
         }
     }
 
-    static AbstractConfigValue parse(ConfigOrigin origin, Reader input) {
+    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
+            Reader input) {
         Iterator<Token> tokens = Tokenizer.tokenize(origin, input);
-        return parse(origin, tokens);
+        return parse(flavor, origin, tokens);
     }
 
-    static AbstractConfigValue parse(ConfigOrigin origin, String input) {
-        return parse(origin, new StringReader(input));
+    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
+            String input) {
+        return parse(flavor, origin, new StringReader(input));
     }
 
     static private final class ParseContext {
         private int lineNumber;
+        private SyntaxFlavor flavor;
         private ConfigOrigin baseOrigin;
 
-        ParseContext(ConfigOrigin origin) {
+        ParseContext(SyntaxFlavor flavor, ConfigOrigin origin) {
             lineNumber = 0;
-            baseOrigin = origin;
+            this.flavor = flavor;
+            this.baseOrigin = origin;
         }
 
         private Token nextTokenIgnoringNewline(Iterator<Token> tokens) {
@@ -207,9 +212,10 @@ final class Parser {
         }
     }
 
-    private static AbstractConfigValue parse(ConfigOrigin origin,
+    private static AbstractConfigValue parse(SyntaxFlavor flavor,
+            ConfigOrigin origin,
             Iterator<Token> tokens) {
-        ParseContext context = new ParseContext(origin);
+        ParseContext context = new ParseContext(flavor, origin);
         return context.parse(tokens);
     }
 }

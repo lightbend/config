@@ -32,7 +32,7 @@ class JsonTest extends TestUtils {
     }
 
     def parse(s: String): ConfigValue = {
-        Parser.parse(new SimpleConfigOrigin("test string"), s)
+        Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test string"), s)
     }
 
     @Test
