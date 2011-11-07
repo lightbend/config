@@ -8,24 +8,23 @@ import java.util.Queue;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.impl.Tokens.Token;
 
 final class Tokenizer {
     /**
      * Tokenizes a Reader. Does not close the reader; you have to arrange to do
      * that after you're done with the returned iterator.
      */
-    static Iterator<Tokens.Token> tokenize(ConfigOrigin origin, Reader input) {
+    static Iterator<Token> tokenize(ConfigOrigin origin, Reader input) {
         return new TokenIterator(origin, input);
     }
 
-    private static class TokenIterator implements Iterator<Tokens.Token> {
+    private static class TokenIterator implements Iterator<Token> {
 
         private ConfigOrigin origin;
         private Reader input;
         private int oneCharBuffer;
         private int lineNumber;
-        private Queue<Tokens.Token> tokens;
+        private Queue<Token> tokens;
 
         private int nextChar() {
             if (oneCharBuffer >= 0) {
@@ -56,9 +55,9 @@ final class Tokenizer {
 
                 if (c == -1) {
                     return -1;
+                } else if (c == '\n') {
+                    return c;
                 } else if (Character.isWhitespace(c)) {
-                    if (c == '\n')
-                        lineNumber += 1;
                     continue;
                 } else {
                     return c;
@@ -66,13 +65,12 @@ final class Tokenizer {
             }
         }
 
-        private void parseError(String message) {
-            parseError(message, null);
+        private ConfigException parseError(String message) {
+            return parseError(message, null);
         }
 
-        private void parseError(String message, Throwable cause) {
-            throw new ConfigException.Parse(origin,
-                    lineNumber + ": " + message, cause);
+        private ConfigException parseError(String message, Throwable cause) {
+            return new ConfigException.Parse(lineOrigin(), message, cause);
         }
 
         private void checkNextOrThrow(String expectedBefore, String expectedNow) {
@@ -82,12 +80,12 @@ final class Tokenizer {
                 int actual = nextChar();
 
                 if (actual == -1)
-                    parseError(String.format(
+                    throw parseError(String.format(
                             "Expecting '%s%s' but input data ended",
                             expectedBefore, expectedNow));
 
                 if (actual != expected)
-                    parseError(String
+                    throw parseError(String
                             .format("Expecting '%s%s' but got char '%c' rather than '%c'",
                                     expectedBefore, expectedNow, actual,
                                     expected));
@@ -101,25 +99,25 @@ final class Tokenizer {
                     + lineNumber);
         }
 
-        private Tokens.Token pullTrue() {
+        private Token pullTrue() {
             // "t" has been already seen
             checkNextOrThrow("t", "rue");
             return Tokens.newBoolean(lineOrigin(), true);
         }
 
-        private Tokens.Token pullFalse() {
+        private Token pullFalse() {
             // "f" has been already seen
             checkNextOrThrow("f", "alse");
             return Tokens.newBoolean(lineOrigin(), false);
         }
 
-        private Tokens.Token pullNull() {
+        private Token pullNull() {
             // "n" has been already seen
             checkNextOrThrow("n", "ull");
             return Tokens.newNull(lineOrigin());
         }
 
-        private Tokens.Token pullNumber(int firstChar) {
+        private Token pullNumber(int firstChar) {
             StringBuilder sb = new StringBuilder();
             sb.append((char) firstChar);
             boolean containedDecimalOrE = false;
@@ -144,15 +142,14 @@ final class Tokenizer {
                     return Tokens.newLong(lineOrigin(), Long.parseLong(s));
                 }
             } catch (NumberFormatException e) {
-                parseError("Invalid number", e);
-                throw new ConfigException.BugOrBroken("not reached");
+                throw parseError("Invalid number", e);
             }
         }
 
         private void pullEscapeSequence(StringBuilder sb) {
             int escaped = nextChar();
             if (escaped == -1)
-                parseError("End of input but backslash in string had nothing after it");
+                throw parseError("End of input but backslash in string had nothing after it");
 
             switch (escaped) {
             case '"':
@@ -185,14 +182,14 @@ final class Tokenizer {
                 for (int i = 0; i < 4; ++i) {
                     int c = nextChar();
                     if (c == -1)
-                        parseError("End of input but expecting 4 hex digits for \\uXXXX escape");
+                        throw parseError("End of input but expecting 4 hex digits for \\uXXXX escape");
                     a[i] = (char) c;
                 }
                 String digits = new String(a);
                 try {
                     sb.appendCodePoint(Integer.parseInt(digits, 16));
                 } catch (NumberFormatException e) {
-                    parseError(
+                    throw parseError(
                             String.format(
                                     "Malformed hex digits after \\u escape in string: '%s'",
                                     digits), e);
@@ -200,20 +197,20 @@ final class Tokenizer {
             }
                 break;
             default:
-                parseError(String
+                throw parseError(String
                         .format("backslash followed by '%c', this is not a valid escape sequence",
                                 escaped));
             }
         }
 
-        private Tokens.Token pullQuotedString() {
+        private Token pullQuotedString() {
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
             int c = '\0'; // value doesn't get used
             do {
                 c = nextChar();
                 if (c == -1)
-                    parseError("End of input but string quote was still open");
+                    throw parseError("End of input but string quote was still open");
 
                 if (c == '\\') {
                     pullEscapeSequence(sb);
@@ -230,6 +227,10 @@ final class Tokenizer {
             int c = nextCharAfterWhitespace();
             if (c == -1) {
                 tokens.add(Tokens.END);
+            } else if (c == '\n') {
+                // newline tokens have the just-ended line number
+                tokens.add(Tokens.newLine(lineNumber));
+                lineNumber += 1;
             } else {
                 Token t = null;
                 switch (c) {
@@ -268,7 +269,7 @@ final class Tokenizer {
                     if ("-0123456789".indexOf(c) >= 0) {
                         t = pullNumber(c);
                     } else {
-                        parseError(String
+                        throw parseError(String
                                 .format("Character '%c' is not the start of any valid token",
                                         c));
                     }
@@ -285,7 +286,7 @@ final class Tokenizer {
             this.input = input;
             oneCharBuffer = -1;
             lineNumber = 0;
-            tokens = new LinkedList<Tokens.Token>();
+            tokens = new LinkedList<Token>();
             tokens.add(Tokens.START);
         }
 
@@ -296,7 +297,7 @@ final class Tokenizer {
 
         @Override
         public Token next() {
-            Tokens.Token t = tokens.remove();
+            Token t = tokens.remove();
             if (t != Tokens.END) {
                 queueNextToken();
                 if (tokens.isEmpty())

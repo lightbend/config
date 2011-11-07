@@ -229,6 +229,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         List<T> l = new ArrayList<T>();
         List<ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
+            if (expected != null && transformer != null) {
+                v = transformer.transform(v, expected);
+            }
             if (v.valueType() != expected)
                 throw new ConfigException.WrongType(v.origin(), path,
                         expected.name(), v.valueType().name());

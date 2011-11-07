@@ -8,10 +8,10 @@ import com.typesafe.config.ConfigValueType;
 final class ConfigSubstitution extends AbstractConfigValue {
 
     private AbstractConfigObject root;
-    private List<Tokens.Token> tokens;
+    private List<Token> tokens;
 
     ConfigSubstitution(ConfigOrigin origin, AbstractConfigObject root,
-            List<Tokens.Token> tokens) {
+            List<Token> tokens) {
         super(origin);
         this.root = root;
         this.tokens = tokens;

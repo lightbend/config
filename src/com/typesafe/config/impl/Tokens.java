@@ -1,21 +1,12 @@
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigValueType;
 
 final class Tokens {
-    static class Token {
-        private TokenType tokenType;
-
-        Token(TokenType tokenType) {
-            this.tokenType = tokenType;
-        }
-
-        public TokenType tokenType() {
-            return tokenType;
-        }
-    }
-
-    static class Value extends Token {
+    static private class Value extends Token {
 
         private AbstractConfigValue value;
 
@@ -27,10 +18,65 @@ final class Tokens {
         AbstractConfigValue value() {
             return value;
         }
+
+        @Override
+        public String toString() {
+            String s = tokenType().name() + "(" + value.valueType().name()
+                    + ")";
+            if (value instanceof ConfigObject || value instanceof ConfigList) {
+                return s;
+            } else {
+                return s + "='" + value().unwrapped() + "'";
+            }
+        }
+    }
+
+    static private class Line extends Token {
+        private int lineNumber;
+
+        Line(int lineNumber) {
+            super(TokenType.NEWLINE);
+            this.lineNumber = lineNumber;
+        }
+
+        int lineNumber() {
+            return lineNumber;
+        }
+
+        @Override
+        public String toString() {
+            return "NEWLINE@" + lineNumber;
+        }
     }
 
     static boolean isValue(Token token) {
         return token instanceof Value;
+    }
+
+    static AbstractConfigValue getValue(Token token) {
+        if (token instanceof Value) {
+            return ((Value) token).value();
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "tried to get value of non-value token");
+        }
+    }
+
+    static boolean isValueWithType(Token t, ConfigValueType valueType) {
+        return isValue(t) && getValue(t).valueType() == valueType;
+    }
+
+    static boolean isNewline(Token token) {
+        return token instanceof Line;
+    }
+
+    static int getLineNumber(Token token) {
+        if (token instanceof Line) {
+            return ((Line) token).lineNumber();
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "tried to get line number from non-newline");
+        }
     }
 
     static Token START = new Token(TokenType.START);
@@ -41,6 +87,10 @@ final class Tokens {
     static Token CLOSE_CURLY = new Token(TokenType.CLOSE_CURLY);
     static Token OPEN_SQUARE = new Token(TokenType.OPEN_SQUARE);
     static Token CLOSE_SQUARE = new Token(TokenType.CLOSE_SQUARE);
+
+    static Token newLine(int lineNumberJustEnded) {
+        return new Line(lineNumberJustEnded);
+    }
 
     static Token newValue(AbstractConfigValue value) {
         return new Value(value);
