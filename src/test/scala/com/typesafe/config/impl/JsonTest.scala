@@ -8,14 +8,18 @@ import java.io.StringReader
 import com.typesafe.config._
 import java.util.HashMap
 
-class JsonTest extends TestUtils {
+class ParseTest extends TestUtils {
 
     @org.junit.Before
     def setup() {
     }
 
     def parse(s: String): ConfigValue = {
-        Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test string"), s)
+        Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test json string"), s)
+    }
+
+    def parseAsConf(s: String): ConfigValue = {
+        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s)
     }
 
     private[this] def toLift(value: ConfigValue): lift.JValue = {
@@ -88,90 +92,15 @@ class JsonTest extends TestUtils {
         withLiftExceptionsConverted(fromLift(lift.JsonParser.parse(json)))
     }
 
-    case class JsonTest(liftBehaviorUnexpected: Boolean, test: String)
-    implicit def string2jsontest(test: String): JsonTest = JsonTest(false, test)
-
-    private val invalidJson = List[JsonTest]("", // empty document
-        "{",
-        "}",
-        "[",
-        "]",
-        "10", // value not in array or object
-        "\"foo\"", // value not in array or object
-        "\"", // single quote by itself
-        "{ \"foo\" : }", // no value in object
-        "{ : 10 }", // no key in object
-        // these two problems are ignored by the lift tokenizer
-        "[:\"foo\", \"bar\"]", // colon in an array; lift doesn't throw (tokenizer erases it)
-        "[\"foo\" : \"bar\"]", // colon in an array another way, lift ignores (tokenizer erases it)
-        "[ foo ]", // not a known token
-        "[ t ]", // start of "true" but ends wrong
-        "[ tx ]",
-        "[ tr ]",
-        "[ trx ]",
-        "[ tru ]",
-        "[ trux ]",
-        "[ truex ]",
-        "[ 10x ]", // number token with trailing junk
-        "[ 10e3e3 ]", // two exponents
-        "[ \"hello ]", // unterminated string
-        JsonTest(true, "{ \"foo\" , true }"), // comma instead of colon, lift is fine with this
-        JsonTest(true, "{ \"foo\" : true \"bar\" : false }"), // missing comma between fields, lift fine with this
-        "[ 10, }]", // array with } as an element
-        "[ 10, {]", // array with { as an element
-        "{}x", // trailing invalid token after the root object
-        "[]x", // trailing invalid token after the root array
-        JsonTest(true, "{}{}"), // trailing token after the root object - lift OK with it
-        "{}true", // trailing token after the root object
-        JsonTest(true, "[]{}"), // trailing valid token after the root array
-        "[]true", // trailing valid token after the root array
-        "") // empty document again, just for clean formatting of this list ;-)
-
-    // We'll automatically try each of these with whitespace modifications
-    // so no need to add every possible whitespace variation
-    private val validJson = List[JsonTest]("{}",
-        "[]",
-        """{ "foo" : "bar" }""",
-        """["foo", "bar"]""",
-        """{ "foo" : 42 }""",
-        """[10, 11]""",
-        """[10,"foo"]""",
-        """{ "foo" : "bar", "baz" : "boo" }""",
-        """{ "foo" : { "bar" : "baz" }, "baz" : "boo" }""",
-        """{ "foo" : { "bar" : "baz", "woo" : "w00t" }, "baz" : "boo" }""",
-        """{ "foo" : [10,11,12], "baz" : "boo" }""",
-        JsonTest(true, """{ "foo" : "bar", "foo" : "bar2" }"""), // dup keys - lift just returns both, we use last one
-        """[{},{},{},{}]""",
-        """[[[[[[]]]]]]""",
-        """{"a":{"a":{"a":{"a":{"a":{"a":{"a":{"a":42}}}}}}}}""",
-        // this long one is mostly to test rendering
-        """{ "foo" : { "bar" : "baz", "woo" : "w00t" }, "baz" : { "bar" : "baz", "woo" : [1,2,3,4], "w00t" : true, "a" : false, "b" : 3.14, "c" : null } }""",
-        "{}")
-
     // For string quoting, check behavior of escaping a random character instead of one on the list;
     // lift-json seems to oddly treat that as a \ literal
-
-    private def whitespaceVariations(tests: Seq[JsonTest]): Seq[JsonTest] = {
-        val variations = List({ s: String => s }, // identity
-            { s: String => " " + s },
-            { s: String => s + " " },
-            { s: String => " " + s + " " },
-            { s: String => s.replace(" ", "") }, // this would break with whitespace in a key or value
-            { s: String => s.replace(":", " : ") }, // could break with : in a key or value
-            { s: String => s.replace(",", " , ") } // could break with , in a key or value
-            )
-        for {
-            t <- tests
-            v <- variations
-        } yield JsonTest(t.liftBehaviorUnexpected, v(t.test))
-    }
 
     private def addOffendingJsonToException[R](parserName: String, s: String)(body: => R) = {
         try {
             body
         } catch {
             case t: Throwable =>
-                throw new AssertionError(parserName + " parser failed on '" + s + "'", t)
+                throw new AssertionError(parserName + " parser did wrong thing on '" + s + "'", t)
         }
     }
 
@@ -211,8 +140,11 @@ class JsonTest extends TestUtils {
             val liftAST = addOffendingJsonToException("lift", valid.test) {
                 fromJsonWithLiftParser(valid.test)
             }
-            val ourAST = addOffendingJsonToException("config", valid.test) {
+            val ourAST = addOffendingJsonToException("config-json", valid.test) {
                 parse(valid.test)
+            }
+            val ourConfAST = addOffendingJsonToException("config-conf", valid.test) {
+                parseAsConf(valid.test)
             }
             if (valid.liftBehaviorUnexpected) {
                 // ignore this for now
@@ -220,6 +152,12 @@ class JsonTest extends TestUtils {
                 addOffendingJsonToException("config", valid.test) {
                     assertEquals(liftAST, ourAST)
                 }
+            }
+
+            // check that our parser gives the same result in JSON mode and ".conf" mode.
+            // i.e. this tests that ".conf" format is a superset of JSON.
+            addOffendingJsonToException("config", valid.test) {
+                assertEquals(ourAST, ourConfAST)
             }
         }
     }

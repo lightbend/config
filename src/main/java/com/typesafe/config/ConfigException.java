@@ -70,10 +70,18 @@ public class ConfigException extends RuntimeException {
     public static class Null extends WrongType {
         private static final long serialVersionUID = 1L;
 
+        private static String makeMessage(String path, String expected) {
+            if (expected != null) {
+                return "Configuration key '" + path
+                        + "' is set to null but expected " + expected;
+            } else {
+                return "Configuration key '" + path + "' is null";
+            }
+        }
+
         public Null(ConfigOrigin origin, String path, String expected,
                 Throwable cause) {
-            super(origin, "Configuration key '" + path
-                    + "' is set to null but expected " + expected, cause);
+            super(origin, makeMessage(path, expected), cause);
         }
 
         public Null(ConfigOrigin origin, String path, String expected) {

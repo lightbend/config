@@ -21,4 +21,9 @@ final class ConfigDouble extends AbstractConfigValue {
     public Double unwrapped() {
         return value;
     }
+
+    @Override
+    String transformToString() {
+        return Double.toString(value);
+    }
 }

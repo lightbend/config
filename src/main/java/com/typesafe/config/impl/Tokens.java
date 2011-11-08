@@ -80,6 +80,47 @@ final class Tokens {
         }
     }
 
+    // This is not a Value, because it requires special processing
+    static private class UnquotedText extends Token {
+        private ConfigOrigin origin;
+        private String value;
+
+        UnquotedText(ConfigOrigin origin, String s) {
+            super(TokenType.UNQUOTED_TEXT);
+            this.origin = origin;
+            this.value = s;
+        }
+
+        ConfigOrigin origin() {
+            return origin;
+        }
+
+        String value() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return tokenType().name() + "(" + value + ")";
+        }
+
+        @Override
+        protected boolean canEqual(Object other) {
+            return other instanceof UnquotedText;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return super.equals(other)
+                    && ((UnquotedText) other).value.equals(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return 41 * (41 + super.hashCode()) + value.hashCode();
+        }
+    }
+
     static boolean isValue(Token token) {
         return token instanceof Value;
     }
@@ -89,7 +130,7 @@ final class Tokens {
             return ((Value) token).value();
         } else {
             throw new ConfigException.BugOrBroken(
-                    "tried to get value of non-value token");
+                    "tried to get value of non-value token " + token);
         }
     }
 
@@ -106,9 +147,42 @@ final class Tokens {
             return ((Line) token).lineNumber();
         } else {
             throw new ConfigException.BugOrBroken(
-                    "tried to get line number from non-newline");
+                    "tried to get line number from non-newline " + token);
         }
     }
+
+    static boolean isUnquotedText(Token token) {
+        return token instanceof UnquotedText;
+    }
+
+    static String getUnquotedText(Token token) {
+        if (token instanceof UnquotedText) {
+            return ((UnquotedText) token).value();
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "tried to get unquoted text from " + token);
+        }
+    }
+
+    static ConfigOrigin getUnquotedTextOrigin(Token token) {
+        if (token instanceof UnquotedText) {
+            return ((UnquotedText) token).origin();
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "tried to get unquoted text from " + token);
+        }
+    }
+
+    /*
+     * static ConfigString newStringValueFromTokens(Token... tokens) {
+     * StringBuilder sb = new StringBuilder(); for (Token t : tokens) { if
+     * (isValue(t)) { ConfigValue v = getValue(t); if (v instanceof
+     * ConfigString) { sb.append(((ConfigString) v).unwrapped()); } else { //
+     * FIXME convert non-strings to string throw new
+     * ConfigException.BugOrBroken( "not handling non-strings here"); } } else
+     * if (isUnquotedText(t)) { String s = getUnquotedText(t); sb.append(s); }
+     * else { throw new ConfigException. } } }
+     */
 
     static Token START = new Token(TokenType.START);
     static Token END = new Token(TokenType.END);
@@ -121,6 +195,10 @@ final class Tokens {
 
     static Token newLine(int lineNumberJustEnded) {
         return new Line(lineNumberJustEnded);
+    }
+
+    static Token newUnquotedText(ConfigOrigin origin, String s) {
+        return new UnquotedText(origin, s);
     }
 
     static Token newValue(AbstractConfigValue value) {

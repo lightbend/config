@@ -73,48 +73,58 @@ final class Tokenizer {
             return new ConfigException.Parse(lineOrigin(), message, cause);
         }
 
-        private void checkNextOrThrow(String expectedBefore, String expectedNow) {
-            int i = 0;
-            while (i < expectedNow.length()) {
-                int expected = expectedNow.charAt(i);
-                int actual = nextChar();
-
-                if (actual == -1)
-                    throw parseError(String.format(
-                            "Expecting '%s%s' but input data ended",
-                            expectedBefore, expectedNow));
-
-                if (actual != expected)
-                    throw parseError(String
-                            .format("Expecting '%s%s' but got char '%c' rather than '%c'",
-                                    expectedBefore, expectedNow, actual,
-                                    expected));
-
-                ++i;
-            }
-        }
-
         private ConfigOrigin lineOrigin() {
             return new SimpleConfigOrigin(origin.description() + ": line "
                     + lineNumber);
         }
 
-        private Token pullTrue() {
-            // "t" has been already seen
-            checkNextOrThrow("t", "rue");
-            return Tokens.newBoolean(lineOrigin(), true);
-        }
+        // chars JSON allows a number to start with
+        static final String firstNumberChars = "0123456789-";
+        // chars JSON allows to be part of a number
+        static final String numberChars = "0123456789eE+-.";
+        // chars that stop an unquoted string
+        static final String notInUnquotedText = "$\"{}[]:=\n,";
 
-        private Token pullFalse() {
-            // "f" has been already seen
-            checkNextOrThrow("f", "alse");
-            return Tokens.newBoolean(lineOrigin(), false);
-        }
+        // The rules here are intended to maximize convenience while
+        // avoiding confusion with real valid JSON. Basically anything
+        // that parses as JSON is treated the JSON way and otherwise
+        // we assume it's a string and let the parser sort it out.
+        private Token pullUnquotedText() {
+            ConfigOrigin origin = lineOrigin();
+            StringBuilder sb = new StringBuilder();
+            int c = nextChar();
+            while (true) {
+                if (c == -1) {
+                    break;
+                } else if (notInUnquotedText.indexOf(c) >= 0) {
+                    break;
+                } else {
+                    sb.append((char) c);
+                }
 
-        private Token pullNull() {
-            // "n" has been already seen
-            checkNextOrThrow("n", "ull");
-            return Tokens.newNull(lineOrigin());
+                // we parse true/false/null tokens as such no matter
+                // what is after them.
+                if (sb.length() == 4) {
+                    String s = sb.toString();
+                    if (s.equals("true"))
+                        return Tokens.newBoolean(origin, true);
+                    else if (s.equals("null"))
+                        return Tokens.newNull(origin);
+                } else if (sb.length() == 5) {
+                    String s = sb.toString();
+                    if (s.equals("false"))
+                        return Tokens.newBoolean(origin, false);
+                }
+
+                c = nextChar();
+            }
+
+            // put back the char that ended the unquoted text
+            putBack(c);
+
+            // chop trailing whitespace; have to quote to have trailing spaces.
+            String s = sb.toString().trim();
+            return Tokens.newUnquotedText(origin, s);
         }
 
         private Token pullNumber(int firstChar) {
@@ -122,7 +132,7 @@ final class Tokenizer {
             sb.append((char) firstChar);
             boolean containedDecimalOrE = false;
             int c = nextChar();
-            while (c != -1 && "0123456789eE+-.".indexOf(c) >= 0) {
+            while (c != -1 && numberChars.indexOf(c) >= 0) {
                 if (c == '.' || c == 'e' || c == 'E')
                     containedDecimalOrE = true;
                 sb.append((char) c);
@@ -255,25 +265,21 @@ final class Tokenizer {
                 case ']':
                     t = Tokens.CLOSE_SQUARE;
                     break;
-                case 't':
-                    t = pullTrue();
-                    break;
-                case 'f':
-                    t = pullFalse();
-                    break;
-                case 'n':
-                    t = pullNull();
-                    break;
                 }
+
                 if (t == null) {
-                    if ("-0123456789".indexOf(c) >= 0) {
+                    if (firstNumberChars.indexOf(c) >= 0) {
                         t = pullNumber(c);
-                    } else {
+                    } else if (notInUnquotedText.indexOf(c) >= 0) {
                         throw parseError(String
                                 .format("Character '%c' is not the start of any valid token",
                                         c));
+                    } else {
+                        putBack(c);
+                        t = pullUnquotedText();
                     }
                 }
+
                 if (t == null)
                     throw new ConfigException.BugOrBroken(
                             "bug: failed to generate next token");

@@ -44,4 +44,9 @@ final class ConfigInt extends AbstractConfigValue {
         // note that "origin" is deliberately NOT part of equality
         return value;
     }
+
+    @Override
+    String transformToString() {
+        return Integer.toString(value);
+    }
 }

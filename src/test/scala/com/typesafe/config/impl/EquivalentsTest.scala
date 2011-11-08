@@ -24,7 +24,7 @@ class EquivalentsTest extends TestUtils {
 
     private def filesForEquiv(equiv: File) = {
         val rawFiles = equiv.listFiles()
-        val files = rawFiles.filter({ f => f.getName().endsWith(".json") })
+        val files = rawFiles.filter({ f => f.getName().endsWith(".json") || f.getName().endsWith(".conf") })
         files
     }
 
@@ -50,6 +50,15 @@ class EquivalentsTest extends TestUtils {
                 val value = Parser.parse(testFile)
                 describeFailure(testFile.getPath()) {
                     assertEquals(original, value)
+                }
+
+                // check that all .json files can be parsed as .conf,
+                // i.e. .conf must be a superset of JSON
+                if (testFile.getName().endsWith(".json")) {
+                    val parsedAsConf = Parser.parse(SyntaxFlavor.CONF, testFile)
+                    describeFailure(testFile.getPath() + " parsed as .conf") {
+                        assertEquals(original, parsedAsConf)
+                    }
                 }
             }
         }

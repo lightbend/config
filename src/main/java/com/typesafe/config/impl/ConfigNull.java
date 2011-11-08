@@ -26,4 +26,9 @@ final class ConfigNull extends AbstractConfigValue {
     public Object unwrapped() {
         return null;
     }
+
+    @Override
+    String transformToString() {
+        return "null";
+    }
 }

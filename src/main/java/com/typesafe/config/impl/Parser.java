@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Stack;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
@@ -54,9 +55,15 @@ final class Parser {
         if (f.getName().endsWith(".json"))
             flavor = SyntaxFlavor.JSON;
         else if (f.getName().endsWith(".conf"))
-            flavor = SyntaxFlavor.HOCON;
+            flavor = SyntaxFlavor.CONF;
         else
             throw new ConfigException.IO(origin, "Unknown filename extension");
+        return parse(flavor, f);
+    }
+
+    static AbstractConfigValue parse(SyntaxFlavor flavor, File f) {
+        ConfigOrigin origin = new SimpleConfigOrigin(f.getPath());
+
         AbstractConfigValue result = null;
         try {
             InputStream stream = new BufferedInputStream(new FileInputStream(f));
@@ -70,22 +77,102 @@ final class Parser {
 
     static private final class ParseContext {
         private int lineNumber;
+        private Stack<Token> buffer;
+        private Iterator<Token> tokens;
         private SyntaxFlavor flavor;
         private ConfigOrigin baseOrigin;
 
-        ParseContext(SyntaxFlavor flavor, ConfigOrigin origin) {
+        ParseContext(SyntaxFlavor flavor, ConfigOrigin origin,
+                Iterator<Token> tokens) {
             lineNumber = 0;
+            buffer = new Stack<Token>();
+            this.tokens = tokens;
             this.flavor = flavor;
             this.baseOrigin = origin;
         }
 
-        private Token nextTokenIgnoringNewline(Iterator<Token> tokens) {
-            Token t = tokens.next();
+        private Token nextToken() {
+            Token t = null;
+            if (buffer.isEmpty()) {
+                t = tokens.next();
+            } else {
+                t = buffer.pop();
+            }
+
+            if (Tokens.isUnquotedText(t) && flavor == SyntaxFlavor.JSON) {
+                throw parseError("Token not allowed in valid JSON: '"
+                        + Tokens.getUnquotedText(t) + "'");
+            } else {
+                return t;
+            }
+        }
+
+        private void putBack(Token token) {
+            buffer.push(token);
+        }
+
+        private Token nextTokenIgnoringNewline() {
+            Token t = nextToken();
             while (Tokens.isNewline(t)) {
                 lineNumber = Tokens.getLineNumber(t);
-                t = tokens.next();
+                t = nextToken();
             }
             return t;
+        }
+
+        // merge a bunch of adjacent values into one
+        // value; change unquoted text into a string
+        // value.
+        private void consolidateValueTokens() {
+            // this trick is not done in JSON
+            if (flavor == SyntaxFlavor.JSON)
+                return;
+
+            List<Token> values = null; // create only if we have value tokens
+            Token t = nextTokenIgnoringNewline(); // ignore a newline up front
+            while (Tokens.isValue(t)
+                    || Tokens.isUnquotedText(t)) {
+                if (values == null)
+                    values = new ArrayList<Token>();
+                values.add(t);
+                t = nextToken(); // but don't consolidate across a newline
+            }
+            // the last one wasn't a value token
+            putBack(t);
+
+            if (values == null)
+                return;
+
+            if (values.size() == 1 && !Tokens.isUnquotedText(values.get(0))) {
+                // a single value token requires no consolidation
+                putBack(values.get(0));
+                return;
+            }
+
+            // we have multiple value tokens or one unquoted text token;
+            // collapse into a string token.
+            StringBuilder sb = new StringBuilder();
+            ConfigOrigin firstOrigin = null;
+            for (Token valueToken : values) {
+                if (Tokens.isValue(valueToken)) {
+                    AbstractConfigValue v = Tokens.getValue(valueToken);
+                    sb.append(v.transformToString());
+                    if (firstOrigin == null)
+                        firstOrigin = v.origin();
+                } else if (Tokens.isUnquotedText(valueToken)) {
+                    String text = Tokens.getUnquotedText(valueToken);
+                    if (firstOrigin == null)
+                        firstOrigin = Tokens.getUnquotedTextOrigin(valueToken);
+                    sb.append(text);
+                } else {
+                    throw new ConfigException.BugOrBroken(
+                            "should not be trying to consolidate token: "
+                                    + valueToken);
+                }
+            }
+
+            Token consolidated = Tokens.newString(firstOrigin, sb.toString());
+            putBack(consolidated);
         }
 
         private ConfigOrigin lineOrigin() {
@@ -101,48 +188,49 @@ final class Parser {
             return new ConfigException.Parse(lineOrigin(), message, cause);
         }
 
-        private AbstractConfigValue parseValue(Token token,
-                Iterator<Token> tokens) {
+        private AbstractConfigValue parseValue(Token token) {
             if (Tokens.isValue(token)) {
                 return Tokens.getValue(token);
             } else if (token == Tokens.OPEN_CURLY) {
-                return parseObject(tokens);
+                return parseObject();
             } else if (token == Tokens.OPEN_SQUARE) {
-                return parseArray(tokens);
+                return parseArray();
             } else {
                 throw parseError("Expecting a value but got wrong token: "
                         + token);
             }
         }
 
-        private AbstractConfigObject parseObject(Iterator<Token> tokens) {
+        private AbstractConfigObject parseObject() {
             // invoked just after the OPEN_CURLY
             Map<String, ConfigValue> values = new HashMap<String, ConfigValue>();
             ConfigOrigin objectOrigin = lineOrigin();
             while (true) {
-                Token t = nextTokenIgnoringNewline(tokens);
+                Token t = nextTokenIgnoringNewline();
                 if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
                     String key = (String) Tokens.getValue(t).unwrapped();
-                    Token afterKey = nextTokenIgnoringNewline(tokens);
+                    Token afterKey = nextTokenIgnoringNewline();
                     if (afterKey != Tokens.COLON) {
                         throw parseError("Key not followed by a colon, followed by token "
                                 + afterKey);
                     }
-                    Token valueToken = nextTokenIgnoringNewline(tokens);
+
+                    consolidateValueTokens();
+                    Token valueToken = nextTokenIgnoringNewline();
 
                     // note how we handle duplicate keys: the last one just
                     // wins.
                     // FIXME in strict JSON, dups should be an error; while in
                     // our custom config language, they should be merged if the
                     // value is an object.
-                    values.put(key, parseValue(valueToken, tokens));
+                    values.put(key, parseValue(valueToken));
                 } else if (t == Tokens.CLOSE_CURLY) {
                     break;
                 } else {
                     throw parseError("Expecting close brace } or a field name, got "
                             + t);
                 }
-                t = nextTokenIgnoringNewline(tokens);
+                t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_CURLY) {
                     break;
                 } else if (t == Tokens.COMMA) {
@@ -155,22 +243,25 @@ final class Parser {
             return new SimpleConfigObject(objectOrigin, null, values);
         }
 
-        private ConfigList parseArray(Iterator<Token> tokens) {
+        private ConfigList parseArray() {
             // invoked just after the OPEN_SQUARE
             ConfigOrigin arrayOrigin = lineOrigin();
             List<ConfigValue> values = new ArrayList<ConfigValue>();
-            Token t = nextTokenIgnoringNewline(tokens);
+
+            consolidateValueTokens();
+
+            Token t = nextTokenIgnoringNewline();
 
             // special-case the first element
             if (t == Tokens.CLOSE_SQUARE) {
                 return new ConfigList(arrayOrigin,
                         Collections.<ConfigValue> emptyList());
             } else if (Tokens.isValue(t)) {
-                values.add(parseValue(t, tokens));
+                values.add(parseValue(t));
             } else if (t == Tokens.OPEN_CURLY) {
-                values.add(parseObject(tokens));
+                values.add(parseObject());
             } else if (t == Tokens.OPEN_SQUARE) {
-                values.add(parseArray(tokens));
+                values.add(parseArray());
             } else {
                 throw parseError("List should have ] or a first element after the open [, instead had token: "
                         + t);
@@ -179,7 +270,7 @@ final class Parser {
             // now remaining elements
             while (true) {
                 // just after a value
-                t = nextTokenIgnoringNewline(tokens);
+                t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_SQUARE) {
                     return new ConfigList(arrayOrigin, values);
                 } else if (t == Tokens.COMMA) {
@@ -190,13 +281,15 @@ final class Parser {
                 }
 
                 // now just after a comma
-                t = nextTokenIgnoringNewline(tokens);
+                consolidateValueTokens();
+
+                t = nextTokenIgnoringNewline();
                 if (Tokens.isValue(t)) {
-                    values.add(parseValue(t, tokens));
+                    values.add(parseValue(t));
                 } else if (t == Tokens.OPEN_CURLY) {
-                    values.add(parseObject(tokens));
+                    values.add(parseObject());
                 } else if (t == Tokens.OPEN_SQUARE) {
-                    values.add(parseArray(tokens));
+                    values.add(parseArray());
                 } else {
                     throw parseError("List should have had new element after a comma, instead had token: "
                             + t);
@@ -204,8 +297,8 @@ final class Parser {
             }
         }
 
-        AbstractConfigValue parse(Iterator<Token> tokens) {
-            Token t = nextTokenIgnoringNewline(tokens);
+        AbstractConfigValue parse() {
+            Token t = nextTokenIgnoringNewline();
             if (t == Tokens.START) {
                 // OK
             } else {
@@ -213,12 +306,12 @@ final class Parser {
                         "token stream did not begin with START, had " + t);
             }
 
-            t = nextTokenIgnoringNewline(tokens);
+            t = nextTokenIgnoringNewline();
             AbstractConfigValue result = null;
             if (t == Tokens.OPEN_CURLY) {
-                result = parseObject(tokens);
+                result = parseObject();
             } else if (t == Tokens.OPEN_SQUARE) {
-                result = parseArray(tokens);
+                result = parseArray();
             } else if (t == Tokens.END) {
                 throw parseError("Empty document");
             } else {
@@ -226,7 +319,7 @@ final class Parser {
                         + t);
             }
 
-            t = nextTokenIgnoringNewline(tokens);
+            t = nextTokenIgnoringNewline();
             if (t == Tokens.END) {
                 return result;
             } else {
@@ -239,7 +332,7 @@ final class Parser {
     private static AbstractConfigValue parse(SyntaxFlavor flavor,
             ConfigOrigin origin,
             Iterator<Token> tokens) {
-        ParseContext context = new ParseContext(flavor, origin);
-        return context.parse(tokens);
+        ParseContext context = new ParseContext(flavor, origin, tokens);
+        return context.parse();
     }
 }

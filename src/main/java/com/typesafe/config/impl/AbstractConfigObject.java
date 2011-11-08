@@ -66,7 +66,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
             if (v.valueType() == ConfigValueType.NULL)
                 throw new ConfigException.Null(v.origin(), originalPath,
-                        expected.name());
+                        expected != null ? expected.name() : null);
             else if (expected != null && v.valueType() != expected)
                 throw new ConfigException.WrongType(v.origin(), originalPath,
                         expected.name(), v.valueType().name());
@@ -361,7 +361,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         for (String k : keySet()) {
             sb.append(k);
             sb.append("->");
-            sb.append(get(k).toString());
+            sb.append(peek(k).toString());
             sb.append(",");
         }
         if (!keySet().isEmpty())

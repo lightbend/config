@@ -49,4 +49,9 @@ final class ConfigLong extends AbstractConfigValue {
         else
             return unwrapped().hashCode(); // use Long.hashCode()
     }
+
+    @Override
+    String transformToString() {
+        return Long.toString(value);
+    }
 }

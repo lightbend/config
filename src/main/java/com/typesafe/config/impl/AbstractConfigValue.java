@@ -55,4 +55,13 @@ abstract class AbstractConfigValue implements ConfigValue {
     public String toString() {
         return valueType().name() + "(" + unwrapped() + ")";
     }
+
+    // toString() is a debugging-oriented string but this is defined
+    // to create a string that would parse back to the value in JSON.
+    // It only works for primitive values (that would be a single token)
+    // which are auto-converted to strings when concatenating with
+    // other strings or by the DefaultTransformer.
+    String transformToString() {
+        return null;
+    }
 }

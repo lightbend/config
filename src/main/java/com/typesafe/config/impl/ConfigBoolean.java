@@ -21,4 +21,9 @@ final class ConfigBoolean extends AbstractConfigValue {
     public Boolean unwrapped() {
         return value;
     }
+
+    @Override
+    String transformToString() {
+        return value ? "true" : "false";
+    }
 }

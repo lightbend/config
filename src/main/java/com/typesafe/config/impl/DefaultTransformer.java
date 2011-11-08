@@ -38,15 +38,17 @@ class DefaultTransformer implements ConfigTransformer {
                 break;
             }
         } else if (requested == ConfigValueType.STRING) {
+            // if we converted null to string here, then you wouldn't properly
+            // get a missing-value error if you tried to get a null value
+            // as a string.
             switch (value.valueType()) {
             case NUMBER: // FALL THROUGH
             case BOOLEAN:
-                return new ConfigString(value.origin(), value.unwrapped()
-                        .toString());
+                return new ConfigString(value.origin(),
+                        ((AbstractConfigValue) value).transformToString());
             }
         }
 
         return value;
     }
-
 }
