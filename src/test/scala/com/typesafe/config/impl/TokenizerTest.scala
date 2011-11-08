@@ -14,6 +14,15 @@ class TokenizerTest extends TestUtils {
     def setup() {
     }
 
+    def tokenTrue = Tokens.newBoolean(fakeOrigin(), true)
+    def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
+    def tokenNull = Tokens.newNull(fakeOrigin())
+    def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
+    def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
+    def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d)
+    def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i)
+    def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l)
+
     def tokenize(origin: ConfigOrigin, input: Reader): java.util.Iterator[Token] = {
         Tokenizer.tokenize(origin, input)
     }
@@ -46,9 +55,9 @@ class TokenizerTest extends TestUtils {
         // but spec is unclear to me when spaces are required, and banning them
         // is actually extra work).
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
-            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.newString(fakeOrigin(), "foo"),
-            Tokens.newBoolean(fakeOrigin(), true), Tokens.newDouble(fakeOrigin(), 3.14), Tokens.newBoolean(fakeOrigin(), false),
-            Tokens.newLong(fakeOrigin(), 42), Tokens.newNull(fakeOrigin()), Tokens.newLine(0), Tokens.END)
+            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
+            tokenTrue, tokenDouble(3.14), tokenFalse,
+            tokenLong(42), tokenNull, Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList(""",:}{]["foo"true3.14false42null""" + "\n"))
     }
 
@@ -58,9 +67,9 @@ class TokenizerTest extends TestUtils {
         // but spec is unclear to me when spaces are required, and banning them
         // is actually extra work)
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
-            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.newString(fakeOrigin(), "foo"),
-            Tokens.newLong(fakeOrigin(), 42), Tokens.newBoolean(fakeOrigin(), true), Tokens.newDouble(fakeOrigin(), 3.14),
-            Tokens.newBoolean(fakeOrigin(), false), Tokens.newNull(fakeOrigin()), Tokens.newLine(0), Tokens.END)
+            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
+            tokenLong(42), tokenTrue, tokenDouble(3.14),
+            tokenFalse, tokenNull, Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList(""" , : } { ] [ "foo" 42 true 3.14 false null """ + "\n "))
     }
 
@@ -70,64 +79,64 @@ class TokenizerTest extends TestUtils {
         // but spec is unclear to me when spaces are required, and banning them
         // is actually extra work)
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
-            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.newString(fakeOrigin(), "foo"),
-            Tokens.newLong(fakeOrigin(), 42), Tokens.newBoolean(fakeOrigin(), true), Tokens.newDouble(fakeOrigin(), 3.14),
-            Tokens.newBoolean(fakeOrigin(), false), Tokens.newNull(fakeOrigin()), Tokens.newLine(0), Tokens.END)
+            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
+            tokenLong(42), tokenTrue, tokenDouble(3.14),
+            tokenFalse, tokenNull, Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList("""   ,   :   }   {   ]   [   "foo"   42   true   3.14   false   null   """ + "\n   "))
     }
 
     @Test
     def tokenizeTrueAndUnquotedText() {
-        val expected = List(Tokens.START, Tokens.newBoolean(fakeOrigin(), true), Tokens.newUnquotedText(fakeOrigin(), "foo"), Tokens.END)
+        val expected = List(Tokens.START, tokenTrue, tokenUnquoted("foo"), Tokens.END)
         assertEquals(expected, tokenizeAsList("""truefoo"""))
     }
 
     @Test
     def tokenizeFalseAndUnquotedText() {
-        val expected = List(Tokens.START, Tokens.newBoolean(fakeOrigin(), false), Tokens.newUnquotedText(fakeOrigin(), "foo"), Tokens.END)
+        val expected = List(Tokens.START, tokenFalse, tokenUnquoted("foo"), Tokens.END)
         assertEquals(expected, tokenizeAsList("""falsefoo"""))
     }
 
     @Test
     def tokenizeNullAndUnquotedText() {
-        val expected = List(Tokens.START, Tokens.newNull(fakeOrigin()), Tokens.newUnquotedText(fakeOrigin(), "foo"), Tokens.END)
+        val expected = List(Tokens.START, tokenNull, tokenUnquoted("foo"), Tokens.END)
         assertEquals(expected, tokenizeAsList("""nullfoo"""))
     }
 
     @Test
     def tokenizeUnquotedTextContainingTrue() {
-        val expected = List(Tokens.START, Tokens.newUnquotedText(fakeOrigin(), "footrue"), Tokens.END)
+        val expected = List(Tokens.START, tokenUnquoted("footrue"), Tokens.END)
         assertEquals(expected, tokenizeAsList("""footrue"""))
     }
 
     @Test
     def tokenizeUnquotedTextContainingSpaceTrue() {
-        val expected = List(Tokens.START, Tokens.newUnquotedText(fakeOrigin(), "foo true"), Tokens.END)
+        val expected = List(Tokens.START, tokenUnquoted("foo true"), Tokens.END)
         assertEquals(expected, tokenizeAsList("""foo true"""))
     }
 
     @Test
     def tokenizeTrueAndSpaceAndUnquotedText() {
-        val expected = List(Tokens.START, Tokens.newBoolean(fakeOrigin(), true), Tokens.newUnquotedText(fakeOrigin(), "foo"), Tokens.END)
+        val expected = List(Tokens.START, tokenTrue, tokenUnquoted("foo"), Tokens.END)
         assertEquals(expected, tokenizeAsList("""true foo"""))
     }
 
     @Test
     def tokenizeUnquotedTextTrimsSpaces() {
-        val expected = List(Tokens.START, Tokens.newUnquotedText(fakeOrigin(), "foo"), Tokens.newLine(0), Tokens.END)
+        val expected = List(Tokens.START, tokenUnquoted("foo"), Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList("    foo     \n"))
     }
 
     @Test
     def tokenizeUnquotedTextKeepsInternalSpaces() {
-        val expected = List(Tokens.START, Tokens.newUnquotedText(fakeOrigin(), "foo  bar baz"), Tokens.newLine(0), Tokens.END)
+        val expected = List(Tokens.START, tokenUnquoted("foo  bar baz"), Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList("    foo  bar baz   \n"))
     }
 
     @Test
     def tokenizeMixedUnquotedQuoted() {
-        val expected = List(Tokens.START, Tokens.newUnquotedText(fakeOrigin(), "foo"),
-            Tokens.newString(fakeOrigin(), "bar"), Tokens.newUnquotedText(fakeOrigin(), "baz"),
+        val expected = List(Tokens.START, tokenUnquoted("foo"),
+            tokenString("bar"), tokenUnquoted("baz"),
             Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList("    foo\"bar\"baz   \n"))
     }
@@ -183,9 +192,9 @@ class TokenizerTest extends TestUtils {
         abstract class NumberTest(val s: String, val result: Token)
         case class LongTest(override val s: String, override val result: Token) extends NumberTest(s, result)
         case class DoubleTest(override val s: String, override val result: Token) extends NumberTest(s, result)
-        implicit def pair2inttest(pair: (String, Int)) = LongTest(pair._1, Tokens.newLong(fakeOrigin(), pair._2))
-        implicit def pair2longtest(pair: (String, Long)) = LongTest(pair._1, Tokens.newLong(fakeOrigin(), pair._2))
-        implicit def pair2doubletest(pair: (String, Double)) = DoubleTest(pair._1, Tokens.newDouble(fakeOrigin(), pair._2))
+        implicit def pair2inttest(pair: (String, Int)) = LongTest(pair._1, tokenLong(pair._2))
+        implicit def pair2longtest(pair: (String, Long)) = LongTest(pair._1, tokenLong(pair._2))
+        implicit def pair2doubletest(pair: (String, Double)) = DoubleTest(pair._1, tokenDouble(pair._2))
 
         val tests = List[NumberTest](("1", 1),
             ("1.2", 1.2),
