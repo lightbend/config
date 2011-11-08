@@ -262,6 +262,48 @@ final class Tokenizer {
             return Tokens.newString(lineOrigin(), sb.toString());
         }
 
+        private Token pullSubstitution() {
+            // the initial '$' has already been consumed
+            ConfigOrigin origin = lineOrigin();
+            int c = nextChar();
+            if (c != '{') {
+                throw parseError("'$' not followed by {");
+            }
+
+            String reference = null;
+            boolean wasQuoted = false;
+
+            do {
+                c = nextChar();
+                if (c == -1)
+                    throw parseError("End of input but substitution was still open");
+
+                if (c == '"') {
+                    if (reference != null)
+                        throw parseError("Substitution contains multiple string values");
+                    Token t = pullQuotedString();
+                    AbstractConfigValue v = Tokens.getValue(t);
+                    reference = ((ConfigString) v).unwrapped();
+                    wasQuoted = true;
+                } else if (c == '}') {
+                    // end the loop, done!
+                } else {
+                    if (reference != null || notInUnquotedText.indexOf(c) >= 0
+                            || isWhitespace(c))
+                        throw parseError("Substitution contains multiple string values or invalid char: '"
+                                + ((char) c) + "'");
+                    putBack(c);
+                    Token t = pullUnquotedText();
+                    if (!Tokens.isUnquotedText(t)) {
+                        throw parseError("Substitution contains non-string token, try quoting it: "
+                                + t);
+                    }
+                    reference = Tokens.getUnquotedText(t);
+                }
+            } while (c != '}');
+            return Tokens.newSubstitution(origin, reference, wasQuoted);
+        }
+
         // called if the next token is not a simple value;
         // discards any whitespace we were saving between
         // simple values.
@@ -305,6 +347,10 @@ final class Tokenizer {
                 switch (c) {
                 case '"':
                     t = pullQuotedString();
+                    tIsSimpleValue = true;
+                    break;
+                case '$':
+                    t = pullSubstitution();
                     tIsSimpleValue = true;
                     break;
                 case ':':

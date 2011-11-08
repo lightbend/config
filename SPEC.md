@@ -191,6 +191,12 @@ simplified HOCON value when merged:
 Substitutions are a way of referring to other parts of the configuration
 tree.
 
+The syntax is `${stringvalue}` where the `stringvalue` may be an unquoted or a
+quoted string, following the usual rules. `stringvalue` may not be a value
+concatenation, only a single string, so for example whitespace requires quoting.
+`stringvalue` may not be a non-string value such as `true`, you would have to quote
+it as `"true"`.
+
 Substitution processing is performed as the last parsing step, so a
 substitution can look forward in the configuration file and even retrieve a
 value from a Java System property. This also means that a substitution will
@@ -210,6 +216,8 @@ to be concatenated) then it is an error if the substituted value is an
 object or array. Otherwise the value is converted to a string value as follows:
 
  - `null` is converted to an empty string, not the string `null`
+   (note that this differs from a literal null value in a value
+   concatenation, which becomes the string "null")
  - strings are already strings
  - numbers are converted to a string that would parse as a valid number in
    HOCON

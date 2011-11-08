@@ -18,6 +18,8 @@ class TokenizerTest extends TestUtils {
     def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
     def tokenNull = Tokens.newNull(fakeOrigin())
     def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
+    def tokenKeySubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, true /* wasQuoted */ )
+    def tokenPathSubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, false /* wasQuoted */ )
     def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
     def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d)
     def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i)
@@ -57,8 +59,9 @@ class TokenizerTest extends TestUtils {
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenTrue, tokenDouble(3.14), tokenFalse,
-            tokenLong(42), tokenNull, Tokens.newLine(0), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""",:}{]["foo"true3.14false42null""" + "\n"))
+            tokenLong(42), tokenNull, tokenPathSubstitution("a.b"),
+            tokenKeySubstitution("c.d"), Tokens.newLine(0), Tokens.END)
+        assertEquals(expected, tokenizeAsList(""",:}{]["foo"true3.14false42null${a.b}${"c.d"}""" + "\n"))
     }
 
     @Test
@@ -67,8 +70,9 @@ class TokenizerTest extends TestUtils {
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
             tokenDouble(3.14), tokenUnquoted(" "), tokenFalse, tokenUnquoted(" "), tokenNull,
+            tokenUnquoted(" "), tokenPathSubstitution("a.b"), tokenUnquoted(" "), tokenKeySubstitution("c.d"),
             Tokens.newLine(0), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""" , : } { ] [ "foo" 42 true 3.14 false null """ + "\n "))
+        assertEquals(expected, tokenizeAsList(""" , : } { ] [ "foo" 42 true 3.14 false null ${a.b} ${"c.d"} """ + "\n "))
     }
 
     @Test
@@ -77,8 +81,10 @@ class TokenizerTest extends TestUtils {
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
             tokenDouble(3.14), tokenUnquoted("   "), tokenFalse, tokenUnquoted("   "), tokenNull,
+            tokenUnquoted("   "), tokenPathSubstitution("a.b"), tokenUnquoted("   "),
+            tokenKeySubstitution("c.d"),
             Tokens.newLine(0), Tokens.END)
-        assertEquals(expected, tokenizeAsList("""   ,   :   }   {   ]   [   "foo"   42   true   3.14   false   null   """ + "\n   "))
+        assertEquals(expected, tokenizeAsList("""   ,   :   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${"c.d"}  """ + "\n   "))
     }
 
     @Test

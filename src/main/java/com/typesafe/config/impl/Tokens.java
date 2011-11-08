@@ -121,6 +121,59 @@ final class Tokens {
         }
     }
 
+    // This is not a Value, because it requires special processing
+    static private class Substitution extends Token {
+        private ConfigOrigin origin;
+        private String value;
+        private boolean isPath;
+
+        Substitution(ConfigOrigin origin, String s, boolean wasQuoted) {
+            super(TokenType.SUBSTITUTION);
+            this.origin = origin;
+            this.value = s;
+            // if the string is not quoted and contains '.' then
+            // it's a path rather than just a key name.
+
+            this.isPath = (!wasQuoted) && s.indexOf('.') >= 0;
+        }
+
+        ConfigOrigin origin() {
+            return origin;
+        }
+
+        String value() {
+            return value;
+        }
+
+        boolean isPath() {
+            return isPath;
+        }
+
+        @Override
+        public String toString() {
+            return tokenType().name() + "(" + value + ",isPath=" + isPath
+                    + ")";
+        }
+
+        @Override
+        protected boolean canEqual(Object other) {
+            return other instanceof Substitution;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return super.equals(other)
+                    && ((Substitution) other).value.equals(value)
+                    && ((Substitution) other).isPath() == this.isPath();
+        }
+
+        @Override
+        public int hashCode() {
+            return 41 * (41 * (41 + super.hashCode()) + value.hashCode())
+                    + new Boolean(isPath()).hashCode();
+        }
+    }
+
     static boolean isValue(Token token) {
         return token instanceof Value;
     }
@@ -173,16 +226,36 @@ final class Tokens {
         }
     }
 
-    /*
-     * static ConfigString newStringValueFromTokens(Token... tokens) {
-     * StringBuilder sb = new StringBuilder(); for (Token t : tokens) { if
-     * (isValue(t)) { ConfigValue v = getValue(t); if (v instanceof
-     * ConfigString) { sb.append(((ConfigString) v).unwrapped()); } else { //
-     * FIXME convert non-strings to string throw new
-     * ConfigException.BugOrBroken( "not handling non-strings here"); } } else
-     * if (isUnquotedText(t)) { String s = getUnquotedText(t); sb.append(s); }
-     * else { throw new ConfigException. } } }
-     */
+    static boolean isSubstitution(Token token) {
+        return token instanceof Substitution;
+    }
+
+    static String getSubstitution(Token token) {
+        if (token instanceof Substitution) {
+            return ((Substitution) token).value();
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "tried to get substitution from " + token);
+        }
+    }
+
+    static ConfigOrigin getSubstitutionOrigin(Token token) {
+        if (token instanceof Substitution) {
+            return ((Substitution) token).origin();
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "tried to get substitution origin from " + token);
+        }
+    }
+
+    static boolean getSubstitutionIsPath(Token token) {
+        if (token instanceof Substitution) {
+            return ((Substitution) token).isPath();
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "tried to get substitution is path from " + token);
+        }
+    }
 
     static Token START = new Token(TokenType.START);
     static Token END = new Token(TokenType.END);
@@ -199,6 +272,11 @@ final class Tokens {
 
     static Token newUnquotedText(ConfigOrigin origin, String s) {
         return new UnquotedText(origin, s);
+    }
+
+    static Token newSubstitution(ConfigOrigin origin, String s,
+            boolean wasQuoted) {
+        return new Substitution(origin, s, wasQuoted);
     }
 
     static Token newValue(AbstractConfigValue value) {
