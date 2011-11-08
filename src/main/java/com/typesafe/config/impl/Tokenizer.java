@@ -128,7 +128,7 @@ final class Tokenizer {
                 } else if (isWhitespace(c)) {
                     break;
                 } else {
-                    sb.append((char) c);
+                    sb.appendCodePoint(c);
                 }
 
                 // we parse true/false/null tokens as such no matter
@@ -158,13 +158,13 @@ final class Tokenizer {
 
         private Token pullNumber(int firstChar) {
             StringBuilder sb = new StringBuilder();
-            sb.append((char) firstChar);
+            sb.appendCodePoint(firstChar);
             boolean containedDecimalOrE = false;
             int c = nextChar();
             while (c != -1 && numberChars.indexOf(c) >= 0) {
                 if (c == '.' || c == 'e' || c == 'E')
                     containedDecimalOrE = true;
-                sb.append((char) c);
+                sb.appendCodePoint(c);
                 c = nextChar();
             }
             // the last character we looked at wasn't part of the number, put it
@@ -256,7 +256,7 @@ final class Tokenizer {
                 } else if (c == '"') {
                     // end the loop, done!
                 } else {
-                    sb.append((char) c);
+                    sb.appendCodePoint(c);
                 }
             } while (c != '"');
             return Tokens.newString(lineOrigin(), sb.toString());
