@@ -66,4 +66,17 @@ class ConfigValueTest extends TestUtils {
         checkEqualObjects(a, sameAsA)
         checkNotEqualObjects(a, b)
     }
+
+    @Test
+    def substitutionEquality() {
+        val a = new Substitution("foo", SubstitutionStyle.KEY);
+        val sameAsA = new Substitution("foo", SubstitutionStyle.KEY);
+        val differentRef = new Substitution("bar", SubstitutionStyle.KEY);
+        val differentStyle = new Substitution("foo", SubstitutionStyle.PATH);
+
+        checkEqualObjects(a, a)
+        checkEqualObjects(a, sameAsA)
+        checkNotEqualObjects(a, differentRef)
+        checkNotEqualObjects(a, differentStyle)
+    }
 }

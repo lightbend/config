@@ -127,14 +127,14 @@ final class Tokens {
         private String value;
         private boolean isPath;
 
-        Substitution(ConfigOrigin origin, String s, boolean wasQuoted) {
+        Substitution(ConfigOrigin origin, String s, SubstitutionStyle style) {
             super(TokenType.SUBSTITUTION);
             this.origin = origin;
             this.value = s;
             // if the string is not quoted and contains '.' then
             // it's a path rather than just a key name.
 
-            this.isPath = (!wasQuoted) && s.indexOf('.') >= 0;
+            this.isPath = style == SubstitutionStyle.PATH;
         }
 
         ConfigOrigin origin() {
@@ -248,12 +248,13 @@ final class Tokens {
         }
     }
 
-    static boolean getSubstitutionIsPath(Token token) {
+    static SubstitutionStyle getSubstitutionStyle(Token token) {
         if (token instanceof Substitution) {
-            return ((Substitution) token).isPath();
+            return ((Substitution) token).isPath() ? SubstitutionStyle.PATH
+                    : SubstitutionStyle.KEY;
         } else {
             throw new ConfigException.BugOrBroken(
-                    "tried to get substitution is path from " + token);
+                    "tried to get substitution style from " + token);
         }
     }
 
@@ -275,8 +276,8 @@ final class Tokens {
     }
 
     static Token newSubstitution(ConfigOrigin origin, String s,
-            boolean wasQuoted) {
-        return new Substitution(origin, s, wasQuoted);
+            SubstitutionStyle style) {
+        return new Substitution(origin, s, style);
     }
 
     static Token newValue(AbstractConfigValue value) {

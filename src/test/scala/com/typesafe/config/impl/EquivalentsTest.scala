@@ -28,6 +28,26 @@ class EquivalentsTest extends TestUtils {
         files
     }
 
+    private def postParse(value: ConfigValue) = {
+        value match {
+            case v: AbstractConfigObject =>
+                // for purposes of these tests, substitutions are only
+                // against the same file's root, and without looking at
+                // system prop or env variable fallbacks.
+                SubstitutionResolver.resolveWithoutFallbacks(v, v)
+            case v =>
+                v
+        }
+    }
+
+    private def parse(flavor: SyntaxFlavor, f: File) = {
+        postParse(Parser.parse(flavor, f))
+    }
+
+    private def parse(f: File) = {
+        postParse(Parser.parse(f))
+    }
+
     // would like each "equivNN" directory to be a suite and each file in the dir
     // to be a test, but not sure how to convince junit to do that.
     @Test
@@ -43,11 +63,11 @@ class EquivalentsTest extends TestUtils {
                 throw new RuntimeException("Need a file named 'original' in " + equiv.getPath())
             if (originals.size > 1)
                 throw new RuntimeException("Multiple 'original' files in " + equiv.getPath() + ": " + originals)
-            val original = Parser.parse(originals(0))
+            val original = parse(originals(0))
 
             for (testFile <- others) {
                 fileCount += 1
-                val value = Parser.parse(testFile)
+                val value = parse(testFile)
                 describeFailure(testFile.getPath()) {
                     assertEquals(original, value)
                 }
@@ -55,7 +75,7 @@ class EquivalentsTest extends TestUtils {
                 // check that all .json files can be parsed as .conf,
                 // i.e. .conf must be a superset of JSON
                 if (testFile.getName().endsWith(".json")) {
-                    val parsedAsConf = Parser.parse(SyntaxFlavor.CONF, testFile)
+                    val parsedAsConf = parse(SyntaxFlavor.CONF, testFile)
                     describeFailure(testFile.getPath() + " parsed as .conf") {
                         assertEquals(original, parsedAsConf)
                     }
@@ -66,6 +86,6 @@ class EquivalentsTest extends TestUtils {
         // This is a little "checksum" to be sure we really tested what we were expecting.
         // it breaks every time you add a file, so you have to update it.
         assertEquals(1, dirCount)
-        assertEquals(2, fileCount)
+        assertEquals(3, fileCount)
     }
 }

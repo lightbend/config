@@ -1,6 +1,7 @@
 package com.typesafe.config.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
@@ -47,6 +48,14 @@ public class ConfigImpl {
                 withExtraTransformer(extraTransformer));
     }
 
+    public static ConfigObject getSystemPropertiesAsConfig(
+            ConfigTransformer extraTransformer) {
+        // This should not need to create a new config object
+        // as long as the transformer is just the default transformer.
+        return AbstractConfigObject.transformed(systemPropertiesConfig(),
+                withExtraTransformer(extraTransformer));
+    }
+
     private static ConfigTransformer withExtraTransformer(
             ConfigTransformer extraTransformer) {
         // idea is to avoid creating a new, unique transformer if there's no
@@ -72,7 +81,7 @@ public class ConfigImpl {
 
     private static AbstractConfigObject systemProperties = null;
 
-    private synchronized static AbstractConfigObject systemPropertiesConfig() {
+    synchronized static AbstractConfigObject systemPropertiesConfig() {
         if (systemProperties == null) {
             systemProperties = loadSystemProperties();
         }
@@ -82,6 +91,11 @@ public class ConfigImpl {
     private static AbstractConfigObject loadSystemProperties() {
         return fromProperties("system property", System.getProperties());
 
+    }
+
+    // this is a hack to let us set system props in the test suite
+    synchronized static void dropSystemPropertiesConfig() {
+        systemProperties = null;
     }
 
     private static AbstractConfigObject fromProperties(String originPrefix,
@@ -121,6 +135,9 @@ public class ConfigImpl {
         // put everything in its parent, ensuring all parents exist
         for (String path : childPaths) {
             String parentPath = ConfigUtil.exceptLastElement(path);
+            if (parentPath == null)
+                parentPath = "";
+
             Map<String, ConfigValue> parent = scopes.get(parentPath);
             if (parent == null) {
                 parent = new HashMap<String, ConfigValue>();
@@ -136,15 +153,21 @@ public class ConfigImpl {
             parent.put(basename, o);
         }
 
+        Map<String, ConfigValue> root = scopes.get("");
+        if (root == null) {
+            // this would happen only if you had no properties at all
+            // in "props"
+            root = Collections.<String, ConfigValue> emptyMap();
+        }
+
         // return root config object
         return new SimpleConfigObject(new SimpleConfigOrigin(originPrefix),
-                null,
-                scopes.get(""));
+                null, root);
     }
 
     private static AbstractConfigObject envVariables = null;
 
-    private synchronized static AbstractConfigObject envVariablesConfig() {
+    synchronized static AbstractConfigObject envVariablesConfig() {
         if (envVariables == null) {
             envVariables = loadEnvVariables();
         }

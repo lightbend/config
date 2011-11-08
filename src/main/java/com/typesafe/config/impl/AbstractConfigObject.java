@@ -34,6 +34,66 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      */
     protected abstract ConfigValue peek(String key);
 
+    protected ConfigValue peek(String key, SubstitutionResolver resolver,
+            int depth, boolean withFallbacks) {
+        ConfigValue v = peek(key);
+
+        if (v != null && resolver != null) {
+            v = resolver.resolve((AbstractConfigValue) v, depth, withFallbacks);
+        }
+
+        return v;
+    }
+
+    /**
+     * Looks up the path with no transformation, type conversion, or exceptions
+     * (just returns null if path not found).
+     */
+    protected ConfigValue peekPath(String path) {
+        return peekPath(this, path);
+    }
+
+    protected ConfigValue peekPath(String path, SubstitutionResolver resolver,
+            int depth,
+            boolean withFallbacks) {
+        return peekPath(this, path, resolver, depth, withFallbacks);
+    }
+
+    private static ConfigValue peekPath(AbstractConfigObject self, String path) {
+        return peekPath(self, path, null, 0, false);
+    }
+
+    private static ConfigValue peekPath(AbstractConfigObject self, String path,
+            SubstitutionResolver resolver, int depth, boolean withFallbacks) {
+        String key = ConfigUtil.firstElement(path);
+        String next = ConfigUtil.otherElements(path);
+
+        if (next == null) {
+            ConfigValue v = self.peek(key, resolver, depth, withFallbacks);
+            return v;
+        } else {
+            // it's important to ONLY resolve substitutions here, not
+            // all values, because if you resolve arrays or objects
+            // it creates unnecessary cycles as a side effect (any sibling
+            // of the object we want to follow could cause a cycle, not just
+            // the object we want to follow).
+
+            ConfigValue v = self.peek(key);
+
+            if (v instanceof ConfigSubstitution && resolver != null) {
+                v = resolver.resolve((AbstractConfigValue) v, depth,
+                        withFallbacks);
+            }
+
+            if (v instanceof AbstractConfigObject) {
+                return peekPath((AbstractConfigObject) v, next, resolver,
+                        depth, withFallbacks);
+            } else {
+                return null;
+            }
+        }
+    }
+
     @Override
     public ConfigValueType valueType() {
         return ConfigValueType.OBJECT;
@@ -51,7 +111,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return transformed(obj, transformer);
     }
 
-    static private ConfigValue resolve(AbstractConfigObject self, String path,
+    static private ConfigValue resolve(AbstractConfigObject self,
+            String path,
             ConfigValueType expected, ConfigTransformer transformer,
             String originalPath) {
         String key = ConfigUtil.firstElement(path);
@@ -61,6 +122,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             if (v == null)
                 throw new ConfigException.Missing(originalPath);
 
+            // FIXME if ConfigTransformer remains public API then
+            // casting to AbstractConfigValue here is broken,
+            // but want to make it not public API.
             if (expected != null && transformer != null)
                 v = transformer.transform(v, expected);
 
@@ -79,7 +143,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         }
     }
 
-    private ConfigValue resolve(String path, ConfigValueType expected,
+    ConfigValue resolve(String path, ConfigValueType expected,
             String originalPath) {
         return resolve(this, path, expected, transformer, originalPath);
     }
@@ -133,6 +197,34 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             }
 
             return new SimpleConfigObject(origin, transformer, merged);
+        }
+    }
+
+    @Override
+    AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
+            int depth,
+            boolean withFallbacks) {
+        Map<String, ConfigValue> changes = new HashMap<String, ConfigValue>();
+        for (String k : keySet()) {
+            AbstractConfigValue v = (AbstractConfigValue) peek(k);
+            AbstractConfigValue resolved = resolver.resolve(v, depth,
+                    withFallbacks);
+            if (resolved != v) {
+                changes.put(k, resolved);
+            }
+        }
+        if (changes.isEmpty()) {
+            return this;
+        } else {
+            Map<String, ConfigValue> resolved = new HashMap<String, ConfigValue>();
+            for (String k : keySet()) {
+                if (changes.containsKey(k)) {
+                    resolved.put(k, changes.get(k));
+                } else {
+                    resolved.put(k, peek(k));
+                }
+            }
+            return new SimpleConfigObject(origin(), transformer, resolved);
         }
     }
 
@@ -234,7 +326,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             }
             if (v.valueType() != expected)
                 throw new ConfigException.WrongType(v.origin(), path,
-                        expected.name(), v.valueType().name());
+                        "list of " + expected.name(), "list of "
+                                + v.valueType().name());
             l.add((T) v.unwrapped());
         }
         return l;

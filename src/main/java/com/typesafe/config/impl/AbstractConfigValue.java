@@ -16,6 +16,24 @@ abstract class AbstractConfigValue implements ConfigValue {
         return this.origin;
     }
 
+    /**
+     * Called only by SubstitutionResolver object.
+     *
+     * @param resolver
+     *            the resolver doing the resolving
+     * @param depth
+     *            the number of substitutions followed in resolving the current
+     *            one
+     * @param withFallbacks
+     *            whether to look at system props and env vars
+     * @return a new value if there were changes, or this if no changes
+     */
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
+            int depth,
+            boolean withFallbacks) {
+        return this;
+    }
+
     protected boolean canEqual(Object other) {
         return other instanceof ConfigValue;
     }

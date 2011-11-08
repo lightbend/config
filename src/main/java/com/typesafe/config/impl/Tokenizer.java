@@ -301,7 +301,10 @@ final class Tokenizer {
                     reference = Tokens.getUnquotedText(t);
                 }
             } while (c != '}');
-            return Tokens.newSubstitution(origin, reference, wasQuoted);
+
+            SubstitutionStyle style = ((!wasQuoted) && reference.indexOf('.') >= 0) ? SubstitutionStyle.PATH
+                    : SubstitutionStyle.KEY;
+            return Tokens.newSubstitution(origin, reference, style);
         }
 
         // called if the next token is not a simple value;

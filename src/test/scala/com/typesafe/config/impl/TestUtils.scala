@@ -48,9 +48,16 @@ abstract trait TestUtils {
         new SimpleConfigOrigin("fake origin")
     }
 
-    case class ParseTest(liftBehaviorUnexpected: Boolean, test: String)
+    case class ParseTest(liftBehaviorUnexpected: Boolean, whitespaceMatters: Boolean, test: String)
+    object ParseTest {
+        def apply(liftBehaviorUnexpected: Boolean, test: String): ParseTest = {
+            ParseTest(liftBehaviorUnexpected, false, test);
+        }
+    }
     implicit def string2jsontest(test: String): ParseTest = ParseTest(false, test)
 
+    // note: it's important to put {} or [] at the root if you
+    // want to test "invalidity reasons" other than "wrong root"
     private val invalidJsonInvalidConf = List[ParseTest]("", // empty document
         "{",
         "}",
@@ -78,6 +85,13 @@ abstract trait TestUtils {
         "{}true", // trailing token after the root object
         ParseTest(true, "[]{}"), // trailing valid token after the root array
         "[]true", // trailing valid token after the root array
+        "[${]", // unclosed substitution
+        "[$]", // '$' by itself
+        ParseTest(false, true, "[${ foo.bar}]"), // substitution with leading spaces
+        ParseTest(false, true, "[${foo.bar }]"), // substitution with trailing spaces
+        ParseTest(false, true, "[${ \"foo.bar\"}]"), // substitution with leading spaces and quoted
+        ParseTest(false, true, "[${\"foo.bar\" }]"), // substitution with trailing spaces and quoted
+        "[${true}]", // substitution with unquoted true token
         "") // empty document again, just for clean formatting of this list ;-)
 
     // We'll automatically try each of these with whitespace modifications
@@ -112,7 +126,11 @@ abstract trait TestUtils {
         "[ tru ]",
         "[ trux ]",
         "[ truex ]",
-        "[ 10x ]") // number token with trailing junk
+        "[ 10x ]", // number token with trailing junk
+        "[ ${foo} ]",
+        "[ ${\"foo\"} ]",
+        "[ ${foo.bar} ]",
+        "[ ${\"foo.bar\"} ]")
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
 
@@ -130,10 +148,13 @@ abstract trait TestUtils {
             { s: String => s.replace(":", " : ") }, // could break with : in a key or value
             { s: String => s.replace(",", " , ") } // could break with , in a key or value
             )
-        for {
-            t <- tests
-            v <- variations
-        } yield ParseTest(t.liftBehaviorUnexpected, v(t.test))
+        tests flatMap { t =>
+            if (t.whitespaceMatters) {
+                return Seq(t)
+            } else {
+                for (v <- variations)
+                    yield ParseTest(t.liftBehaviorUnexpected, v(t.test))
+            }
+        }
     }
-
 }

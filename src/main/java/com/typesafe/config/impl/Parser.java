@@ -99,12 +99,16 @@ final class Parser {
                 t = buffer.pop();
             }
 
-            if (Tokens.isUnquotedText(t) && flavor == SyntaxFlavor.JSON) {
-                throw parseError("Token not allowed in valid JSON: '"
+            if (flavor == SyntaxFlavor.JSON) {
+                if (Tokens.isUnquotedText(t)) {
+                    throw parseError("Token not allowed in valid JSON: '"
                         + Tokens.getUnquotedText(t) + "'");
-            } else {
-                return t;
+                } else if (Tokens.isSubstitution(t)) {
+                    throw parseError("Substitutions (${} syntax) not allowed in JSON");
+                }
             }
+
+            return t;
         }
 
         private void putBack(Token token) {
@@ -130,8 +134,8 @@ final class Parser {
 
             List<Token> values = null; // create only if we have value tokens
             Token t = nextTokenIgnoringNewline(); // ignore a newline up front
-            while (Tokens.isValue(t)
-                    || Tokens.isUnquotedText(t)) {
+            while (Tokens.isValue(t) || Tokens.isUnquotedText(t)
+                    || Tokens.isSubstitution(t)) {
                 if (values == null)
                     values = new ArrayList<Token>();
                 values.add(t);
@@ -143,11 +147,14 @@ final class Parser {
             if (values == null)
                 return;
 
-            if (values.size() == 1 && !Tokens.isUnquotedText(values.get(0))) {
+            if (values.size() == 1 && Tokens.isValue(values.get(0))) {
                 // a single value token requires no consolidation
                 putBack(values.get(0));
                 return;
             }
+
+            // this will be a list of String and Substitution
+            List<Object> minimized = new ArrayList<Object>();
 
             // we have multiple value tokens or one unquoted text token;
             // collapse into a string token.
@@ -164,6 +171,20 @@ final class Parser {
                     if (firstOrigin == null)
                         firstOrigin = Tokens.getUnquotedTextOrigin(valueToken);
                     sb.append(text);
+                } else if (Tokens.isSubstitution(valueToken)) {
+                    if (firstOrigin == null)
+                        firstOrigin = Tokens.getSubstitutionOrigin(valueToken);
+
+                    if (sb.length() > 0) {
+                        // save string so far
+                        minimized.add(sb.toString());
+                        sb.setLength(0);
+                    }
+                    // now save substitution
+                    String reference = Tokens.getSubstitution(valueToken);
+                    SubstitutionStyle style = Tokens
+                            .getSubstitutionStyle(valueToken);
+                    minimized.add(new Substitution(reference, style));
                 } else {
                     throw new ConfigException.BugOrBroken(
                             "should not be trying to consolidate token: "
@@ -171,7 +192,26 @@ final class Parser {
                 }
             }
 
-            Token consolidated = Tokens.newString(firstOrigin, sb.toString());
+            if (sb.length() > 0) {
+                // save string so far
+                minimized.add(sb.toString());
+            }
+
+            if (minimized.isEmpty())
+                throw new ConfigException.BugOrBroken(
+                        "trying to consolidate values to nothing");
+
+            Token consolidated = null;
+
+            if (minimized.size() == 1 && minimized.get(0) instanceof String) {
+                consolidated = Tokens.newString(firstOrigin,
+                        (String) minimized.get(0));
+            } else {
+                // there's some substitution to do later (post-parse step)
+                consolidated = Tokens.newValue(new ConfigSubstitution(
+                        firstOrigin, minimized));
+            }
+
             putBack(consolidated);
         }
 

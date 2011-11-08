@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigTransformer;
@@ -17,6 +18,9 @@ class SimpleConfigObject extends AbstractConfigObject {
     SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
             Map<String, ConfigValue> value) {
         super(origin, transformer);
+        if (value == null)
+            throw new ConfigException.BugOrBroken(
+                    "creating config object with null map");
         this.value = value;
     }
 

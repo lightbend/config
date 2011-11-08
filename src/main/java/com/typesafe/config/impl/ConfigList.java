@@ -3,6 +3,7 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
@@ -32,6 +33,43 @@ final class ConfigList extends AbstractConfigValue {
             list.add(v.unwrapped());
         }
         return list;
+    }
+
+    @Override
+    ConfigList resolveSubstitutions(SubstitutionResolver resolver,
+ int depth,
+            boolean withFallbacks) {
+        List<ConfigValue> changed = null; // lazy-create for optimization
+        int i = 0;
+        for (ConfigValue v : value) {
+            AbstractConfigValue resolved = resolver.resolve(
+                    (AbstractConfigValue) v, depth, withFallbacks);
+
+            // lazy-create the new list if required
+            if (changed == null && resolved != v) {
+                changed = new ArrayList<ConfigValue>();
+                for (int j = 0; j < i; ++j) {
+                    changed.add(value.get(j));
+                }
+            }
+
+            // once the new list is created, all elements
+            // have to go in it.
+            if (changed != null) {
+                changed.add(resolved);
+            }
+
+            i += 1;
+        }
+
+        if (changed != null) {
+            if (changed.size() != value.size())
+                throw new ConfigException.BugOrBroken(
+                        "substituted list's size doesn't match");
+            return new ConfigList(origin(), changed);
+        } else {
+            return this;
+        }
     }
 
     protected boolean canEqual(Object other) {
