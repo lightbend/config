@@ -66,6 +66,6 @@ class EquivalentsTest extends TestUtils {
         // This is a little "checksum" to be sure we really tested what we were expecting.
         // it breaks every time you add a file, so you have to update it.
         assertEquals(1, dirCount)
-        assertEquals(1, fileCount)
+        assertEquals(2, fileCount)
     }
 }

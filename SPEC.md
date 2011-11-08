@@ -72,11 +72,11 @@ Different from JSON:
    instead
  - keys with an object as their value may omit `=`, so `foo { }` means
    `foo = { }`
- - keys which contain no whitespace need not be quoted; the string
-   is then used literally with no unescaping
- - if a key is not quoted, the `.` character has a special meaning and
+ - keys may be unquoted strings (see below for detailed definition)
+ - only if a key is unquoted, the `.` character has a special meaning and
    creates a new object. So `foo.bar = 10` means to create an object at key
-   `foo`, then inside that object, create a key `bar` with value `10`
+   `foo`, then inside that object, create a key `bar` with value
+   `10`.
  - quoted keys _should not_ contain the `.` character because it's
    confusing, but it is permitted (to preserve the ability to use any string
    as a key and thus convert an arbitrary map or JavaScript object into HOCON)
@@ -100,32 +100,46 @@ Different from JSON:
     - FIXME prepend operator?
  - a new type of value exists, substitution, which looks like `${some.path}`
    (details below)
- - to support substitutions, a value may consist of multiple strings which
-   are concatenated into one string. `"foo"${some.path}"bar"`
- - String values may sometimes omit quotes. If a value does not parse as a
-   substitution, quoted string, number, object, array, true, false, or null,
-   then that value will be parsed as a string value, created as
-   follows:
-    - take the string from the `=` to the first newline or comma
-    - remove leading and trailing whitespace (whitespace defined
-      only as ASCII whitespace, as with Java's trim() method)
-    - what remains is treated as a sequence of strings, where
-      each string is either the raw inline UTF-8 data, a quoted
-      string, or a substitution
-    - everything up to a `"` or `$` is a raw unquoted UTF-8 string;
-      no unescaping is performed
-    - at `"` a quoted string is parsed, with the usual escape
-      sequences; after the close `"` parsing the unquoted string
-      continues. The quoted string must be well-formed or it's
-      an error.
-    - at `$` a substitution is parsed. The substitution must be well-formed
-      or it's an error.
-    - to get a literal `"`, `$`, newline or comma, you would have to use
-      a quoted string
-    - after the initial raw string, quoted string, or substitution,
-      parsing another one immediately begins and so on until the
-      end of the value.
-    - the resulting sequence of strings is concatenated
+ - String values may sometimes omit quotes.
+    - Unquoted strings may not contain '$', '"', '{', '}',
+      '[', ']', ':', '=', ',', or '\' (backslash) and may not
+      contain whitespace (including newlines).
+    - Unquoted strings do not support any form of escaping; the
+      characters are all left as-is. If you need to use special
+      characters or escaping, you have to quote the string.
+    - Because of "value concatenation" rules (see below) you can
+      write a sentence with whitespace unquoted, though.
+    - Any unquoted series of characters that parses as a
+      substitution, true, false, null, number, or quoted string
+      will be treated as the type it parses as, rather than as
+      an unquoted string. However, in "value concatenation"
+      the non-string types convert to strings, which means
+      you can have the word "true" in an unquoted sentence.
+    - true, false, null, numbers only parse as such if they
+      immediately follow at least one character that is not
+      allowed in unquoted strings. That is, `truefoo` is
+      the value `true` then the unquoted string `foo`, but
+      `footrue` is the unquoted string `footrue`.
+    - quoted strings and substitutions always parse as such
+      since they begin with a character that can't be in an
+      unquoted string.
+ - Value concatenation: to support substitutions, and unquoted
+   sentences with whitespace, a value may consist of multiple
+   values which are concatenated into one
+   string. `"foo"${some.path}"bar"` or `The quick brown fox`.
+    - let a "simple value" be the set of JSON values excluding
+      objects and arrays, and including unquoted strings and
+      substitutions.
+    - as long as simple values are separated only by non-newline
+      whitespace, the _whitespace between them is preserved_
+      and the values, along with the whitespace, are concatenated
+      into a string.
+    - Whitespace before the first and after the last simple value
+      will be discarded. Only whitespace _between_ simple values
+      is preserved.
+    - concatenation never spans a newline or a non-simple-value
+      token.
+    - the result of the concatenation is a string value.
  - the special key `include` followed directly by a string value (with no
    `=`) means to treat that string value as a filename and merge the
    object defined in that file into the current object, overriding
