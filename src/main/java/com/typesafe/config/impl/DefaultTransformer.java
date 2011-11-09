@@ -1,6 +1,5 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -9,7 +8,8 @@ import com.typesafe.config.ConfigValueType;
 class DefaultTransformer implements ConfigTransformer {
 
     @Override
-    public ConfigValue transform(ConfigValue value, ConfigValueType requested) {
+    public AbstractConfigValue transform(AbstractConfigValue value,
+            ConfigValueType requested) {
         if (value.valueType() == ConfigValueType.STRING) {
             String s = (String) value.unwrapped();
             switch (requested) {
@@ -47,7 +47,7 @@ class DefaultTransformer implements ConfigTransformer {
             case NUMBER: // FALL THROUGH
             case BOOLEAN:
                 return new ConfigString(value.origin(),
-                        ((AbstractConfigValue) value).transformToString());
+                        value.transformToString());
             }
         }
 

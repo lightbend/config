@@ -31,14 +31,15 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      * @param key
      * @return the unmodified raw value or null
      */
-    protected abstract ConfigValue peek(String key);
+    protected abstract AbstractConfigValue peek(String key);
 
-    protected ConfigValue peek(String key, SubstitutionResolver resolver,
+    protected AbstractConfigValue peek(String key,
+            SubstitutionResolver resolver,
             int depth, boolean withFallbacks) {
-        ConfigValue v = peek(key);
+        AbstractConfigValue v = peek(key);
 
         if (v != null && resolver != null) {
-            v = resolver.resolve((AbstractConfigValue) v, depth, withFallbacks);
+            v = resolver.resolve(v, depth, withFallbacks);
         }
 
         return v;
@@ -110,20 +111,17 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return transformed(obj, transformer);
     }
 
-    static private ConfigValue resolve(AbstractConfigObject self,
+    static private AbstractConfigValue resolve(AbstractConfigObject self,
             String path,
             ConfigValueType expected, ConfigTransformer transformer,
             String originalPath) {
         String key = ConfigUtil.firstElement(path);
         String next = ConfigUtil.otherElements(path);
         if (next == null) {
-            ConfigValue v = self.peek(key);
+            AbstractConfigValue v = self.peek(key);
             if (v == null)
                 throw new ConfigException.Missing(originalPath);
 
-            // FIXME if ConfigTransformer remains public API then
-            // casting to AbstractConfigValue here is broken,
-            // but want to make it not public API.
             if (expected != null && transformer != null)
                 v = transformer.transform(v, expected);
 
@@ -136,13 +134,13 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             else
                 return v;
         } else {
-            AbstractConfigObject o = (AbstractConfigObject) self.getObject(key);
+            AbstractConfigObject o = self.getObject(key);
             assert (o != null); // missing was supposed to throw
             return resolve(o, next, expected, transformer, originalPath);
         }
     }
 
-    ConfigValue resolve(String path, ConfigValueType expected,
+    AbstractConfigValue resolve(String path, ConfigValueType expected,
             String originalPath) {
         return resolve(this, path, expected, transformer, originalPath);
     }
@@ -158,17 +156,17 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             ConfigTransformer transformer) {
         if (stack.isEmpty()) {
             return new SimpleConfigObject(origin, transformer,
-                    Collections.<String, ConfigValue> emptyMap());
+                    Collections.<String, AbstractConfigValue> emptyMap());
         } else if (stack.size() == 1) {
             return transformed(stack.get(0), transformer);
         } else {
             // for non-objects, we just take the first value; but for objects we
             // have to do work to combine them.
-            Map<String, ConfigValue> merged = new HashMap<String, ConfigValue>();
+            Map<String, AbstractConfigValue> merged = new HashMap<String, AbstractConfigValue>();
             Map<String, List<AbstractConfigObject>> objects = new HashMap<String, List<AbstractConfigObject>>();
             for (AbstractConfigObject obj : stack) {
                 for (String key : obj.keySet()) {
-                    ConfigValue v = obj.peek(key);
+                    AbstractConfigValue v = obj.peek(key);
                     if (!merged.containsKey(key)) {
                         if (v.valueType() == ConfigValueType.OBJECT) {
                             // requires recursive merge and transformer fixup
@@ -203,9 +201,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
             int depth,
             boolean withFallbacks) {
-        Map<String, ConfigValue> changes = new HashMap<String, ConfigValue>();
+        Map<String, AbstractConfigValue> changes = new HashMap<String, AbstractConfigValue>();
         for (String k : keySet()) {
-            AbstractConfigValue v = (AbstractConfigValue) peek(k);
+            AbstractConfigValue v = peek(k);
             AbstractConfigValue resolved = resolver.resolve(v, depth,
                     withFallbacks);
             if (resolved != v) {
@@ -215,7 +213,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         if (changes.isEmpty()) {
             return this;
         } else {
-            Map<String, ConfigValue> resolved = new HashMap<String, ConfigValue>();
+            Map<String, AbstractConfigValue> resolved = new HashMap<String, AbstractConfigValue>();
             for (String k : keySet()) {
                 if (changes.containsKey(k)) {
                     resolved.put(k, changes.get(k));
@@ -266,8 +264,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public List<ConfigValue> getList(String path) {
-        ConfigValue v = resolve(path, ConfigValueType.LIST, path);
+    public List<? extends ConfigValue> getList(String path) {
+        AbstractConfigValue v = resolve(path, ConfigValueType.LIST, path);
         return ((ConfigList) v).asJavaList();
     }
 
@@ -318,8 +316,10 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     private <T> List<T> getHomogeneousUnwrappedList(String path,
             ConfigValueType expected) {
         List<T> l = new ArrayList<T>();
-        List<ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
+        List<? extends ConfigValue> list = getList(path);
+        for (ConfigValue cv : list) {
+            // variance would be nice, but stupid cast will do
+            AbstractConfigValue v = (AbstractConfigValue) cv;
             if (expected != null && transformer != null) {
                 v = transformer.transform(v, expected);
             }
@@ -375,7 +375,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     @Override
     public List<ConfigObject> getObjectList(String path) {
         List<ConfigObject> l = new ArrayList<ConfigObject>();
-        List<ConfigValue> list = getList(path);
+        List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
             if (v.valueType() != ConfigValueType.OBJECT)
                 throw new ConfigException.WrongType(v.origin(), path,
@@ -386,9 +386,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public List<Object> getAnyList(String path) {
+    public List<? extends Object> getAnyList(String path) {
         List<Object> l = new ArrayList<Object>();
-        List<ConfigValue> list = getList(path);
+        List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
             l.add(v.unwrapped());
         }
@@ -398,7 +398,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     @Override
     public List<Long> getMemorySizeList(String path) {
         List<Long> l = new ArrayList<Long>();
-        List<ConfigValue> list = getList(path);
+        List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
             if (v.valueType() == ConfigValueType.NUMBER) {
                 l.add(((Number) v.unwrapped()).longValue());
@@ -428,7 +428,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     @Override
     public List<Long> getNanosecondsList(String path) {
         List<Long> l = new ArrayList<Long>();
-        List<ConfigValue> list = getList(path);
+        List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
             if (v.valueType() == ConfigValueType.NUMBER) {
                 l.add(((Number) v.unwrapped()).longValue());

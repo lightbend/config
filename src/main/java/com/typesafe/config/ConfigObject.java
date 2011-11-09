@@ -52,7 +52,7 @@ public interface ConfigObject extends ConfigValue {
      */
     Long getNanoseconds(String path);
 
-    List<ConfigValue> getList(String path);
+    List<? extends ConfigValue> getList(String path);
 
     List<Boolean> getBooleanList(String path);
 
@@ -64,9 +64,9 @@ public interface ConfigObject extends ConfigValue {
 
     List<Double> getDoubleList(String path);
 
-    List<ConfigObject> getObjectList(String path);
+    List<? extends ConfigObject> getObjectList(String path);
 
-    List<Object> getAnyList(String path);
+    List<? extends Object> getAnyList(String path);
 
     List<Long> getMemorySizeList(String path);
 

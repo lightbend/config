@@ -2,8 +2,6 @@ package com.typesafe.config.impl;
 
 import java.util.Set;
 
-import com.typesafe.config.ConfigValue;
-
 class TransformedConfigObject extends AbstractConfigObject {
 
     private AbstractConfigObject underlying;
@@ -30,7 +28,7 @@ class TransformedConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    protected ConfigValue peek(String key) {
+    protected AbstractConfigValue peek(String key) {
         return underlying.peek(key);
     }
 }

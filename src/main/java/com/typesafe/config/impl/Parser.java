@@ -19,7 +19,6 @@ import java.util.Stack;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 final class Parser {
@@ -243,7 +242,7 @@ final class Parser {
 
         private AbstractConfigObject parseObject() {
             // invoked just after the OPEN_CURLY
-            Map<String, ConfigValue> values = new HashMap<String, ConfigValue>();
+            Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
             ConfigOrigin objectOrigin = lineOrigin();
             while (true) {
                 Token t = nextTokenIgnoringNewline();
@@ -286,7 +285,7 @@ final class Parser {
         private ConfigList parseArray() {
             // invoked just after the OPEN_SQUARE
             ConfigOrigin arrayOrigin = lineOrigin();
-            List<ConfigValue> values = new ArrayList<ConfigValue>();
+            List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
 
             consolidateValueTokens();
 
@@ -295,7 +294,7 @@ final class Parser {
             // special-case the first element
             if (t == Tokens.CLOSE_SQUARE) {
                 return new ConfigList(arrayOrigin,
-                        Collections.<ConfigValue> emptyList());
+                        Collections.<AbstractConfigValue> emptyList());
             } else if (Tokens.isValue(t)) {
                 values.add(parseValue(t));
             } else if (t == Tokens.OPEN_CURLY) {

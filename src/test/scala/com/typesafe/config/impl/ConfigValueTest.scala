@@ -41,8 +41,8 @@ class ConfigValueTest extends TestUtils {
         checkNotEqualObjects(intValueB, longValue)
     }
 
-    private def configMap(pairs: (String, Int)*): java.util.Map[String, ConfigValue] = {
-        val m = new java.util.HashMap[String, ConfigValue]()
+    private def configMap(pairs: (String, Int)*): java.util.Map[String, AbstractConfigValue] = {
+        val m = new java.util.HashMap[String, AbstractConfigValue]()
         for (p <- pairs) {
             m.put(p._1, new ConfigInt(fakeOrigin(), p._2))
         }

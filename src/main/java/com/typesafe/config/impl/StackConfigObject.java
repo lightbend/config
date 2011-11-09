@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigValue;
 
 /**
  * This is unused for now, decided that it was too annoying to "lazy merge" and
@@ -64,11 +63,11 @@ final class StackConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    protected ConfigValue peek(String key) {
+    protected AbstractConfigValue peek(String key) {
         for (AbstractConfigObject o : stack) {
             // Important: A ConfigNull value would override
             // and keep us from returning a later non-null value.
-            ConfigValue v = o.peek(key);
+            AbstractConfigValue v = o.peek(key);
             if (v != null)
                 return v;
         }

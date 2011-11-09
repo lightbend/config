@@ -10,14 +10,14 @@ import com.typesafe.config.ConfigValueType;
 
 final class ConfigList extends AbstractConfigValue {
 
-    private List<ConfigValue> value;
+    private List<AbstractConfigValue> value;
 
-    ConfigList(ConfigOrigin origin, List<ConfigValue> value) {
+    ConfigList(ConfigOrigin origin, List<AbstractConfigValue> value) {
         super(origin);
         this.value = value;
     }
 
-    List<ConfigValue> asJavaList() {
+    List<? extends ConfigValue> asJavaList() {
         return value;
     }
 
@@ -29,25 +29,25 @@ final class ConfigList extends AbstractConfigValue {
     @Override
     public List<Object> unwrapped() {
         List<Object> list = new ArrayList<Object>();
-        for (ConfigValue v : value) {
+        for (AbstractConfigValue v : value) {
             list.add(v.unwrapped());
         }
         return list;
     }
 
     @Override
-    ConfigList resolveSubstitutions(SubstitutionResolver resolver,
- int depth,
+    ConfigList resolveSubstitutions(SubstitutionResolver resolver, int depth,
             boolean withFallbacks) {
-        List<ConfigValue> changed = null; // lazy-create for optimization
+        // lazy-create for optimization
+        List<AbstractConfigValue> changed = null;
         int i = 0;
-        for (ConfigValue v : value) {
-            AbstractConfigValue resolved = resolver.resolve(
-                    (AbstractConfigValue) v, depth, withFallbacks);
+        for (AbstractConfigValue v : value) {
+            AbstractConfigValue resolved = resolver.resolve(v, depth,
+                    withFallbacks);
 
             // lazy-create the new list if required
             if (changed == null && resolved != v) {
-                changed = new ArrayList<ConfigValue>();
+                changed = new ArrayList<AbstractConfigValue>();
                 for (int j = 0; j < i; ++j) {
                     changed.add(value.get(j));
                 }

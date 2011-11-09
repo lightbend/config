@@ -41,12 +41,12 @@ class ParseTest extends TestUtils {
         }
     }
 
-    private[this] def fromLift(liftValue: lift.JValue): ConfigValue = {
+    private[this] def fromLift(liftValue: lift.JValue): AbstractConfigValue = {
         import scala.collection.JavaConverters._
 
         liftValue match {
             case lift.JObject(fields) =>
-                val m = new HashMap[String, ConfigValue]()
+                val m = new HashMap[String, AbstractConfigValue]()
                 fields.foreach({ field => m.put(field.name, fromLift(field.value)) })
                 new SimpleConfigObject(fakeOrigin(), null, m)
             case lift.JArray(values) =>

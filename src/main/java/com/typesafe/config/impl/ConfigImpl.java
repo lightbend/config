@@ -11,7 +11,6 @@ import java.util.Properties;
 import com.typesafe.config.ConfigConfig;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigValue;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
@@ -96,7 +95,7 @@ public class ConfigImpl {
 
     private static AbstractConfigObject fromProperties(String originPrefix,
             Properties props) {
-        Map<String, Map<String, ConfigValue>> scopes = new HashMap<String, Map<String, ConfigValue>>();
+        Map<String, Map<String, AbstractConfigValue>> scopes = new HashMap<String, Map<String, AbstractConfigValue>>();
         Enumeration<?> i = props.propertyNames();
         while (i.hasMoreElements()) {
             Object o = i.nextElement();
@@ -107,9 +106,10 @@ public class ConfigImpl {
                     String exceptLast = ConfigUtil.exceptLastElement(path);
                     if (exceptLast == null)
                         exceptLast = "";
-                    Map<String, ConfigValue> scope = scopes.get(exceptLast);
+                    Map<String, AbstractConfigValue> scope = scopes
+                            .get(exceptLast);
                     if (scope == null) {
-                        scope = new HashMap<String, ConfigValue>();
+                        scope = new HashMap<String, AbstractConfigValue>();
                         scopes.put(exceptLast, scope);
                     }
                     String value = props.getProperty(path);
@@ -134,26 +134,27 @@ public class ConfigImpl {
             if (parentPath == null)
                 parentPath = "";
 
-            Map<String, ConfigValue> parent = scopes.get(parentPath);
+            Map<String, AbstractConfigValue> parent = scopes.get(parentPath);
             if (parent == null) {
-                parent = new HashMap<String, ConfigValue>();
+                parent = new HashMap<String, AbstractConfigValue>();
                 scopes.put(parentPath, parent);
             }
             // NOTE: we are evil and cheating, we mutate the map we
             // provide to SimpleConfigObject, which is not allowed by
             // its contract, but since we know nobody has a ref to this
             // SimpleConfigObject yet we can get away with it.
-            ConfigObject o = new SimpleConfigObject(new SimpleConfigOrigin(
+            AbstractConfigObject o = new SimpleConfigObject(
+                    new SimpleConfigOrigin(
                     originPrefix + " " + path), null, scopes.get(path));
             String basename = ConfigUtil.lastElement(path);
             parent.put(basename, o);
         }
 
-        Map<String, ConfigValue> root = scopes.get("");
+        Map<String, AbstractConfigValue> root = scopes.get("");
         if (root == null) {
             // this would happen only if you had no properties at all
             // in "props"
-            root = Collections.<String, ConfigValue> emptyMap();
+            root = Collections.<String, AbstractConfigValue> emptyMap();
         }
 
         // return root config object
@@ -172,7 +173,7 @@ public class ConfigImpl {
 
     private static AbstractConfigObject loadEnvVariables() {
         Map<String, String> env = System.getenv();
-        Map<String, ConfigValue> m = new HashMap<String, ConfigValue>();
+        Map<String, AbstractConfigValue> m = new HashMap<String, AbstractConfigValue>();
         for (String key : env.keySet()) {
             m.put(key, new ConfigString(
                     new SimpleConfigOrigin("env var " + key), env.get(key)));

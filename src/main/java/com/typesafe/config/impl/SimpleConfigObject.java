@@ -7,15 +7,14 @@ import java.util.Set;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigValue;
 
 class SimpleConfigObject extends AbstractConfigObject {
 
     // this map should never be modified - assume immutable
-    private Map<String, ConfigValue> value;
+    private Map<String, AbstractConfigValue> value;
 
     SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
-            Map<String, ConfigValue> value) {
+            Map<String, AbstractConfigValue> value) {
         super(origin, transformer);
         if (value == null)
             throw new ConfigException.BugOrBroken(
@@ -24,7 +23,7 @@ class SimpleConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    protected ConfigValue peek(String key) {
+    protected AbstractConfigValue peek(String key) {
         return value.get(key);
     }
 
@@ -47,8 +46,8 @@ class SimpleConfigObject extends AbstractConfigObject {
         return value.keySet();
     }
 
-    private static boolean mapEquals(Map<String, ConfigValue> a,
-            Map<String, ConfigValue> b) {
+    private static boolean mapEquals(Map<String, AbstractConfigValue> a,
+            Map<String, AbstractConfigValue> b) {
         Set<String> aKeys = a.keySet();
         Set<String> bKeys = b.keySet();
 
@@ -62,7 +61,7 @@ class SimpleConfigObject extends AbstractConfigObject {
         return true;
     }
 
-    private static int mapHash(Map<String, ConfigValue> m) {
+    private static int mapHash(Map<String, AbstractConfigValue> m) {
         Set<String> keys = m.keySet();
         int valuesHash = 0;
         for (String k : keys) {
