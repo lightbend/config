@@ -4,16 +4,26 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * A Config is a read-only configuration object, which may have nested child
- * objects. Implementations of Config should be immutable (at least from the
- * perspective of anyone using this interface).
+ * A ConfigObject is a read-only configuration object, which may have nested
+ * child objects. Implementations of ConfigObject should be immutable (at least
+ * from the perspective of anyone using this interface).
  *
  * The getters all have the same semantics; they throw ConfigException.Missing
  * if the value is entirely unset, and ConfigException.WrongType if you ask for
  * a type that the value can't be converted to. ConfigException.Null is a
- * subclass of ConfigException.WrongType thrown if the value is null.
- *
- * TODO add OrNull variants of all these getters?
+ * subclass of ConfigException.WrongType thrown if the value is null. The "path"
+ * parameters for all the getters have periods between the key names, so the
+ * path "a.b.c" looks for key c in object b in object a in the root object.
+ * 
+ * 
+ * TODO If you need to look up a key with a period in its name, there isn't a
+ * way to do it right now.
+ * 
+ * TODO add OrNull variants of all these getters? Or better to avoid convenience
+ * API for that?
+ * 
+ * TODO should it implement Map<String, ? extends ConfigValue> with the mutators
+ * throwing ?
  */
 public interface ConfigObject extends ConfigValue {
 
@@ -31,8 +41,22 @@ public interface ConfigObject extends ConfigValue {
 
     ConfigObject getObject(String path);
 
+    /**
+     * Gets the value at the path as an unwrapped Java boxed value (Boolean,
+     * Integer, Long, etc.)
+     */
     Object getAny(String path);
 
+    /**
+     * Gets the value at the path as a ConfigValue.
+     *
+     * TODO conceptually if we want to match a read-only subset of the
+     * Map<String, ? extends ConfigValue> interface, we would need to take a key
+     * instead of a path here and return null instead of throwing an exception.
+     *
+     * @param path
+     * @return
+     */
     ConfigValue get(String path);
 
     /** Get value as a size in bytes (parses special strings like "128M") */

@@ -4,11 +4,33 @@ import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.impl.ConfigImpl;
 
+/**
+ * This class holds some global static methods for the config package.
+ */
 public final class Config {
+    /**
+     * Loads a configuration object.
+     *
+     * @param configConfig
+     *            configuration for the configuration.
+     * @return a configuration object
+     */
     public static ConfigObject load(ConfigConfig configConfig) {
         return ConfigImpl.loadConfig(configConfig);
     }
 
+    /**
+     * Loads a configuration for the given root path. The root path should be a
+     * short word that scopes the package being configured; typically it's the
+     * package name or something similar. System properties overriding values in
+     * the configuration will have to be prefixed with the root path. The root
+     * path may have periods in it if you like but other punctuation or
+     * whitespace will probably cause you headaches. Example root paths: "akka",
+     * "sbt", "jsoup", "heroku", "mongo", etc.
+     * @param rootPath
+     *            the configuration "domain"
+     * @return configuration object for the requested root path
+     */
     public static ConfigObject load(String rootPath) {
         return ConfigImpl.loadConfig(new ConfigConfig(rootPath));
     }

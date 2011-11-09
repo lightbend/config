@@ -1,5 +1,8 @@
 package com.typesafe.config;
 
+/**
+ * All exceptions thrown by the library are subclasses of ConfigException.
+ */
 public class ConfigException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
@@ -20,6 +23,11 @@ public class ConfigException extends RuntimeException {
         this(message, null);
     }
 
+    /**
+     * Exception indicating that the type of a value does not match the type you
+     * requested.
+     *
+     */
     public static class WrongType extends ConfigException {
         private static final long serialVersionUID = 1L;
 
@@ -89,6 +97,12 @@ public class ConfigException extends RuntimeException {
         }
     }
 
+    /**
+     * Exception indicating that a value was messed up, for example you may have
+     * asked for a duration and the value can't be sensibly parsed as a
+     * duration.
+     *
+     */
     public static class BadValue extends ConfigException {
         private static final long serialVersionUID = 1L;
 
@@ -149,6 +163,10 @@ public class ConfigException extends RuntimeException {
         }
     }
 
+    /**
+     * Exception indicating that there was an IO error.
+     *
+     */
     public static class IO extends ConfigException {
         private static final long serialVersionUID = 1L;
 
@@ -161,6 +179,10 @@ public class ConfigException extends RuntimeException {
         }
     }
 
+    /**
+     * Exception indicating that there was a parse error.
+     *
+     */
     public static class Parse extends ConfigException {
         private static final long serialVersionUID = 1L;
 
