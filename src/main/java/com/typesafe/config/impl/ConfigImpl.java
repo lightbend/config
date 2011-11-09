@@ -37,14 +37,14 @@ public class ConfigImpl {
         return merged;
     }
 
-    public static ConfigObject getEnvironmentAsConfig() {
+    static ConfigObject getEnvironmentAsConfig() {
         // This should not need to create a new config object
         // as long as the transformer is just the default transformer.
         return AbstractConfigObject.transformed(envVariablesConfig(),
                 withExtraTransformer(null));
     }
 
-    public static ConfigObject getSystemPropertiesAsConfig() {
+    static ConfigObject getSystemPropertiesAsConfig() {
         // This should not need to create a new config object
         // as long as the transformer is just the default transformer.
         return AbstractConfigObject.transformed(systemPropertiesConfig(),
