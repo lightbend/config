@@ -27,6 +27,8 @@ public final class Config {
     /**
      * Parses a duration string. If no units are specified in the string, it is
      * assumed to be in milliseconds. The returned duration is in nanoseconds.
+     * The purpose of this function is to implement the duration-related methods
+     * in the ConfigObject interface.
      *
      * @param input
      *            the string to parse
@@ -45,18 +47,23 @@ public final class Config {
         String numberString = s.substring(0, s.length() - unitString.length()).trim();
         TimeUnit units = null;
 
+        if (unitString.length() > 2 && !unitString.endsWith("s"))
+            unitString = unitString + "s";
+
         // note that this is deliberately case-sensitive
-        if (unitString == "" || unitString == "ms" || unitString == "milliseconds") {
+        if (unitString.equals("") || unitString.equals("ms") || unitString.equals("milliseconds")) {
             units = TimeUnit.MILLISECONDS;
-        } else if (unitString == "us" || unitString == "microseconds") {
+        } else if (unitString.equals("us") || unitString.equals("microseconds")) {
             units = TimeUnit.MICROSECONDS;
-        } else if (unitString == "ns" || unitString == "nanoseconds") {
+        } else if (unitString.equals("ns") || unitString.equals("nanoseconds")) {
             units = TimeUnit.NANOSECONDS;
-        } else if (unitString == "d" || unitString == "days") {
+        } else if (unitString.equals("d") || unitString.equals("days")) {
             units = TimeUnit.DAYS;
-        } else if (unitString == "s" || unitString == "seconds") {
+        } else if (unitString.equals("h") || unitString.equals("hours")) {
+            units = TimeUnit.HOURS;
+        } else if (unitString.equals("s") || unitString.equals("seconds")) {
             units = TimeUnit.SECONDS;
-        } else if (unitString == "m" || unitString == "minutes") {
+        } else if (unitString.equals("m") || unitString.equals("minutes")) {
             units = TimeUnit.MINUTES;
         } else {
             throw new ConfigException.BadValue(originForException,
@@ -92,7 +99,9 @@ public final class Config {
 
     /**
      * Parses a memory-size string. If no units are specified in the string, it
-     * is assumed to be in bytes. The returned value is in bytes.
+     * is assumed to be in bytes. The returned value is in bytes. The purpose of
+     * this function is to implement the memory-size-related methods in the
+     * ConfigObject interface.
      *
      * @param input
      *            the string to parse
@@ -107,22 +116,29 @@ public final class Config {
     public static long parseMemorySize(String input,
             ConfigOrigin originForException, String pathForException) {
         String s = input.trim();
-        String unitString = getUnits(s);
+        String unitStringMaybePlural = getUnits(s);
+        String unitString;
+        if (unitStringMaybePlural.endsWith("s"))
+            unitString = unitStringMaybePlural.substring(0,
+                    unitStringMaybePlural.length() - 1);
+        else
+            unitString = unitStringMaybePlural;
         String unitStringLower = unitString.toLowerCase();
-        String numberString = s.substring(0, s.length() - unitString.length())
+        String numberString = s.substring(0,
+                s.length() - unitStringMaybePlural.length())
                 .trim();
         MemoryUnit units = null;
 
         // the short abbreviations are case-insensitive but you can't write the
         // long form words in all caps.
-        if (unitString == "" || unitStringLower == "b"
-                || unitString == "bytes") {
+        if (unitString.equals("") || unitStringLower.equals("b")
+                || unitString.equals("byte")) {
             units = MemoryUnit.BYTES;
-        } else if (unitStringLower == "k" || unitString == "kilobytes") {
+        } else if (unitStringLower.equals("k") || unitString.equals("kilobyte")) {
             units = MemoryUnit.KILOBYTES;
-        } else if (unitStringLower == "m" || unitString == "megabytes") {
+        } else if (unitStringLower.equals("m") || unitString.equals("megabyte")) {
             units = MemoryUnit.MEGABYTES;
-        } else if (unitStringLower == "g" || unitString == "gigabytes") {
+        } else if (unitStringLower.equals("g") || unitString.equals("gigabyte")) {
             units = MemoryUnit.GIGABYTES;
         } else {
             throw new ConfigException.BadValue(originForException,
