@@ -7,7 +7,6 @@ import java.util.Set;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 
 class SimpleConfigObject extends AbstractConfigObject {

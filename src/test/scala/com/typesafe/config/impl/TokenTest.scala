@@ -5,10 +5,6 @@ import org.junit._
 
 class TokenTest extends TestUtils {
 
-    @org.junit.Before
-    def setup() {
-    }
-
     @Test
     def tokenEquality() {
         checkEqualObjects(Tokens.START, Tokens.START)

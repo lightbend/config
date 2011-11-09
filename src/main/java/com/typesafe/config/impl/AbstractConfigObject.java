@@ -11,7 +11,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 

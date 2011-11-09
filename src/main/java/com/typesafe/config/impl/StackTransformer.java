@@ -2,7 +2,6 @@ package com.typesafe.config.impl;
 
 import java.util.List;
 
-import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 

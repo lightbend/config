@@ -10,10 +10,6 @@ import java.util.HashMap
 
 class TokenizerTest extends TestUtils {
 
-    @org.junit.Before
-    def setup() {
-    }
-
     def tokenTrue = Tokens.newBoolean(fakeOrigin(), true)
     def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
     def tokenNull = Tokens.newNull(fakeOrigin())

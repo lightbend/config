@@ -11,7 +11,6 @@ import java.util.Properties;
 import com.typesafe.config.ConfigConfig;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 
 /** This is public but is only supposed to be used by the "config" package */
@@ -30,8 +29,7 @@ public class ConfigImpl {
         if (system != null)
             stack.add(system);
 
-        ConfigTransformer transformer = withExtraTransformer(configConfig
-                .extraTransformer());
+        ConfigTransformer transformer = withExtraTransformer(null);
 
         AbstractConfigObject merged = AbstractConfigObject
                 .merge(new SimpleConfigOrigin("config for "
@@ -40,20 +38,18 @@ public class ConfigImpl {
         return merged;
     }
 
-    public static ConfigObject getEnvironmentAsConfig(
-            ConfigTransformer extraTransformer) {
+    public static ConfigObject getEnvironmentAsConfig() {
         // This should not need to create a new config object
         // as long as the transformer is just the default transformer.
         return AbstractConfigObject.transformed(envVariablesConfig(),
-                withExtraTransformer(extraTransformer));
+                withExtraTransformer(null));
     }
 
-    public static ConfigObject getSystemPropertiesAsConfig(
-            ConfigTransformer extraTransformer) {
+    public static ConfigObject getSystemPropertiesAsConfig() {
         // This should not need to create a new config object
         // as long as the transformer is just the default transformer.
         return AbstractConfigObject.transformed(systemPropertiesConfig(),
-                withExtraTransformer(extraTransformer));
+                withExtraTransformer(null));
     }
 
     private static ConfigTransformer withExtraTransformer(

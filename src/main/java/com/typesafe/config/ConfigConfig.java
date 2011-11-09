@@ -6,17 +6,12 @@ package com.typesafe.config;
 public final class ConfigConfig {
 
     private String rootPath;
-    private ConfigTransformer extraTransformer;
 
-    public ConfigConfig(String rootPath, ConfigTransformer extraTransformer) {
+    public ConfigConfig(String rootPath) {
         this.rootPath = rootPath;
     }
 
     public String rootPath() {
         return rootPath;
-    }
-
-    public ConfigTransformer extraTransformer() {
-        return extraTransformer;
     }
 }

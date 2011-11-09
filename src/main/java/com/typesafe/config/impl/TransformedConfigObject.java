@@ -2,7 +2,6 @@ package com.typesafe.config.impl;
 
 import java.util.Set;
 
-import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 
 class TransformedConfigObject extends AbstractConfigObject {

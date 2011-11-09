@@ -10,7 +10,7 @@ public final class Config {
     }
 
     public static ConfigObject load(String rootPath) {
-        return ConfigImpl.loadConfig(new ConfigConfig(rootPath, null));
+        return ConfigImpl.loadConfig(new ConfigConfig(rootPath));
     }
 
     private static String getUnits(String s) {

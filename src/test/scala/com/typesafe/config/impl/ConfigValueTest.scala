@@ -6,10 +6,6 @@ import com.typesafe.config.ConfigValue
 
 class ConfigValueTest extends TestUtils {
 
-    @org.junit.Before
-    def setup() {
-    }
-
     @Test
     def configIntEquality() {
         val a = new ConfigInt(fakeOrigin(), 42)

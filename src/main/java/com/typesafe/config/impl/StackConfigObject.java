@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 
 /**

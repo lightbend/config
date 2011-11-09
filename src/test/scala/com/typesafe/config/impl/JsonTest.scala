@@ -10,10 +10,6 @@ import java.util.HashMap
 
 class ParseTest extends TestUtils {
 
-    @org.junit.Before
-    def setup() {
-    }
-
     def parse(s: String): ConfigValue = {
         Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test json string"), s)
     }

@@ -9,10 +9,6 @@ import java.util.HashMap
 
 class ConfParserTest extends TestUtils {
 
-    @org.junit.Before
-    def setup() {
-    }
-
     def parse(s: String): ConfigValue = {
         Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s)
     }

@@ -1,9 +1,11 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigTransformer;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
+/**
+ * Default automatic type transformations.
+ */
 class DefaultTransformer implements ConfigTransformer {
 
     @Override
