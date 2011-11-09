@@ -22,6 +22,7 @@ final class ConfigInt extends AbstractConfigValue {
         return value;
     }
 
+    @Override
     protected boolean canEqual(Object other) {
         return other instanceof ConfigInt || other instanceof ConfigLong;
     }
@@ -33,7 +34,7 @@ final class ConfigInt extends AbstractConfigValue {
             return this.value == ((ConfigInt) other).value;
         } else if (other instanceof ConfigLong) {
             Long l = ((ConfigLong) other).unwrapped();
-            return ((long) l.intValue()) == l && this.value == l.intValue();
+            return l.intValue() == l && this.value == l.intValue();
         } else {
             return false;
         }

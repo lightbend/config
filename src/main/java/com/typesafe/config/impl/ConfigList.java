@@ -72,6 +72,7 @@ final class ConfigList extends AbstractConfigValue {
         }
     }
 
+    @Override
     protected boolean canEqual(Object other) {
         return other instanceof ConfigList;
     }

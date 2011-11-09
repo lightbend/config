@@ -38,6 +38,15 @@ class DefaultTransformer implements ConfigTransformer {
                     return new ConfigBoolean(value.origin(), false);
                 }
                 break;
+            case LIST:
+                // can't go STRING to LIST automatically
+                break;
+            case OBJECT:
+                // can't go STRING to OBJECT automatically
+                break;
+            case STRING:
+                // no-op STRING to STRING
+                break;
             }
         } else if (requested == ConfigValueType.STRING) {
             // if we converted null to string here, then you wouldn't properly
@@ -48,6 +57,19 @@ class DefaultTransformer implements ConfigTransformer {
             case BOOLEAN:
                 return new ConfigString(value.origin(),
                         value.transformToString());
+            case NULL:
+                // want to be sure this throws instead of returning "null" as a
+                // string
+                break;
+            case OBJECT:
+                // no OBJECT to STRING automatically
+                break;
+            case LIST:
+                // no LIST to STRING automatically
+                break;
+            case STRING:
+                // no-op STRING to STRING
+                break;
             }
         }
 

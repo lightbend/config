@@ -133,6 +133,7 @@ final class ConfigSubstitution extends AbstractConfigValue {
         return resolved;
     }
 
+    @Override
     protected boolean canEqual(Object other) {
         return other instanceof ConfigSubstitution;
     }

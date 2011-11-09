@@ -70,6 +70,7 @@ class SimpleConfigObject extends AbstractConfigObject {
         return 41 * (41 + keys.hashCode()) + valuesHash;
     }
 
+    @Override
     protected boolean canEqual(Object other) {
         return other instanceof ConfigObject;
     }
