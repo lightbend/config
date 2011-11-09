@@ -1,5 +1,7 @@
 import de.johoop.findbugs4sbt.FindBugs._
 import de.johoop.findbugs4sbt.ReportType
+import de.johoop.jacoco4sbt._
+import JacocoPlugin._
 
 name := "config"
 
@@ -16,3 +18,5 @@ seq(findbugsSettings : _*)
 findbugsReportType := ReportType.Html
 
 findbugsReportName := "findbugs.html"
+
+seq(jacoco.settings : _*)
