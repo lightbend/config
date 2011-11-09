@@ -1,5 +1,8 @@
 package com.typesafe.config.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -11,6 +14,7 @@ import java.util.Properties;
 import com.typesafe.config.ConfigConfig;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigOrigin;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
@@ -28,13 +32,29 @@ public class ConfigImpl {
         if (system != null)
             stack.add(system);
 
+        // now try to load a resource for each extension
+        addResource(configConfig.rootPath() + ".conf", stack);
+        addResource(configConfig.rootPath() + ".json", stack);
+        addResource(configConfig.rootPath() + ".properties", stack);
+
         ConfigTransformer transformer = withExtraTransformer(null);
 
         AbstractConfigObject merged = AbstractConfigObject
                 .merge(new SimpleConfigOrigin("config for "
                         + configConfig.rootPath()), stack, transformer);
 
-        return merged;
+        AbstractConfigValue resolved = SubstitutionResolver.resolve(merged,
+                merged);
+
+        return (AbstractConfigObject) resolved;
+    }
+
+    private static void addResource(String name,
+            List<AbstractConfigObject> stack) {
+        URL url = ConfigImpl.class.getResource("/" + name);
+        if (url != null) {
+            stack.add(loadURL(url));
+        }
     }
 
     static ConfigObject getEnvironmentAsConfig() {
@@ -49,6 +69,39 @@ public class ConfigImpl {
         // as long as the transformer is just the default transformer.
         return AbstractConfigObject.transformed(systemPropertiesConfig(),
                 withExtraTransformer(null));
+    }
+
+    static AbstractConfigObject loadURL(URL url) {
+        if (url.getPath().endsWith(".properties")) {
+            ConfigOrigin origin = new SimpleConfigOrigin(url.toExternalForm());
+            Properties props = new Properties();
+            InputStream stream = null;
+            try {
+                stream = url.openStream();
+                props.load(stream);
+            } catch (IOException e) {
+                throw new ConfigException.IO(origin, "failed to open url", e);
+            } finally {
+                if (stream != null) {
+                    try {
+                        stream.close();
+                    } catch (IOException e) {
+                    }
+                }
+            }
+            return fromProperties(url.toExternalForm(), props);
+        } else {
+            return forceParsedToObject(Parser.parse(url));
+        }
+    }
+
+    static AbstractConfigObject forceParsedToObject(AbstractConfigValue value) {
+        if (value instanceof AbstractConfigObject) {
+            return (AbstractConfigObject) value;
+        } else {
+            throw new ConfigException.WrongType(value.origin(), "",
+                    "object at file root", value.valueType().name());
+        }
     }
 
     private static ConfigTransformer withExtraTransformer(

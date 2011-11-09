@@ -146,10 +146,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     /**
-     * Stack should be from overrides to fallbacks (earlier items win). Test
-     * suite should check: merging of objects with a non-object in the middle.
-     * Override of object with non-object, override of non-object with object.
-     * Merging 0, 1, N objects.
+     * Stack should be from overrides to fallbacks (earlier items win). Objects
+     * have their keys combined into a new object, while other kinds of value
+     * are just first-one-wins.
      */
     static AbstractConfigObject merge(ConfigOrigin origin,
             List<AbstractConfigObject> stack,
@@ -175,6 +174,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                                 stackForKey = objects.get(key);
                             } else {
                                 stackForKey = new ArrayList<AbstractConfigObject>();
+                                objects.put(key, stackForKey);
                             }
                             stackForKey.add(transformed(
                                     (AbstractConfigObject) v,
@@ -187,6 +187,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                     }
                 }
             }
+
             for (Map.Entry<String, List<AbstractConfigObject>> entry : objects
                     .entrySet()) {
                 List<AbstractConfigObject> stackForKey = entry.getValue();
@@ -371,6 +372,11 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             l.add(n.doubleValue());
         }
         return l;
+    }
+
+    @Override
+    public List<String> getStringList(String path) {
+        return getHomogeneousUnwrappedList(path, ConfigValueType.STRING);
     }
 
     @Override

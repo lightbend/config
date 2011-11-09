@@ -2,13 +2,14 @@ package com.typesafe.config.impl;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,28 +49,53 @@ final class Parser {
         return parse(flavor, origin, new StringReader(input));
     }
 
-    static AbstractConfigValue parse(File f) {
-        ConfigOrigin origin = new SimpleConfigOrigin(f.getPath());
-        SyntaxFlavor flavor = null;
-        if (f.getName().endsWith(".json"))
-            flavor = SyntaxFlavor.JSON;
-        else if (f.getName().endsWith(".conf"))
-            flavor = SyntaxFlavor.CONF;
+    private static SyntaxFlavor flavorFromExtension(String name,
+            ConfigOrigin origin) {
+        if (name.endsWith(".json"))
+            return SyntaxFlavor.JSON;
+        else if (name.endsWith(".conf"))
+            return SyntaxFlavor.CONF;
         else
             throw new ConfigException.IO(origin, "Unknown filename extension");
-        return parse(flavor, f);
+    }
+
+    static AbstractConfigValue parse(File f) {
+        return parse(null, f);
     }
 
     static AbstractConfigValue parse(SyntaxFlavor flavor, File f) {
         ConfigOrigin origin = new SimpleConfigOrigin(f.getPath());
+        try {
+            return parse(flavor, origin, f.toURI().toURL());
+        } catch (MalformedURLException e) {
+            throw new ConfigException.IO(origin,
+                    "failed to create url from file path", e);
+        }
+    }
 
+    static AbstractConfigValue parse(URL url) {
+        return parse(null, url);
+    }
+
+    static AbstractConfigValue parse(SyntaxFlavor flavor, URL url) {
+        ConfigOrigin origin = new SimpleConfigOrigin(url.toExternalForm());
+        return parse(flavor, origin, url);
+    }
+
+    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
+            URL url) {
         AbstractConfigValue result = null;
         try {
-            InputStream stream = new BufferedInputStream(new FileInputStream(f));
-            result = parse(flavor, origin, stream);
-            stream.close();
+            InputStream stream = new BufferedInputStream(url.openStream());
+            try {
+                result = parse(
+                        flavor != null ? flavor : flavorFromExtension(
+                                url.getPath(), origin), origin, stream);
+            } finally {
+                stream.close();
+            }
         } catch (IOException e) {
-            throw new ConfigException.IO(origin, "failed to read file", e);
+            throw new ConfigException.IO(origin, "failed to read url", e);
         }
         return result;
     }

@@ -90,6 +90,8 @@ public interface ConfigObject extends ConfigValue {
 
     List<Double> getDoubleList(String path);
 
+    List<String> getStringList(String path);
+
     List<? extends ConfigObject> getObjectList(String path);
 
     List<? extends Object> getAnyList(String path);

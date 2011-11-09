@@ -7,10 +7,6 @@ import com.typesafe.config.ConfigException
 
 class ConfigSubstitutionTest extends TestUtils {
 
-    private def parseObject(s: String) = {
-        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s).asInstanceOf[AbstractConfigObject]
-    }
-
     private def subst(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {
         val pieces = java.util.Collections.singletonList[Object](new Substitution(ref, style))
         new ConfigSubstitution(fakeOrigin(), pieces)
@@ -21,12 +17,6 @@ class ConfigSubstitutionTest extends TestUtils {
         val pieces = List("start<", new Substitution(ref, style), ">end")
         new ConfigSubstitution(fakeOrigin(), pieces.asJava)
     }
-
-    private def intValue(i: Int) = new ConfigInt(fakeOrigin(), i)
-    private def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)
-    private def nullValue() = new ConfigNull(fakeOrigin())
-    private def stringValue(s: String) = new ConfigString(fakeOrigin(), s)
-    private def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d)
 
     private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
         SubstitutionResolver.resolveWithoutFallbacks(v, v).asInstanceOf[AbstractConfigObject]

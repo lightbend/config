@@ -157,4 +157,15 @@ abstract trait TestUtils {
             }
         }
     }
+
+    protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i)
+    protected def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)
+    protected def nullValue() = new ConfigNull(fakeOrigin())
+    protected def stringValue(s: String) = new ConfigString(fakeOrigin(), s)
+    protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d)
+
+    protected def parseObject(s: String) = {
+        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s).asInstanceOf[AbstractConfigObject]
+    }
+
 }
