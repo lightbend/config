@@ -26,7 +26,8 @@ final class Substitution {
     public boolean equals(Object other) {
         if (other instanceof Substitution) {
             Substitution that = (Substitution) other;
-            return this.reference == that.reference && this.style == that.style;
+            return this.reference.equals(that.reference)
+                    && this.style == that.style;
         } else {
             return false;
         }

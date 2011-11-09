@@ -100,7 +100,7 @@ public final class Config {
                 return units.toNanos(Long.parseLong(numberString));
             } else {
                 long nanosInUnit = units.toNanos(1);
-                return (new Double(Double.parseDouble(numberString) * nanosInUnit)).longValue();
+                return (long) (Double.parseDouble(numberString) * nanosInUnit);
             }
         } catch (NumberFormatException e) {
             throw new ConfigException.BadValue(originForException, pathForException,
@@ -175,8 +175,7 @@ public final class Config {
             if (numberString.matches("[0-9]+")) {
                 return Long.parseLong(numberString) * units.bytes;
             } else {
-                return (new Double(Double.parseDouble(numberString)
-                        * units.bytes)).longValue();
+                return (long) (Double.parseDouble(numberString) * units.bytes);
             }
         } catch (NumberFormatException e) {
             throw new ConfigException.BadValue(originForException,

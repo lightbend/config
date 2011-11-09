@@ -187,10 +187,11 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                     }
                 }
             }
-            for (String key : objects.keySet()) {
-                List<AbstractConfigObject> stackForKey = objects.get(key);
+            for (Map.Entry<String, List<AbstractConfigObject>> entry : objects
+                    .entrySet()) {
+                List<AbstractConfigObject> stackForKey = entry.getValue();
                 AbstractConfigObject obj = merge(origin, stackForKey, transformer);
-                merged.put(key, obj);
+                merged.put(entry.getKey(), obj);
             }
 
             return new SimpleConfigObject(origin, transformer, merged);

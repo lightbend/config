@@ -170,7 +170,7 @@ final class Tokens {
         @Override
         public int hashCode() {
             return 41 * (41 * (41 + super.hashCode()) + value.hashCode())
-                    + new Boolean(isPath()).hashCode();
+                    + Boolean.valueOf(isPath()).hashCode();
         }
     }
 

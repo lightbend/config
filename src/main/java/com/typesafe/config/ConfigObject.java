@@ -14,14 +14,14 @@ import java.util.Set;
  * subclass of ConfigException.WrongType thrown if the value is null. The "path"
  * parameters for all the getters have periods between the key names, so the
  * path "a.b.c" looks for key c in object b in object a in the root object.
- * 
- * 
+ *
+ *
  * TODO If you need to look up a key with a period in its name, there isn't a
  * way to do it right now.
- * 
+ *
  * TODO add OrNull variants of all these getters? Or better to avoid convenience
  * API for that?
- * 
+ *
  * TODO should it implement Map<String, ? extends ConfigValue> with the mutators
  * throwing ?
  */
@@ -60,6 +60,8 @@ public interface ConfigObject extends ConfigValue {
     ConfigValue get(String path);
 
     /** Get value as a size in bytes (parses special strings like "128M") */
+    // rename getSizeInBytes ? clearer. allows a megabyte version
+    // or just getBytes is consistent with getMilliseconds
     Long getMemorySize(String path);
 
     /**

@@ -174,9 +174,10 @@ public class ConfigImpl {
     private static AbstractConfigObject loadEnvVariables() {
         Map<String, String> env = System.getenv();
         Map<String, AbstractConfigValue> m = new HashMap<String, AbstractConfigValue>();
-        for (String key : env.keySet()) {
+        for (Map.Entry<String, String> entry : env.entrySet()) {
+            String key = entry.getKey();
             m.put(key, new ConfigString(
-                    new SimpleConfigOrigin("env var " + key), env.get(key)));
+                    new SimpleConfigOrigin("env var " + key), entry.getValue()));
         }
         return new SimpleConfigObject(new SimpleConfigOrigin("env variables"),
                 defaultConfigTransformer(), m);
