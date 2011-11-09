@@ -75,6 +75,10 @@ abstract trait TestUtils {
         new SimpleConfigOrigin("fake origin")
     }
 
+    def includer() = {
+        ConfigImpl.defaultIncluder();
+    }
+
     case class ParseTest(liftBehaviorUnexpected: Boolean, whitespaceMatters: Boolean, test: String)
     object ParseTest {
         def apply(liftBehaviorUnexpected: Boolean, test: String): ParseTest = {
@@ -209,7 +213,7 @@ abstract trait TestUtils {
     protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d)
 
     protected def parseObject(s: String) = {
-        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s).asInstanceOf[AbstractConfigObject]
+        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s, includer()).asInstanceOf[AbstractConfigObject]
     }
 
     protected def subst(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {

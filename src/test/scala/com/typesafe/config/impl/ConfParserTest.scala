@@ -10,7 +10,7 @@ import java.util.HashMap
 class ConfParserTest extends TestUtils {
 
     def parse(s: String): ConfigValue = {
-        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s)
+        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s, includer())
     }
 
     private def addOffendingJsonToException[R](parserName: String, s: String)(body: => R) = {

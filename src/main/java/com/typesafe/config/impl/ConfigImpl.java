@@ -25,7 +25,11 @@ public class ConfigImpl {
         if (system != null)
             stack.add(system);
 
-        stack.add(Loader.load(configConfig.rootPath()));
+        // this is a conceptual placeholder for a customizable
+        // object that the app might be able to pass in.
+        IncludeHandler includer = defaultIncluder();
+
+        stack.add(includer.include(configConfig.rootPath()));
 
         ConfigTransformer transformer = withExtraTransformer(null);
 
@@ -74,6 +78,21 @@ public class ConfigImpl {
             defaultTransformer = new DefaultTransformer();
         }
         return defaultTransformer;
+    }
+
+    private static IncludeHandler defaultIncluder = null;
+
+    synchronized static IncludeHandler defaultIncluder() {
+        if (defaultIncluder == null) {
+            defaultIncluder = new IncludeHandler() {
+
+                @Override
+                public AbstractConfigObject include(String name) {
+                    return Loader.load(name, this);
+                }
+            };
+        }
+        return defaultIncluder;
     }
 
     private static AbstractConfigObject systemProperties = null;

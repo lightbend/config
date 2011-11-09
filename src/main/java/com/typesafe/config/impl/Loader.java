@@ -15,19 +15,19 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
 final class Loader {
-    static AbstractConfigObject load(String name) {
+    static AbstractConfigObject load(String name, IncludeHandler includer) {
         List<AbstractConfigObject> stack = new ArrayList<AbstractConfigObject>();
 
         // if name has an extension, only use that; otherwise merge all three
         if (name.endsWith(".conf") || name.endsWith(".json")
                 || name.endsWith(".properties")) {
-            addResource(name, stack);
+            addResource(name, includer, stack);
         } else {
             // .conf wins over .json wins over .properties;
             // arbitrary, but deterministic
-            addResource(name + ".conf", stack);
-            addResource(name + ".json", stack);
-            addResource(name + ".properties", stack);
+            addResource(name + ".conf", includer, stack);
+            addResource(name + ".json", includer, stack);
+            addResource(name + ".properties", includer, stack);
         }
 
         AbstractConfigObject merged = AbstractConfigObject.merge(
@@ -37,15 +37,15 @@ final class Loader {
         return merged;
     }
 
-    private static void addResource(String name,
+    private static void addResource(String name, IncludeHandler includer,
             List<AbstractConfigObject> stack) {
         URL url = ConfigImpl.class.getResource("/" + name);
         if (url != null) {
-            stack.add(loadURL(url));
+            stack.add(loadURL(url, includer));
         }
     }
 
-    private static AbstractConfigObject loadURL(URL url) {
+    private static AbstractConfigObject loadURL(URL url, IncludeHandler includer) {
         if (url.getPath().endsWith(".properties")) {
             ConfigOrigin origin = new SimpleConfigOrigin(url.toExternalForm());
             Properties props = new Properties();
@@ -65,7 +65,7 @@ final class Loader {
             }
             return fromProperties(url.toExternalForm(), props);
         } else {
-            return forceParsedToObject(Parser.parse(url));
+            return forceParsedToObject(Parser.parse(url, includer));
         }
     }
 

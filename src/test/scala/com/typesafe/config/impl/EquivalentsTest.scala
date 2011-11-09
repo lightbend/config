@@ -41,11 +41,11 @@ class EquivalentsTest extends TestUtils {
     }
 
     private def parse(flavor: SyntaxFlavor, f: File) = {
-        postParse(Parser.parse(flavor, f))
+        postParse(Parser.parse(flavor, f, includer()))
     }
 
     private def parse(f: File) = {
-        postParse(Parser.parse(f))
+        postParse(Parser.parse(f, includer()))
     }
 
     // would like each "equivNN" directory to be a suite and each file in the dir

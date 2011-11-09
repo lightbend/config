@@ -29,9 +29,10 @@ final class Parser {
      * yourself.
      */
     static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            InputStream input) {
+            InputStream input, IncludeHandler includer) {
         try {
-            return parse(flavor, origin, new InputStreamReader(input, "UTF-8"));
+            return parse(flavor, origin, new InputStreamReader(input, "UTF-8"),
+                    includer);
         } catch (UnsupportedEncodingException e) {
             throw new ConfigException.BugOrBroken(
                     "Java runtime does not support UTF-8");
@@ -39,14 +40,14 @@ final class Parser {
     }
 
     static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            Reader input) {
+            Reader input, IncludeHandler includer) {
         Iterator<Token> tokens = Tokenizer.tokenize(origin, input);
-        return parse(flavor, origin, tokens);
+        return parse(flavor, origin, tokens, includer);
     }
 
     static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            String input) {
-        return parse(flavor, origin, new StringReader(input));
+            String input, IncludeHandler includer) {
+        return parse(flavor, origin, new StringReader(input), includer);
     }
 
     private static SyntaxFlavor flavorFromExtension(String name,
@@ -59,38 +60,41 @@ final class Parser {
             throw new ConfigException.IO(origin, "Unknown filename extension");
     }
 
-    static AbstractConfigValue parse(File f) {
-        return parse(null, f);
+    static AbstractConfigValue parse(File f, IncludeHandler includer) {
+        return parse(null, f, includer);
     }
 
-    static AbstractConfigValue parse(SyntaxFlavor flavor, File f) {
+    static AbstractConfigValue parse(SyntaxFlavor flavor, File f,
+            IncludeHandler includer) {
         ConfigOrigin origin = new SimpleConfigOrigin(f.getPath());
         try {
-            return parse(flavor, origin, f.toURI().toURL());
+            return parse(flavor, origin, f.toURI().toURL(), includer);
         } catch (MalformedURLException e) {
             throw new ConfigException.IO(origin,
                     "failed to create url from file path", e);
         }
     }
 
-    static AbstractConfigValue parse(URL url) {
-        return parse(null, url);
+    static AbstractConfigValue parse(URL url, IncludeHandler includer) {
+        return parse(null, url, includer);
     }
 
-    static AbstractConfigValue parse(SyntaxFlavor flavor, URL url) {
+    static AbstractConfigValue parse(SyntaxFlavor flavor, URL url,
+            IncludeHandler includer) {
         ConfigOrigin origin = new SimpleConfigOrigin(url.toExternalForm());
-        return parse(flavor, origin, url);
+        return parse(flavor, origin, url, includer);
     }
 
     static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            URL url) {
+            URL url, IncludeHandler includer) {
         AbstractConfigValue result = null;
         try {
             InputStream stream = new BufferedInputStream(url.openStream());
             try {
                 result = parse(
                         flavor != null ? flavor : flavorFromExtension(
-                                url.getPath(), origin), origin, stream);
+                                url.getPath(), origin), origin, stream,
+                        includer);
             } finally {
                 stream.close();
             }
@@ -104,16 +108,18 @@ final class Parser {
         private int lineNumber;
         private Stack<Token> buffer;
         private Iterator<Token> tokens;
+        private IncludeHandler includer;
         private SyntaxFlavor flavor;
         private ConfigOrigin baseOrigin;
 
         ParseContext(SyntaxFlavor flavor, ConfigOrigin origin,
-                Iterator<Token> tokens) {
+                Iterator<Token> tokens, IncludeHandler includer) {
             lineNumber = 0;
             buffer = new Stack<Token>();
             this.tokens = tokens;
             this.flavor = flavor;
             this.baseOrigin = origin;
+            this.includer = includer;
         }
 
         private Token nextToken() {
@@ -395,9 +401,9 @@ final class Parser {
     }
 
     private static AbstractConfigValue parse(SyntaxFlavor flavor,
-            ConfigOrigin origin,
-            Iterator<Token> tokens) {
-        ParseContext context = new ParseContext(flavor, origin, tokens);
+            ConfigOrigin origin, Iterator<Token> tokens, IncludeHandler includer) {
+        ParseContext context = new ParseContext(flavor, origin, tokens,
+                includer);
         return context.parse();
     }
 }

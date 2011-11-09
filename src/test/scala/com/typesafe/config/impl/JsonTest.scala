@@ -12,11 +12,11 @@ import java.util.Collections
 class JsonTest extends TestUtils {
 
     def parse(s: String): ConfigValue = {
-        Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test json string"), s)
+        Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test json string"), s, includer())
     }
 
     def parseAsConf(s: String): ConfigValue = {
-        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s)
+        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s, includer())
     }
 
     private[this] def toLift(value: ConfigValue): lift.JValue = {
