@@ -8,6 +8,7 @@ import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigException
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
+import com.typesafe.config.ConfigConfig
 
 class ConfigTest extends TestUtils {
 
@@ -141,7 +142,7 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
-    def test01() {
+    def test01Getting() {
         val conf = Config.load("test01")
 
         // get all the primitive types
@@ -157,6 +158,11 @@ class ConfigTest extends TestUtils {
         assertEquals(false, conf.getBoolean("booleans.falseAgain"))
         // FIXME need to add a way to get a null
         //assertEquals(null, conf.getAny("nulls.null"))
+
+        // get stuff with getAny
+        assertEquals(42L, conf.getAny("ints.fortyTwo"))
+        assertEquals("abcd", conf.getAny("strings.abcd"))
+        assertEquals(false, conf.getAny("booleans.falseAgain"))
 
         // get empty array as any type of array
         assertEquals(Seq(), conf.getAnyList("arrays.empty").asScala)
@@ -184,6 +190,11 @@ class ConfigTest extends TestUtils {
         // plain getList should work
         assertEquals(Seq(intValue(1), intValue(2), intValue(3)), conf.getList("arrays.ofInt").asScala)
         assertEquals(Seq(stringValue("a"), stringValue("b"), stringValue("c")), conf.getList("arrays.ofString").asScala)
+    }
+
+    @Test
+    def test01Exceptions() {
+        val conf = Config.load("test01")
 
         // should throw Missing if key doesn't exist
         intercept[ConfigException.Missing] {
@@ -195,10 +206,82 @@ class ConfigTest extends TestUtils {
             conf.getInt("nulls.null")
         }
 
+        intercept[ConfigException.Null] {
+            conf.getIntList("nulls.null")
+        }
+
+        intercept[ConfigException.Null] {
+            conf.getMilliseconds("nulls.null")
+        }
+
+        intercept[ConfigException.Null] {
+            conf.getNanoseconds("nulls.null")
+        }
+
+        intercept[ConfigException.Null] {
+            conf.getMemorySize("nulls.null")
+        }
+
         // should throw WrongType if key is wrong type and not convertible
         intercept[ConfigException.WrongType] {
             conf.getInt("booleans.trueAgain")
         }
+
+        intercept[ConfigException.WrongType] {
+            conf.getBooleanList("arrays.ofInt")
+        }
+
+        intercept[ConfigException.WrongType] {
+            conf.getIntList("arrays.ofBoolean")
+        }
+
+        intercept[ConfigException.WrongType] {
+            conf.getObjectList("arrays.ofInt")
+        }
+
+        intercept[ConfigException.WrongType] {
+            conf.getMilliseconds("ints")
+        }
+
+        intercept[ConfigException.WrongType] {
+            conf.getNanoseconds("ints")
+        }
+
+        intercept[ConfigException.WrongType] {
+            conf.getMemorySize("ints")
+        }
+
+        // should throw BadPath on various bad paths
+        intercept[ConfigException.BadPath] {
+            conf.getInt(".bad")
+        }
+
+        intercept[ConfigException.BadPath] {
+            conf.getInt("bad.")
+        }
+
+        intercept[ConfigException.BadPath] {
+            conf.getInt("bad..bad")
+        }
+
+        // should throw BadValue on things that don't parse
+        // as durations and sizes
+        intercept[ConfigException.BadValue] {
+            conf.getMilliseconds("strings.a")
+        }
+
+        intercept[ConfigException.BadValue] {
+            conf.getNanoseconds("strings.a")
+        }
+
+        intercept[ConfigException.BadValue] {
+            conf.getMemorySize("strings.a")
+        }
+    }
+
+    @Test
+    def test01Conversions() {
+        val conf = Config.load("test01")
 
         // should convert numbers to string
         assertEquals("42", conf.getString("ints.fortyTwo"))
@@ -206,20 +289,62 @@ class ConfigTest extends TestUtils {
 
         // should convert string to number
         assertEquals(57, conf.getInt("strings.number"))
+        assertEquals(3.14, conf.getDouble("strings.double"), 1e-6)
+
+        // should convert strings to boolean
+        assertEquals(true, conf.getBoolean("strings.true"))
+        assertEquals(true, conf.getBoolean("strings.yes"))
+        assertEquals(false, conf.getBoolean("strings.false"))
+        assertEquals(false, conf.getBoolean("strings.no"))
+
+        // converting some random string to boolean fails though
+        intercept[ConfigException.WrongType] {
+            conf.getBoolean("strings.abcd")
+        }
+
+        // FIXME test convert string "null" to a null value
+
+        // should not convert strings to object or list
+        intercept[ConfigException.WrongType] {
+            conf.getObject("strings.a")
+        }
+
+        intercept[ConfigException.WrongType] {
+            conf.getList("strings.a")
+        }
+
+        // should not convert object or list to string
+        intercept[ConfigException.WrongType] {
+            conf.getString("ints")
+        }
+
+        intercept[ConfigException.WrongType] {
+            conf.getString("arrays.ofInt")
+        }
 
         // should get durations
         def asNanos(secs: Int) = TimeUnit.SECONDS.toNanos(secs)
         assertEquals(1000L, conf.getMilliseconds("durations.second"))
         assertEquals(asNanos(1), conf.getNanoseconds("durations.second"))
-        assertEquals(Seq(1000L, 2000L, 3000L),
+        assertEquals(1000L, conf.getMilliseconds("durations.secondAsNumber"))
+        assertEquals(asNanos(1), conf.getNanoseconds("durations.secondAsNumber"))
+        assertEquals(Seq(1000L, 2000L, 3000L, 4000L),
             conf.getMillisecondsList("durations.secondsList").asScala)
-        assertEquals(Seq(asNanos(1), asNanos(2), asNanos(3)),
+        assertEquals(Seq(asNanos(1), asNanos(2), asNanos(3), asNanos(4)),
             conf.getNanosecondsList("durations.secondsList").asScala)
+        assertEquals(500L, conf.getMilliseconds("durations.halfSecond"))
 
         // should get size in bytes
         assertEquals(1024 * 1024L, conf.getMemorySize("memsizes.meg"))
-        assertEquals(Seq(1024 * 1024L, 1024 * 1024L),
+        assertEquals(1024 * 1024L, conf.getMemorySize("memsizes.megAsNumber"))
+        assertEquals(Seq(1024 * 1024L, 1024 * 1024L, 1024L * 1024L),
             conf.getMemorySizeList("memsizes.megsList").asScala)
+        assertEquals(512 * 1024L, conf.getMemorySize("memsizes.halfMeg"))
+    }
+
+    @Test
+    def test01MergingOtherFormats() {
+        val conf = Config.load("test01")
 
         // should have loaded stuff from .json
         assertEquals(1, conf.getInt("fromJson1"))
@@ -229,8 +354,18 @@ class ConfigTest extends TestUtils {
         assertEquals("abc", conf.getString("fromProps.abc"))
         assertEquals(1, conf.getInt("fromProps.one"))
         assertEquals(true, conf.getBoolean("fromProps.bool"))
+    }
+
+    @Test
+    def test01ToString() {
+        val conf = Config.load("test01")
 
         // toString() on conf objects doesn't throw (toString is just a debug string so not testing its result)
         conf.toString()
+    }
+
+    @Test
+    def test01LoadWithConfigConfig() {
+        val conf = Config.load(new ConfigConfig("test01"))
     }
 }

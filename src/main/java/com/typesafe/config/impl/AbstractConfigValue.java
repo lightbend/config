@@ -66,7 +66,11 @@ abstract class AbstractConfigValue implements ConfigValue {
     @Override
     public int hashCode() {
         // note that "origin" is deliberately NOT part of equality
-        return this.unwrapped().hashCode();
+        Object o = this.unwrapped();
+        if (o == null)
+            return 0;
+        else
+            return o.hashCode();
     }
 
     @Override

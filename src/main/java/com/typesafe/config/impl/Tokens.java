@@ -1,7 +1,6 @@
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
@@ -23,11 +22,8 @@ final class Tokens {
         public String toString() {
             String s = tokenType().name() + "(" + value.valueType().name()
                     + ")";
-            if (value instanceof ConfigObject || value instanceof ConfigList) {
-                return s;
-            } else {
-                return s + "='" + value().unwrapped() + "'";
-            }
+
+            return s + "='" + value().unwrapped() + "'";
         }
 
         @Override

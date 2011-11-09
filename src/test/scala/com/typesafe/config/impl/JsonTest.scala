@@ -7,8 +7,9 @@ import java.io.Reader
 import java.io.StringReader
 import com.typesafe.config._
 import java.util.HashMap
+import java.util.Collections
 
-class ParseTest extends TestUtils {
+class JsonTest extends TestUtils {
 
     def parse(s: String): ConfigValue = {
         Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test json string"), s)
@@ -133,8 +134,12 @@ class ParseTest extends TestUtils {
     def validJsonWorks(): Unit = {
         // be sure we do the same thing as Lift when we build our JSON "DOM"
         for (valid <- whitespaceVariations(validJson)) {
-            val liftAST = addOffendingJsonToException("lift", valid.test) {
-                fromJsonWithLiftParser(valid.test)
+            val liftAST = if (valid.liftBehaviorUnexpected) {
+                new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())
+            } else {
+                addOffendingJsonToException("lift", valid.test) {
+                    fromJsonWithLiftParser(valid.test)
+                }
             }
             val ourAST = addOffendingJsonToException("config-json", valid.test) {
                 parse(valid.test)

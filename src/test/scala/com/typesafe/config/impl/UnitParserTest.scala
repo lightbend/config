@@ -23,6 +23,18 @@ class UnitParserTest extends TestUtils {
             val result = Config.parseDuration(s, fakeOrigin(), "test")
             assertEquals(oneSecInNanos, result)
         }
+
+        // bad units
+        val e = intercept[ConfigException.BadValue] {
+            Config.parseDuration("100 dollars", fakeOrigin(), "test")
+        }
+        assertTrue(e.getMessage().contains("time unit"))
+
+        // bad number
+        val e2 = intercept[ConfigException.BadValue] {
+            Config.parseDuration("1 00 seconds", fakeOrigin(), "test")
+        }
+        assertTrue(e2.getMessage().contains("duration number"))
     }
 
     @Test
@@ -38,5 +50,17 @@ class UnitParserTest extends TestUtils {
             val result = Config.parseMemorySize(s, fakeOrigin(), "test")
             assertEquals(1024 * 1024, result)
         }
+
+        // bad units
+        val e = intercept[ConfigException.BadValue] {
+            Config.parseMemorySize("100 dollars", fakeOrigin(), "test")
+        }
+        assertTrue(e.getMessage().contains("size unit"))
+
+        // bad number
+        val e2 = intercept[ConfigException.BadValue] {
+            Config.parseMemorySize("1 00 bytes", fakeOrigin(), "test")
+        }
+        assertTrue(e2.getMessage().contains("size number"))
     }
 }

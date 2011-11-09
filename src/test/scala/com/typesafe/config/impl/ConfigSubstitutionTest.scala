@@ -7,17 +7,6 @@ import com.typesafe.config.ConfigException
 
 class ConfigSubstitutionTest extends TestUtils {
 
-    private def subst(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {
-        val pieces = java.util.Collections.singletonList[Object](new Substitution(ref, style))
-        new ConfigSubstitution(fakeOrigin(), pieces)
-    }
-
-    private def substInString(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {
-        import scala.collection.JavaConverters._
-        val pieces = List("start<", new Substitution(ref, style), ">end")
-        new ConfigSubstitution(fakeOrigin(), pieces.asJava)
-    }
-
     private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
         SubstitutionResolver.resolveWithoutFallbacks(v, v).asInstanceOf[AbstractConfigObject]
     }

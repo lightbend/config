@@ -65,9 +65,17 @@ public final class Config {
     public static long parseDuration(String input,
             ConfigOrigin originForException, String pathForException) {
         String s = input.trim();
-        String unitString = getUnits(s);
+        String originalUnitString = getUnits(s);
+        String unitString = originalUnitString;
         String numberString = s.substring(0, s.length() - unitString.length()).trim();
         TimeUnit units = null;
+
+        // this would be caught later anyway, but the error message
+        // is more helpful if we check it here.
+        if (numberString.length() == 0)
+            throw new ConfigException.BadValue(originForException,
+                    pathForException, "No number in duration value '" + input
+                            + "'");
 
         if (unitString.length() > 2 && !unitString.endsWith("s"))
             unitString = unitString + "s";
@@ -90,7 +98,8 @@ public final class Config {
         } else {
             throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse time unit '"
-                            + unitString + "' (try ns, us, ms, s, m, d)");
+                            + originalUnitString
+                            + "' (try ns, us, ms, s, m, d)");
         }
 
         try {
@@ -149,6 +158,14 @@ public final class Config {
         String numberString = s.substring(0,
                 s.length() - unitStringMaybePlural.length())
                 .trim();
+
+        // this would be caught later anyway, but the error message
+        // is more helpful if we check it here.
+        if (numberString.length() == 0)
+            throw new ConfigException.BadValue(originForException,
+                    pathForException, "No number in size-in-bytes value '"
+                            + input + "'");
+
         MemoryUnit units = null;
 
         // the short abbreviations are case-insensitive but you can't write the
@@ -165,7 +182,7 @@ public final class Config {
         } else {
             throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse size unit '"
-                            + unitString + "' (try b, k, m, g)");
+                            + unitStringMaybePlural + "' (try b, k, m, g)");
         }
 
         try {

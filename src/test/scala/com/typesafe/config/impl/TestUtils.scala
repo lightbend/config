@@ -32,16 +32,43 @@ abstract trait TestUtils {
         }
     }
 
+    private class NotEqualToAnythingElse {
+        override def equals(other: Any) = {
+            other match {
+                case x: NotEqualToAnythingElse => true
+                case _ => false
+            }
+        }
+
+        override def hashCode() = 971
+    }
+
+    private object notEqualToAnything extends NotEqualToAnythingElse
+
+    private def checkNotEqualToRandomOtherThing(a: Any) {
+        assertFalse(a.equals(notEqualToAnything))
+        assertFalse(notEqualToAnything.equals(a))
+    }
+
     protected def checkNotEqualObjects(a: Any, b: Any) {
         assertFalse(a.equals(b))
         assertFalse(b.equals(a))
+        // hashcode inequality isn't guaranteed, but
+        // as long as it happens to work it might
+        // detect a bug (if hashcodes are equal,
+        // check if it's due to a bug or correct
+        // before you remove this)
         assertFalse(a.hashCode() == b.hashCode())
+        checkNotEqualToRandomOtherThing(a)
+        checkNotEqualToRandomOtherThing(b)
     }
 
     protected def checkEqualObjects(a: Any, b: Any) {
         assertTrue(a.equals(b))
         assertTrue(b.equals(a))
         assertTrue(a.hashCode() == b.hashCode())
+        checkNotEqualToRandomOtherThing(a)
+        checkNotEqualToRandomOtherThing(b)
     }
 
     def fakeOrigin() = {
@@ -68,13 +95,20 @@ abstract trait TestUtils {
         "\"", // single quote by itself
         "{ \"foo\" : }", // no value in object
         "{ : 10 }", // no key in object
+        "{ \"foo\" }", // no value or colon
+        "{ \"a\" : [ }", // [ is not a valid value
+        "{ \"foo\" : 10, }", // extra trailing comma
+        "{ \"foo\" : 10, true }", // non-key after comma
         "{ foo : \"bar\" }", // no quotes on key
         "{ foo : bar }", // no quotes on key or value
+        "[ 1, \\", // ends with backslash
         // these two problems are ignored by the lift tokenizer
         "[:\"foo\", \"bar\"]", // colon in an array; lift doesn't throw (tokenizer erases it)
         "[\"foo\" : \"bar\"]", // colon in an array another way, lift ignores (tokenizer erases it)
         "[ 10e3e3 ]", // two exponents. ideally this might parse to a number plus string "e3" but it's hard to implement.
+        "[ 1-e3 ]", // malformed number but all chars can appear in a number
         "[ \"hello ]", // unterminated string
+        "[ 1, 2, 3, ]", // array with empty element
         ParseTest(true, "{ \"foo\" , true }"), // comma instead of colon, lift is fine with this
         ParseTest(true, "{ \"foo\" : true \"bar\" : false }"), // missing comma between fields, lift fine with this
         "[ 10, }]", // array with } as an element
@@ -87,11 +121,16 @@ abstract trait TestUtils {
         "[]true", // trailing valid token after the root array
         "[${]", // unclosed substitution
         "[$]", // '$' by itself
+        "[$  ]", // '$' by itself with spaces after
+        """${"foo""bar"}""", // multiple strings in substitution
+        """{ "a" : [1,2], "b" : y${a}z }""", // trying to interpolate an array in a string
+        """{ "a" : { "c" : 2 }, "b" : y${a}z }""", // trying to interpolate an object in a string
         ParseTest(false, true, "[${ foo.bar}]"), // substitution with leading spaces
         ParseTest(false, true, "[${foo.bar }]"), // substitution with trailing spaces
         ParseTest(false, true, "[${ \"foo.bar\"}]"), // substitution with leading spaces and quoted
         ParseTest(false, true, "[${\"foo.bar\" }]"), // substitution with trailing spaces and quoted
         "[${true}]", // substitution with unquoted true token
+        "[ = ]", // = is not a valid token
         "") // empty document again, just for clean formatting of this list ;-)
 
     // We'll automatically try each of these with whitespace modifications
@@ -130,6 +169,8 @@ abstract trait TestUtils {
         "[ ${foo} ]",
         "[ ${\"foo\"} ]",
         "[ ${foo.bar} ]",
+        "[ abc  xyz  ${foo.bar}  qrs tuv ]", // value concatenation
+        "[ 1, 2, 3, blah ]",
         "[ ${\"foo.bar\"} ]")
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
@@ -152,13 +193,16 @@ abstract trait TestUtils {
             if (t.whitespaceMatters) {
                 return Seq(t)
             } else {
-                for (v <- variations)
-                    yield ParseTest(t.liftBehaviorUnexpected, v(t.test))
+                val withNonAscii = ParseTest(true,
+                    t.test.replace(" ", "\u2003")) // 2003 = em space, to test non-ascii whitespace
+                Seq(withNonAscii) ++ (for (v <- variations)
+                    yield ParseTest(t.liftBehaviorUnexpected, v(t.test)))
             }
         }
     }
 
     protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i)
+    protected def longValue(l: Long) = new ConfigLong(fakeOrigin(), l)
     protected def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)
     protected def nullValue() = new ConfigNull(fakeOrigin())
     protected def stringValue(s: String) = new ConfigString(fakeOrigin(), s)
@@ -168,4 +212,25 @@ abstract trait TestUtils {
         Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s).asInstanceOf[AbstractConfigObject]
     }
 
+    protected def subst(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {
+        val pieces = java.util.Collections.singletonList[Object](new Substitution(ref, style))
+        new ConfigSubstitution(fakeOrigin(), pieces)
+    }
+
+    protected def substInString(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {
+        import scala.collection.JavaConverters._
+        val pieces = List("start<", new Substitution(ref, style), ">end")
+        new ConfigSubstitution(fakeOrigin(), pieces.asJava)
+    }
+
+    def tokenTrue = Tokens.newBoolean(fakeOrigin(), true)
+    def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
+    def tokenNull = Tokens.newNull(fakeOrigin())
+    def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
+    def tokenKeySubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, SubstitutionStyle.KEY)
+    def tokenPathSubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, SubstitutionStyle.PATH)
+    def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
+    def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d)
+    def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i)
+    def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l)
 }

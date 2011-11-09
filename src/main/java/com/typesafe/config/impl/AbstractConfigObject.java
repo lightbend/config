@@ -299,14 +299,16 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     public Long getMilliseconds(String path) {
-        return TimeUnit.NANOSECONDS.toMillis(getNanoseconds(path));
+        long ns = getNanoseconds(path);
+        long ms = TimeUnit.NANOSECONDS.toMillis(ns);
+        return ms;
     }
 
     @Override
     public Long getNanoseconds(String path) {
         Long ns = null;
         try {
-            ns = getLong(path);
+            ns = TimeUnit.MILLISECONDS.toNanos(getLong(path));
         } catch (ConfigException.WrongType e) {
             ConfigValue v = resolve(path, ConfigValueType.STRING, path);
             ns = Config.parseDuration((String) v.unwrapped(), v.origin(), path);
@@ -438,7 +440,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
             if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(((Number) v.unwrapped()).longValue());
+                l.add(TimeUnit.MILLISECONDS.toNanos(((Number) v.unwrapped())
+                        .longValue()));
             } else if (v.valueType() == ConfigValueType.STRING) {
                 String s = (String) v.unwrapped();
                 Long n = Config.parseDuration(s, v.origin(), path);

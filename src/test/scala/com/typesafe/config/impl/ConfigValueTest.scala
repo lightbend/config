@@ -3,6 +3,7 @@ package com.typesafe.config.impl
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config.ConfigValue
+import java.util.Collections
 
 class ConfigValueTest extends TestUtils {
 
@@ -74,5 +75,32 @@ class ConfigValueTest extends TestUtils {
         checkEqualObjects(a, sameAsA)
         checkNotEqualObjects(a, differentRef)
         checkNotEqualObjects(a, differentStyle)
+    }
+
+    @Test
+    def configSubstitutionEquality() {
+        val a = subst("foo")
+        val sameAsA = subst("foo")
+        val b = subst("bar")
+
+        checkEqualObjects(a, a)
+        checkEqualObjects(a, sameAsA)
+        checkNotEqualObjects(a, b)
+    }
+
+    @Test
+    def valuesToString() {
+        // just check that these don't throw, the exact output
+        // isn't super important since it's just for debugging
+        intValue(10).toString()
+        longValue(11).toString()
+        doubleValue(3.14).toString()
+        stringValue("hi").toString()
+        nullValue().toString()
+        boolValue(true).toString()
+        (new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())).toString()
+        (new ConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]())).toString()
+        subst("a").toString()
+        substInString("b").toString()
     }
 }

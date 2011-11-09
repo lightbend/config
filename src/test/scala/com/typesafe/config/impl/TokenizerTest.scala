@@ -10,17 +10,6 @@ import java.util.HashMap
 
 class TokenizerTest extends TestUtils {
 
-    def tokenTrue = Tokens.newBoolean(fakeOrigin(), true)
-    def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
-    def tokenNull = Tokens.newNull(fakeOrigin())
-    def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
-    def tokenKeySubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, SubstitutionStyle.KEY)
-    def tokenPathSubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, SubstitutionStyle.PATH)
-    def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
-    def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d)
-    def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i)
-    def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l)
-
     def tokenize(origin: ConfigOrigin, input: Reader): java.util.Iterator[Token] = {
         Tokenizer.tokenize(origin, input)
     }
@@ -199,6 +188,7 @@ class TokenizerTest extends TestUtils {
             ("1.2", 1.2),
             ("1e6", 1e6),
             ("1e-6", 1e-6),
+            ("1E-6", 1e-6), // capital E is allowed
             ("-1", -1),
             ("-1.2", -1.2))
 
