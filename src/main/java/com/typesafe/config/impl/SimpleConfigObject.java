@@ -1,6 +1,9 @@
 package com.typesafe.config.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -62,7 +65,12 @@ class SimpleConfigObject extends AbstractConfigObject {
     }
 
     private static int mapHash(Map<String, AbstractConfigValue> m) {
-        Set<String> keys = m.keySet();
+        // the keys have to be sorted, otherwise we could be equal
+        // to another map but have a different hashcode.
+        List<String> keys = new ArrayList<String>();
+        keys.addAll(m.keySet());
+        Collections.sort(keys);
+
         int valuesHash = 0;
         for (String k : keys) {
             valuesHash += m.get(k).hashCode();
