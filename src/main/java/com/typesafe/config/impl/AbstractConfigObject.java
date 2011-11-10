@@ -116,10 +116,10 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             ConfigValueType expected, ConfigTransformer transformer,
             String originalPath) {
         Path path = Path.newPath(pathExpression);
-        return resolve(self, path, expected, transformer, originalPath);
+        return find(self, path, expected, transformer, originalPath);
     }
 
-    static private AbstractConfigValue resolveKey(AbstractConfigObject self,
+    static private AbstractConfigValue findKey(AbstractConfigObject self,
             String key, ConfigValueType expected,
             ConfigTransformer transformer, String originalPath) {
         AbstractConfigValue v = self.peek(key);
@@ -139,22 +139,22 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             return v;
     }
 
-    static private AbstractConfigValue resolve(AbstractConfigObject self,
+    static private AbstractConfigValue find(AbstractConfigObject self,
             Path path, ConfigValueType expected, ConfigTransformer transformer,
             String originalPath) {
         String key = path.first();
         Path next = path.remainder();
         if (next == null) {
-            return resolveKey(self, key, expected, transformer, originalPath);
+            return findKey(self, key, expected, transformer, originalPath);
         } else {
-            AbstractConfigObject o = (AbstractConfigObject) resolveKey(self,
+            AbstractConfigObject o = (AbstractConfigObject) findKey(self,
                     key, ConfigValueType.OBJECT, transformer, originalPath);
             assert (o != null); // missing was supposed to throw
-            return resolve(o, next, expected, transformer, originalPath);
+            return find(o, next, expected, transformer, originalPath);
         }
     }
 
-    AbstractConfigValue resolve(String pathExpression,
+    AbstractConfigValue find(String pathExpression,
             ConfigValueType expected,
             String originalPath) {
         return resolve(this, pathExpression, expected, transformer,
@@ -245,18 +245,18 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     public ConfigValue get(String path) {
-        return resolve(path, null, path);
+        return find(path, null, path);
     }
 
     @Override
     public boolean getBoolean(String path) {
-        ConfigValue v = resolve(path, ConfigValueType.BOOLEAN, path);
+        ConfigValue v = find(path, ConfigValueType.BOOLEAN, path);
         return (Boolean) v.unwrapped();
     }
 
     @Override
     public Number getNumber(String path) {
-        ConfigValue v = resolve(path, ConfigValueType.NUMBER, path);
+        ConfigValue v = find(path, ConfigValueType.NUMBER, path);
         return (Number) v.unwrapped();
     }
 
@@ -277,26 +277,26 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     public String getString(String path) {
-        ConfigValue v = resolve(path, ConfigValueType.STRING, path);
+        ConfigValue v = find(path, ConfigValueType.STRING, path);
         return (String) v.unwrapped();
     }
 
     @Override
     public List<? extends ConfigValue> getList(String path) {
-        AbstractConfigValue v = resolve(path, ConfigValueType.LIST, path);
+        AbstractConfigValue v = find(path, ConfigValueType.LIST, path);
         return ((ConfigList) v).asJavaList();
     }
 
     @Override
     public AbstractConfigObject getObject(String path) {
-        AbstractConfigObject obj = (AbstractConfigObject) resolve(path,
+        AbstractConfigObject obj = (AbstractConfigObject) find(path,
                 ConfigValueType.OBJECT, path);
         return transformed(obj);
     }
 
     @Override
     public Object getAny(String path) {
-        ConfigValue v = resolve(path, null, path);
+        ConfigValue v = find(path, null, path);
         return v.unwrapped();
     }
 
@@ -306,7 +306,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         try {
             size = getLong(path);
         } catch (ConfigException.WrongType e) {
-            ConfigValue v = resolve(path, ConfigValueType.STRING, path);
+            ConfigValue v = find(path, ConfigValueType.STRING, path);
             size = Config.parseMemorySize((String) v.unwrapped(), v.origin(),
                     path);
         }
@@ -326,7 +326,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         try {
             ns = TimeUnit.MILLISECONDS.toNanos(getLong(path));
         } catch (ConfigException.WrongType e) {
-            ConfigValue v = resolve(path, ConfigValueType.STRING, path);
+            ConfigValue v = find(path, ConfigValueType.STRING, path);
             ns = Config.parseDuration((String) v.unwrapped(), v.origin(), path);
         }
         return ns;
