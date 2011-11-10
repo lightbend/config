@@ -155,92 +155,6 @@ final class Parser {
             return t;
         }
 
-        static class Element {
-            StringBuilder sb;
-            // an element can be empty if it has a quoted empty string "" in it
-            boolean canBeEmpty;
-
-            Element(String initial, boolean canBeEmpty) {
-                this.canBeEmpty = canBeEmpty;
-                this.sb = new StringBuilder(initial);
-            }
-        }
-
-        private void addPathText(List<Element> buf, boolean wasQuoted,
-                String newText) {
-            int i = wasQuoted ? -1 : newText.indexOf('.');
-            Element current = buf.get(buf.size() - 1);
-            if (i < 0) {
-                // add to current path element
-                current.sb.append(newText);
-                // any empty quoted string means this element can
-                // now be empty.
-                if (wasQuoted && current.sb.length() == 0)
-                    current.canBeEmpty = true;
-            } else {
-                // "buf" plus up to the period is an element
-                current.sb.append(newText.substring(0, i));
-                // then start a new element
-                buf.add(new Element("", false));
-                // recurse to consume remainder of newText
-                addPathText(buf, false, newText.substring(i + 1));
-            }
-        }
-
-        private Path parsePathExpression(List<Token> expression) {
-            // each builder in "buf" is an element in the path.
-            List<Element> buf = new ArrayList<Element>();
-            buf.add(new Element("", false));
-
-            for (Token t : expression) {
-                if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
-                    AbstractConfigValue v = Tokens.getValue(t);
-                    // this is a quoted string; so any periods
-                    // in here don't count as path separators
-                    String s = v.transformToString();
-
-                    addPathText(buf, true, s);
-                } else {
-                    // any periods outside of a quoted string count as
-                    // separators
-                    String text;
-                    if (Tokens.isValue(t)) {
-                        // appending a number here may add
-                        // a period, but we _do_ count those as path
-                        // separators, because we basically want
-                        // "foo 3.0bar" to parse as a string even
-                        // though there's a number in it. The fact that
-                        // we tokenize non-string values is largely an
-                        // implementation detail.
-                        AbstractConfigValue v = Tokens.getValue(t);
-                        text = v.transformToString();
-                    } else if (Tokens.isUnquotedText(t)) {
-                        text = Tokens.getUnquotedText(t);
-                    } else {
-                        throw new ConfigException.BadPath(lineOrigin(),
-                                "Token not allowed in path expression: "
-                                + t);
-                    }
-
-                    addPathText(buf, false, text);
-                }
-            }
-
-            PathBuilder pb = new PathBuilder();
-            for (Element e : buf) {
-                if (e.sb.length() == 0 && !e.canBeEmpty) {
-                    throw new ConfigException.BadPath(
-                            lineOrigin(),
-                            buf.toString(),
-                            "path has a leading, trailing, or two adjacent period '.' (use \"\" empty string if you want an empty element)");
-                } else {
-                    pb.appendKey(e.sb.toString());
-                }
-            }
-
-            return pb.result();
-        }
-
         // merge a bunch of adjacent values into one
         // value; change unquoted text into a string
         // value.
@@ -300,7 +214,8 @@ final class Parser {
                     // now save substitution
                     List<Token> expression = Tokens
                             .getSubstitutionPathExpression(valueToken);
-                    Path path = parsePathExpression(expression);
+                    Path path = parsePathExpression(expression,
+                            Tokens.getSubstitutionOrigin(valueToken));
                     minimized.add(path);
                 } else {
                     throw new ConfigException.BugOrBroken(
@@ -498,5 +413,92 @@ final class Parser {
         ParseContext context = new ParseContext(flavor, origin, tokens,
                 includer);
         return context.parse();
+    }
+
+    static class Element {
+        StringBuilder sb;
+        // an element can be empty if it has a quoted empty string "" in it
+        boolean canBeEmpty;
+
+        Element(String initial, boolean canBeEmpty) {
+            this.canBeEmpty = canBeEmpty;
+            this.sb = new StringBuilder(initial);
+        }
+    }
+
+    private static void addPathText(List<Element> buf, boolean wasQuoted,
+            String newText) {
+        int i = wasQuoted ? -1 : newText.indexOf('.');
+        Element current = buf.get(buf.size() - 1);
+        if (i < 0) {
+            // add to current path element
+            current.sb.append(newText);
+            // any empty quoted string means this element can
+            // now be empty.
+            if (wasQuoted && current.sb.length() == 0)
+                current.canBeEmpty = true;
+        } else {
+            // "buf" plus up to the period is an element
+            current.sb.append(newText.substring(0, i));
+            // then start a new element
+            buf.add(new Element("", false));
+            // recurse to consume remainder of newText
+            addPathText(buf, false, newText.substring(i + 1));
+        }
+    }
+
+    private static Path parsePathExpression(List<Token> expression,
+            ConfigOrigin origin) {
+        // each builder in "buf" is an element in the path.
+        List<Element> buf = new ArrayList<Element>();
+        buf.add(new Element("", false));
+
+        for (Token t : expression) {
+            if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
+                AbstractConfigValue v = Tokens.getValue(t);
+                // this is a quoted string; so any periods
+                // in here don't count as path separators
+                String s = v.transformToString();
+
+                addPathText(buf, true, s);
+            } else {
+                // any periods outside of a quoted string count as
+                // separators
+                String text;
+                if (Tokens.isValue(t)) {
+                    // appending a number here may add
+                    // a period, but we _do_ count those as path
+                    // separators, because we basically want
+                    // "foo 3.0bar" to parse as a string even
+                    // though there's a number in it. The fact that
+                    // we tokenize non-string values is largely an
+                    // implementation detail.
+                    AbstractConfigValue v = Tokens.getValue(t);
+                    text = v.transformToString();
+                } else if (Tokens.isUnquotedText(t)) {
+                    text = Tokens.getUnquotedText(t);
+                } else {
+                    throw new ConfigException.BadPath(origin,
+                            "Token not allowed in path expression: "
+                            + t);
+                }
+
+                addPathText(buf, false, text);
+            }
+        }
+
+        PathBuilder pb = new PathBuilder();
+        for (Element e : buf) {
+            if (e.sb.length() == 0 && !e.canBeEmpty) {
+                throw new ConfigException.BadPath(
+                        origin,
+                        buf.toString(),
+                        "path has a leading, trailing, or two adjacent period '.' (use \"\" empty string if you want an empty element)");
+            } else {
+                pb.appendKey(e.sb.toString());
+            }
+        }
+
+        return pb.result();
     }
 }
