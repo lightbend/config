@@ -92,15 +92,6 @@ class JsonTest extends TestUtils {
     // For string quoting, check behavior of escaping a random character instead of one on the list;
     // lift-json seems to oddly treat that as a \ literal
 
-    private def addOffendingJsonToException[R](parserName: String, s: String)(body: => R) = {
-        try {
-            body
-        } catch {
-            case t: Throwable =>
-                throw new AssertionError(parserName + " parser did wrong thing on '" + s + "'", t)
-        }
-    }
-
     @Test
     def invalidJsonThrows(): Unit = {
         // be sure Lift throws on the string
@@ -161,5 +152,15 @@ class JsonTest extends TestUtils {
                 assertEquals(ourAST, ourConfAST)
             }
         }
+    }
+
+    @Test
+    def renderingJsonStrings() {
+        def r(s: String) = ConfigUtil.renderJsonString(s)
+        assertEquals(""""abcdefg"""", r("""abcdefg"""))
+        assertEquals(""""\" \\ \n \b \f \r \t"""", r("\" \\ \n \b \f \r \t"))
+        // control characters are escaped. Remember that unicode escapes
+        // are weird and happen on the source file before doing other processing.
+        assertEquals("\"\\" + "u001f\"", r("\u001f"))
     }
 }

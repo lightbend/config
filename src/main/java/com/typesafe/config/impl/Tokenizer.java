@@ -2,8 +2,10 @@ package com.typesafe.config.impl;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 import com.typesafe.config.ConfigException;
@@ -20,15 +22,71 @@ final class Tokenizer {
 
     private static class TokenIterator implements Iterator<Token> {
 
+        private static class WhitespaceSaver {
+            // has to be saved inside value concatenations
+            private StringBuilder whitespace;
+            // may need to value-concat with next value
+            private boolean lastTokenWasSimpleValue;
+
+            WhitespaceSaver() {
+                whitespace = new StringBuilder();
+                lastTokenWasSimpleValue = false;
+            }
+
+            void add(int c) {
+                if (lastTokenWasSimpleValue)
+                    whitespace.appendCodePoint(c);
+            }
+
+            Token check(Token t, ConfigOrigin baseOrigin, int lineNumber) {
+                if (isSimpleValue(t)) {
+                    return nextIsASimpleValue(baseOrigin, lineNumber);
+                } else {
+                    nextIsNotASimpleValue();
+                    return null;
+                }
+            }
+
+            // called if the next token is not a simple value;
+            // discards any whitespace we were saving between
+            // simple values.
+            private void nextIsNotASimpleValue() {
+                lastTokenWasSimpleValue = false;
+                whitespace.setLength(0);
+            }
+
+            // called if the next token IS a simple value,
+            // so creates a whitespace token if the previous
+            // token also was.
+            private Token nextIsASimpleValue(ConfigOrigin baseOrigin,
+                    int lineNumber) {
+                if (lastTokenWasSimpleValue) {
+                    // need to save whitespace between the two so
+                    // the parser has the option to concatenate it.
+                    if (whitespace.length() > 0) {
+                        Token t = Tokens.newUnquotedText(
+                                lineOrigin(baseOrigin, lineNumber),
+                                whitespace.toString());
+                        whitespace.setLength(0); // reset
+                        return t;
+                    } else {
+                        // lastTokenWasSimpleValue = true still
+                        return null;
+                    }
+                } else {
+                    lastTokenWasSimpleValue = true;
+                    whitespace.setLength(0);
+                    return null;
+                }
+            }
+        }
+
         private ConfigOrigin origin;
         private Reader input;
         private int oneCharBuffer;
         private int lineNumber;
         private Queue<Token> tokens;
-        // has to be saved inside value concatenations
-        private StringBuilder whitespace;
-        // may need to value-concat with next value
-        private boolean lastTokenWasSimpleValue;
+        private WhitespaceSaver whitespaceSaver;
 
         TokenIterator(ConfigOrigin origin, Reader input) {
             this.origin = origin;
@@ -37,8 +95,7 @@ final class Tokenizer {
             lineNumber = 0;
             tokens = new LinkedList<Token>();
             tokens.add(Tokens.START);
-            whitespace = new StringBuilder();
-            lastTokenWasSimpleValue = false;
+            whitespaceSaver = new WhitespaceSaver();
         }
 
 
@@ -76,15 +133,14 @@ final class Tokenizer {
         }
 
         // get next char, skipping non-newline whitespace
-        private int nextCharAfterWhitespace() {
+        private int nextCharAfterWhitespace(WhitespaceSaver saver) {
             for (;;) {
                 int c = nextChar();
 
                 if (c == -1) {
                     return -1;
                 } else if (isWhitespaceNotNewline(c)) {
-                    if (lastTokenWasSimpleValue)
-                        whitespace.appendCodePoint(c);
+                    saver.add(c);
                     continue;
                 } else {
                     return c;
@@ -97,11 +153,27 @@ final class Tokenizer {
         }
 
         private ConfigException parseError(String message, Throwable cause) {
-            return new ConfigException.Parse(lineOrigin(), message, cause);
+            return parseError(lineOrigin(), message, cause);
+        }
+
+        private static ConfigException parseError(ConfigOrigin origin,
+                String message,
+                Throwable cause) {
+            return new ConfigException.Parse(origin, message, cause);
+        }
+
+        private static ConfigException parseError(ConfigOrigin origin,
+                String message) {
+            return parseError(origin, message, null);
         }
 
         private ConfigOrigin lineOrigin() {
-            return new SimpleConfigOrigin(origin.description() + ": line "
+            return lineOrigin(origin, lineNumber);
+        }
+
+        private static ConfigOrigin lineOrigin(ConfigOrigin baseOrigin,
+                int lineNumber) {
+            return new SimpleConfigOrigin(baseOrigin.description() + ": line "
                     + lineNumber);
         }
 
@@ -270,91 +342,49 @@ final class Tokenizer {
                 throw parseError("'$' not followed by {");
             }
 
-            String reference = null;
-            boolean wasQuoted = false;
+            WhitespaceSaver saver = new WhitespaceSaver();
+            List<Token> expression = new ArrayList<Token>();
 
+            Token t;
             do {
-                c = nextChar();
-                if (c == -1)
-                    throw parseError("End of input but substitution was still open");
+                t = pullNextToken(saver);
 
-                if (c == '"') {
-                    if (reference != null)
-                        throw parseError("Substitution contains multiple string values");
-                    Token t = pullQuotedString();
-                    AbstractConfigValue v = Tokens.getValue(t);
-                    reference = ((ConfigString) v).unwrapped();
-                    wasQuoted = true;
-                } else if (c == '}') {
+                // note that we avoid validating the allowed tokens inside
+                // the substitution here; we even allow nested substitutions
+                // in the tokenizer. The parser sorts it out.
+                if (t == Tokens.CLOSE_CURLY) {
                     // end the loop, done!
+                    break;
+                } else if (t == Tokens.END) {
+                    throw parseError(origin,
+                            "Substitution ${ was not closed with a }");
                 } else {
-                    if (reference != null || notInUnquotedText.indexOf(c) >= 0
-                            || isWhitespace(c))
-                        throw parseError("Substitution contains multiple string values or invalid char: '"
-                                + ((char) c) + "'");
-                    putBack(c);
-                    Token t = pullUnquotedText();
-                    if (!Tokens.isUnquotedText(t)) {
-                        throw parseError("Substitution contains non-string token, try quoting it: "
-                                + t);
-                    }
-                    reference = Tokens.getUnquotedText(t);
+                    Token whitespace = saver.check(t, origin, lineNumber);
+                    if (whitespace != null)
+                        expression.add(whitespace);
+                    expression.add(t);
                 }
-            } while (c != '}');
+            } while (true);
 
-            SubstitutionStyle style = ((!wasQuoted) && reference.indexOf('.') >= 0) ? SubstitutionStyle.PATH
-                    : SubstitutionStyle.KEY;
-            return Tokens.newSubstitution(origin, reference, style);
+            return Tokens.newSubstitution(origin, expression);
         }
 
-        // called if the next token is not a simple value;
-        // discards any whitespace we were saving between
-        // simple values.
-        private void nextIsNotASimpleValue() {
-            lastTokenWasSimpleValue = false;
-            whitespace.setLength(0);
-        }
-
-        // called if the next token IS a simple value,
-        // so creates a whitespace token if the previous
-        // token also was.
-        private void nextIsASimpleValue() {
-            if (lastTokenWasSimpleValue) {
-                // need to save whitespace between the two so
-                // the parser has the option to concatenate it.
-                if (whitespace.length() > 0) {
-                    tokens.add(Tokens.newUnquotedText(lineOrigin(),
-                            whitespace.toString()));
-                    whitespace.setLength(0); // reset
-                }
-                // lastTokenWasSimpleValue = true still
-            } else {
-                lastTokenWasSimpleValue = true;
-                whitespace.setLength(0);
-            }
-        }
-
-        private void queueNextToken() {
-            int c = nextCharAfterWhitespace();
+        private Token pullNextToken(WhitespaceSaver saver) {
+            int c = nextCharAfterWhitespace(saver);
             if (c == -1) {
-                nextIsNotASimpleValue();
-                tokens.add(Tokens.END);
+                return Tokens.END;
             } else if (c == '\n') {
                 // newline tokens have the just-ended line number
-                nextIsNotASimpleValue();
-                tokens.add(Tokens.newLine(lineNumber));
                 lineNumber += 1;
+                return Tokens.newLine(lineNumber - 1);
             } else {
                 Token t = null;
-                boolean tIsSimpleValue = false;
                 switch (c) {
                 case '"':
                     t = pullQuotedString();
-                    tIsSimpleValue = true;
                     break;
                 case '$':
                     t = pullSubstitution();
-                    tIsSimpleValue = true;
                     break;
                 case ':':
                     t = Tokens.COLON;
@@ -379,7 +409,6 @@ final class Tokenizer {
                 if (t == null) {
                     if (firstNumberChars.indexOf(c) >= 0) {
                         t = pullNumber(c);
-                        tIsSimpleValue = true;
                     } else if (notInUnquotedText.indexOf(c) >= 0) {
                         throw parseError(String
                                 .format("Character '%c' is not the start of any valid token",
@@ -387,7 +416,6 @@ final class Tokenizer {
                     } else {
                         putBack(c);
                         t = pullUnquotedText();
-                        tIsSimpleValue = true;
                     }
                 }
 
@@ -395,14 +423,25 @@ final class Tokenizer {
                     throw new ConfigException.BugOrBroken(
                             "bug: failed to generate next token");
 
-                if (tIsSimpleValue) {
-                    nextIsASimpleValue();
-                } else {
-                    nextIsNotASimpleValue();
-                }
-
-                tokens.add(t);
+                return t;
             }
+        }
+
+        private static boolean isSimpleValue(Token t) {
+            if (Tokens.isSubstitution(t) || Tokens.isUnquotedText(t)
+                    || Tokens.isValue(t)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        private void queueNextToken() {
+            Token t = pullNextToken(whitespaceSaver);
+            Token whitespace = whitespaceSaver.check(t, origin, lineNumber);
+            if (whitespace != null)
+                tokens.add(whitespace);
+            tokens.add(t);
         }
 
         @Override

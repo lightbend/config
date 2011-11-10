@@ -156,6 +156,23 @@ Different from JSON:
    already then it refers to precisely that filename and the format
    is not flexible.
 
+### Path expressions
+
+Path expressions are used to write out a path through the object
+graph. They appear in two places; in substitutions, like
+`${foo.bar}`, and as the keys in objects like `{ foo.bar : 42 }`.
+
+Path expressions work like a value concatenation, except that they
+may not contain substitutions. This means that you can't nest
+substitutions inside other substitutions, and you can't have
+substitutions in keys.
+
+When concatenating the path expression, any `.` characters outside quoted
+strings or numbers are understood as path separators, while inside quoted
+strings `.` has no special meaning. So `foo.bar."hello.world"` would be
+a path with three elements, looking up key `foo`, key `bar`, then key
+`hello.world`.
+
 ### Java properties mapping
 
 See the Java properties spec here: http://download.oracle.com/javase/7/docs/api/java/util/Properties.html#load%28java.io.Reader%29
@@ -191,11 +208,8 @@ simplified HOCON value when merged:
 Substitutions are a way of referring to other parts of the configuration
 tree.
 
-The syntax is `${stringvalue}` where the `stringvalue` may be an unquoted or a
-quoted string, following the usual rules. `stringvalue` may not be a value
-concatenation, only a single string, so for example whitespace requires quoting.
-`stringvalue` may not be a non-string value such as `true`, you would have to quote
-it as `"true"`.
+The syntax is `${stringvalue}` where the `stringvalue` is a path expression
+(see above).
 
 Substitution processing is performed as the last parsing step, so a
 substitution can look forward in the configuration file and even retrieve a

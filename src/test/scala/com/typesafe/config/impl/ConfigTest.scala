@@ -368,4 +368,16 @@ class ConfigTest extends TestUtils {
     def test01LoadWithConfigConfig() {
         val conf = Config.load(new ConfigConfig("test01"))
     }
+
+    @Test
+    def test02WeirdPaths() {
+        val conf = Config.load("test02")
+
+        assertEquals(42, conf.getInt("42_a"))
+        assertEquals(42, conf.getInt("42_b"))
+        assertEquals(42, conf.getInt("42_c"))
+        assertEquals(57, conf.getInt("57_a"))
+        assertEquals(57, conf.getInt("57_b"))
+        assertEquals(103, conf.getInt("103_a"))
+    }
 }

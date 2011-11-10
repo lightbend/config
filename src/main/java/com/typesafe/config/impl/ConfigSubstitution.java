@@ -7,9 +7,16 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
+/**
+ * A ConfigSubstitution represents a value with one or more substitutions in it;
+ * it can resolve to a value of any type, though if the substitution has more
+ * than one piece it always resolves to a string via value concatenation.
+ */
 final class ConfigSubstitution extends AbstractConfigValue {
 
-    // this is a list of String and Substitution
+    // this is a list of String and Path where the Path
+    // have to be resolved to values, then if there's more
+    // than one piece everything is stringified and concatenated
     private List<Object> pieces;
 
     ConfigSubstitution(ConfigOrigin origin, List<Object> pieces) {
@@ -29,27 +36,25 @@ final class ConfigSubstitution extends AbstractConfigValue {
                 "tried to unwrap a ConfigSubstitution; need to resolve substitution first");
     }
 
+    List<Object> pieces() {
+        return pieces;
+    }
+
     // larger than anyone would ever want
     private static final int MAX_DEPTH = 100;
 
     private ConfigValue findInObject(AbstractConfigObject root,
             SubstitutionResolver resolver, /* null if we should not have refs */
-            Substitution subst, int depth,
+            Path subst, int depth,
             boolean withFallbacks) {
         if (depth > MAX_DEPTH) {
-            throw new ConfigException.BadValue(origin(), subst.reference(),
-                    "Substitution ${" + subst.reference()
+            throw new ConfigException.BadValue(origin(), subst.render(),
+                    "Substitution ${" + subst.render()
                             + "} is part of a cycle of substitutions");
         }
 
-        ConfigValue result = null;
-        if (subst.isPath()) {
-            result = root.peekPath(subst.reference(), resolver, depth,
+        ConfigValue result = root.peekPath(subst, resolver, depth,
                     withFallbacks);
-        } else {
-            result = root.peek(subst.reference(), resolver, depth,
-                    withFallbacks);
-        }
 
         if (result instanceof ConfigSubstitution) {
             throw new ConfigException.BugOrBroken(
@@ -63,8 +68,7 @@ final class ConfigSubstitution extends AbstractConfigValue {
         return result;
     }
 
-    private ConfigValue resolve(SubstitutionResolver resolver,
-            Substitution subst,
+    private ConfigValue resolve(SubstitutionResolver resolver, Path subst,
             int depth, boolean withFallbacks) {
         ConfigValue result = findInObject(resolver.root(), resolver, subst,
                 depth, withFallbacks);
@@ -95,7 +99,7 @@ final class ConfigSubstitution extends AbstractConfigValue {
                 if (p instanceof String) {
                     sb.append((String) p);
                 } else {
-                    ConfigValue v = resolve(resolver, (Substitution) p,
+                    ConfigValue v = resolve(resolver, (Path) p,
                             depth, withFallbacks);
                     switch (v.valueType()) {
                     case NULL:
@@ -105,7 +109,7 @@ final class ConfigSubstitution extends AbstractConfigValue {
                     case OBJECT:
                         // cannot substitute lists and objects into strings
                         throw new ConfigException.WrongType(v.origin(),
-                                ((Substitution) p).reference(),
+                                ((Path) p).render(),
                                 "not a list or object", v.valueType().name());
                     default:
                         sb.append(((AbstractConfigValue) v).transformToString());
@@ -114,10 +118,10 @@ final class ConfigSubstitution extends AbstractConfigValue {
             }
             return new ConfigString(origin(), sb.toString());
         } else {
-            if (!(pieces.get(0) instanceof Substitution))
+            if (!(pieces.get(0) instanceof Path))
                 throw new ConfigException.BugOrBroken(
                         "ConfigSubstitution should never contain a single String piece");
-            return resolve(resolver, (Substitution) pieces.get(0), depth,
+            return resolve(resolver, (Path) pieces.get(0), depth,
                     withFallbacks);
         }
     }

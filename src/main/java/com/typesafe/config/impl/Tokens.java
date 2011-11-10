@@ -1,5 +1,7 @@
 package com.typesafe.config.impl;
 
+import java.util.List;
+
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
@@ -120,35 +122,25 @@ final class Tokens {
     // This is not a Value, because it requires special processing
     static private class Substitution extends Token {
         private ConfigOrigin origin;
-        private String value;
-        private boolean isPath;
+        private List<Token> value;
 
-        Substitution(ConfigOrigin origin, String s, SubstitutionStyle style) {
+        Substitution(ConfigOrigin origin, List<Token> expression) {
             super(TokenType.SUBSTITUTION);
             this.origin = origin;
-            this.value = s;
-            // if the string is not quoted and contains '.' then
-            // it's a path rather than just a key name.
-
-            this.isPath = style == SubstitutionStyle.PATH;
+            this.value = expression;
         }
 
         ConfigOrigin origin() {
             return origin;
         }
 
-        String value() {
+        List<Token> value() {
             return value;
-        }
-
-        boolean isPath() {
-            return isPath;
         }
 
         @Override
         public String toString() {
-            return tokenType().name() + "(" + value + ",isPath=" + isPath
-                    + ")";
+            return tokenType().name() + "(" + value.toString() + ")";
         }
 
         @Override
@@ -159,14 +151,12 @@ final class Tokens {
         @Override
         public boolean equals(Object other) {
             return super.equals(other)
-                    && ((Substitution) other).value.equals(value)
-                    && ((Substitution) other).isPath() == this.isPath();
+                    && ((Substitution) other).value.equals(value);
         }
 
         @Override
         public int hashCode() {
-            return 41 * (41 * (41 + super.hashCode()) + value.hashCode())
-                    + Boolean.valueOf(isPath()).hashCode();
+            return 41 * (41 + super.hashCode()) + value.hashCode();
         }
     }
 
@@ -226,7 +216,7 @@ final class Tokens {
         return token instanceof Substitution;
     }
 
-    static String getSubstitution(Token token) {
+    static List<Token> getSubstitutionPathExpression(Token token) {
         if (token instanceof Substitution) {
             return ((Substitution) token).value();
         } else {
@@ -241,16 +231,6 @@ final class Tokens {
         } else {
             throw new ConfigException.BugOrBroken(
                     "tried to get substitution origin from " + token);
-        }
-    }
-
-    static SubstitutionStyle getSubstitutionStyle(Token token) {
-        if (token instanceof Substitution) {
-            return ((Substitution) token).isPath() ? SubstitutionStyle.PATH
-                    : SubstitutionStyle.KEY;
-        } else {
-            throw new ConfigException.BugOrBroken(
-                    "tried to get substitution style from " + token);
         }
     }
 
@@ -271,9 +251,8 @@ final class Tokens {
         return new UnquotedText(origin, s);
     }
 
-    static Token newSubstitution(ConfigOrigin origin, String s,
-            SubstitutionStyle style) {
-        return new Substitution(origin, s, style);
+    static Token newSubstitution(ConfigOrigin origin, List<Token> expression) {
+        return new Substitution(origin, expression);
     }
 
     static Token newValue(AbstractConfigValue value) {

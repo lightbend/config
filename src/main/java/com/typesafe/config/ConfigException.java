@@ -143,6 +143,10 @@ public class ConfigException extends RuntimeException {
         public BadPath(String path, String message) {
             this(path, message, null);
         }
+
+        public BadPath(ConfigOrigin origin, String message) {
+            super(origin, message);
+        }
     }
 
     /**

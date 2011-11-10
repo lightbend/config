@@ -2,6 +2,9 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
+import com.typesafe.config.ConfigOrigin
+import java.io.Reader
+import java.io.StringReader
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -126,14 +129,10 @@ abstract trait TestUtils {
         "[${]", // unclosed substitution
         "[$]", // '$' by itself
         "[$  ]", // '$' by itself with spaces after
-        """${"foo""bar"}""", // multiple strings in substitution
         """{ "a" : [1,2], "b" : y${a}z }""", // trying to interpolate an array in a string
         """{ "a" : { "c" : 2 }, "b" : y${a}z }""", // trying to interpolate an object in a string
-        ParseTest(false, true, "[${ foo.bar}]"), // substitution with leading spaces
-        ParseTest(false, true, "[${foo.bar }]"), // substitution with trailing spaces
-        ParseTest(false, true, "[${ \"foo.bar\"}]"), // substitution with leading spaces and quoted
-        ParseTest(false, true, "[${\"foo.bar\" }]"), // substitution with trailing spaces and quoted
-        "[${true}]", // substitution with unquoted true token
+        """{ "a" : ${a} }""", // simple cycle
+        """[ { "a" : 2, "b" : ${${a}} } ]""", // nested substitution
         "[ = ]", // = is not a valid token
         "") // empty document again, just for clean formatting of this list ;-)
 
@@ -175,7 +174,14 @@ abstract trait TestUtils {
         "[ ${foo.bar} ]",
         "[ abc  xyz  ${foo.bar}  qrs tuv ]", // value concatenation
         "[ 1, 2, 3, blah ]",
-        "[ ${\"foo.bar\"} ]")
+        "[ ${\"foo.bar\"} ]",
+        ParseTest(false, true, "[${ foo.bar}]"), // substitution with leading spaces
+        ParseTest(false, true, "[${foo.bar }]"), // substitution with trailing spaces
+        ParseTest(false, true, "[${ \"foo.bar\"}]"), // substitution with leading spaces and quoted
+        ParseTest(false, true, "[${\"foo.bar\" }]"), // substitution with trailing spaces and quoted
+        """${"foo""bar"}""", // multiple strings in substitution
+        """${foo  "bar"  baz}""", // multiple strings and whitespace in substitution
+        "[${true}]") // substitution with unquoted true token
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
 
@@ -183,6 +189,21 @@ abstract trait TestUtils {
 
     // .conf is a superset of JSON so validJson just goes in here
     protected val validConf = validConfInvalidJson ++ validJson;
+
+    protected def addOffendingJsonToException[R](parserName: String, s: String)(body: => R) = {
+        try {
+            body
+        } catch {
+            case t: Throwable =>
+                val tokens = try {
+                    "tokens: " + tokenizeAsList(s)
+                } catch {
+                    case e =>
+                        "tokenizer failed: " + e.getMessage();
+                }
+                throw new AssertionError(parserName + " parser did wrong thing on '" + s + "', " + tokens, t)
+        }
+    }
 
     protected def whitespaceVariations(tests: Seq[ParseTest]): Seq[ParseTest] = {
         val variations = List({ s: String => s }, // identity
@@ -216,14 +237,14 @@ abstract trait TestUtils {
         Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s, includer()).asInstanceOf[AbstractConfigObject]
     }
 
-    protected def subst(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {
-        val pieces = java.util.Collections.singletonList[Object](new Substitution(ref, style))
+    protected def subst(ref: String) = {
+        val pieces = java.util.Collections.singletonList[Object](PathBuilder.newPath(ref))
         new ConfigSubstitution(fakeOrigin(), pieces)
     }
 
-    protected def substInString(ref: String, style: SubstitutionStyle = SubstitutionStyle.PATH) = {
+    protected def substInString(ref: String) = {
         import scala.collection.JavaConverters._
-        val pieces = List("start<", new Substitution(ref, style), ">end")
+        val pieces = List("start<", PathBuilder.newPath(ref), ">end")
         new ConfigSubstitution(fakeOrigin(), pieces.asJava)
     }
 
@@ -231,10 +252,41 @@ abstract trait TestUtils {
     def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
     def tokenNull = Tokens.newNull(fakeOrigin())
     def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
-    def tokenKeySubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, SubstitutionStyle.KEY)
-    def tokenPathSubstitution(s: String) = Tokens.newSubstitution(fakeOrigin(), s, SubstitutionStyle.PATH)
     def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
     def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d)
     def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i)
     def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l)
+
+    def tokenSubstitution(expression: Token*) = {
+        val l = new java.util.ArrayList[Token]
+        for (t <- expression) {
+            l.add(t);
+        }
+        Tokens.newSubstitution(fakeOrigin(), l);
+    }
+
+    // quoted string substitution (no interpretation of periods)
+    def tokenKeySubstitution(s: String) = tokenSubstitution(tokenString(s))
+
+    def tokenize(origin: ConfigOrigin, input: Reader): java.util.Iterator[Token] = {
+        Tokenizer.tokenize(origin, input)
+    }
+
+    def tokenize(input: Reader): java.util.Iterator[Token] = {
+        tokenize(new SimpleConfigOrigin("anonymous Reader"), input)
+    }
+
+    def tokenize(s: String): java.util.Iterator[Token] = {
+        val reader = new StringReader(s)
+        val result = tokenize(reader)
+        // reader.close() // can't close until the iterator is traversed, so this tokenize() flavor is inherently broken
+        result
+    }
+
+    def tokenizeAsList(s: String) = {
+        import scala.collection.JavaConverters._
+        tokenize(s).asScala.toList
+    }
+
+    def path(elements: String*) = new Path(elements: _*)
 }

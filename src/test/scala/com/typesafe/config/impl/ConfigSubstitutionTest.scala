@@ -38,7 +38,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def resolveTrivialKey() {
-        val s = subst("foo", SubstitutionStyle.KEY)
+        val s = subst("foo")
         val v = resolveWithoutFallbacks(s, simpleObject)
         assertEquals(intValue(42), v)
     }

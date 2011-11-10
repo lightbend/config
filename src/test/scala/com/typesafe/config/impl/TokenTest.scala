@@ -43,13 +43,6 @@ class TokenTest extends TestUtils {
         checkEqualObjects(tokenKeySubstitution("foo"), tokenKeySubstitution("foo"))
         checkNotEqualObjects(tokenKeySubstitution("foo"), tokenKeySubstitution("bar"))
 
-        // path subst
-        checkEqualObjects(tokenPathSubstitution("foo"), tokenPathSubstitution("foo"))
-        checkNotEqualObjects(tokenPathSubstitution("foo"), tokenPathSubstitution("bar"))
-
-        // key and path not equal
-        checkNotEqualObjects(tokenKeySubstitution("foo"), tokenPathSubstitution("foo"))
-
         // null
         checkEqualObjects(tokenNull, tokenNull)
 
@@ -75,7 +68,6 @@ class TokenTest extends TestUtils {
         tokenUnquoted("foo").toString()
         tokenString("bar").toString()
         tokenKeySubstitution("a").toString()
-        tokenPathSubstitution("b").toString()
         Tokens.newLine(10).toString()
         Tokens.START.toString()
         Tokens.END.toString()

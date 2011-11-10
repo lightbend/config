@@ -1,39 +1,22 @@
 package com.typesafe.config.impl
 
-import org.junit.Assert._
-import org.junit._
-import net.liftweb.{ json => lift }
-import java.io.Reader
-import java.io.StringReader
-import com.typesafe.config._
-import java.util.HashMap
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+import com.typesafe.config.ConfigException
 
 class TokenizerTest extends TestUtils {
-
-    def tokenize(origin: ConfigOrigin, input: Reader): java.util.Iterator[Token] = {
-        Tokenizer.tokenize(origin, input)
-    }
-
-    def tokenize(input: Reader): java.util.Iterator[Token] = {
-        tokenize(new SimpleConfigOrigin("anonymous Reader"), input)
-    }
-
-    def tokenize(s: String): java.util.Iterator[Token] = {
-        val reader = new StringReader(s)
-        val result = tokenize(reader)
-        // reader.close() // can't close until the iterator is traversed, so this tokenize() flavor is inherently broken
-        result
-    }
-
-    def tokenizeAsList(s: String) = {
-        import scala.collection.JavaConverters._
-        tokenize(s).asScala.toList
-    }
 
     @Test
     def tokenizeEmptyString() {
         assertEquals(List(Tokens.START, Tokens.END),
             tokenizeAsList(""))
+    }
+
+    @Test
+    def tokenizeNewlines() {
+        assertEquals(List(Tokens.START, Tokens.newLine(0), Tokens.newLine(1), Tokens.END),
+            tokenizeAsList("\n\n"))
     }
 
     @Test
@@ -44,7 +27,7 @@ class TokenizerTest extends TestUtils {
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenTrue, tokenDouble(3.14), tokenFalse,
-            tokenLong(42), tokenNull, tokenPathSubstitution("a.b"),
+            tokenLong(42), tokenNull, tokenSubstitution(tokenUnquoted("a.b")),
             tokenKeySubstitution("c.d"), Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList(""",:}{]["foo"true3.14false42null${a.b}${"c.d"}""" + "\n"))
     }
@@ -55,7 +38,7 @@ class TokenizerTest extends TestUtils {
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
             tokenDouble(3.14), tokenUnquoted(" "), tokenFalse, tokenUnquoted(" "), tokenNull,
-            tokenUnquoted(" "), tokenPathSubstitution("a.b"), tokenUnquoted(" "), tokenKeySubstitution("c.d"),
+            tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "), tokenKeySubstitution("c.d"),
             Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList(""" , : } { ] [ "foo" 42 true 3.14 false null ${a.b} ${"c.d"} """ + "\n "))
     }
@@ -66,7 +49,7 @@ class TokenizerTest extends TestUtils {
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
             tokenDouble(3.14), tokenUnquoted("   "), tokenFalse, tokenUnquoted("   "), tokenNull,
-            tokenUnquoted("   "), tokenPathSubstitution("a.b"), tokenUnquoted("   "),
+            tokenUnquoted("   "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted("   "),
             tokenKeySubstitution("c.d"),
             Tokens.newLine(0), Tokens.END)
         assertEquals(expected, tokenizeAsList("""   ,   :   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${"c.d"}  """ + "\n   "))

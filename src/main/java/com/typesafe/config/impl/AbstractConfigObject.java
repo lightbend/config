@@ -49,24 +49,24 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      * Looks up the path with no transformation, type conversion, or exceptions
      * (just returns null if path not found).
      */
-    protected ConfigValue peekPath(String path) {
+    protected ConfigValue peekPath(Path path) {
         return peekPath(this, path);
     }
 
-    protected ConfigValue peekPath(String path, SubstitutionResolver resolver,
+    protected ConfigValue peekPath(Path path, SubstitutionResolver resolver,
             int depth,
             boolean withFallbacks) {
         return peekPath(this, path, resolver, depth, withFallbacks);
     }
 
-    private static ConfigValue peekPath(AbstractConfigObject self, String path) {
+    private static ConfigValue peekPath(AbstractConfigObject self, Path path) {
         return peekPath(self, path, null, 0, false);
     }
 
-    private static ConfigValue peekPath(AbstractConfigObject self, String path,
+    private static ConfigValue peekPath(AbstractConfigObject self, Path path,
             SubstitutionResolver resolver, int depth, boolean withFallbacks) {
-        String key = ConfigUtil.firstElement(path);
-        String next = ConfigUtil.otherElements(path);
+        String key = path.first();
+        Path next = path.remainder();
 
         if (next == null) {
             ConfigValue v = self.peek(key, resolver, depth, withFallbacks);

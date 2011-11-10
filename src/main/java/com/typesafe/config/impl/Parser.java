@@ -155,6 +155,92 @@ final class Parser {
             return t;
         }
 
+        static class Element {
+            StringBuilder sb;
+            // an element can be empty if it has a quoted empty string "" in it
+            boolean canBeEmpty;
+
+            Element(String initial, boolean canBeEmpty) {
+                this.canBeEmpty = canBeEmpty;
+                this.sb = new StringBuilder(initial);
+            }
+        }
+
+        private void addPathText(List<Element> buf, boolean wasQuoted,
+                String newText) {
+            int i = wasQuoted ? -1 : newText.indexOf('.');
+            Element current = buf.get(buf.size() - 1);
+            if (i < 0) {
+                // add to current path element
+                current.sb.append(newText);
+                // any empty quoted string means this element can
+                // now be empty.
+                if (wasQuoted && current.sb.length() == 0)
+                    current.canBeEmpty = true;
+            } else {
+                // "buf" plus up to the period is an element
+                current.sb.append(newText.substring(0, i));
+                // then start a new element
+                buf.add(new Element("", false));
+                // recurse to consume remainder of newText
+                addPathText(buf, false, newText.substring(i + 1));
+            }
+        }
+
+        private Path parsePathExpression(List<Token> expression) {
+            // each builder in "buf" is an element in the path.
+            List<Element> buf = new ArrayList<Element>();
+            buf.add(new Element("", false));
+
+            for (Token t : expression) {
+                if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
+                    AbstractConfigValue v = Tokens.getValue(t);
+                    // this is a quoted string; so any periods
+                    // in here don't count as path separators
+                    String s = v.transformToString();
+
+                    addPathText(buf, true, s);
+                } else {
+                    // any periods outside of a quoted string count as
+                    // separators
+                    String text;
+                    if (Tokens.isValue(t)) {
+                        // appending a number here may add
+                        // a period, but we _do_ count those as path
+                        // separators, because we basically want
+                        // "foo 3.0bar" to parse as a string even
+                        // though there's a number in it. The fact that
+                        // we tokenize non-string values is largely an
+                        // implementation detail.
+                        AbstractConfigValue v = Tokens.getValue(t);
+                        text = v.transformToString();
+                    } else if (Tokens.isUnquotedText(t)) {
+                        text = Tokens.getUnquotedText(t);
+                    } else {
+                        throw new ConfigException.BadPath(lineOrigin(),
+                                "Token not allowed in path expression: "
+                                + t);
+                    }
+
+                    addPathText(buf, false, text);
+                }
+            }
+
+            PathBuilder pb = new PathBuilder();
+            for (Element e : buf) {
+                if (e.sb.length() == 0 && !e.canBeEmpty) {
+                    throw new ConfigException.BadPath(
+                            lineOrigin(),
+                            buf.toString(),
+                            "path has a leading, trailing, or two adjacent period '.' (use \"\" empty string if you want an empty element)");
+                } else {
+                    pb.appendKey(e.sb.toString());
+                }
+            }
+
+            return pb.result();
+        }
+
         // merge a bunch of adjacent values into one
         // value; change unquoted text into a string
         // value.
@@ -184,7 +270,7 @@ final class Parser {
                 return;
             }
 
-            // this will be a list of String and Substitution
+            // this will be a list of String and Path
             List<Object> minimized = new ArrayList<Object>();
 
             // we have multiple value tokens or one unquoted text token;
@@ -212,10 +298,10 @@ final class Parser {
                         sb.setLength(0);
                     }
                     // now save substitution
-                    String reference = Tokens.getSubstitution(valueToken);
-                    SubstitutionStyle style = Tokens
-                            .getSubstitutionStyle(valueToken);
-                    minimized.add(new Substitution(reference, style));
+                    List<Token> expression = Tokens
+                            .getSubstitutionPathExpression(valueToken);
+                    Path path = parsePathExpression(expression);
+                    minimized.add(path);
                 } else {
                     throw new ConfigException.BugOrBroken(
                             "should not be trying to consolidate token: "
@@ -276,6 +362,7 @@ final class Parser {
             // invoked just after the OPEN_CURLY
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
             ConfigOrigin objectOrigin = lineOrigin();
+            boolean afterComma = false;
             while (true) {
                 Token t = nextTokenIgnoringNewline();
                 if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
@@ -295,7 +382,12 @@ final class Parser {
                     // our custom config language, they should be merged if the
                     // value is an object.
                     values.put(key, parseValue(valueToken));
+
+                    afterComma = false;
                 } else if (t == Tokens.CLOSE_CURLY) {
+                    if (afterComma) {
+                        throw parseError("expecting a field name after comma, got a close brace }");
+                    }
                     break;
                 } else {
                     throw parseError("Expecting close brace } or a field name, got "
@@ -306,6 +398,7 @@ final class Parser {
                     break;
                 } else if (t == Tokens.COMMA) {
                     // continue looping
+                    afterComma = true;
                 } else {
                     throw parseError("Expecting close brace } or a comma, got "
                             + t);
