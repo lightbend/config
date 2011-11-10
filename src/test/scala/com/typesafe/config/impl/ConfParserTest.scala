@@ -51,8 +51,10 @@ class ConfParserTest extends TestUtils {
     }
 
     private def parsePath(s: String): Path = {
+        // parse first by wrapping into a whole document and using
+        // the regular parser.
         val tree = parseWithoutResolving("[${" + s + "}]")
-        tree match {
+        val result = tree match {
             case list: ConfigList =>
                 list.asJavaList().get(0) match {
                     case subst: ConfigSubstitution =>
@@ -61,6 +63,12 @@ class ConfParserTest extends TestUtils {
                         }
                 }
         }
+        // also parse with the standalone path parser and be sure the
+        // outcome is the same
+        val shouldBeSame = Parser.parsePath(s)
+        assertEquals(result, shouldBeSame)
+
+        result
     }
 
     @Test

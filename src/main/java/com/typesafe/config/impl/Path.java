@@ -101,8 +101,6 @@ final class Path {
     }
 
     static Path newPath(String path) {
-        PathBuilder pb = new PathBuilder();
-        pb.appendPath(path);
-        return pb.result();
+        return Parser.parsePath(path);
     }
 }

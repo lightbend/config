@@ -288,5 +288,8 @@ abstract trait TestUtils {
         tokenize(s).asScala.toList
     }
 
+    // this is importantly NOT using Path.newPath, which relies on
+    // the parser; in the test suite we are often testing the parser,
+    // so we don't want to use the parser to build the expected result.
     def path(elements: String*) = new Path(elements: _*)
 }

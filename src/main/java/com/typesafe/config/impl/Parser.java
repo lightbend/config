@@ -214,7 +214,7 @@ final class Parser {
                     // now save substitution
                     List<Token> expression = Tokens
                             .getSubstitutionPathExpression(valueToken);
-                    Path path = parsePathExpression(expression,
+                    Path path = parsePathExpression(expression.iterator(),
                             Tokens.getSubstitutionOrigin(valueToken));
                     minimized.add(path);
                 } else {
@@ -447,13 +447,14 @@ final class Parser {
         }
     }
 
-    private static Path parsePathExpression(List<Token> expression,
+    private static Path parsePathExpression(Iterator<Token> expression,
             ConfigOrigin origin) {
         // each builder in "buf" is an element in the path.
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
 
-        for (Token t : expression) {
+        while (expression.hasNext()) {
+            Token t = expression.next();
             if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
                 AbstractConfigValue v = Tokens.getValue(t);
                 // this is a quoted string; so any periods
@@ -461,6 +462,11 @@ final class Parser {
                 String s = v.transformToString();
 
                 addPathText(buf, true, s);
+            } else if (t == Tokens.END) {
+                // ignore this; when parsing a file, it should not happen
+                // since we're parsing a token list rather than the main
+                // token iterator, and when parsing a path expression from the
+                // API, it's expected to have an END.
             } else {
                 // any periods outside of a quoted string count as
                 // separators
@@ -500,5 +506,15 @@ final class Parser {
         }
 
         return pb.result();
+    }
+
+    static ConfigOrigin apiOrigin = new SimpleConfigOrigin("path parameter");
+
+    static Path parsePath(String path) {
+        StringReader reader = new StringReader(path);
+        Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader);
+        tokens.next(); // drop START
+
+        return parsePathExpression(tokens, apiOrigin);
     }
 }
