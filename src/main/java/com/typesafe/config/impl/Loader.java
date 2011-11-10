@@ -79,6 +79,34 @@ final class Loader {
         }
     }
 
+    static void verifyPath(String path) {
+        if (path.startsWith("."))
+            throw new ConfigException.BadPath(path, "Path starts with '.'");
+        if (path.endsWith("."))
+            throw new ConfigException.BadPath(path, "Path ends with '.'");
+        if (path.contains(".."))
+            throw new ConfigException.BadPath(path,
+                    "Path contains '..' (empty element)");
+    }
+
+    static String lastElement(String path) {
+        verifyPath(path);
+        int i = path.lastIndexOf('.');
+        if (i < 0)
+            return path;
+        else
+            return path.substring(i + 1);
+    }
+
+    static String exceptLastElement(String path) {
+        verifyPath(path);
+        int i = path.lastIndexOf('.');
+        if (i < 0)
+            return null;
+        else
+            return path.substring(0, i);
+    }
+
     static AbstractConfigObject fromProperties(String originPrefix,
             Properties props) {
         Map<String, Map<String, AbstractConfigValue>> scopes = new HashMap<String, Map<String, AbstractConfigValue>>();
@@ -88,8 +116,8 @@ final class Loader {
             if (o instanceof String) {
                 try {
                     String path = (String) o;
-                    String last = ConfigUtil.lastElement(path);
-                    String exceptLast = ConfigUtil.exceptLastElement(path);
+                    String last = lastElement(path);
+                    String exceptLast = exceptLastElement(path);
                     if (exceptLast == null)
                         exceptLast = "";
                     Map<String, AbstractConfigValue> scope = scopes
@@ -116,7 +144,7 @@ final class Loader {
 
         // put everything in its parent, ensuring all parents exist
         for (String path : childPaths) {
-            String parentPath = ConfigUtil.exceptLastElement(path);
+            String parentPath = exceptLastElement(path);
             if (parentPath == null)
                 parentPath = "";
 
@@ -132,7 +160,7 @@ final class Loader {
             AbstractConfigObject o = new SimpleConfigObject(
                     new SimpleConfigOrigin(originPrefix + " " + path), null,
                     scopes.get(path));
-            String basename = ConfigUtil.lastElement(path);
+            String basename = lastElement(path);
             parent.put(basename, o);
         }
 

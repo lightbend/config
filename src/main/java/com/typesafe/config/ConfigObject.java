@@ -13,11 +13,9 @@ import java.util.Set;
  * a type that the value can't be converted to. ConfigException.Null is a
  * subclass of ConfigException.WrongType thrown if the value is null. The "path"
  * parameters for all the getters have periods between the key names, so the
- * path "a.b.c" looks for key c in object b in object a in the root object.
- *
- *
- * TODO If you need to look up a key with a period in its name, there isn't a
- * way to do it right now.
+ * path "a.b.c" looks for key c in object b in object a in the root object. (The
+ * syntax for paths is the same as in ${} substitution expressions in config
+ * files, sometimes double quotes are needed around special characters.)
  *
  * TODO add OrNull variants of all these getters? Or better to avoid convenience
  * API for that?

@@ -63,6 +63,7 @@ class ConfParserTest extends TestUtils {
                         }
                 }
         }
+
         // also parse with the standalone path parser and be sure the
         // outcome is the same
         val shouldBeSame = Parser.parsePath(s)
@@ -93,6 +94,7 @@ class ConfParserTest extends TestUtils {
         assertEquals(path(""), parsePath("\"\"\"\""))
         assertEquals(path("a", ""), parsePath("a.\"\"\"\""))
         assertEquals(path("", "b"), parsePath("\"\"\"\".b"))
+        assertEquals(path("", "", ""), parsePath(""" "".""."" """))
 
         for (invalid <- Seq("a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
             try {

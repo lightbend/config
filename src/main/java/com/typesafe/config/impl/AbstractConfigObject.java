@@ -112,37 +112,53 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     static private AbstractConfigValue resolve(AbstractConfigObject self,
-            String path,
+            String pathExpression,
             ConfigValueType expected, ConfigTransformer transformer,
             String originalPath) {
-        String key = ConfigUtil.firstElement(path);
-        String next = ConfigUtil.otherElements(path);
+        Path path = Path.newPath(pathExpression);
+        return resolve(self, path, expected, transformer, originalPath);
+    }
+
+    static private AbstractConfigValue resolveKey(AbstractConfigObject self,
+            String key, ConfigValueType expected,
+            ConfigTransformer transformer, String originalPath) {
+        AbstractConfigValue v = self.peek(key);
+        if (v == null)
+            throw new ConfigException.Missing(originalPath);
+
+        if (expected != null && transformer != null)
+            v = transformer.transform(v, expected);
+
+        if (v.valueType() == ConfigValueType.NULL)
+            throw new ConfigException.Null(v.origin(), originalPath,
+                    expected != null ? expected.name() : null);
+        else if (expected != null && v.valueType() != expected)
+            throw new ConfigException.WrongType(v.origin(), originalPath,
+                    expected.name(), v.valueType().name());
+        else
+            return v;
+    }
+
+    static private AbstractConfigValue resolve(AbstractConfigObject self,
+            Path path, ConfigValueType expected, ConfigTransformer transformer,
+            String originalPath) {
+        String key = path.first();
+        Path next = path.remainder();
         if (next == null) {
-            AbstractConfigValue v = self.peek(key);
-            if (v == null)
-                throw new ConfigException.Missing(originalPath);
-
-            if (expected != null && transformer != null)
-                v = transformer.transform(v, expected);
-
-            if (v.valueType() == ConfigValueType.NULL)
-                throw new ConfigException.Null(v.origin(), originalPath,
-                        expected != null ? expected.name() : null);
-            else if (expected != null && v.valueType() != expected)
-                throw new ConfigException.WrongType(v.origin(), originalPath,
-                        expected.name(), v.valueType().name());
-            else
-                return v;
+            return resolveKey(self, key, expected, transformer, originalPath);
         } else {
-            AbstractConfigObject o = self.getObject(key);
+            AbstractConfigObject o = (AbstractConfigObject) resolveKey(self,
+                    key, ConfigValueType.OBJECT, transformer, originalPath);
             assert (o != null); // missing was supposed to throw
             return resolve(o, next, expected, transformer, originalPath);
         }
     }
 
-    AbstractConfigValue resolve(String path, ConfigValueType expected,
+    AbstractConfigValue resolve(String pathExpression,
+            ConfigValueType expected,
             String originalPath) {
-        return resolve(this, path, expected, transformer, originalPath);
+        return resolve(this, pathExpression, expected, transformer,
+                originalPath);
     }
 
     /**

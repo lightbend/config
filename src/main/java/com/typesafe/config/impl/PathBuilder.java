@@ -19,24 +19,6 @@ final class PathBuilder {
                     "Adding to PathBuilder after getting result");
     }
 
-    void appendPath(String path) {
-        checkCanAppend();
-        ConfigUtil.verifyPath(path);
-
-        String next = ConfigUtil.firstElement(path);
-        String remainder = ConfigUtil.otherElements(path);
-
-        while (next != null) {
-            keys.push(next);
-            if (remainder != null) {
-                next = ConfigUtil.firstElement(remainder);
-                remainder = ConfigUtil.otherElements(remainder);
-            } else {
-                next = null;
-            }
-        }
-    }
-
     void appendKey(String key) {
         checkCanAppend();
 

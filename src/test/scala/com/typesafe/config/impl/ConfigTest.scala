@@ -370,7 +370,7 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
-    def test02WeirdPaths() {
+    def test02SubstitutionsWithWeirdPaths() {
         val conf = Config.load("test02")
 
         assertEquals(42, conf.getInt("42_a"))
@@ -379,5 +379,17 @@ class ConfigTest extends TestUtils {
         assertEquals(57, conf.getInt("57_a"))
         assertEquals(57, conf.getInt("57_b"))
         assertEquals(103, conf.getInt("103_a"))
+    }
+
+    @Test
+    def test02UseWeirdPathsWithConfigObject() {
+        val conf = Config.load("test02")
+
+        // we're checking that the getters in ConfigObject support
+        // these weird path expressions
+        assertEquals(42, conf.getInt(""" "".""."" """))
+        assertEquals(57, conf.getInt("a.b.c"))
+        assertEquals(57, conf.getInt(""" "a"."b"."c" """))
+        assertEquals(103, conf.getInt(""" "a.b.c" """))
     }
 }
