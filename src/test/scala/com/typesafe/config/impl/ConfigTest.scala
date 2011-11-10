@@ -156,8 +156,15 @@ class ConfigTest extends TestUtils {
         assertEquals("null bar 42 baz true 3.14 hi", conf.getString("strings.concatenated"))
         assertEquals(true, conf.getBoolean("booleans.trueAgain"))
         assertEquals(false, conf.getBoolean("booleans.falseAgain"))
-        // FIXME need to add a way to get a null
-        //assertEquals(null, conf.getAny("nulls.null"))
+
+        // to get null we have to use the get() method from Map,
+        // which takes a key and not a path
+        assertEquals(nullValue(), conf.getObject("nulls").get("null"))
+        assertNull(conf.get("notinthefile"))
+
+        // get stuff with getValue
+        assertEquals(intValue(42), conf.getValue("ints.fortyTwo"))
+        assertEquals(stringValue("abcd"), conf.getValue("strings.abcd"))
 
         // get stuff with getAny
         assertEquals(42L, conf.getAny("ints.fortyTwo"))

@@ -1,8 +1,11 @@
 package com.typesafe.config.impl;
 
+import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +13,7 @@ import java.util.Set;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigValue;
 
 class SimpleConfigObject extends AbstractConfigObject {
 
@@ -31,16 +35,16 @@ class SimpleConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    public Object unwrapped() {
+    public Map<String, Object> unwrapped() {
         Map<String, Object> m = new HashMap<String, Object>();
-        for (String k : value.keySet()) {
-            m.put(k, value.get(k).unwrapped());
+        for (Map.Entry<String, AbstractConfigValue> e : value.entrySet()) {
+            m.put(e.getKey(), e.getValue().unwrapped());
         }
         return m;
     }
 
     @Override
-    public boolean containsKey(String key) {
+    public boolean containsKey(Object key) {
         return value.containsKey(key);
     }
 
@@ -103,5 +107,38 @@ class SimpleConfigObject extends AbstractConfigObject {
     public int hashCode() {
         // note that "origin" is deliberately NOT part of equality
         return mapHash(this.value);
+    }
+
+    @Override
+    public boolean containsValue(Object v) {
+        return value.containsValue(v);
+    }
+
+    @Override
+    public Set<Map.Entry<String, ConfigValue>> entrySet() {
+        // total bloat just to work around lack of type variance
+
+        HashSet<java.util.Map.Entry<String, ConfigValue>> entries = new HashSet<Map.Entry<String, ConfigValue>>();
+        for (Map.Entry<String, AbstractConfigValue> e : value.entrySet()) {
+            entries.add(new AbstractMap.SimpleImmutableEntry<String, ConfigValue>(
+                    e.getKey(), e
+                    .getValue()));
+        }
+        return entries;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return value.isEmpty();
+    }
+
+    @Override
+    public int size() {
+        return value.size();
+    }
+
+    @Override
+    public Collection<ConfigValue> values() {
+        return new HashSet<ConfigValue>(value.values());
     }
 }

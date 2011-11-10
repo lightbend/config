@@ -24,6 +24,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         this.transformer = transformer;
     }
 
+    @Override
+    abstract public Map<String, Object> unwrapped();
+
     /**
      * This looks up the key with no transformation or type conversion of any
      * kind, and returns null if the key is not present.
@@ -244,7 +247,15 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public ConfigValue get(String path) {
+    public ConfigValue get(Object key) {
+        if (key instanceof String)
+            return peek((String) key);
+        else
+            return null;
+    }
+
+    @Override
+    public ConfigValue getValue(String path) {
         return find(path, null, path);
     }
 
@@ -486,5 +497,31 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             sb.setLength(sb.length() - 1); // chop comma
         sb.append(")");
         return sb.toString();
+    }
+
+    private static UnsupportedOperationException weAreImmutable(String method) {
+        return new UnsupportedOperationException(
+                "ConfigObject is immutable, you can't call Map.'" + method
+                        + "'");
+    }
+
+    @Override
+    public void clear() {
+        throw weAreImmutable("clear");
+    }
+
+    @Override
+    public ConfigValue put(String arg0, ConfigValue arg1) {
+        throw weAreImmutable("put");
+    }
+
+    @Override
+    public void putAll(Map<? extends String, ? extends ConfigValue> arg0) {
+        throw weAreImmutable("putAll");
+    }
+
+    @Override
+    public ConfigValue remove(Object arg0) {
+        throw weAreImmutable("remove");
     }
 }

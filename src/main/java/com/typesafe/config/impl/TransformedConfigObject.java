@@ -1,6 +1,10 @@
 package com.typesafe.config.impl;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
+
+import com.typesafe.config.ConfigValue;
 
 class TransformedConfigObject extends AbstractConfigObject {
 
@@ -13,7 +17,7 @@ class TransformedConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    public boolean containsKey(String key) {
+    public boolean containsKey(Object key) {
         return underlying.containsKey(key);
     }
 
@@ -23,12 +27,37 @@ class TransformedConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    public Object unwrapped() {
+    public Map<String, Object> unwrapped() {
         return underlying.unwrapped();
     }
 
     @Override
     protected AbstractConfigValue peek(String key) {
         return underlying.peek(key);
+    }
+
+    @Override
+    public boolean containsValue(Object value) {
+        return underlying.containsValue(value);
+    }
+
+    @Override
+    public Set<java.util.Map.Entry<String, ConfigValue>> entrySet() {
+        return underlying.entrySet();
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return underlying.isEmpty();
+    }
+
+    @Override
+    public int size() {
+        return underlying.size();
+    }
+
+    @Override
+    public Collection<ConfigValue> values() {
+        return underlying.values();
     }
 }

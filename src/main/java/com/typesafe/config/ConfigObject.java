@@ -1,13 +1,13 @@
 package com.typesafe.config;
 
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 
 /**
  * A ConfigObject is a read-only configuration object, which may have nested
  * child objects. Implementations of ConfigObject should be immutable (at least
  * from the perspective of anyone using this interface).
- *
+ * 
  * The getters all have the same semantics; they throw ConfigException.Missing
  * if the value is entirely unset, and ConfigException.WrongType if you ask for
  * a type that the value can't be converted to. ConfigException.Null is a
@@ -16,14 +16,14 @@ import java.util.Set;
  * path "a.b.c" looks for key c in object b in object a in the root object. (The
  * syntax for paths is the same as in ${} substitution expressions in config
  * files, sometimes double quotes are needed around special characters.)
- *
+ * 
+ * ConfigObject implements the standard Java Map interface, but the mutator
+ * methods all throw UnsupportedOperationException.
+ * 
  * TODO add OrNull variants of all these getters? Or better to avoid convenience
  * API for that?
- *
- * TODO should it implement Map<String, ? extends ConfigValue> with the mutators
- * throwing ?
  */
-public interface ConfigObject extends ConfigValue {
+public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
     boolean getBoolean(String path);
 
@@ -46,16 +46,14 @@ public interface ConfigObject extends ConfigValue {
     Object getAny(String path);
 
     /**
-     * Gets the value at the path as a ConfigValue.
-     *
-     * TODO conceptually if we want to match a read-only subset of the
-     * Map<String, ? extends ConfigValue> interface, we would need to take a key
-     * instead of a path here and return null instead of throwing an exception.
+     * Gets the value at the given path, unless the value is a null value or
+     * missing, in which case it throws just like the other getters. Use get()
+     * from the Map interface if you want an unprocessed value.
      *
      * @param path
      * @return
      */
-    ConfigValue get(String path);
+    ConfigValue getValue(String path);
 
     /** Get value as a size in bytes (parses special strings like "128M") */
     // rename getSizeInBytes ? clearer. allows a megabyte version
@@ -76,6 +74,7 @@ public interface ConfigObject extends ConfigValue {
      */
     Long getNanoseconds(String path);
 
+    /* TODO should this return an iterator instead? */
     List<? extends ConfigValue> getList(String path);
 
     List<Boolean> getBooleanList(String path);
@@ -100,7 +99,12 @@ public interface ConfigObject extends ConfigValue {
 
     List<Long> getNanosecondsList(String path);
 
-    boolean containsKey(String key);
-
-    Set<String> keySet();
+    /**
+     * Gets a ConfigValue at the given key, or returns null if there is no
+     * value. The returned ConfigValue may have ConfigValueType.NULL or any
+     * other type, and the passed-in key must be a key in this object, rather
+     * than a path expression.
+     */
+    @Override
+    ConfigValue get(Object key);
 }

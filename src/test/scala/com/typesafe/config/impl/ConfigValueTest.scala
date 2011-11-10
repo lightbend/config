@@ -4,6 +4,8 @@ import org.junit.Assert._
 import org.junit._
 import com.typesafe.config.ConfigValue
 import java.util.Collections
+import scala.collection.JavaConverters._
+import com.typesafe.config.ConfigObject
 
 class ConfigValueTest extends TestUtils {
 
@@ -89,5 +91,50 @@ class ConfigValueTest extends TestUtils {
         (new ConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]())).toString()
         subst("a").toString()
         substInString("b").toString()
+    }
+
+    private def unsupported(body: => Unit) {
+        intercept[UnsupportedOperationException] {
+            body
+        }
+    }
+
+    @Test
+    def configObjectUnwraps() {
+        val m = new SimpleConfigObject(fakeOrigin(), null, configMap("a" -> 1, "b" -> 2, "c" -> 3))
+        assertEquals(Map("a" -> 1, "b" -> 2, "c" -> 3), m.unwrapped().asScala)
+    }
+
+    @Test
+    def configObjectImplementsMap() {
+        val m: ConfigObject = new SimpleConfigObject(fakeOrigin(), null, configMap("a" -> 1, "b" -> 2, "c" -> 3))
+
+        assertEquals(intValue(1), m.get("a"))
+        assertEquals(intValue(2), m.get("b"))
+        assertEquals(intValue(3), m.get("c"))
+        assertNull(m.get("d"))
+
+        assertTrue(m.containsKey("a"))
+        assertFalse(m.containsKey("z"))
+
+        assertTrue(m.containsValue(intValue(1)))
+        assertFalse(m.containsValue(intValue(10)))
+
+        assertFalse(m.isEmpty())
+
+        assertEquals(3, m.size())
+
+        val values = Set(intValue(1), intValue(2), intValue(3))
+        assertEquals(values, m.values().asScala.toSet)
+        assertEquals(values, m.entrySet().asScala map { _.getValue() } toSet)
+
+        val keys = Set("a", "b", "c")
+        assertEquals(keys, m.keySet().asScala.toSet)
+        assertEquals(keys, m.entrySet().asScala map { _.getKey() } toSet)
+
+        unsupported { m.clear() }
+        unsupported { m.put("hello", intValue(42)) }
+        unsupported { m.putAll(Collections.emptyMap[String, AbstractConfigValue]()) }
+        unsupported { m.remove("a") }
     }
 }
