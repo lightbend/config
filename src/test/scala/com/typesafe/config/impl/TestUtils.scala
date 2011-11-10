@@ -238,13 +238,13 @@ abstract trait TestUtils {
     }
 
     protected def subst(ref: String) = {
-        val pieces = java.util.Collections.singletonList[Object](PathBuilder.newPath(ref))
+        val pieces = java.util.Collections.singletonList[Object](Path.newPath(ref))
         new ConfigSubstitution(fakeOrigin(), pieces)
     }
 
     protected def substInString(ref: String) = {
         import scala.collection.JavaConverters._
-        val pieces = List("start<", PathBuilder.newPath(ref), ">end")
+        val pieces = List("start<", Path.newPath(ref), ">end")
         new ConfigSubstitution(fakeOrigin(), pieces.asJava)
     }
 

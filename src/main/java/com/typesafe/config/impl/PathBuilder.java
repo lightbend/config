@@ -54,14 +54,4 @@ final class PathBuilder {
         }
         return result;
     }
-
-    static Path newPath(String path) {
-        PathBuilder pb = new PathBuilder();
-        pb.appendPath(path);
-        return pb.result();
-    }
-
-    static Path newKey(String key) {
-        return new Path(key, null);
-    }
 }

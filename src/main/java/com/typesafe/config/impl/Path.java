@@ -95,4 +95,14 @@ final class Path {
         appendToStringBuilder(sb);
         return sb.toString();
     }
+
+    static Path newKey(String key) {
+        return new Path(key, null);
+    }
+
+    static Path newPath(String path) {
+        PathBuilder pb = new PathBuilder();
+        pb.appendPath(path);
+        return pb.result();
+    }
 }
