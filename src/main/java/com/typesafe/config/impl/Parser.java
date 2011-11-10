@@ -512,9 +512,13 @@ final class Parser {
 
     static Path parsePath(String path) {
         StringReader reader = new StringReader(path);
-        Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader);
-        tokens.next(); // drop START
 
-        return parsePathExpression(tokens, apiOrigin);
+        try {
+            Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader);
+            tokens.next(); // drop START
+            return parsePathExpression(tokens, apiOrigin);
+        } finally {
+            reader.close();
+        }
     }
 }
