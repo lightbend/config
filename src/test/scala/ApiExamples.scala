@@ -19,6 +19,7 @@ class ApiExamples {
         val a: Int = conf.getInt("ints.fortyTwo")
         val obj: ConfigObject = conf.getObject("ints")
         val c: Int = obj.getInt("fortyTwo")
+        val ms: Long = conf.getMilliseconds("durations.halfSecond")
 
         // this is unfortunate; asScala creates a mutable map but
         // the ConfigObject is in fact immutable.
