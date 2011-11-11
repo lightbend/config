@@ -167,12 +167,12 @@ class ConfigTest extends TestUtils {
         assertEquals(stringValue("abcd"), conf.getValue("strings.abcd"))
 
         // get stuff with getAny
-        assertEquals(42L, conf.getAny("ints.fortyTwo"))
-        assertEquals("abcd", conf.getAny("strings.abcd"))
-        assertEquals(false, conf.getAny("booleans.falseAgain"))
+        assertEquals(42L, conf.getAnyRef("ints.fortyTwo"))
+        assertEquals("abcd", conf.getAnyRef("strings.abcd"))
+        assertEquals(false, conf.getAnyRef("booleans.falseAgain"))
 
         // get empty array as any type of array
-        assertEquals(Seq(), conf.getAnyList("arrays.empty").asScala)
+        assertEquals(Seq(), conf.getAnyRefList("arrays.empty").asScala)
         assertEquals(Seq(), conf.getIntList("arrays.empty").asScala)
         assertEquals(Seq(), conf.getLongList("arrays.empty").asScala)
         assertEquals(Seq(), conf.getStringList("arrays.empty").asScala)
@@ -188,9 +188,9 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(1L, 2L, 3L), conf.getLongList("arrays.ofInt").asScala)
         assertEquals(Seq("a", "b", "c"), conf.getStringList("arrays.ofString").asScala)
         assertEquals(Seq(3.14, 4.14, 5.14), conf.getDoubleList("arrays.ofDouble").asScala)
-        assertEquals(Seq(null, null, null), conf.getAnyList("arrays.ofNull").asScala)
+        assertEquals(Seq(null, null, null), conf.getAnyRefList("arrays.ofNull").asScala)
         assertEquals(Seq(true, false), conf.getBooleanList("arrays.ofBoolean").asScala)
-        val listOfLists = conf.getAnyList("arrays.ofArray").asScala map { _.asInstanceOf[java.util.List[_]].asScala }
+        val listOfLists = conf.getAnyRefList("arrays.ofArray").asScala map { _.asInstanceOf[java.util.List[_]].asScala }
         assertEquals(Seq(Seq("a", "b", "c"), Seq("a", "b", "c"), Seq("a", "b", "c")), listOfLists)
         assertEquals(3, conf.getObjectList("arrays.ofObject").asScala.length)
 

@@ -258,7 +258,8 @@ class ConfigSubstitutionTest extends TestUtils {
     "pwd" : ${PWD},
     "shell" : ${SHELL},
     "lang" : ${LANG},
-    "path" : ${PATH}
+    "path" : ${PATH},
+    "not_here" : ${NOT_HERE}
 }
 """)
     }
@@ -276,7 +277,7 @@ class ConfigSubstitutionTest extends TestUtils {
                 existed += 1
                 assertEquals(e, resolved.getString(k))
             } else {
-                assertEquals(null, resolved.getAny(k))
+                assertEquals(nullValue, resolved.get(k))
             }
         }
         if (existed == 0) {

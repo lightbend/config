@@ -307,7 +307,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public Object getAny(String path) {
+    public Object getAnyRef(String path) {
         ConfigValue v = find(path, null, path);
         return v.unwrapped();
     }
@@ -423,7 +423,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public List<? extends Object> getAnyList(String path) {
+    public List<? extends Object> getAnyRefList(String path) {
         List<Object> l = new ArrayList<Object>();
         List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {

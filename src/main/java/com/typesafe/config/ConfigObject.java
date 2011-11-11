@@ -43,7 +43,7 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
      * Gets the value at the path as an unwrapped Java boxed value (Boolean,
      * Integer, Long, etc.)
      */
-    Object getAny(String path);
+    Object getAnyRef(String path);
 
     /**
      * Gets the value at the given path, unless the value is a null value or
@@ -99,7 +99,7 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
     List<? extends ConfigObject> getObjectList(String path);
 
-    List<? extends Object> getAnyList(String path);
+    List<? extends Object> getAnyRefList(String path);
 
     List<Long> getMemorySizeList(String path);
 
