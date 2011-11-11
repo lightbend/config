@@ -4,8 +4,8 @@ import com.typesafe.config.ConfigException;
 
 final class Path {
 
-    private String first;
-    private Path remainder;
+    final private String first;
+    final private Path remainder;
 
     Path(String first, Path remainder) {
         this.first = first;

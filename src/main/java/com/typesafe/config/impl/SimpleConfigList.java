@@ -14,7 +14,7 @@ import com.typesafe.config.ConfigValueType;
 
 final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
 
-    private List<AbstractConfigValue> value;
+    final private List<AbstractConfigValue> value;
 
     SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value) {
         super(origin);

@@ -106,11 +106,11 @@ final class Parser {
 
     static private final class ParseContext {
         private int lineNumber;
-        private Stack<Token> buffer;
-        private Iterator<Token> tokens;
-        private IncludeHandler includer;
-        private SyntaxFlavor flavor;
-        private ConfigOrigin baseOrigin;
+        final private Stack<Token> buffer;
+        final private Iterator<Token> tokens;
+        final private IncludeHandler includer;
+        final private SyntaxFlavor flavor;
+        final private ConfigOrigin baseOrigin;
 
         ParseContext(SyntaxFlavor flavor, ConfigOrigin origin,
                 Iterator<Token> tokens, IncludeHandler includer) {

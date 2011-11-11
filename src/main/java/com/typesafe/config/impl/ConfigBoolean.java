@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigValueType;
 
 final class ConfigBoolean extends AbstractConfigValue {
 
-    private boolean value;
+    final private boolean value;
 
     ConfigBoolean(ConfigOrigin origin, boolean value) {
         super(origin);

@@ -8,7 +8,7 @@ import com.typesafe.config.ConfigValue;
 
 class TransformedConfigObject extends AbstractConfigObject {
 
-    private AbstractConfigObject underlying;
+    final private AbstractConfigObject underlying;
 
     TransformedConfigObject(ConfigTransformer transformer,
             AbstractConfigObject underlying) {

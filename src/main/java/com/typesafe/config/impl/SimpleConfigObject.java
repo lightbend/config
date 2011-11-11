@@ -18,7 +18,7 @@ import com.typesafe.config.ConfigValue;
 class SimpleConfigObject extends AbstractConfigObject {
 
     // this map should never be modified - assume immutable
-    private Map<String, AbstractConfigValue> value;
+    final private Map<String, AbstractConfigValue> value;
 
     SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
             Map<String, AbstractConfigValue> value) {

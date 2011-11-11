@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigException;
 
 final class PathBuilder {
     // the keys are kept "backward" (top of stack is end of path)
-    private Stack<String> keys;
+    final private Stack<String> keys;
     private Path result;
 
     PathBuilder() {

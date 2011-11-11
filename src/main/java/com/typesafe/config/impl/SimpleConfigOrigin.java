@@ -4,7 +4,7 @@ import com.typesafe.config.ConfigOrigin;
 
 final class SimpleConfigOrigin implements ConfigOrigin {
 
-    private String description;
+    final private String description;
 
     SimpleConfigOrigin(String description) {
         this.description = description;

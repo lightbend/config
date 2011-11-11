@@ -17,7 +17,7 @@ import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements
         ConfigObject {
-    protected ConfigTransformer transformer;
+    final protected ConfigTransformer transformer;
 
     protected AbstractConfigObject(ConfigOrigin origin,
             ConfigTransformer transformer) {

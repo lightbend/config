@@ -17,7 +17,7 @@ final class ConfigSubstitution extends AbstractConfigValue {
     // this is a list of String and Path where the Path
     // have to be resolved to values, then if there's more
     // than one piece everything is stringified and concatenated
-    private List<Object> pieces;
+    final private List<Object> pieces;
 
     ConfigSubstitution(ConfigOrigin origin, List<Object> pieces) {
         super(origin);

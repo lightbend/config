@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigValueType;
 
 final class ConfigLong extends AbstractConfigValue {
 
-    private long value;
+    final private long value;
 
     ConfigLong(ConfigOrigin origin, long value) {
         super(origin);

@@ -5,7 +5,7 @@ package com.typesafe.config;
  */
 public final class ConfigConfig {
 
-    private String rootPath;
+    final private String rootPath;
 
     /**
      * Creates a new configuration configuration.

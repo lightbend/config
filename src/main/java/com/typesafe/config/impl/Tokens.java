@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigValueType;
 final class Tokens {
     static private class Value extends Token {
 
-        private AbstractConfigValue value;
+        final private AbstractConfigValue value;
 
         Value(AbstractConfigValue value) {
             super(TokenType.VALUE);
@@ -45,7 +45,7 @@ final class Tokens {
     }
 
     static private class Line extends Token {
-        private int lineNumber;
+        final private int lineNumber;
 
         Line(int lineNumber) {
             super(TokenType.NEWLINE);
@@ -80,8 +80,8 @@ final class Tokens {
 
     // This is not a Value, because it requires special processing
     static private class UnquotedText extends Token {
-        private ConfigOrigin origin;
-        private String value;
+        final private ConfigOrigin origin;
+        final private String value;
 
         UnquotedText(ConfigOrigin origin, String s) {
             super(TokenType.UNQUOTED_TEXT);
@@ -121,8 +121,8 @@ final class Tokens {
 
     // This is not a Value, because it requires special processing
     static private class Substitution extends Token {
-        private ConfigOrigin origin;
-        private List<Token> value;
+        final private ConfigOrigin origin;
+        final private List<Token> value;
 
         Substitution(ConfigOrigin origin, List<Token> expression) {
             super(TokenType.SUBSTITUTION);
@@ -234,14 +234,14 @@ final class Tokens {
         }
     }
 
-    static Token START = new Token(TokenType.START);
-    static Token END = new Token(TokenType.END);
-    static Token COMMA = new Token(TokenType.COMMA);
-    static Token COLON = new Token(TokenType.COLON);
-    static Token OPEN_CURLY = new Token(TokenType.OPEN_CURLY);
-    static Token CLOSE_CURLY = new Token(TokenType.CLOSE_CURLY);
-    static Token OPEN_SQUARE = new Token(TokenType.OPEN_SQUARE);
-    static Token CLOSE_SQUARE = new Token(TokenType.CLOSE_SQUARE);
+    final static Token START = new Token(TokenType.START);
+    final static Token END = new Token(TokenType.END);
+    final static Token COMMA = new Token(TokenType.COMMA);
+    final static Token COLON = new Token(TokenType.COLON);
+    final static Token OPEN_CURLY = new Token(TokenType.OPEN_CURLY);
+    final static Token CLOSE_CURLY = new Token(TokenType.CLOSE_CURLY);
+    final static Token OPEN_SQUARE = new Token(TokenType.OPEN_SQUARE);
+    final static Token CLOSE_SQUARE = new Token(TokenType.CLOSE_SQUARE);
 
     static Token newLine(int lineNumberJustEnded) {
         return new Line(lineNumberJustEnded);

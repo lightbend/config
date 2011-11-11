@@ -81,12 +81,12 @@ final class Tokenizer {
             }
         }
 
-        private ConfigOrigin origin;
-        private Reader input;
+        final private ConfigOrigin origin;
+        final private Reader input;
         private int oneCharBuffer;
         private int lineNumber;
-        private Queue<Token> tokens;
-        private WhitespaceSaver whitespaceSaver;
+        final private Queue<Token> tokens;
+        final private WhitespaceSaver whitespaceSaver;
 
         TokenIterator(ConfigOrigin origin, Reader input) {
             this.origin = origin;

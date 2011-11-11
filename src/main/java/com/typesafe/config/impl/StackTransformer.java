@@ -6,7 +6,7 @@ import com.typesafe.config.ConfigValueType;
 
 final class StackTransformer implements ConfigTransformer {
 
-    private List<ConfigTransformer> stack;
+    final private List<ConfigTransformer> stack;
 
     StackTransformer(List<ConfigTransformer> stack) {
         this.stack = stack;

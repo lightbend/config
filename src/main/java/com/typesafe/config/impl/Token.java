@@ -1,7 +1,7 @@
 package com.typesafe.config.impl;
 
 class Token {
-    private TokenType tokenType;
+    final private TokenType tokenType;
 
     Token(TokenType tokenType) {
         this.tokenType = tokenType;

@@ -9,8 +9,8 @@ import java.util.Map;
  * of values or whole trees of values as we follow chains of substitutions.
  */
 final class SubstitutionResolver {
-    private AbstractConfigObject root;
-    private Map<AbstractConfigValue, AbstractConfigValue> memos;
+    final private AbstractConfigObject root;
+    final private Map<AbstractConfigValue, AbstractConfigValue> memos;
 
     SubstitutionResolver(AbstractConfigObject root) {
         this.root = root;
