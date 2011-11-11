@@ -18,9 +18,8 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
     final private List<AbstractConfigValue> stack;
 
     ConfigDelayedMergeObject(ConfigOrigin origin,
-            ConfigTransformer transformer,
             List<AbstractConfigValue> stack) {
-        super(origin, transformer);
+        super(origin);
         this.stack = stack;
         if (stack.isEmpty())
             throw new ConfigException.BugOrBroken(
@@ -57,7 +56,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
             else
                 newStack.add((AbstractConfigValue) other);
             return new ConfigDelayedMergeObject(
-                    AbstractConfigObject.mergeOrigins(newStack), transformer,
+                    AbstractConfigObject.mergeOrigins(newStack),
                     newStack);
         } else {
             // if the other is not an object, there won't be anything

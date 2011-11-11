@@ -157,7 +157,6 @@ final class Loader {
             // SimpleConfigObject yet we can get away with it.
             AbstractConfigObject o = new SimpleConfigObject(
                     new SimpleConfigOrigin(originPrefix + " " + path),
-                    ConfigImpl.defaultConfigTransformer(),
                     scopes.get(path));
             String basename = lastElement(path);
             parent.put(basename, o);
@@ -172,6 +171,6 @@ final class Loader {
 
         // return root config object
         return new SimpleConfigObject(new SimpleConfigOrigin(originPrefix),
-                ConfigImpl.defaultConfigTransformer(), root);
+                root);
     }
 }

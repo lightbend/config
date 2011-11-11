@@ -30,6 +30,10 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             throw new ConfigException.BugOrBroken("null transformer");
     }
 
+    protected AbstractConfigObject(ConfigOrigin origin) {
+        this(origin, ConfigImpl.defaultConfigTransformer());
+    }
+
     /**
      * This looks up the key with no transformation or type conversion of any
      * kind, and returns null if the key is not present.
@@ -169,8 +173,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             List<AbstractConfigValue> stack = new ArrayList<AbstractConfigValue>();
             stack.add(this);
             stack.addAll(((Unresolved) other).unmergedValues());
-            return new ConfigDelayedMergeObject(mergeOrigins(stack),
-                    transformer, stack);
+            return new ConfigDelayedMergeObject(mergeOrigins(stack), stack);
         } else if (other instanceof AbstractConfigObject) {
             AbstractConfigObject fallback = (AbstractConfigObject) other;
             if (fallback.isEmpty()) {
@@ -191,7 +194,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                         merged.put(key, first.withFallback(second));
                 }
                 return new SimpleConfigObject(mergeOrigins(this, fallback),
-                        transformer, merged);
+                        merged);
             }
         } else {
             // falling back to a non-object has no effect, we just override
@@ -266,7 +269,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                     resolved.put(k, peek(k));
                 }
             }
-            return new SimpleConfigObject(origin(), transformer, resolved);
+            return new SimpleConfigObject(origin(), resolved);
         }
     }
 

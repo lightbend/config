@@ -60,9 +60,9 @@ class ConfigValueTest extends TestUtils {
         val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val sameAsAMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val bMap = configMap("a" -> 3, "b" -> 4, "c" -> 5)
-        val a = new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), aMap)
-        val sameAsA = new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), sameAsAMap)
-        val b = new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), bMap)
+        val a = new SimpleConfigObject(fakeOrigin(), aMap)
+        val sameAsA = new SimpleConfigObject(fakeOrigin(), sameAsAMap)
+        val b = new SimpleConfigObject(fakeOrigin(), bMap)
 
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
@@ -111,9 +111,9 @@ class ConfigValueTest extends TestUtils {
         val empty = SimpleConfigObject.empty()
         val s1 = subst("foo")
         val s2 = subst("bar")
-        val a = new ConfigDelayedMergeObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), List[AbstractConfigValue](empty, s1, s2).asJava)
-        val sameAsA = new ConfigDelayedMergeObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), List[AbstractConfigValue](empty, s1, s2).asJava)
-        val b = new ConfigDelayedMergeObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), List[AbstractConfigValue](empty, s2, s1).asJava)
+        val a = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](empty, s1, s2).asJava)
+        val sameAsA = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](empty, s1, s2).asJava)
+        val b = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](empty, s2, s1).asJava)
 
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
@@ -137,7 +137,7 @@ class ConfigValueTest extends TestUtils {
         substInString("b").toString()
         val dm = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](subst("a"), subst("b")).asJava)
         dm.toString()
-        val dmo = new ConfigDelayedMergeObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
+        val dmo = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
         dmo.toString()
     }
 
@@ -149,14 +149,14 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configObjectUnwraps() {
-        val m = new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(),
+        val m = new SimpleConfigObject(fakeOrigin(),
             configMap("a" -> 1, "b" -> 2, "c" -> 3))
         assertEquals(Map("a" -> 1, "b" -> 2, "c" -> 3), m.unwrapped().asScala)
     }
 
     @Test
     def configObjectImplementsMap() {
-        val m: ConfigObject = new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(),
+        val m: ConfigObject = new SimpleConfigObject(fakeOrigin(),
             configMap("a" -> 1, "b" -> 2, "c" -> 3))
 
         assertEquals(intValue(1), m.get("a"))
@@ -277,8 +277,8 @@ class ConfigValueTest extends TestUtils {
         unresolved { dm.unwrapped() }
 
         // ConfigDelayedMergeObject
-        val emptyObj = new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), Collections.emptyMap[String, AbstractConfigValue]())
-        val dmo = new ConfigDelayedMergeObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
+        val emptyObj = new SimpleConfigObject(fakeOrigin(), Collections.emptyMap[String, AbstractConfigValue]())
+        val dmo = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
         assertEquals(ConfigValueType.OBJECT, dmo.valueType())
         unresolved { dmo.unwrapped() }
         unresolved { dmo.containsKey(null) }

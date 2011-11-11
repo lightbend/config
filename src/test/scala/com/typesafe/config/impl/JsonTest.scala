@@ -49,7 +49,7 @@ class JsonTest extends TestUtils {
             case lift.JObject(fields) =>
                 val m = new HashMap[String, AbstractConfigValue]()
                 fields.foreach({ field => m.put(field.name, fromLift(field.value)) })
-                new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), m)
+                new SimpleConfigObject(fakeOrigin(), m)
             case lift.JArray(values) =>
                 new SimpleConfigList(fakeOrigin(), values.map(fromLift(_)).asJava)
             case lift.JField(name, value) =>

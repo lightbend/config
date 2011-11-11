@@ -320,7 +320,7 @@ final class Parser {
                 }
             }
             return new SimpleConfigObject(objectOrigin,
-                    ConfigImpl.defaultConfigTransformer(), values);
+                    values);
         }
 
         private SimpleConfigList parseArray() {
