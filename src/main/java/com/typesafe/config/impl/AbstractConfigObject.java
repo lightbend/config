@@ -25,9 +25,6 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         this.transformer = transformer;
     }
 
-    @Override
-    abstract public Map<String, Object> unwrapped();
-
     /**
      * This looks up the key with no transformation or type conversion of any
      * kind, and returns null if the key is not present.

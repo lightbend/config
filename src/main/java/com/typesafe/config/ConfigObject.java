@@ -25,6 +25,13 @@ import java.util.Map;
  */
 public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
+    /**
+     * Recursively unwraps the object, returning a map from String to whatever
+     * plain Java values are unwrapped from the object's values.
+     */
+    @Override
+    Map<String, Object> unwrapped();
+
     boolean getBoolean(String path);
 
     Number getNumber(String path);
