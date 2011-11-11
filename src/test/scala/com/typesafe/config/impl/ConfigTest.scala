@@ -13,7 +13,7 @@ import com.typesafe.config.ConfigConfig
 class ConfigTest extends TestUtils {
 
     def merge(toMerge: AbstractConfigObject*) = {
-        AbstractConfigObject.merge(fakeOrigin(), toMerge.toList.asJava, null)
+        AbstractConfigObject.merge(toMerge.toList.asJava)
     }
 
     // In many cases, we expect merging to be associative. It is
@@ -69,7 +69,7 @@ class ConfigTest extends TestUtils {
     def mergeTrivial() {
         val obj1 = parseObject("""{ "a" : 1 }""")
         val obj2 = parseObject("""{ "b" : 2 }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val merged = merge(obj1, obj2)
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(2, merged.getInt("b"))
@@ -78,7 +78,7 @@ class ConfigTest extends TestUtils {
 
     @Test
     def mergeEmpty() {
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List[AbstractConfigObject]().asJava, null)
+        val merged = merge()
 
         assertEquals(0, merged.keySet().size)
     }
@@ -86,7 +86,7 @@ class ConfigTest extends TestUtils {
     @Test
     def mergeOne() {
         val obj1 = parseObject("""{ "a" : 1 }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1).asJava, null)
+        val merged = merge(obj1)
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(1, merged.keySet().size)
@@ -96,12 +96,12 @@ class ConfigTest extends TestUtils {
     def mergeOverride() {
         val obj1 = parseObject("""{ "a" : 1 }""")
         val obj2 = parseObject("""{ "a" : 2 }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val merged = merge(obj1, obj2)
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(1, merged.keySet().size)
 
-        val merged2 = AbstractConfigObject.merge(fakeOrigin(), List(obj2, obj1).asJava, null)
+        val merged2 = merge(obj2, obj1)
 
         assertEquals(2, merged2.getInt("a"))
         assertEquals(1, merged2.keySet().size)
@@ -113,7 +113,7 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "b" : 2 }""")
         val obj3 = parseObject("""{ "c" : 3 }""")
         val obj4 = parseObject("""{ "d" : 4 }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2, obj3, obj4).asJava, null)
+        val merged = merge(obj1, obj2, obj3, obj4)
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(2, merged.getInt("b"))
@@ -128,12 +128,12 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "a" : 2 }""")
         val obj3 = parseObject("""{ "a" : 3 }""")
         val obj4 = parseObject("""{ "a" : 4 }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2, obj3, obj4).asJava, null)
+        val merged = merge(obj1, obj2, obj3, obj4)
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(1, merged.keySet().size)
 
-        val merged2 = AbstractConfigObject.merge(fakeOrigin(), List(obj4, obj3, obj2, obj1).asJava, null)
+        val merged2 = merge(obj4, obj3, obj2, obj1)
 
         assertEquals(4, merged2.getInt("a"))
         assertEquals(1, merged2.keySet().size)
@@ -143,7 +143,7 @@ class ConfigTest extends TestUtils {
     def mergeNested() {
         val obj1 = parseObject("""{ "root" : { "a" : 1, "z" : 101 } }""")
         val obj2 = parseObject("""{ "root" : { "b" : 2, "z" : 102 } }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val merged = merge(obj1, obj2)
 
         assertEquals(1, merged.getInt("root.a"))
         assertEquals(2, merged.getInt("root.b"))
@@ -156,12 +156,12 @@ class ConfigTest extends TestUtils {
     def mergeWithEmpty() {
         val obj1 = parseObject("""{ "a" : 1 }""")
         val obj2 = parseObject("""{ }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val merged = merge(obj1, obj2)
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(1, merged.keySet().size)
 
-        val merged2 = AbstractConfigObject.merge(fakeOrigin(), List(obj2, obj1).asJava, null)
+        val merged2 = merge(obj2, obj1)
 
         assertEquals(1, merged2.getInt("a"))
         assertEquals(1, merged2.keySet().size)
@@ -171,12 +171,12 @@ class ConfigTest extends TestUtils {
     def mergeOverrideObjectAndPrimitive() {
         val obj1 = parseObject("""{ "a" : 1 }""")
         val obj2 = parseObject("""{ "a" : { "b" : 42 } }""")
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val merged = merge(obj1, obj2)
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(1, merged.keySet().size)
 
-        val merged2 = AbstractConfigObject.merge(fakeOrigin(), List(obj2, obj1).asJava, null)
+        val merged2 = merge(obj2, obj1)
 
         assertEquals(42, merged2.getObject("a").getInt("b"))
         assertEquals(42, merged2.getInt("a.b"))
@@ -218,7 +218,7 @@ class ConfigTest extends TestUtils {
         val obj1 = parseObject("""{ "a" : { "x" : 1, "z" : 4 }, "c" : ${a} }""")
         val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
 
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val merged = merge(obj1, obj2)
         val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
             case x: ConfigObject => x
         }
@@ -234,7 +234,7 @@ class ConfigTest extends TestUtils {
         val obj1 = parseObject("""{ "a" : { "x" : 1, "z" : 4 }, "c" : { "z" : 42 } }""")
         val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
 
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val merged = merge(obj1, obj2)
         val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
             case x: ConfigObject => x
         }
@@ -243,7 +243,7 @@ class ConfigTest extends TestUtils {
         assertEquals(2, resolved.getInt("c.y"))
         assertEquals(42, resolved.getInt("c.z"))
 
-        val merged2 = AbstractConfigObject.merge(fakeOrigin(), List(obj2, obj1).asJava, null)
+        val merged2 = merge(obj2, obj1)
         val resolved2 = SubstitutionResolver.resolveWithoutFallbacks(merged2, merged2) match {
             case x: ConfigObject => x
         }
@@ -274,7 +274,7 @@ class ConfigTest extends TestUtils {
         assertTrue(e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : 57 } } } """)
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(fixUpCycle, cycleObject).asJava, null)
+        val merged = merge(fixUpCycle, cycleObject)
         val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), merged)
         assertEquals(intValue(57), v);
     }
@@ -290,7 +290,7 @@ class ConfigTest extends TestUtils {
         assertTrue(e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : { "q" : "u" } } } } """)
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(fixUpCycle, cycleObject).asJava, null)
+        val merged = merge(fixUpCycle, cycleObject)
         val e2 = intercept[ConfigException.BadValue] {
             val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), merged)
         }

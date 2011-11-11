@@ -12,6 +12,8 @@ import com.typesafe.config.ConfigObject;
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
     public static ConfigObject loadConfig(ConfigConfig configConfig) {
+        ConfigTransformer transformer = withExtraTransformer(null);
+
         AbstractConfigObject system = null;
         try {
             system = systemPropertiesConfig()
@@ -23,19 +25,16 @@ public class ConfigImpl {
 
         // higher-priority configs are first
         if (system != null)
-            stack.add(system);
+            stack.add(system.transformed(transformer));
 
         // this is a conceptual placeholder for a customizable
         // object that the app might be able to pass in.
         IncludeHandler includer = defaultIncluder();
 
-        stack.add(includer.include(configConfig.rootPath()));
+        stack.add(includer.include(configConfig.rootPath()).transformed(
+                transformer));
 
-        ConfigTransformer transformer = withExtraTransformer(null);
-
-        AbstractConfigObject merged = AbstractConfigObject
-                .merge(new SimpleConfigOrigin("config for "
-                        + configConfig.rootPath()), stack, transformer);
+        AbstractConfigObject merged = AbstractConfigObject.merge(stack);
 
         AbstractConfigValue resolved = SubstitutionResolver.resolve(merged,
                 merged);

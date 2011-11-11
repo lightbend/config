@@ -49,7 +49,7 @@ class JsonTest extends TestUtils {
             case lift.JObject(fields) =>
                 val m = new HashMap[String, AbstractConfigValue]()
                 fields.foreach({ field => m.put(field.name, fromLift(field.value)) })
-                new SimpleConfigObject(fakeOrigin(), null, m)
+                new SimpleConfigObject(fakeOrigin(), ConfigImpl.defaultConfigTransformer(), m)
             case lift.JArray(values) =>
                 new SimpleConfigList(fakeOrigin(), values.map(fromLift(_)).asJava)
             case lift.JField(name, value) =>
@@ -126,7 +126,7 @@ class JsonTest extends TestUtils {
         // be sure we do the same thing as Lift when we build our JSON "DOM"
         for (valid <- whitespaceVariations(validJson)) {
             val liftAST = if (valid.liftBehaviorUnexpected) {
-                new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())
+                SimpleConfigObject.empty()
             } else {
                 addOffendingJsonToException("lift", valid.test) {
                     fromJsonWithLiftParser(valid.test)

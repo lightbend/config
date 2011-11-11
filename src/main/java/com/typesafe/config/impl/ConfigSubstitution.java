@@ -53,7 +53,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                 newStack.addAll(((Unresolved) other).unmergedValues());
             else
                 newStack.add((AbstractConfigValue) other);
-            return new ConfigDelayedMerge(origin(), newStack);
+            return new ConfigDelayedMerge(
+                    AbstractConfigObject.mergeOrigins(newStack), newStack);
         } else {
             // if the other is not an object, there won't be anything
             // to merge with, so we are it even if we are an object.

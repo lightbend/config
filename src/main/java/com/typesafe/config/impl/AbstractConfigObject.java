@@ -1,7 +1,8 @@
 package com.typesafe.config.impl;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -25,6 +26,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             ConfigTransformer transformer) {
         super(origin);
         this.transformer = transformer;
+        if (transformer == null)
+            throw new ConfigException.BugOrBroken("null transformer");
     }
 
     /**
@@ -166,7 +169,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             List<AbstractConfigValue> stack = new ArrayList<AbstractConfigValue>();
             stack.add(this);
             stack.addAll(((Unresolved) other).unmergedValues());
-            return new ConfigDelayedMergeObject(origin(), transformer, stack);
+            return new ConfigDelayedMergeObject(mergeOrigins(stack),
+                    transformer, stack);
         } else if (other instanceof AbstractConfigObject) {
             AbstractConfigObject fallback = (AbstractConfigObject) other;
             if (fallback.isEmpty()) {
@@ -186,7 +190,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                     else
                         merged.put(key, first.withFallback(second));
                 }
-                return new SimpleConfigObject(origin(), transformer, merged);
+                return new SimpleConfigObject(mergeOrigins(this, fallback),
+                        transformer, merged);
             }
         } else {
             // falling back to a non-object has no effect, we just override
@@ -195,25 +200,45 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         }
     }
 
+    static ConfigOrigin mergeOrigins(
+            Collection<? extends AbstractConfigValue> stack) {
+        if (stack.isEmpty())
+            throw new ConfigException.BugOrBroken(
+                    "can't merge origins on empty list");
+        StringBuilder sb = new StringBuilder();
+        String prefix = "merge of ";
+        sb.append(prefix);
+        for (AbstractConfigValue v : stack) {
+            String desc = v.origin().description();
+            if (desc.startsWith(prefix))
+                desc = desc.substring(prefix.length());
+            sb.append(desc);
+            sb.append(",");
+        }
+        sb.setLength(sb.length() - 1); // chop comma
+        return new SimpleConfigOrigin(sb.toString());
+    }
+
+    static ConfigOrigin mergeOrigins(AbstractConfigObject... stack) {
+        return mergeOrigins(Arrays.asList(stack));
+    }
+
     /**
      * Stack should be from overrides to fallbacks (earlier items win). Objects
      * have their keys combined into a new object, while other kinds of value
      * are just first-one-wins.
      */
-    static AbstractConfigObject merge(ConfigOrigin origin,
-            List<AbstractConfigObject> stack,
-            ConfigTransformer transformer) {
+    static AbstractConfigObject merge(List<AbstractConfigObject> stack) {
         if (stack.isEmpty()) {
-            return new SimpleConfigObject(origin, transformer,
-                    Collections.<String, AbstractConfigValue> emptyMap());
+            return SimpleConfigObject.empty();
         } else if (stack.size() == 1) {
-            return stack.get(0).transformed(transformer);
+            return stack.get(0);
         } else {
             AbstractConfigObject merged = stack.get(0);
             for (int i = 1; i < stack.size(); ++i) {
                 merged = merged.withFallback(stack.get(i));
             }
-            return merged.transformed(transformer);
+            return merged;
         }
     }
 

@@ -141,4 +141,10 @@ final class SimpleConfigObject extends AbstractConfigObject {
     public Collection<ConfigValue> values() {
         return new HashSet<ConfigValue>(value.values());
     }
+
+    final static SimpleConfigObject empty() {
+        return new SimpleConfigObject(new SimpleConfigOrigin("empty config"),
+                ConfigImpl.defaultConfigTransformer(),
+                Collections.<String, AbstractConfigValue> emptyMap());
+    }
 }

@@ -30,9 +30,7 @@ final class Loader {
             addResource(name + ".properties", includer, stack);
         }
 
-        AbstractConfigObject merged = AbstractConfigObject.merge(
-                new SimpleConfigOrigin("config for " + name), stack,
-                ConfigImpl.defaultConfigTransformer());
+        AbstractConfigObject merged = AbstractConfigObject.merge(stack);
 
         return merged;
     }
@@ -158,7 +156,8 @@ final class Loader {
             // its contract, but since we know nobody has a ref to this
             // SimpleConfigObject yet we can get away with it.
             AbstractConfigObject o = new SimpleConfigObject(
-                    new SimpleConfigOrigin(originPrefix + " " + path), null,
+                    new SimpleConfigOrigin(originPrefix + " " + path),
+                    ConfigImpl.defaultConfigTransformer(),
                     scopes.get(path));
             String basename = lastElement(path);
             parent.put(basename, o);
@@ -173,6 +172,6 @@ final class Loader {
 
         // return root config object
         return new SimpleConfigObject(new SimpleConfigOrigin(originPrefix),
-                null, root);
+                ConfigImpl.defaultConfigTransformer(), root);
     }
 }
