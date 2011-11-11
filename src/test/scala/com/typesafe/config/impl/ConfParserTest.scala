@@ -65,7 +65,7 @@ class ConfParserTest extends TestUtils {
         }
 
         // also parse with the standalone path parser and be sure the
-        // outcome is the same
+        // outcome is the same.
         val shouldBeSame = Parser.parsePath(s)
         assertEquals(result, shouldBeSame)
 
@@ -95,6 +95,9 @@ class ConfParserTest extends TestUtils {
         assertEquals(path("a", ""), parsePath("a.\"\"\"\""))
         assertEquals(path("", "b"), parsePath("\"\"\"\".b"))
         assertEquals(path("", "", ""), parsePath(""" "".""."" """))
+        assertEquals(path("a-c"), parsePath("a-c"))
+        assertEquals(path("a_c"), parsePath("a_c"))
+        assertEquals(path("-"), parsePath("\"-\""))
 
         for (invalid <- Seq("a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
             try {
@@ -106,6 +109,11 @@ class ConfParserTest extends TestUtils {
                     System.err.println("failed on: " + invalid);
                     throw e;
             }
+        }
+
+        intercept[ConfigException.Parse] {
+            // this gets parsed as a number since it starts with '-'
+            parsePath("-")
         }
     }
 }
