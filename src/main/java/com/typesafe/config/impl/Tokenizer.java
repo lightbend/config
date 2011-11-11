@@ -253,7 +253,8 @@ final class Tokenizer {
                     return Tokens.newLong(lineOrigin(), Long.parseLong(s));
                 }
             } catch (NumberFormatException e) {
-                throw parseError("Invalid number", e);
+                throw parseError("Invalid number: '" + s
+                        + "' (if this is in a path, try quoting it)", e);
             }
         }
 
