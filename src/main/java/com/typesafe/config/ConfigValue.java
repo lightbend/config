@@ -8,21 +8,22 @@ package com.typesafe.config;
 public interface ConfigValue {
     /**
      * The origin of the value, for debugging and error messages.
-     * 
+     *
      * @return where the value came from
      */
     ConfigOrigin origin();
 
     /**
      * The type of the value; matches the JSON type schema.
-     * 
+     *
      * @return value's type
      */
     ConfigValueType valueType();
 
     /**
      * Returns the config value as a plain Java boxed value, should be a String,
-     * Number, etc. matching the valueType() of the ConfigValue.
+     * Number, etc. matching the valueType() of the ConfigValue. If the value is
+     * a ConfigObject or ConfigList, it is recursively unwrapped.
      */
     Object unwrapped();
 }

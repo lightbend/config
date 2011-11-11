@@ -6,6 +6,7 @@ import com.typesafe.config.ConfigValue
 import java.util.Collections
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigObject
+import com.typesafe.config.ConfigList
 
 class ConfigValueTest extends TestUtils {
 
@@ -69,10 +70,10 @@ class ConfigValueTest extends TestUtils {
     @Test
     def configListEquality() {
         val aScalaSeq = Seq(1, 2, 3) map { intValue(_): AbstractConfigValue }
-        val aList = new ConfigList(fakeOrigin(), aScalaSeq.asJava)
-        val sameAsAList = new ConfigList(fakeOrigin(), aScalaSeq.asJava)
+        val aList = new SimpleConfigList(fakeOrigin(), aScalaSeq.asJava)
+        val sameAsAList = new SimpleConfigList(fakeOrigin(), aScalaSeq.asJava)
         val bScalaSeq = Seq(4, 5, 6) map { intValue(_): AbstractConfigValue }
-        val bList = new ConfigList(fakeOrigin(), bScalaSeq.asJava)
+        val bList = new SimpleConfigList(fakeOrigin(), bScalaSeq.asJava)
 
         checkEqualObjects(aList, aList)
         checkEqualObjects(aList, sameAsAList)
@@ -101,7 +102,7 @@ class ConfigValueTest extends TestUtils {
         nullValue().toString()
         boolValue(true).toString()
         (new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())).toString()
-        (new ConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]())).toString()
+        (new SimpleConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]())).toString()
         subst("a").toString()
         substInString("b").toString()
     }
@@ -153,8 +154,9 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configListImplementsList() {
-        val l: ConfigList = new ConfigList(fakeOrigin(), List[AbstractConfigValue](stringValue("a"), stringValue("b"), stringValue("c")).asJava)
-        val scalaSeq = Seq(stringValue("a"), stringValue("b"), stringValue("c"))
+        val scalaSeq = Seq[AbstractConfigValue](stringValue("a"), stringValue("b"), stringValue("c"))
+        val l: ConfigList = new SimpleConfigList(fakeOrigin(),
+            scalaSeq.asJava)
 
         assertEquals(scalaSeq(0), l.get(0))
         assertEquals(scalaSeq(1), l.get(1))

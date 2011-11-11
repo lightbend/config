@@ -7,15 +7,16 @@ import java.util.List;
 import java.util.ListIterator;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
-final class ConfigList extends AbstractConfigValue implements List<ConfigValue> {
+final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
 
     private List<AbstractConfigValue> value;
 
-    ConfigList(ConfigOrigin origin, List<AbstractConfigValue> value) {
+    SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value) {
         super(origin);
         this.value = value;
     }
@@ -35,7 +36,7 @@ final class ConfigList extends AbstractConfigValue implements List<ConfigValue> 
     }
 
     @Override
-    ConfigList resolveSubstitutions(SubstitutionResolver resolver, int depth,
+    SimpleConfigList resolveSubstitutions(SubstitutionResolver resolver, int depth,
             boolean withFallbacks) {
         // lazy-create for optimization
         List<AbstractConfigValue> changed = null;
@@ -65,7 +66,7 @@ final class ConfigList extends AbstractConfigValue implements List<ConfigValue> 
             if (changed.size() != value.size())
                 throw new ConfigException.BugOrBroken(
                         "substituted list's size doesn't match");
-            return new ConfigList(origin(), changed);
+            return new SimpleConfigList(origin(), changed);
         } else {
             return this;
         }
@@ -73,15 +74,15 @@ final class ConfigList extends AbstractConfigValue implements List<ConfigValue> 
 
     @Override
     protected boolean canEqual(Object other) {
-        return other instanceof ConfigList;
+        return other instanceof SimpleConfigList;
     }
 
     @Override
     public boolean equals(Object other) {
         // note that "origin" is deliberately NOT part of equality
-        if (other instanceof ConfigList) {
+        if (other instanceof SimpleConfigList) {
             // optimization to avoid unwrapped() for two ConfigList
-            return canEqual(other) && value.equals(((ConfigList) other).value);
+            return canEqual(other) && value.equals(((SimpleConfigList) other).value);
         } else {
             return false;
         }

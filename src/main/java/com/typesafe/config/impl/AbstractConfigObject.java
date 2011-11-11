@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
@@ -293,7 +294,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public List<? extends ConfigValue> getList(String path) {
+    public ConfigList getList(String path) {
         AbstractConfigValue v = find(path, ConfigValueType.LIST, path);
         return (ConfigList) v;
     }

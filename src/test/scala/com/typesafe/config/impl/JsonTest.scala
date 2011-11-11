@@ -51,7 +51,7 @@ class JsonTest extends TestUtils {
                 fields.foreach({ field => m.put(field.name, fromLift(field.value)) })
                 new SimpleConfigObject(fakeOrigin(), null, m)
             case lift.JArray(values) =>
-                new ConfigList(fakeOrigin(), values.map(fromLift(_)).asJava)
+                new SimpleConfigList(fakeOrigin(), values.map(fromLift(_)).asJava)
             case lift.JField(name, value) =>
                 throw new IllegalStateException("either JField was a toplevel from lift-json or this function is buggy")
             case lift.JInt(i) =>

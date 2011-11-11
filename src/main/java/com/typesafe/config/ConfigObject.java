@@ -7,7 +7,7 @@ import java.util.Map;
  * A ConfigObject is a read-only configuration object, which may have nested
  * child objects. Implementations of ConfigObject should be immutable (at least
  * from the perspective of anyone using this interface).
- * 
+ *
  * The getters all have the same semantics; they throw ConfigException.Missing
  * if the value is entirely unset, and ConfigException.WrongType if you ask for
  * a type that the value can't be converted to. ConfigException.Null is a
@@ -16,10 +16,10 @@ import java.util.Map;
  * path "a.b.c" looks for key c in object b in object a in the root object. (The
  * syntax for paths is the same as in ${} substitution expressions in config
  * files, sometimes double quotes are needed around special characters.)
- * 
+ *
  * ConfigObject implements the standard Java Map interface, but the mutator
  * methods all throw UnsupportedOperationException.
- * 
+ *
  * TODO add OrNull variants of all these getters? Or better to avoid convenience
  * API for that?
  */
@@ -74,8 +74,16 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
      */
     Long getNanoseconds(String path);
 
-    /* TODO should this return an iterator instead? */
-    List<? extends ConfigValue> getList(String path);
+    /**
+     * Gets a list value (with any element type) as a ConfigList, which
+     * implements java.util.List<ConfigValue>. Throws if the path is unset or
+     * null.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the ConfigList at the path
+     */
+    ConfigList getList(String path);
 
     List<Boolean> getBooleanList(String path);
 

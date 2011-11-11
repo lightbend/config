@@ -322,7 +322,7 @@ final class Parser {
             return new SimpleConfigObject(objectOrigin, null, values);
         }
 
-        private ConfigList parseArray() {
+        private SimpleConfigList parseArray() {
             // invoked just after the OPEN_SQUARE
             ConfigOrigin arrayOrigin = lineOrigin();
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
@@ -333,7 +333,7 @@ final class Parser {
 
             // special-case the first element
             if (t == Tokens.CLOSE_SQUARE) {
-                return new ConfigList(arrayOrigin,
+                return new SimpleConfigList(arrayOrigin,
                         Collections.<AbstractConfigValue> emptyList());
             } else if (Tokens.isValue(t)) {
                 values.add(parseValue(t));
@@ -351,7 +351,7 @@ final class Parser {
                 // just after a value
                 t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_SQUARE) {
-                    return new ConfigList(arrayOrigin, values);
+                    return new SimpleConfigList(arrayOrigin, values);
                 } else if (t == Tokens.COMMA) {
                     // OK
                 } else {
