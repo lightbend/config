@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigValueType;
 /**
  * Default automatic type transformations.
  */
-class DefaultTransformer implements ConfigTransformer {
+final class DefaultTransformer implements ConfigTransformer {
 
     @Override
     public AbstractConfigValue transform(AbstractConfigValue value,

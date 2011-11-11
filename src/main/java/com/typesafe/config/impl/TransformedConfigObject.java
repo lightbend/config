@@ -6,7 +6,7 @@ import java.util.Set;
 
 import com.typesafe.config.ConfigValue;
 
-class TransformedConfigObject extends AbstractConfigObject {
+final class TransformedConfigObject extends AbstractConfigObject {
 
     final private AbstractConfigObject underlying;
 

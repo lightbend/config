@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigValue;
 
 abstract class AbstractConfigValue implements ConfigValue {
 
-    private ConfigOrigin origin;
+    final private ConfigOrigin origin;
 
     AbstractConfigValue(ConfigOrigin origin) {
         this.origin = origin;
