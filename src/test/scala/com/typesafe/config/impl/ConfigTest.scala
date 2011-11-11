@@ -12,6 +12,59 @@ import com.typesafe.config.ConfigConfig
 
 class ConfigTest extends TestUtils {
 
+    def merge(toMerge: AbstractConfigObject*) = {
+        AbstractConfigObject.merge(fakeOrigin(), toMerge.toList.asJava, null)
+    }
+
+    // In many cases, we expect merging to be associative. It is
+    // not, however, when an object value is the first value,
+    // a non-object value follows, and then an object after that;
+    // in that case, if an association starts with the non-object
+    // value, then the value after the non-object value gets lost.
+    private def associativeMerge(allObjects: Seq[AbstractConfigObject])(assertions: AbstractConfigObject => Unit) {
+        def m(toMerge: AbstractConfigObject*) = merge(toMerge: _*)
+
+        def makeTrees(objects: Seq[AbstractConfigObject]): Iterator[AbstractConfigObject] = {
+            objects.length match {
+                case 0 => Iterator.empty
+                case 1 => {
+                    Iterator(objects(0))
+                }
+                case 2 => {
+                    Iterator(m(objects(0), objects(1)))
+                }
+                case 3 => {
+                    Seq(m(m(objects(0), objects(1)), objects(2)),
+                        m(objects(0), m(objects(1), objects(2))),
+                        m(objects(0), objects(1), objects(2))).iterator
+                }
+                case n => {
+                    // obviously if n gets very high we will be sad ;-)
+                    val trees = for {
+                        i <- (1 until n)
+                        val pair = objects.splitAt(i)
+                        first <- makeTrees(pair._1)
+                        second <- makeTrees(pair._2)
+                    } yield m(first, second)
+                    Iterator(m(objects: _*)) ++ trees.iterator
+                }
+            }
+        }
+
+        // the extra m(allObjects: _*) here is redundant but want to
+        // be sure we do it first, and guard against makeTrees
+        // being insane.
+        val trees = Seq(m(allObjects: _*)) ++ makeTrees(allObjects)
+        for (tree <- trees) {
+            // if this fails, we were not associative.
+            assertEquals(trees(0), tree)
+        }
+
+        for (tree <- trees) {
+            assertions(tree)
+        }
+    }
+
     @Test
     def mergeTrivial() {
         val obj1 = parseObject("""{ "a" : 1 }""")
@@ -100,6 +153,21 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def mergeWithEmpty() {
+        val obj1 = parseObject("""{ "a" : 1 }""")
+        val obj2 = parseObject("""{ }""")
+        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+
+        assertEquals(1, merged.getInt("a"))
+        assertEquals(1, merged.keySet().size)
+
+        val merged2 = AbstractConfigObject.merge(fakeOrigin(), List(obj2, obj1).asJava, null)
+
+        assertEquals(1, merged2.getInt("a"))
+        assertEquals(1, merged2.keySet().size)
+    }
+
+    @Test
     def mergeOverrideObjectAndPrimitive() {
         val obj1 = parseObject("""{ "a" : 1 }""")
         val obj2 = parseObject("""{ "a" : { "b" : 42 } }""")
@@ -118,27 +186,192 @@ class ConfigTest extends TestUtils {
 
     @Test
     def mergeObjectThenPrimitiveThenObject() {
+        // the semantic here is that the primitive gets ignored, because
+        // it can't be merged with the object. But potentially it should
+        // throw an exception even, or warn.
         val obj1 = parseObject("""{ "a" : { "b" : 42 } }""")
         val obj2 = parseObject("""{ "a" : 2 }""")
-        val obj3 = parseObject("""{ "a" : { "b" : 43 } }""")
+        val obj3 = parseObject("""{ "a" : { "b" : 43, "c" : 44 } }""")
 
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2, obj3).asJava, null)
-
+        val merged = merge(obj1, obj2, obj3)
         assertEquals(42, merged.getInt("a.b"))
-        assertEquals(1, merged.keySet().size)
-        assertEquals(1, merged.getObject("a").keySet().size())
+        assertEquals(1, merged.size)
+        assertEquals(44, merged.getInt("a.c"))
+        assertEquals(2, merged.getObject("a").size())
     }
 
     @Test
     def mergePrimitiveThenObjectThenPrimitive() {
+        // the primitive should override the object
         val obj1 = parseObject("""{ "a" : 1 }""")
         val obj2 = parseObject("""{ "a" : { "b" : 42 } }""")
         val obj3 = parseObject("""{ "a" : 3 }""")
 
-        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2, obj3).asJava, null)
+        associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
+            assertEquals(1, merged.getInt("a"))
+            assertEquals(1, merged.keySet().size)
+        }
+    }
 
-        assertEquals(1, merged.getInt("a"))
-        assertEquals(1, merged.keySet().size)
+    @Test
+    def mergeSubstitutedValues() {
+        val obj1 = parseObject("""{ "a" : { "x" : 1, "z" : 4 }, "c" : ${a} }""")
+        val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
+
+        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+            case x: ConfigObject => x
+        }
+
+        assertEquals(3, resolved.getObject("c").size())
+        assertEquals(1, resolved.getInt("c.x"))
+        assertEquals(2, resolved.getInt("c.y"))
+        assertEquals(4, resolved.getInt("c.z"))
+    }
+
+    @Test
+    def mergeObjectWithSubstituted() {
+        val obj1 = parseObject("""{ "a" : { "x" : 1, "z" : 4 }, "c" : { "z" : 42 } }""")
+        val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
+
+        val merged = AbstractConfigObject.merge(fakeOrigin(), List(obj1, obj2).asJava, null)
+        val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+            case x: ConfigObject => x
+        }
+
+        assertEquals(2, resolved.getObject("c").size())
+        assertEquals(2, resolved.getInt("c.y"))
+        assertEquals(42, resolved.getInt("c.z"))
+
+        val merged2 = AbstractConfigObject.merge(fakeOrigin(), List(obj2, obj1).asJava, null)
+        val resolved2 = SubstitutionResolver.resolveWithoutFallbacks(merged2, merged2) match {
+            case x: ConfigObject => x
+        }
+
+        assertEquals(2, resolved2.getObject("c").size())
+        assertEquals(2, resolved2.getInt("c.y"))
+        assertEquals(5, resolved2.getInt("c.z"))
+    }
+
+    private val cycleObject = {
+        parseObject("""
+{
+    "foo" : ${bar},
+    "bar" : ${a.b.c},
+    "a" : { "b" : { "c" : ${foo} } }
+}
+""")
+    }
+
+    @Test
+    def mergeHidesCycles() {
+        // the point here is that we should not try to evaluate a substitution
+        // that's been overridden, and thus not end up with a cycle as long
+        // as we override the problematic link in the cycle.
+        val e = intercept[ConfigException.BadValue] {
+            val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), cycleObject)
+        }
+        assertTrue(e.getMessage().contains("cycle"))
+
+        val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : 57 } } } """)
+        val merged = AbstractConfigObject.merge(fakeOrigin(), List(fixUpCycle, cycleObject).asJava, null)
+        val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), merged)
+        assertEquals(intValue(57), v);
+    }
+
+    @Test
+    def mergeWithObjectInFrontKeepsCycles() {
+        // the point here is that if our eventual value will be an object, then
+        // we have to evaluate the substitution to see if it's an object to merge,
+        // so we don't avoid the cycle.
+        val e = intercept[ConfigException.BadValue] {
+            val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), cycleObject)
+        }
+        assertTrue(e.getMessage().contains("cycle"))
+
+        val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : { "q" : "u" } } } } """)
+        val merged = AbstractConfigObject.merge(fakeOrigin(), List(fixUpCycle, cycleObject).asJava, null)
+        val e2 = intercept[ConfigException.BadValue] {
+            val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), merged)
+        }
+        assertTrue(e2.getMessage().contains("cycle"))
+    }
+
+    @Test
+    def mergeSeriesOfSubstitutions() {
+        val obj1 = parseObject("""{ "a" : { "x" : 1, "q" : 4 }, "j" : ${a} }""")
+        val obj2 = parseObject("""{ "b" : { "y" : 2, "q" : 5 }, "j" : ${b} }""")
+        val obj3 = parseObject("""{ "c" : { "z" : 3, "q" : 6 }, "j" : ${c} }""")
+
+        associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
+            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+                case x: ConfigObject => x
+            }
+
+            assertEquals(4, resolved.getObject("j").size())
+            assertEquals(1, resolved.getInt("j.x"))
+            assertEquals(2, resolved.getInt("j.y"))
+            assertEquals(3, resolved.getInt("j.z"))
+            assertEquals(4, resolved.getInt("j.q"))
+        }
+    }
+
+    @Test
+    def mergePrimitiveAndTwoSubstitutions() {
+        val obj1 = parseObject("""{ "j" : 42 }""")
+        val obj2 = parseObject("""{ "b" : { "y" : 2, "q" : 5 }, "j" : ${b} }""")
+        val obj3 = parseObject("""{ "c" : { "z" : 3, "q" : 6 }, "j" : ${c} }""")
+
+        associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
+            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+                case x: ConfigObject => x
+            }
+
+            assertEquals(3, resolved.size())
+            assertEquals(42, resolved.getInt("j"));
+            assertEquals(2, resolved.getInt("b.y"))
+            assertEquals(3, resolved.getInt("c.z"))
+        }
+    }
+
+    @Test
+    def mergeObjectAndTwoSubstitutions() {
+        val obj1 = parseObject("""{ "j" : { "x" : 1, "q" : 4 } }""")
+        val obj2 = parseObject("""{ "b" : { "y" : 2, "q" : 5 }, "j" : ${b} }""")
+        val obj3 = parseObject("""{ "c" : { "z" : 3, "q" : 6 }, "j" : ${c} }""")
+
+        associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
+            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+                case x: ConfigObject => x
+            }
+
+            assertEquals(4, resolved.getObject("j").size())
+            assertEquals(1, resolved.getInt("j.x"))
+            assertEquals(2, resolved.getInt("j.y"))
+            assertEquals(3, resolved.getInt("j.z"))
+            assertEquals(4, resolved.getInt("j.q"))
+        }
+    }
+
+    @Test
+    def mergeObjectSubstitutionObjectSubstitution() {
+        val obj1 = parseObject("""{ "j" : { "w" : 1, "q" : 5 } }""")
+        val obj2 = parseObject("""{ "b" : { "x" : 2, "q" : 6 }, "j" : ${b} }""")
+        val obj3 = parseObject("""{ "j" : { "y" : 3, "q" : 7 } }""")
+        val obj4 = parseObject("""{ "c" : { "z" : 4, "q" : 8 }, "j" : ${c} }""")
+
+        associativeMerge(Seq(obj1, obj2, obj3, obj4)) { merged =>
+            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+                case x: ConfigObject => x
+            }
+
+            assertEquals(5, resolved.getObject("j").size())
+            assertEquals(1, resolved.getInt("j.w"))
+            assertEquals(2, resolved.getInt("j.x"))
+            assertEquals(3, resolved.getInt("j.y"))
+            assertEquals(4, resolved.getInt("j.z"))
+            assertEquals(5, resolved.getInt("j.q"))
+        }
     }
 
     @Test

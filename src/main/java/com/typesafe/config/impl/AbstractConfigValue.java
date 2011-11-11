@@ -34,6 +34,15 @@ abstract class AbstractConfigValue implements ConfigValue {
         return this;
     }
 
+    @Override
+    public AbstractConfigValue withFallback(ConfigValue other) {
+        return this;
+    }
+
+    AbstractConfigValue transformed(ConfigTransformer transformer) {
+        return this;
+    }
+
     protected boolean canEqual(Object other) {
         return other instanceof ConfigValue;
     }

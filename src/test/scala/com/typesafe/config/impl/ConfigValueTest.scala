@@ -7,6 +7,8 @@ import java.util.Collections
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigList
+import com.typesafe.config.ConfigException
+import com.typesafe.config.ConfigValueType
 
 class ConfigValueTest extends TestUtils {
 
@@ -92,6 +94,33 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def configDelayedMergeEquality() {
+        val s1 = subst("foo")
+        val s2 = subst("bar")
+        val a = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](s1, s2).asJava)
+        val sameAsA = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](s1, s2).asJava)
+        val b = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](s2, s1).asJava)
+
+        checkEqualObjects(a, a)
+        checkEqualObjects(a, sameAsA)
+        checkNotEqualObjects(a, b)
+    }
+
+    @Test
+    def configDelayedMergeObjectEquality() {
+        val empty = new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())
+        val s1 = subst("foo")
+        val s2 = subst("bar")
+        val a = new ConfigDelayedMergeObject(fakeOrigin(), null, List[AbstractConfigValue](empty, s1, s2).asJava)
+        val sameAsA = new ConfigDelayedMergeObject(fakeOrigin(), null, List[AbstractConfigValue](empty, s1, s2).asJava)
+        val b = new ConfigDelayedMergeObject(fakeOrigin(), null, List[AbstractConfigValue](empty, s2, s1).asJava)
+
+        checkEqualObjects(a, a)
+        checkEqualObjects(a, sameAsA)
+        checkNotEqualObjects(a, b)
+    }
+
+    @Test
     def valuesToString() {
         // just check that these don't throw, the exact output
         // isn't super important since it's just for debugging
@@ -101,10 +130,15 @@ class ConfigValueTest extends TestUtils {
         stringValue("hi").toString()
         nullValue().toString()
         boolValue(true).toString()
-        (new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())).toString()
+        val emptyObj = new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())
+        emptyObj.toString()
         (new SimpleConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]())).toString()
         subst("a").toString()
         substInString("b").toString()
+        val dm = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](subst("a"), subst("b")).asJava)
+        dm.toString()
+        val dmo = new ConfigDelayedMergeObject(fakeOrigin(), null, List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
+        dmo.toString()
     }
 
     private def unsupported(body: => Unit) {
@@ -221,5 +255,37 @@ class ConfigValueTest extends TestUtils {
         unsupported { l.removeAll(List[ConfigValue](intValue(1)).asJava) }
         unsupported { l.retainAll(List[ConfigValue](intValue(1)).asJava) }
         unsupported { l.set(0, intValue(42)) }
+    }
+
+    private def unresolved(body: => Unit) {
+        intercept[ConfigException.NotResolved] {
+            body
+        }
+    }
+
+    @Test
+    def notResolvedThrown() {
+        // ConfigSubstitution
+        unresolved { subst("foo").valueType() }
+        unresolved { subst("foo").unwrapped() }
+
+        // ConfigDelayedMerge
+        val dm = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](subst("a"), subst("b")).asJava)
+        unresolved { dm.valueType() }
+        unresolved { dm.unwrapped() }
+
+        // ConfigDelayedMergeObject
+        val emptyObj = new SimpleConfigObject(fakeOrigin(), null, Collections.emptyMap[String, AbstractConfigValue]())
+        val dmo = new ConfigDelayedMergeObject(fakeOrigin(), null, List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
+        assertEquals(ConfigValueType.OBJECT, dmo.valueType())
+        unresolved { dmo.unwrapped() }
+        unresolved { dmo.containsKey(null) }
+        unresolved { dmo.containsValue(null) }
+        unresolved { dmo.entrySet() }
+        unresolved { dmo.isEmpty() }
+        unresolved { dmo.keySet() }
+        unresolved { dmo.size() }
+        unresolved { dmo.values() }
+        unresolved { dmo.getInt("foo") }
     }
 }

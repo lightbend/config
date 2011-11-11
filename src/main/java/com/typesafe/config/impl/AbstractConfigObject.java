@@ -3,8 +3,10 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.Config;
@@ -100,16 +102,12 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return ConfigValueType.OBJECT;
     }
 
-    static AbstractConfigObject transformed(AbstractConfigObject obj,
-            ConfigTransformer transformer) {
-        if (obj.transformer != transformer)
-            return new TransformedConfigObject(transformer, obj);
+    @Override
+    AbstractConfigObject transformed(ConfigTransformer newTransformer) {
+        if (this.transformer != newTransformer)
+            return new TransformedConfigObject(newTransformer, this);
         else
-            return obj;
-    }
-
-    private AbstractConfigObject transformed(AbstractConfigObject obj) {
-        return transformed(obj, transformer);
+            return this;
     }
 
     static private AbstractConfigValue resolve(AbstractConfigObject self,
@@ -162,6 +160,41 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                 originalPath);
     }
 
+    @Override
+    public AbstractConfigObject withFallback(ConfigValue other) {
+        if (other instanceof Unresolved) {
+            List<AbstractConfigValue> stack = new ArrayList<AbstractConfigValue>();
+            stack.add(this);
+            stack.addAll(((Unresolved) other).unmergedValues());
+            return new ConfigDelayedMergeObject(origin(), transformer, stack);
+        } else if (other instanceof AbstractConfigObject) {
+            AbstractConfigObject fallback = (AbstractConfigObject) other;
+            if (fallback.isEmpty()) {
+                return this; // nothing to do
+            } else {
+                Map<String, AbstractConfigValue> merged = new HashMap<String, AbstractConfigValue>();
+                Set<String> allKeys = new HashSet<String>();
+                allKeys.addAll(this.keySet());
+                allKeys.addAll(fallback.keySet());
+                for (String key : allKeys) {
+                    AbstractConfigValue first = this.peek(key);
+                    AbstractConfigValue second = fallback.peek(key);
+                    if (first == null)
+                        merged.put(key, second);
+                    else if (second == null)
+                        merged.put(key, first);
+                    else
+                        merged.put(key, first.withFallback(second));
+                }
+                return new SimpleConfigObject(origin(), transformer, merged);
+            }
+        } else {
+            // falling back to a non-object has no effect, we just override
+            // primitive values.
+            return this;
+        }
+    }
+
     /**
      * Stack should be from overrides to fallbacks (earlier items win). Objects
      * have their keys combined into a new object, while other kinds of value
@@ -174,45 +207,13 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             return new SimpleConfigObject(origin, transformer,
                     Collections.<String, AbstractConfigValue> emptyMap());
         } else if (stack.size() == 1) {
-            return transformed(stack.get(0), transformer);
+            return stack.get(0).transformed(transformer);
         } else {
-            // for non-objects, we just take the first value; but for objects we
-            // have to do work to combine them.
-            Map<String, AbstractConfigValue> merged = new HashMap<String, AbstractConfigValue>();
-            Map<String, List<AbstractConfigObject>> objects = new HashMap<String, List<AbstractConfigObject>>();
-            for (AbstractConfigObject obj : stack) {
-                for (String key : obj.keySet()) {
-                    AbstractConfigValue v = obj.peek(key);
-                    if (!merged.containsKey(key)) {
-                        if (v.valueType() == ConfigValueType.OBJECT) {
-                            // requires recursive merge and transformer fixup
-                            List<AbstractConfigObject> stackForKey = null;
-                            if (objects.containsKey(key)) {
-                                stackForKey = objects.get(key);
-                            } else {
-                                stackForKey = new ArrayList<AbstractConfigObject>();
-                                objects.put(key, stackForKey);
-                            }
-                            stackForKey.add(transformed(
-                                    (AbstractConfigObject) v,
-                                    transformer));
-                        } else {
-                            if (!objects.containsKey(key)) {
-                                merged.put(key, v);
-                            }
-                        }
-                    }
-                }
+            AbstractConfigObject merged = stack.get(0);
+            for (int i = 1; i < stack.size(); ++i) {
+                merged = merged.withFallback(stack.get(i));
             }
-
-            for (Map.Entry<String, List<AbstractConfigObject>> entry : objects
-                    .entrySet()) {
-                List<AbstractConfigObject> stackForKey = entry.getValue();
-                AbstractConfigObject obj = merge(origin, stackForKey, transformer);
-                merged.put(entry.getKey(), obj);
-            }
-
-            return new SimpleConfigObject(origin, transformer, merged);
+            return merged.transformed(transformer);
         }
     }
 
@@ -300,7 +301,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     public AbstractConfigObject getObject(String path) {
         AbstractConfigObject obj = (AbstractConfigObject) find(path,
                 ConfigValueType.OBJECT, path);
-        return transformed(obj);
+        return obj.transformed(this.transformer);
     }
 
     @Override
@@ -414,7 +415,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             if (v.valueType() != ConfigValueType.OBJECT)
                 throw new ConfigException.WrongType(v.origin(), path,
                         ConfigValueType.OBJECT.name(), v.valueType().name());
-            l.add(transformed((AbstractConfigObject) v));
+            l.add(((AbstractConfigObject) v).transformed(this.transformer));
         }
         return l;
     }

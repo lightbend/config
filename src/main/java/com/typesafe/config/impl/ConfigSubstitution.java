@@ -1,5 +1,8 @@
 package com.typesafe.config.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
@@ -12,7 +15,8 @@ import com.typesafe.config.ConfigValueType;
  * it can resolve to a value of any type, though if the substitution has more
  * than one piece it always resolves to a string via value concatenation.
  */
-final class ConfigSubstitution extends AbstractConfigValue {
+final class ConfigSubstitution extends AbstractConfigValue implements
+        Unresolved {
 
     // this is a list of String and Path where the Path
     // have to be resolved to values, then if there's more
@@ -26,14 +30,40 @@ final class ConfigSubstitution extends AbstractConfigValue {
 
     @Override
     public ConfigValueType valueType() {
-        throw new ConfigException.BugOrBroken(
-                "tried to get value type on a ConfigSubstitution; need to resolve substitution first");
+        throw new ConfigException.NotResolved(
+                "tried to get value type on an unresolved substitution: "
+                        + this);
     }
 
     @Override
     public Object unwrapped() {
-        throw new ConfigException.BugOrBroken(
-                "tried to unwrap a ConfigSubstitution; need to resolve substitution first");
+        throw new ConfigException.NotResolved(
+                "tried to unwrap an unresolved substitution: " + this);
+    }
+
+    @Override
+    public AbstractConfigValue withFallback(ConfigValue other) {
+        if (other instanceof AbstractConfigObject
+                || other instanceof Unresolved) {
+            // if we turn out to be an object, and the fallback also does,
+            // then a merge may be required; delay until we resolve.
+            List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+            newStack.add(this);
+            if (other instanceof Unresolved)
+                newStack.addAll(((Unresolved) other).unmergedValues());
+            else
+                newStack.add((AbstractConfigValue) other);
+            return new ConfigDelayedMerge(origin(), newStack);
+        } else {
+            // if the other is not an object, there won't be anything
+            // to merge with, so we are it even if we are an object.
+            return this;
+        }
+    }
+
+    @Override
+    public Collection<ConfigSubstitution> unmergedValues() {
+        return Collections.singleton(this);
     }
 
     List<Object> pieces() {

@@ -198,4 +198,23 @@ public class ConfigException extends RuntimeException {
             this(origin, message, null);
         }
     }
+
+    /**
+     * Exception indicating that you tried to use a function that requires
+     * substitutions to be resolved, but substitutions have not been resolved.
+     * This is always a bug in either application code or the library; it's
+     * wrong to write a handler for this exception because you should be able to
+     * fix the code to avoid it.
+     */
+    public static class NotResolved extends BugOrBroken {
+        private static final long serialVersionUID = 1L;
+
+        public NotResolved(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public NotResolved(String message) {
+            this(message, null);
+        }
+    }
 }

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigValue;
 
 final class TransformedConfigObject extends AbstractConfigObject {
@@ -14,6 +15,9 @@ final class TransformedConfigObject extends AbstractConfigObject {
             AbstractConfigObject underlying) {
         super(underlying.origin(), transformer);
         this.underlying = underlying;
+        if (transformer == underlying.transformer)
+            throw new ConfigException.BugOrBroken(
+                    "Created unnecessary TransformedConfigObject");
     }
 
     @Override
