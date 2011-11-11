@@ -194,6 +194,8 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(Seq("a", "b", "c"), Seq("a", "b", "c"), Seq("a", "b", "c")), listOfLists)
         assertEquals(3, conf.getObjectList("arrays.ofObject").asScala.length)
 
+        assertEquals(Seq("a", "b"), conf.getStringList("arrays.firstElementNotASubst").asScala)
+
         // plain getList should work
         assertEquals(Seq(intValue(1), intValue(2), intValue(3)), conf.getList("arrays.ofInt").asScala)
         assertEquals(Seq(stringValue("a"), stringValue("b"), stringValue("c")), conf.getList("arrays.ofString").asScala)

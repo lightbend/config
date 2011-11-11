@@ -67,6 +67,19 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def configListEquality() {
+        val aScalaSeq = Seq(1, 2, 3) map { intValue(_): AbstractConfigValue }
+        val aList = new ConfigList(fakeOrigin(), aScalaSeq.asJava)
+        val sameAsAList = new ConfigList(fakeOrigin(), aScalaSeq.asJava)
+        val bScalaSeq = Seq(4, 5, 6) map { intValue(_): AbstractConfigValue }
+        val bList = new ConfigList(fakeOrigin(), bScalaSeq.asJava)
+
+        checkEqualObjects(aList, aList)
+        checkEqualObjects(aList, sameAsAList)
+        checkNotEqualObjects(aList, bList)
+    }
+
+    @Test
     def configSubstitutionEquality() {
         val a = subst("foo")
         val sameAsA = subst("foo")
@@ -136,5 +149,75 @@ class ConfigValueTest extends TestUtils {
         unsupported { m.put("hello", intValue(42)) }
         unsupported { m.putAll(Collections.emptyMap[String, AbstractConfigValue]()) }
         unsupported { m.remove("a") }
+    }
+
+    @Test
+    def configListImplementsList() {
+        val l: ConfigList = new ConfigList(fakeOrigin(), List[AbstractConfigValue](stringValue("a"), stringValue("b"), stringValue("c")).asJava)
+        val scalaSeq = Seq(stringValue("a"), stringValue("b"), stringValue("c"))
+
+        assertEquals(scalaSeq(0), l.get(0))
+        assertEquals(scalaSeq(1), l.get(1))
+        assertEquals(scalaSeq(2), l.get(2))
+
+        assertTrue(l.contains(stringValue("a")))
+
+        assertTrue(l.containsAll(List[AbstractConfigValue](stringValue("b")).asJava))
+        assertFalse(l.containsAll(List[AbstractConfigValue](stringValue("d")).asJava))
+
+        assertEquals(1, l.indexOf(scalaSeq(1)))
+
+        assertFalse(l.isEmpty());
+
+        assertEquals(scalaSeq, l.iterator().asScala.toSeq)
+
+        unsupported { l.iterator().remove() }
+
+        assertEquals(1, l.lastIndexOf(scalaSeq(1)))
+
+        val li = l.listIterator()
+        var i = 0
+        while (li.hasNext()) {
+            assertEquals(i > 0, li.hasPrevious())
+            assertEquals(i, li.nextIndex())
+            assertEquals(i - 1, li.previousIndex())
+
+            unsupported { li.remove() }
+            unsupported { li.add(intValue(3)) }
+            unsupported { li.set(stringValue("foo")) }
+
+            val v = li.next()
+            assertEquals(l.get(i), v)
+
+            if (li.hasPrevious()) {
+                // go backward
+                assertEquals(scalaSeq(i), li.previous())
+                // go back forward
+                li.next()
+            }
+
+            i += 1
+        }
+
+        l.listIterator(1) // doesn't throw!
+
+        assertEquals(3, l.size())
+
+        assertEquals(scalaSeq.tail, l.subList(1, l.size()).asScala)
+
+        assertEquals(scalaSeq, l.toArray.toList)
+
+        assertEquals(scalaSeq, l.toArray(new Array[ConfigValue](l.size())).toList)
+
+        unsupported { l.add(intValue(3)) }
+        unsupported { l.add(1, intValue(4)) }
+        unsupported { l.addAll(List[ConfigValue]().asJava) }
+        unsupported { l.addAll(1, List[ConfigValue]().asJava) }
+        unsupported { l.clear() }
+        unsupported { l.remove(intValue(2)) }
+        unsupported { l.remove(1) }
+        unsupported { l.removeAll(List[ConfigValue](intValue(1)).asJava) }
+        unsupported { l.retainAll(List[ConfigValue](intValue(1)).asJava) }
+        unsupported { l.set(0, intValue(42)) }
     }
 }

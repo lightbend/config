@@ -56,7 +56,7 @@ class ConfParserTest extends TestUtils {
         val tree = parseWithoutResolving("[${" + s + "}]")
         val result = tree match {
             case list: ConfigList =>
-                list.asJavaList().get(0) match {
+                list.get(0) match {
                     case subst: ConfigSubstitution =>
                         subst.pieces().get(0) match {
                             case p: Path => p

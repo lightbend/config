@@ -295,7 +295,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     @Override
     public List<? extends ConfigValue> getList(String path) {
         AbstractConfigValue v = find(path, ConfigValueType.LIST, path);
-        return ((ConfigList) v).asJavaList();
+        return (ConfigList) v;
     }
 
     @Override

@@ -26,7 +26,7 @@ class JsonTest extends TestUtils {
             case v: ConfigObject =>
                 lift.JObject(v.keySet().asScala.map({ k => lift.JField(k, toLift(v.get(k))) }).toList)
             case v: ConfigList =>
-                lift.JArray(v.asJavaList().asScala.toList.map({ elem => toLift(elem) }))
+                lift.JArray(v.asScala.toList.map({ elem => toLift(elem) }))
             case v: ConfigBoolean =>
                 lift.JBool(v.unwrapped())
             case v: ConfigInt =>
