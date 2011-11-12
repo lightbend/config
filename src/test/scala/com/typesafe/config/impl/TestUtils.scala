@@ -92,7 +92,7 @@ abstract trait TestUtils {
 
     // note: it's important to put {} or [] at the root if you
     // want to test "invalidity reasons" other than "wrong root"
-    private val invalidJsonInvalidConf = List[ParseTest]("", // empty document
+    private val invalidJsonInvalidConf = List[ParseTest](
         "{",
         "}",
         "[",
@@ -102,6 +102,10 @@ abstract trait TestUtils {
         "\"", // single quote by itself
         "{ \"foo\" : }", // no value in object
         "{ : 10 }", // no key in object
+        " \"foo\" : ", // no value in object with no braces
+        " : 10 ", // no key in object with no braces
+        " \"foo\" : 10 } ", // close brace but no open
+        " \"foo\" : 10 [ ", // no-braces object with trailing gunk 
         "{ \"foo\" }", // no value or colon
         "{ \"a\" : [ }", // [ is not a valid value
         ParseTest(true, "{ \"foo\" : 10, }"), // extra trailing comma (lift fails to throw)
@@ -142,8 +146,7 @@ abstract trait TestUtils {
         "${ #comment }",
         "{ include \"bar\" : 10 }", // include with a value after it
         "{ include foo }", // include with unquoted string
-        "{ include : { \"a\" : 1 } }", // include used as unquoted key
-        "") // empty document again, just for clean formatting of this list ;-)
+        "{ include : { \"a\" : 1 } }") // include used as unquoted key
 
     // We'll automatically try each of these with whitespace modifications
     // so no need to add every possible whitespace variation
@@ -170,10 +173,11 @@ abstract trait TestUtils {
         """{ "foo" : { "bar" : "baz", "woo" : "w00t" }, "baz" : { "bar" : "baz", "woo" : [1,2,3,4], "w00t" : true, "a" : false, "b" : 3.14, "c" : null } }""",
         "{}")
 
-    private val validConfInvalidJson = List[ParseTest](
+    private val validConfInvalidJson = List[ParseTest]("", // empty document
         """{ "foo" = 42 }""", // equals rather than colon
         """{ foo { "bar" : 42 } }""", // omit the colon for object value
         """{ foo baz { "bar" : 42 } }""", // omit the colon with unquoted key with spaces
+        """ "foo" : 42 """, // omit braces on root object
         """{ "foo" : bar }""", // no quotes on value
         """{ "foo" : null bar 42 baz true 3.14 "hi" }""", // bunch of values to concat into a string
         "{ foo : \"bar\" }", // no quotes on key

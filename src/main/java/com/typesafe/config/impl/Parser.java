@@ -265,7 +265,7 @@ final class Parser {
             if (Tokens.isValue(token)) {
                 return Tokens.getValue(token);
             } else if (token == Tokens.OPEN_CURLY) {
-                return parseObject();
+                return parseObject(true);
             } else if (token == Tokens.OPEN_SQUARE) {
                 return parseArray();
             } else {
@@ -379,8 +379,8 @@ final class Parser {
             }
         }
 
-        private AbstractConfigObject parseObject() {
-            // invoked just after the OPEN_CURLY
+        private AbstractConfigObject parseObject(boolean hadOpenCurly) {
+            // invoked just after the OPEN_CURLY (or START, if !hadOpenCurly)
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
             ConfigOrigin objectOrigin = lineOrigin();
             boolean afterComma = false;
@@ -389,7 +389,12 @@ final class Parser {
                 if (t == Tokens.CLOSE_CURLY) {
                     if (afterComma) {
                         throw parseError("expecting a field name after comma, got a close brace }");
+                    } else if (!hadOpenCurly) {
+                        throw parseError("unbalanced close brace '}' with no open brace");
                     }
+                    break;
+                } else if (t == Tokens.END && !hadOpenCurly) {
+                    putBack(t);
                     break;
                 } else if (flavor != SyntaxFlavor.JSON && isIncludeKeyword(t)) {
                     parseInclude(values);
@@ -405,7 +410,7 @@ final class Parser {
                             && afterKey == Tokens.OPEN_CURLY) {
                         // can omit the ':' or '=' before an object value
                         valueToken = afterKey;
-                        newValue = parseObject();
+                        newValue = parseObject(true);
                     } else {
                         if (!isKeyValueSeparatorToken(afterKey)) {
                             throw parseError("Key may not be followed by token: "
@@ -458,13 +463,24 @@ final class Parser {
 
                 t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_CURLY) {
+                    if (!hadOpenCurly) {
+                        throw parseError("unbalanced close brace '}' with no open brace");
+                    }
                     break;
                 } else if (t == Tokens.COMMA) {
                     // continue looping
                     afterComma = true;
-                } else {
+                } else if (hadOpenCurly) {
                     throw parseError("Expecting close brace } or a comma, got "
                             + t);
+                } else {
+                    if (t == Tokens.END) {
+                        putBack(t);
+                        break;
+                    } else {
+                        throw parseError("Expecting end of input or a comma, got "
+                                + t);
+                    }
                 }
             }
             return new SimpleConfigObject(objectOrigin,
@@ -487,7 +503,7 @@ final class Parser {
             } else if (Tokens.isValue(t)) {
                 values.add(parseValue(t));
             } else if (t == Tokens.OPEN_CURLY) {
-                values.add(parseObject());
+                values.add(parseObject(true));
             } else if (t == Tokens.OPEN_SQUARE) {
                 values.add(parseArray());
             } else {
@@ -515,7 +531,7 @@ final class Parser {
                 if (Tokens.isValue(t)) {
                     values.add(parseValue(t));
                 } else if (t == Tokens.OPEN_CURLY) {
-                    values.add(parseObject());
+                    values.add(parseObject(true));
                 } else if (t == Tokens.OPEN_SQUARE) {
                     values.add(parseArray());
                 } else {
@@ -537,14 +553,24 @@ final class Parser {
             t = nextTokenIgnoringNewline();
             AbstractConfigValue result = null;
             if (t == Tokens.OPEN_CURLY) {
-                result = parseObject();
+                result = parseObject(true);
             } else if (t == Tokens.OPEN_SQUARE) {
                 result = parseArray();
-            } else if (t == Tokens.END) {
-                throw parseError("Empty document");
             } else {
-                throw parseError("Document must have an object or array at root, unexpected token: "
-                        + t);
+                if (flavor == SyntaxFlavor.JSON) {
+                    if (t == Tokens.END) {
+                        throw parseError("Empty document");
+                    } else {
+                        throw parseError("Document must have an object or array at root, unexpected token: "
+                                + t);
+                    }
+                } else {
+                    // the root object can omit the surrounding braces.
+                    // this token should be the first field's key, or part
+                    // of it, so put it back.
+                    putBack(t);
+                    result = parseObject(false);
+                }
             }
 
             t = nextTokenIgnoringNewline();
