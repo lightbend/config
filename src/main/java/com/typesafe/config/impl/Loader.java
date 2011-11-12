@@ -1,5 +1,6 @@
 package com.typesafe.config.impl;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -50,6 +51,7 @@ final class Loader {
             InputStream stream = null;
             try {
                 stream = url.openStream();
+                stream = new BufferedInputStream(stream);
                 props.load(stream);
             } catch (IOException e) {
                 throw new ConfigException.IO(origin, "failed to open url", e);
