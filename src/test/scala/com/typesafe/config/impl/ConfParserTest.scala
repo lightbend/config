@@ -116,4 +116,48 @@ class ConfParserTest extends TestUtils {
             parsePath("-")
         }
     }
+
+    @Test
+    def duplicateKeyLastWins() {
+        val obj = parseObject("""{ "a" : 10, "a" : 11 } """)
+
+        assertEquals(1, obj.size())
+        assertEquals(11, obj.getInt("a"))
+    }
+
+    @Test
+    def duplicateKeyObjectsMerged() {
+        val obj = parseObject("""{ "a" : { "x" : 1, "y" : 2 }, "a" : { "x" : 42, "z" : 100 } }""")
+
+        assertEquals(1, obj.size())
+        assertEquals(3, obj.getObject("a").size())
+        assertEquals(42, obj.getInt("a.x"))
+        assertEquals(2, obj.getInt("a.y"))
+        assertEquals(100, obj.getInt("a.z"))
+    }
+
+    @Test
+    def duplicateKeyObjectsMergedRecursively() {
+        val obj = parseObject("""{ "a" : { "b" : { "x" : 1, "y" : 2 } }, "a" : { "b" : { "x" : 42, "z" : 100 } } }""")
+
+        assertEquals(1, obj.size())
+        assertEquals(1, obj.getObject("a").size())
+        assertEquals(3, obj.getObject("a.b").size())
+        assertEquals(42, obj.getInt("a.b.x"))
+        assertEquals(2, obj.getInt("a.b.y"))
+        assertEquals(100, obj.getInt("a.b.z"))
+    }
+
+    @Test
+    def duplicateKeyObjectsMergedRecursivelyDeeper() {
+        val obj = parseObject("""{ "a" : { "b" : { "c" : { "x" : 1, "y" : 2 } } }, "a" : { "b" : { "c" : { "x" : 42, "z" : 100 } } } }""")
+
+        assertEquals(1, obj.size())
+        assertEquals(1, obj.getObject("a").size())
+        assertEquals(1, obj.getObject("a.b").size())
+        assertEquals(3, obj.getObject("a.b.c").size())
+        assertEquals(42, obj.getInt("a.b.c.x"))
+        assertEquals(2, obj.getInt("a.b.c.y"))
+        assertEquals(100, obj.getInt("a.b.c.z"))
+    }
 }

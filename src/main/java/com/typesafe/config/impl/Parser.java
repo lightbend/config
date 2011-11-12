@@ -290,13 +290,25 @@ final class Parser {
 
                     consolidateValueTokens();
                     Token valueToken = nextTokenIgnoringNewline();
+                    AbstractConfigValue newValue = parseValue(valueToken);
 
-                    // note how we handle duplicate keys: the last one just
-                    // wins.
-                    // FIXME in strict JSON, dups should be an error; while in
+                    // In strict JSON, dups should be an error; while in
                     // our custom config language, they should be merged if the
-                    // value is an object.
-                    values.put(key, parseValue(valueToken));
+                    // value is an object (or substitution that could become
+                    // an object).
+                    AbstractConfigValue existing = values.get(key);
+
+                    if (existing != null) {
+                        if (flavor == SyntaxFlavor.JSON) {
+                            throw parseError("JSON does not allow duplicate fields: '"
+                                    + key
+                                    + "' was already seen at "
+                                    + existing.origin().description());
+                        } else {
+                            newValue = newValue.withFallback(existing);
+                        }
+                    }
+                    values.put(key, newValue);
 
                     afterComma = false;
                 } else if (t == Tokens.CLOSE_CURLY) {

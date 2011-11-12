@@ -149,7 +149,6 @@ abstract trait TestUtils {
         """{ "foo" : { "bar" : "baz" }, "baz" : "boo" }""",
         """{ "foo" : { "bar" : "baz", "woo" : "w00t" }, "baz" : "boo" }""",
         """{ "foo" : [10,11,12], "baz" : "boo" }""",
-        ParseTest(true, """{ "foo" : "bar", "foo" : "bar2" }"""), // dup keys - lift just returns both, we use last one
         """[{},{},{},{}]""",
         """[[[[[[]]]]]]""",
         """{"a":{"a":{"a":{"a":{"a":{"a":{"a":{"a":42}}}}}}}}""",
@@ -160,6 +159,7 @@ abstract trait TestUtils {
     private val validConfInvalidJson = List[ParseTest](
         """{ "foo" : bar }""", // no quotes on value
         """{ "foo" : null bar 42 baz true 3.14 "hi" }""", // bunch of values to concat into a string
+        ParseTest(true, """{ "foo" : "bar", "foo" : "bar2" }"""), // dup keys - lift just returns both
         "[ foo ]", // not a known token in JSON
         "[ t ]", // start of "true" but ends wrong in JSON
         "[ tx ]",
