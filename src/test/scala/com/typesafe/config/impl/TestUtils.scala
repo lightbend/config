@@ -172,6 +172,8 @@ abstract trait TestUtils {
 
     private val validConfInvalidJson = List[ParseTest](
         """{ "foo" = 42 }""", // equals rather than colon
+        """{ foo { "bar" : 42 } }""", // omit the colon for object value
+        """{ foo baz { "bar" : 42 } }""", // omit the colon with unquoted key with spaces
         """{ "foo" : bar }""", // no quotes on value
         """{ "foo" : null bar 42 baz true 3.14 "hi" }""", // bunch of values to concat into a string
         "{ foo : \"bar\" }", // no quotes on key

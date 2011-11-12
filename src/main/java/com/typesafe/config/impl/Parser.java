@@ -398,14 +398,24 @@ final class Parser {
                 } else {
                     Path path = parseKey(t);
                     Token afterKey = nextTokenIgnoringNewline();
-                    if (!isKeyValueSeparatorToken(afterKey)) {
-                        throw parseError("Key may not be followed by token: "
-                                + afterKey);
-                    }
 
-                    consolidateValueTokens();
-                    Token valueToken = nextTokenIgnoringNewline();
-                    AbstractConfigValue newValue = parseValue(valueToken);
+                    Token valueToken;
+                    AbstractConfigValue newValue;
+                    if (flavor == SyntaxFlavor.CONF
+                            && afterKey == Tokens.OPEN_CURLY) {
+                        // can omit the ':' or '=' before an object value
+                        valueToken = afterKey;
+                        newValue = parseObject();
+                    } else {
+                        if (!isKeyValueSeparatorToken(afterKey)) {
+                            throw parseError("Key may not be followed by token: "
+                                    + afterKey);
+                        }
+
+                        consolidateValueTokens();
+                        valueToken = nextTokenIgnoringNewline();
+                        newValue = parseValue(valueToken);
+                    }
 
                     String key = path.first();
                     Path remaining = path.remainder();
