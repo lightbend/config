@@ -30,7 +30,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def invalidConfThrows(): Unit = {
         // be sure we throw
-        for (invalid <- whitespaceVariations(invalidConf)) {
+        for (invalid <- whitespaceVariations(invalidConf, false)) {
             addOffendingJsonToException("config", invalid.test) {
                 intercept[ConfigException] {
                     parse(invalid.test)
@@ -43,7 +43,7 @@ class ConfParserTest extends TestUtils {
     def validConfWorks(): Unit = {
         // all we're checking here unfortunately is that it doesn't throw.
         // for a more thorough check, use the EquivalentsTest stuff.
-        for (valid <- whitespaceVariations(validConf)) {
+        for (valid <- whitespaceVariations(validConf, true)) {
             val ourAST = addOffendingJsonToException("config-conf", valid.test) {
                 parse(valid.test)
             }

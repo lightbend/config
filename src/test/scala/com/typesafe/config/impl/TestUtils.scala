@@ -104,7 +104,7 @@ abstract trait TestUtils {
         "{ : 10 }", // no key in object
         "{ \"foo\" }", // no value or colon
         "{ \"a\" : [ }", // [ is not a valid value
-        "{ \"foo\" : 10, }", // extra trailing comma
+        ParseTest(true, "{ \"foo\" : 10, }"), // extra trailing comma (lift fails to throw)
         "{ \"foo\" : 10, true }", // non-key after comma
         "{ foo \n bar : 10 }", // newline in the middle of the unquoted key
         "[ 1, \\", // ends with backslash
@@ -114,7 +114,7 @@ abstract trait TestUtils {
         "[ 10e3e3 ]", // two exponents. ideally this might parse to a number plus string "e3" but it's hard to implement.
         "[ 1-e3 ]", // malformed number but all chars can appear in a number
         "[ \"hello ]", // unterminated string
-        "[ 1, 2, 3, ]", // array with empty element
+        ParseTest(true, "[ 1, 2, 3, ]"), // array with empty element (lift fails to throw)
         ParseTest(true, "{ \"foo\" , true }"), // comma instead of colon, lift is fine with this
         ParseTest(true, "{ \"foo\" : true \"bar\" : false }"), // missing comma between fields, lift fine with this
         "[ 10, }]", // array with } as an element
@@ -196,8 +196,8 @@ abstract trait TestUtils {
         ParseTest(false, true, "[${foo.bar }]"), // substitution with trailing spaces
         ParseTest(false, true, "[${ \"foo.bar\"}]"), // substitution with leading spaces and quoted
         ParseTest(false, true, "[${\"foo.bar\" }]"), // substitution with trailing spaces and quoted
-        """${"foo""bar"}""", // multiple strings in substitution
-        """${foo  "bar"  baz}""", // multiple strings and whitespace in substitution
+        """[ ${"foo""bar"} ]""", // multiple strings in substitution
+        """[ ${foo  "bar"  baz} ]""", // multiple strings and whitespace in substitution
         "[${true}]") // substitution with unquoted true token
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
@@ -222,7 +222,7 @@ abstract trait TestUtils {
         }
     }
 
-    protected def whitespaceVariations(tests: Seq[ParseTest]): Seq[ParseTest] = {
+    protected def whitespaceVariations(tests: Seq[ParseTest], validInLift: Boolean): Seq[ParseTest] = {
         val variations = List({ s: String => s }, // identity
             { s: String => " " + s },
             { s: String => s + " " },
@@ -233,11 +233,14 @@ abstract trait TestUtils {
             )
         tests flatMap { t =>
             if (t.whitespaceMatters) {
-                return Seq(t)
+                Seq(t)
             } else {
-                val withNonAscii = ParseTest(true,
-                    t.test.replace(" ", "\u2003")) // 2003 = em space, to test non-ascii whitespace
-                Seq(withNonAscii) ++ (for (v <- variations)
+                val withNonAscii = if (t.test.contains(" "))
+                    Seq(ParseTest(validInLift,
+                        t.test.replace(" ", "\u2003"))) // 2003 = em space, to test non-ascii whitespace
+                else
+                    Seq()
+                withNonAscii ++ (for (v <- variations)
                     yield ParseTest(t.liftBehaviorUnexpected, v(t.test)))
             }
         }

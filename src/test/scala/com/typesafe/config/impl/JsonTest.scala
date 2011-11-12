@@ -94,12 +94,15 @@ class JsonTest extends TestUtils {
 
     @Test
     def invalidJsonThrows(): Unit = {
+        var tested = 0
         // be sure Lift throws on the string
-        for (invalid <- whitespaceVariations(invalidJson)) {
+        for (invalid <- whitespaceVariations(invalidJson, false)) {
             if (invalid.liftBehaviorUnexpected) {
                 // lift unexpectedly doesn't throw, confirm that
-                fromJsonWithLiftParser(invalid.test)
-                fromJsonWithLiftParser(new java.io.StringReader(invalid.test))
+                addOffendingJsonToException("lift-nonthrowing", invalid.test) {
+                    fromJsonWithLiftParser(invalid.test)
+                    fromJsonWithLiftParser(new java.io.StringReader(invalid.test))
+                }
             } else {
                 addOffendingJsonToException("lift", invalid.test) {
                     intercept[ConfigException] {
@@ -108,23 +111,34 @@ class JsonTest extends TestUtils {
                     intercept[ConfigException] {
                         fromJsonWithLiftParser(new java.io.StringReader(invalid.test))
                     }
+                    tested += 1
                 }
             }
+
         }
+
+        assertTrue(tested > 100) // just checking we ran a bunch of tests
+        tested = 0
+
         // be sure we also throw
-        for (invalid <- whitespaceVariations(invalidJson)) {
+        for (invalid <- whitespaceVariations(invalidJson, false)) {
             addOffendingJsonToException("config", invalid.test) {
                 intercept[ConfigException] {
                     parse(invalid.test)
                 }
+                tested += 1
             }
         }
+
+        assertTrue(tested > 100)
     }
 
     @Test
     def validJsonWorks(): Unit = {
+        var tested = 0
+
         // be sure we do the same thing as Lift when we build our JSON "DOM"
-        for (valid <- whitespaceVariations(validJson)) {
+        for (valid <- whitespaceVariations(validJson, true)) {
             val liftAST = if (valid.liftBehaviorUnexpected) {
                 SimpleConfigObject.empty()
             } else {
@@ -151,7 +165,11 @@ class JsonTest extends TestUtils {
             addOffendingJsonToException("config", valid.test) {
                 assertEquals(ourAST, ourConfAST)
             }
+
+            tested += 1
         }
+
+        assertTrue(tested > 100) // just verify we ran a lot of tests
     }
 
     @Test
