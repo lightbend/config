@@ -387,7 +387,7 @@ final class Parser {
             while (true) {
                 Token t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_CURLY) {
-                    if (afterComma) {
+                    if (flavor == SyntaxFlavor.JSON && afterComma) {
                         throw parseError("expecting a field name after comma, got a close brace }");
                     } else if (!hadOpenCurly) {
                         throw parseError("unbalanced close brace '}' with no open brace");
@@ -534,6 +534,10 @@ final class Parser {
                     values.add(parseObject(true));
                 } else if (t == Tokens.OPEN_SQUARE) {
                     values.add(parseArray());
+                } else if (flavor != SyntaxFlavor.JSON
+                        && t == Tokens.CLOSE_SQUARE) {
+                    // we allow one trailing comma
+                    putBack(t);
                 } else {
                     throw parseError("List should have had new element after a comma, instead had token: "
                             + t);

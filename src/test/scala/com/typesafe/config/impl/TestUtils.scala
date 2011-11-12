@@ -97,9 +97,20 @@ abstract trait TestUtils {
         "}",
         "[",
         "]",
+        ",",
         "10", // value not in array or object
         "\"foo\"", // value not in array or object
         "\"", // single quote by itself
+        ParseTest(true, "[,]"), // array with just a comma in it; lift is OK with this
+        ParseTest(true, "[,,]"), // array with just two commas in it; lift is cool with this too
+        ParseTest(true, "[1,2,,]"), // array with two trailing commas
+        ParseTest(true, "[,1,2]"), // array with initial comma
+        ParseTest(true, "{ , }"), // object with just a comma in it
+        ParseTest(true, "{ , , }"), // object with just two commas in it
+        "{ 1,2 }", // object with single values not key-value pair
+        ParseTest(true, "{ , \"foo\" : 10 }"), // object starts with comma
+        ParseTest(true, "{ \"foo\" : 10 ,, }"), // object has two trailing commas
+        " \"a\" : 10 ,, ", // two trailing commas for braceless root object
         "{ \"foo\" : }", // no value in object
         "{ : 10 }", // no key in object
         " \"foo\" : ", // no value in object with no braces
@@ -108,7 +119,6 @@ abstract trait TestUtils {
         " \"foo\" : 10 [ ", // no-braces object with trailing gunk 
         "{ \"foo\" }", // no value or colon
         "{ \"a\" : [ }", // [ is not a valid value
-        ParseTest(true, "{ \"foo\" : 10, }"), // extra trailing comma (lift fails to throw)
         "{ \"foo\" : 10, true }", // non-key after comma
         "{ foo \n bar : 10 }", // newline in the middle of the unquoted key
         "[ 1, \\", // ends with backslash
@@ -118,7 +128,6 @@ abstract trait TestUtils {
         "[ 10e3e3 ]", // two exponents. ideally this might parse to a number plus string "e3" but it's hard to implement.
         "[ 1-e3 ]", // malformed number but all chars can appear in a number
         "[ \"hello ]", // unterminated string
-        ParseTest(true, "[ 1, 2, 3, ]"), // array with empty element (lift fails to throw)
         ParseTest(true, "{ \"foo\" , true }"), // comma instead of colon, lift is fine with this
         ParseTest(true, "{ \"foo\" : true \"bar\" : false }"), // missing comma between fields, lift fine with this
         "[ 10, }]", // array with } as an element
@@ -188,6 +197,15 @@ abstract trait TestUtils {
         "{ foo  bar : bar }", // whitespace in the key
         "{ true : bar }", // key is a non-string token
         ParseTest(true, """{ "foo" : "bar", "foo" : "bar2" }"""), // dup keys - lift just returns both
+        ParseTest(true, "[ 1, 2, 3, ]"), // single trailing comma (lift fails to throw)
+        ParseTest(true, "[1,2,3  , ]"), // single trailing comma with whitespace
+        ParseTest(true, "[1,2,3\n\n , \n]"), // single trailing comma with newlines
+        ParseTest(true, "[1,]"), // single trailing comma with one-element array
+        ParseTest(true, "{ \"foo\" : 10, }"), // extra trailing comma (lift fails to throw)
+        ParseTest(true, "{ \"a\" : \"b\", }"), // single trailing comma in object
+        "{ a : b, }", // single trailing comma in object (unquoted strings)
+        "{ a : b  \n  , \n }", // single trailing comma in object with newlines
+        "a : b, c : d,", // single trailing comma in object with no root braces
         "[ foo ]", // not a known token in JSON
         "[ t ]", // start of "true" but ends wrong in JSON
         "[ tx ]",
