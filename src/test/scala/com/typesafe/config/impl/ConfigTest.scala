@@ -652,4 +652,19 @@ class ConfigTest extends TestUtils {
         // equiv01/original.json was included (it has a slash in the name)
         assertEquals("a", conf.getString("equiv01.strings.a"))
     }
+
+    @Test
+    def test04LoadAkkaReference() {
+        val conf = Config.load("test04")
+
+        // Note, test04 is an unmodified old-style akka.conf,
+        // which means it has an outer akka{} namespace.
+        // that namespace wouldn't normally be used with
+        // this library because the conf object is not global,
+        // it's per-module already.
+        assertEquals("2.0-SNAPSHOT", conf.getString("akka.version"))
+        assertEquals(8, conf.getInt("akka.event-handler-dispatcher.max-pool-size"))
+        assertEquals("round-robin", conf.getString("akka.actor.deployment.\"/app/service-ping\".router"))
+        assertEquals(true, conf.getBoolean("akka.stm.quick-release"))
+    }
 }
