@@ -129,13 +129,13 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     @Override
     AbstractConfigObject transformed(ConfigTransformer newTransformer) {
         if (newTransformer != transformer)
-            return newCopy(newTransformer);
+            return newCopy(newTransformer, resolveStatus());
         else
             return this;
     }
 
     protected abstract AbstractConfigObject newCopy(
-            ConfigTransformer newTransformer);
+            ConfigTransformer newTransformer, ResolveStatus status);
 
     static private AbstractConfigValue resolve(AbstractConfigObject self,
             String pathExpression,
@@ -199,6 +199,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             if (fallback.isEmpty()) {
                 return this; // nothing to do
             } else {
+                boolean allResolved = true;
                 Map<String, AbstractConfigValue> merged = new HashMap<String, AbstractConfigValue>();
                 Set<String> allKeys = new HashSet<String>();
                 allKeys.addAll(this.keySet());
@@ -206,15 +207,19 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                 for (String key : allKeys) {
                     AbstractConfigValue first = this.peek(key);
                     AbstractConfigValue second = fallback.peek(key);
+                    AbstractConfigValue kept;
                     if (first == null)
-                        merged.put(key, second);
+                        kept = second;
                     else if (second == null)
-                        merged.put(key, first);
+                        kept = first;
                     else
-                        merged.put(key, first.withFallback(second));
+                        kept = first.withFallback(second);
+                    merged.put(key, kept);
+                    if (kept.resolveStatus() == ResolveStatus.UNRESOLVED)
+                        allResolved = false;
                 }
                 return new SimpleConfigObject(mergeOrigins(this, fallback),
-                        merged);
+                        merged, ResolveStatus.fromBoolean(allResolved));
             }
         } else {
             // falling back to a non-object has no effect, we just override
@@ -269,17 +274,22 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
             int depth,
             boolean withFallbacks) {
-        Map<String, AbstractConfigValue> changes = new HashMap<String, AbstractConfigValue>();
+        if (resolveStatus() == ResolveStatus.RESOLVED)
+            return this;
+
+        Map<String, AbstractConfigValue> changes = null;
         for (String k : keySet()) {
             AbstractConfigValue v = peek(k);
             AbstractConfigValue resolved = resolver.resolve(v, depth,
                     withFallbacks);
             if (resolved != v) {
+                if (changes == null)
+                    changes = new HashMap<String, AbstractConfigValue>();
                 changes.put(k, resolved);
             }
         }
-        if (changes.isEmpty()) {
-            return this;
+        if (changes == null) {
+            return newCopy(transformer, ResolveStatus.RESOLVED);
         } else {
             Map<String, AbstractConfigValue> resolved = new HashMap<String, AbstractConfigValue>();
             for (String k : keySet()) {
@@ -289,7 +299,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                     resolved.put(k, peek(k));
                 }
             }
-            return new SimpleConfigObject(origin(), resolved);
+            return new SimpleConfigObject(origin(), transformer, resolved,
+                    ResolveStatus.RESOLVED);
         }
     }
 

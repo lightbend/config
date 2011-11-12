@@ -155,9 +155,12 @@ final class Loader {
             // provide to SimpleConfigObject, which is not allowed by
             // its contract, but since we know nobody has a ref to this
             // SimpleConfigObject yet we can get away with it.
+            // Also we assume here that any info based on the map that
+            // SimpleConfigObject computes and caches in its constructor
+            // will not change. Basically this is a bad hack.
             AbstractConfigObject o = new SimpleConfigObject(
                     new SimpleConfigOrigin(originPrefix + " " + path),
-                    scopes.get(path));
+                    scopes.get(path), ResolveStatus.RESOLVED);
             String basename = lastElement(path);
             parent.put(basename, o);
         }
@@ -171,6 +174,6 @@ final class Loader {
 
         // return root config object
         return new SimpleConfigObject(new SimpleConfigOrigin(originPrefix),
-                root);
+                root, ResolveStatus.RESOLVED);
     }
 }

@@ -15,10 +15,17 @@ import com.typesafe.config.ConfigValueType;
 final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
 
     final private List<AbstractConfigValue> value;
+    final private boolean resolved;
 
     SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value) {
+        this(origin, value, ResolveStatus.fromValues(value));
+    }
+
+    SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value,
+            ResolveStatus status) {
         super(origin);
         this.value = value;
+        this.resolved = status == ResolveStatus.RESOLVED;
     }
 
     @Override
@@ -36,8 +43,16 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
     }
 
     @Override
+    ResolveStatus resolveStatus() {
+        return ResolveStatus.fromBoolean(resolved);
+    }
+
+    @Override
     SimpleConfigList resolveSubstitutions(SubstitutionResolver resolver, int depth,
             boolean withFallbacks) {
+        if (resolved)
+            return this;
+
         // lazy-create for optimization
         List<AbstractConfigValue> changed = null;
         int i = 0;
@@ -66,7 +81,8 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
             if (changed.size() != value.size())
                 throw new ConfigException.BugOrBroken(
                         "substituted list's size doesn't match");
-            return new SimpleConfigList(origin(), changed);
+            return new SimpleConfigList(origin(), changed,
+                    ResolveStatus.RESOLVED);
         } else {
             return this;
         }

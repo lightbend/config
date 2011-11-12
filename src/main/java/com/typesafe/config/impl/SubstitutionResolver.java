@@ -3,6 +3,8 @@ package com.typesafe.config.impl;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
+import com.typesafe.config.ConfigException;
+
 /**
  * This exists because we have to memoize resolved substitutions as we go
  * through the config tree; otherwise we could end up creating multiple copies
@@ -26,6 +28,9 @@ final class SubstitutionResolver {
             AbstractConfigValue resolved = original.resolveSubstitutions(this,
                     depth,
                     withFallbacks);
+            if (resolved.resolveStatus() != ResolveStatus.RESOLVED)
+                throw new ConfigException.BugOrBroken(
+                        "resolveSubstitutions() did not give us a resolved object");
             memos.put(original, resolved);
             return resolved;
         }

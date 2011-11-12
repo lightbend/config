@@ -169,6 +169,11 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
+    ResolveStatus resolveStatus() {
+        return ResolveStatus.UNRESOLVED;
+    }
+
+    @Override
     protected boolean canEqual(Object other) {
         return other instanceof ConfigSubstitution;
     }

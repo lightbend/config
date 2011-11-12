@@ -64,7 +64,11 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    public ConfigDelayedMergeObject newCopy(ConfigTransformer newTransformer) {
+    public ConfigDelayedMergeObject newCopy(ConfigTransformer newTransformer,
+            ResolveStatus status) {
+        if (status != resolveStatus())
+            throw new ConfigException.BugOrBroken(
+                    "attempt to create resolved ConfigDelayedMergeObject");
         return new ConfigDelayedMergeObject(origin(), newTransformer, stack);
     }
 
@@ -80,6 +84,11 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
             throw new ConfigException.BugOrBroken(
                     "somehow brokenly merged an object and didn't get an object");
         }
+    }
+
+    @Override
+    ResolveStatus resolveStatus() {
+        return ResolveStatus.UNRESOLVED;
     }
 
     @Override

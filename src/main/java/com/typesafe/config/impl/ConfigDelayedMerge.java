@@ -86,6 +86,11 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     }
 
     @Override
+    ResolveStatus resolveStatus() {
+        return ResolveStatus.UNRESOLVED;
+    }
+
+    @Override
     public AbstractConfigValue withFallback(ConfigValue other) {
         if (other instanceof AbstractConfigObject
                 || other instanceof Unmergeable) {

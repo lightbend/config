@@ -19,19 +19,32 @@ final class SimpleConfigObject extends AbstractConfigObject {
 
     // this map should never be modified - assume immutable
     final private Map<String, AbstractConfigValue> value;
+    final private boolean resolved;
 
     SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
-            Map<String, AbstractConfigValue> value) {
+            Map<String, AbstractConfigValue> value, ResolveStatus status) {
         super(origin, transformer);
         if (value == null)
             throw new ConfigException.BugOrBroken(
                     "creating config object with null map");
         this.value = value;
+        this.resolved = status == ResolveStatus.RESOLVED;
+    }
+
+    SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
+            Map<String, AbstractConfigValue> value) {
+        this(origin, transformer, value, ResolveStatus.fromValues(value
+                .values()));
+    }
+
+    SimpleConfigObject(ConfigOrigin origin,
+            Map<String, AbstractConfigValue> value, ResolveStatus status) {
+        this(origin, ConfigImpl.defaultConfigTransformer(), value, status);
     }
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value) {
-        this(origin, ConfigImpl.defaultConfigTransformer(), value);
+        this(origin, value, ResolveStatus.fromValues(value.values()));
     }
 
     @Override
@@ -40,8 +53,15 @@ final class SimpleConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    public SimpleConfigObject newCopy(ConfigTransformer newTransformer) {
-        return new SimpleConfigObject(origin(), newTransformer, value);
+    public SimpleConfigObject newCopy(ConfigTransformer newTransformer,
+            ResolveStatus newStatus) {
+        return new SimpleConfigObject(origin(), newTransformer, value,
+                newStatus);
+    }
+
+    @Override
+    ResolveStatus resolveStatus() {
+        return ResolveStatus.fromBoolean(resolved);
     }
 
     @Override

@@ -34,6 +34,10 @@ abstract class AbstractConfigValue implements ConfigValue {
         return this;
     }
 
+    ResolveStatus resolveStatus() {
+        return ResolveStatus.RESOLVED;
+    }
+
     @Override
     public AbstractConfigValue withFallback(ConfigValue other) {
         return this;

@@ -128,6 +128,6 @@ public class ConfigImpl {
                     new SimpleConfigOrigin("env var " + key), entry.getValue()));
         }
         return new SimpleConfigObject(new SimpleConfigOrigin("env variables"),
-                m);
+                m, ResolveStatus.RESOLVED);
     }
 }
