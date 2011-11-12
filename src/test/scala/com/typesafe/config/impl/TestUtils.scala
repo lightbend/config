@@ -212,6 +212,9 @@ abstract trait TestUtils {
         "{ a : b, }", // single trailing comma in object (unquoted strings)
         "{ a : b  \n  , \n }", // single trailing comma in object with newlines
         "a : b, c : d,", // single trailing comma in object with no root braces
+        "{ a : b\nc : d }", // skip comma if there's a newline
+        "a : b\nc : d", // skip comma if there's a newline and no root braces
+        "a : b\nc : d,", // skip one comma but still have one at the end
         "[ foo ]", // not a known token in JSON
         "[ t ]", // start of "true" but ends wrong in JSON
         "[ tx ]",

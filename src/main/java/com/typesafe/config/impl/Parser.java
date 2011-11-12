@@ -156,6 +156,42 @@ final class Parser {
             return t;
         }
 
+        // In arrays and objects, comma can be omitted
+        // as long as there's at least one newline instead.
+        // this skips any newlines in front of a comma,
+        // skips the comma, and returns true if it found
+        // either a newline or a comma. The iterator
+        // is left just after the comma or the newline.
+        private boolean checkElementSeparator() {
+            if (flavor == SyntaxFlavor.JSON) {
+                Token t = nextTokenIgnoringNewline();
+                if (t == Tokens.COMMA) {
+                    return true;
+                } else {
+                    putBack(t);
+                    return false;
+                }
+            } else {
+                boolean sawSeparatorOrNewline = false;
+                Token t = nextToken();
+                while (true) {
+                    if (Tokens.isNewline(t)) {
+                        lineNumber = Tokens.getLineNumber(t);
+                        sawSeparatorOrNewline = true;
+                        // we want to continue to also eat
+                        // a comma if there is one.
+                    } else if (t == Tokens.COMMA) {
+                        return true;
+                    } else {
+                        // non-newline-or-comma
+                        putBack(t);
+                        return sawSeparatorOrNewline;
+                    }
+                    t = nextToken();
+                }
+            }
+        }
+
         // merge a bunch of adjacent values into one
         // value; change unquoted text into a string
         // value.
@@ -461,25 +497,27 @@ final class Parser {
                     afterComma = false;
                 }
 
-                t = nextTokenIgnoringNewline();
-                if (t == Tokens.CLOSE_CURLY) {
-                    if (!hadOpenCurly) {
-                        throw parseError("unbalanced close brace '}' with no open brace");
-                    }
-                    break;
-                } else if (t == Tokens.COMMA) {
+                if (checkElementSeparator()) {
                     // continue looping
                     afterComma = true;
-                } else if (hadOpenCurly) {
-                    throw parseError("Expecting close brace } or a comma, got "
-                            + t);
                 } else {
-                    if (t == Tokens.END) {
-                        putBack(t);
+                    t = nextTokenIgnoringNewline();
+                    if (t == Tokens.CLOSE_CURLY) {
+                        if (!hadOpenCurly) {
+                            throw parseError("unbalanced close brace '}' with no open brace");
+                        }
                         break;
-                    } else {
-                        throw parseError("Expecting end of input or a comma, got "
+                    } else if (hadOpenCurly) {
+                        throw parseError("Expecting close brace } or a comma, got "
                                 + t);
+                    } else {
+                        if (t == Tokens.END) {
+                            putBack(t);
+                            break;
+                        } else {
+                            throw parseError("Expecting end of input or a comma, got "
+                                    + t);
+                        }
                     }
                 }
             }
@@ -514,14 +552,16 @@ final class Parser {
             // now remaining elements
             while (true) {
                 // just after a value
-                t = nextTokenIgnoringNewline();
-                if (t == Tokens.CLOSE_SQUARE) {
-                    return new SimpleConfigList(arrayOrigin, values);
-                } else if (t == Tokens.COMMA) {
-                    // OK
+                if (checkElementSeparator()) {
+                    // comma (or newline equivalent) consumed
                 } else {
-                    throw parseError("List should have ended with ] or had a comma, instead had token: "
-                            + t);
+                    t = nextTokenIgnoringNewline();
+                    if (t == Tokens.CLOSE_SQUARE) {
+                        return new SimpleConfigList(arrayOrigin, values);
+                    } else {
+                        throw parseError("List should have ended with ] or had a comma, instead had token: "
+                                + t);
+                    }
                 }
 
                 // now just after a comma

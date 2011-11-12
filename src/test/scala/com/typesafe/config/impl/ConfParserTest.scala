@@ -160,4 +160,86 @@ class ConfParserTest extends TestUtils {
         assertEquals(2, obj.getInt("a.b.c.y"))
         assertEquals(100, obj.getInt("a.b.c.z"))
     }
+
+    @Test
+    def impliedCommaHandling() {
+        val valids = Seq(
+            """
+// one line
+{
+  a : y, b : z, c : [ 1, 2, 3 ]
+}""", """
+// multiline but with all commas
+{
+  a : y,
+  b : z,
+  c : [
+    1,
+    2,
+    3,
+  ],
+}
+""", """
+// multiline with no commas
+{
+  a : y
+  b : z
+  c : [
+    1
+    2
+    3
+  ]
+}
+""")
+
+        def dropCurlies(s: String) = {
+            // drop the outside curly braces
+            val first = s.indexOf('{')
+            val last = s.lastIndexOf('}')
+            s.substring(0, first) + s.substring(first + 1, last) + s.substring(last + 1, s.length())
+        }
+
+        val changes = Seq(
+            { s: String => s },
+            { s: String => s.replace("\n", "\n\n") },
+            { s: String => s.replace("\n", "\n\n\n") },
+            { s: String => s.replace(",\n", "\n,\n") },
+            { s: String => s.replace(",\n", "\n\n,\n\n") },
+            { s: String => s.replace("\n", " \n ") },
+            { s: String => s.replace(",\n", "  \n  \n  ,  \n  \n  ") },
+            { s: String => dropCurlies(s) })
+
+        var tested = 0;
+        for (v <- valids; change <- changes) {
+            tested += 1;
+            val obj = parseObject(change(v))
+            assertEquals(3, obj.size())
+            assertEquals("y", obj.getString("a"))
+            assertEquals("z", obj.getString("b"))
+            assertEquals(Seq(1, 2, 3), obj.getIntList("c").asScala)
+        }
+
+        assertEquals(valids.length * changes.length, tested)
+
+        // with no newline or comma, we do value concatenation
+        val noNewlineInArray = parseObject(" { c : [ 1 2 3 ] } ")
+        assertEquals(Seq("1 2 3"), noNewlineInArray.getStringList("c").asScala)
+
+        val noNewlineInArrayWithQuoted = parseObject(""" { c : [ "4" "5" "6" ] } """)
+        assertEquals(Seq("4 5 6"), noNewlineInArrayWithQuoted.getStringList("c").asScala)
+
+        val noNewlineInObject = parseObject(" { a : b c } ")
+        assertEquals("b c", noNewlineInObject.getString("a"))
+
+        val noNewlineAtEnd = parseObject("a : b")
+        assertEquals("b", noNewlineAtEnd.getString("a"))
+
+        intercept[ConfigException] {
+            parseObject("{ a : y b : z }")
+        }
+
+        intercept[ConfigException] {
+            parseObject("""{ "a" : "y" "b" : "z" }""")
+        }
+    }
 }
