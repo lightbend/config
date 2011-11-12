@@ -16,7 +16,7 @@ import com.typesafe.config.ConfigValueType;
  * than one piece it always resolves to a string via value concatenation.
  */
 final class ConfigSubstitution extends AbstractConfigValue implements
-        Unresolved {
+        Unmergeable {
 
     // this is a list of String and Path where the Path
     // have to be resolved to values, then if there's more
@@ -44,13 +44,13 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     @Override
     public AbstractConfigValue withFallback(ConfigValue other) {
         if (other instanceof AbstractConfigObject
-                || other instanceof Unresolved) {
+                || other instanceof Unmergeable) {
             // if we turn out to be an object, and the fallback also does,
             // then a merge may be required; delay until we resolve.
             List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
             newStack.add(this);
-            if (other instanceof Unresolved)
-                newStack.addAll(((Unresolved) other).unmergedValues());
+            if (other instanceof Unmergeable)
+                newStack.addAll(((Unmergeable) other).unmergedValues());
             else
                 newStack.add((AbstractConfigValue) other);
             return new ConfigDelayedMerge(

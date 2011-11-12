@@ -18,7 +18,7 @@ import com.typesafe.config.ConfigValueType;
  * substitutions.
  */
 final class ConfigDelayedMerge extends AbstractConfigValue implements
-        Unresolved {
+        Unmergeable {
 
     // earlier items in the stack win
     final private List<AbstractConfigValue> stack;
@@ -88,13 +88,13 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     @Override
     public AbstractConfigValue withFallback(ConfigValue other) {
         if (other instanceof AbstractConfigObject
-                || other instanceof Unresolved) {
+                || other instanceof Unmergeable) {
             // if we turn out to be an object, and the fallback also does,
             // then a merge may be required; delay until we resolve.
             List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
             newStack.addAll(stack);
-            if (other instanceof Unresolved)
-                newStack.addAll(((Unresolved) other).unmergedValues());
+            if (other instanceof Unmergeable)
+                newStack.addAll(((Unmergeable) other).unmergedValues());
             else
                 newStack.add((AbstractConfigValue) other);
             return new ConfigDelayedMerge(

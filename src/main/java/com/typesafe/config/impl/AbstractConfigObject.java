@@ -189,10 +189,10 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     public AbstractConfigObject withFallback(ConfigValue other) {
-        if (other instanceof Unresolved) {
+        if (other instanceof Unmergeable) {
             List<AbstractConfigValue> stack = new ArrayList<AbstractConfigValue>();
             stack.add(this);
-            stack.addAll(((Unresolved) other).unmergedValues());
+            stack.addAll(((Unmergeable) other).unmergedValues());
             return new ConfigDelayedMergeObject(mergeOrigins(stack), stack);
         } else if (other instanceof AbstractConfigObject) {
             AbstractConfigObject fallback = (AbstractConfigObject) other;

@@ -14,7 +14,7 @@ import com.typesafe.config.ConfigValue;
 // This is just like ConfigDelayedMerge except we know statically
 // that it will turn out to be an object.
 class ConfigDelayedMergeObject extends AbstractConfigObject implements
-        Unresolved {
+        Unmergeable {
 
     final private List<AbstractConfigValue> stack;
 
@@ -85,13 +85,13 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     @Override
     public ConfigDelayedMergeObject withFallback(ConfigValue other) {
         if (other instanceof AbstractConfigObject
-                || other instanceof Unresolved) {
+                || other instanceof Unmergeable) {
             // since we are an object, and the fallback could be,
             // then a merge may be required; delay until we resolve.
             List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
             newStack.addAll(stack);
-            if (other instanceof Unresolved)
-                newStack.addAll(((Unresolved) other).unmergedValues());
+            if (other instanceof Unmergeable)
+                newStack.addAll(((Unmergeable) other).unmergedValues());
             else
                 newStack.add((AbstractConfigValue) other);
             return new ConfigDelayedMergeObject(
