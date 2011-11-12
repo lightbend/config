@@ -7,6 +7,12 @@ name := "config"
 
 version := "0.1"
 
+fork in test := true
+
+fork in run := true
+
+fork in run in Test := true
+
 libraryDependencies += "net.liftweb" %% "lift-json" % "2.4-SNAPSHOT" % "test"
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.7" % "test"
