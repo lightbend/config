@@ -36,7 +36,7 @@ final class Parser {
                     includer);
         } catch (UnsupportedEncodingException e) {
             throw new ConfigException.BugOrBroken(
-                    "Java runtime does not support UTF-8");
+                    "Java runtime does not support UTF-8", e);
         }
     }
 
