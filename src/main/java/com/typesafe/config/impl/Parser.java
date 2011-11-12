@@ -1,6 +1,7 @@
 package com.typesafe.config.impl;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,14 +26,20 @@ import com.typesafe.config.ConfigValueType;
 
 final class Parser {
     /**
-     * Parses an input stream, which must be in UTF-8 encoding and should be
-     * buffered. Does not close the stream; you have to arrange to do that
-     * yourself.
+     * Parses an input stream, which must be in UTF-8 encoding and should not be
+     * buffered because we'll use a BufferedReader instead. Does not close the
+     * stream; you have to arrange to do that yourself.
      */
     static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
             InputStream input, IncludeHandler includer) {
         try {
-            return parse(flavor, origin, new InputStreamReader(input, "UTF-8"),
+            // well, this is messed up. If we aren't going to close
+            // the passed-in InputStream then we have no way to
+            // close these readers. So maybe we should not have an
+            // InputStream version, only a Reader version.
+            Reader reader = new InputStreamReader(input, "UTF-8");
+            reader = new BufferedReader(reader);
+            return parse(flavor, origin, reader,
                     includer);
         } catch (UnsupportedEncodingException e) {
             throw new ConfigException.BugOrBroken(
@@ -92,7 +99,6 @@ final class Parser {
         try {
             InputStream stream = url.openStream();
             try {
-                stream = new BufferedInputStream(stream);
                 result = parse(
                         flavor != null ? flavor : flavorFromExtension(
                                 url.getPath(), origin), origin, stream,
