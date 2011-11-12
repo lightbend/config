@@ -305,7 +305,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public ConfigValue get(Object key) {
+    public AbstractConfigValue get(Object key) {
         if (key instanceof String)
             return peek((String) key);
         else
@@ -313,7 +313,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public ConfigValue getValue(String path) {
+    public AbstractConfigValue getValue(String path) {
         return find(path, null, path);
     }
 
