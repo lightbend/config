@@ -16,8 +16,8 @@ final class Tokenizer {
      * Tokenizes a Reader. Does not close the reader; you have to arrange to do
      * that after you're done with the returned iterator.
      */
-    static Iterator<Token> tokenize(ConfigOrigin origin, Reader input) {
-        return new TokenIterator(origin, input);
+    static Iterator<Token> tokenize(ConfigOrigin origin, Reader input, SyntaxFlavor flavor) {
+        return new TokenIterator(origin, input, flavor != SyntaxFlavor.JSON);
     }
 
     private static class TokenIterator implements Iterator<Token> {
@@ -87,10 +87,12 @@ final class Tokenizer {
         private int lineNumber;
         final private Queue<Token> tokens;
         final private WhitespaceSaver whitespaceSaver;
+        final private boolean allowComments;
 
-        TokenIterator(ConfigOrigin origin, Reader input) {
+        TokenIterator(ConfigOrigin origin, Reader input, boolean allowComments) {
             this.origin = origin;
             this.input = input;
+            this.allowComments = allowComments;
             oneCharBuffer = -1;
             lineNumber = 0;
             tokens = new LinkedList<Token>();
@@ -132,6 +134,15 @@ final class Tokenizer {
             return c == ' ' || (c != '\n' && Character.isWhitespace(c));
         }
 
+        private int slurpComment() {
+            for (;;) {
+                int c = nextChar();
+                if (c == -1 || c == '\n') {
+                    return c;
+                }
+            }
+        }
+
         // get next char, skipping non-newline whitespace
         private int nextCharAfterWhitespace(WhitespaceSaver saver) {
             for (;;) {
@@ -139,11 +150,27 @@ final class Tokenizer {
 
                 if (c == -1) {
                     return -1;
-                } else if (isWhitespaceNotNewline(c)) {
-                    saver.add(c);
-                    continue;
                 } else {
-                    return c;
+                    if (isWhitespaceNotNewline(c)) {
+                        saver.add(c);
+                        continue;
+                    } else if (allowComments) {
+                        if (c == '#') {
+                            return slurpComment();
+                        } else if (c == '/') {
+                            int maybeSecondSlash = nextChar();
+                            if (maybeSecondSlash == '/') {
+                                return slurpComment();
+                            } else {
+                                putBack(maybeSecondSlash);
+                                return c;
+                            }
+                        } else {
+                            return c;
+                        }
+                    } else {
+                        return c;
+                    }
                 }
             }
         }

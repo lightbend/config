@@ -42,7 +42,7 @@ final class Parser {
 
     static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
             Reader input, IncludeHandler includer) {
-        Iterator<Token> tokens = Tokenizer.tokenize(origin, input);
+        Iterator<Token> tokens = Tokenizer.tokenize(origin, input, flavor);
         return parse(flavor, origin, tokens, includer);
     }
 
@@ -654,7 +654,8 @@ final class Parser {
         StringReader reader = new StringReader(path);
 
         try {
-            Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader);
+            Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader,
+                    SyntaxFlavor.CONF);
             tokens.next(); // drop START
             return parsePathExpression(tokens, apiOrigin);
         } finally {

@@ -138,6 +138,8 @@ abstract trait TestUtils {
         "[ / ]",
         "[ # ]",
         "[ \\ ]",
+        "[ # comment ]",
+        "${ #comment }",
         "{ include \"bar\" : 10 }", // include with a value after it
         "{ include foo }", // include with unquoted string
         "{ include : { \"a\" : 1 } }", // include used as unquoted key
@@ -162,6 +164,8 @@ abstract trait TestUtils {
         """[[[[[[]]]]]]""",
         """[[1], [1,2], [1,2,3], []]""", // nested multiple-valued array
         """{"a":{"a":{"a":{"a":{"a":{"a":{"a":{"a":42}}}}}}}}""",
+        "[ \"#comment\" ]", // quoted # comment
+        "[ \"//comment\" ]", // quoted // comment
         // this long one is mostly to test rendering
         """{ "foo" : { "bar" : "baz", "woo" : "w00t" }, "baz" : { "bar" : "baz", "woo" : [1,2,3,4], "w00t" : true, "a" : false, "b" : 3.14, "c" : null } }""",
         "{}")
@@ -197,6 +201,28 @@ abstract trait TestUtils {
         "[ abc  xyz  ${foo.bar}  qrs tuv ]", // value concatenation
         "[ 1, 2, 3, blah ]",
         "[ ${\"foo.bar\"} ]",
+        "{} # comment",
+        "{} // comment",
+        """{ "foo" #comment
+: 10 }""",
+        """{ "foo" // comment
+: 10 }""",
+        """{ "foo" : #comment
+ 10 }""",
+        """{ "foo" : // comment
+ 10 }""",
+        """{ "foo" : 10 #comment
+ }""",
+        """{ "foo" : 10 // comment
+ }""",
+        """[ 10, # comment
+ 11]""",
+        """[ 10, // comment
+ 11]""",
+        """[ 10 # comment
+, 11]""",
+        """[ 10 // comment
+, 11]""",
         ParseTest(false, true, "[${ foo.bar}]"), // substitution with leading spaces
         ParseTest(false, true, "[${foo.bar }]"), // substitution with trailing spaces
         ParseTest(false, true, "[${ \"foo.bar\"}]"), // substitution with leading spaces and quoted
@@ -294,7 +320,7 @@ abstract trait TestUtils {
     def tokenKeySubstitution(s: String) = tokenSubstitution(tokenString(s))
 
     def tokenize(origin: ConfigOrigin, input: Reader): java.util.Iterator[Token] = {
-        Tokenizer.tokenize(origin, input)
+        Tokenizer.tokenize(origin, input, SyntaxFlavor.CONF)
     }
 
     def tokenize(input: Reader): java.util.Iterator[Token] = {
