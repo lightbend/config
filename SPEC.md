@@ -102,8 +102,8 @@ Different from JSON:
    (details below)
  - String values may sometimes omit quotes.
     - Unquoted strings may not contain '$', '"', '{', '}',
-      '[', ']', ':', '=', ',', or '\' (backslash) and may not
-      contain whitespace (including newlines).
+      '[', ']', ':', '=', ',', '+', '#', '/' or '\' (backslash)
+      and may not contain whitespace (including newlines).
     - Unquoted strings do not support any form of escaping; the
       characters are all left as-is. If you need to use special
       characters or escaping, you have to quote the string.

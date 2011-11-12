@@ -182,7 +182,7 @@ final class Tokenizer {
         // chars JSON allows to be part of a number
         static final String numberChars = "0123456789eE+-.";
         // chars that stop an unquoted string
-        static final String notInUnquotedText = "$\"{}[]:=,\\";
+        static final String notInUnquotedText = "$\"{}[]:=,\\+#/";
 
         // The rules here are intended to maximize convenience while
         // avoiding confusion with real valid JSON. Basically anything

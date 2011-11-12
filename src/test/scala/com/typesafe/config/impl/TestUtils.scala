@@ -133,7 +133,11 @@ abstract trait TestUtils {
         """{ "a" : { "c" : 2 }, "b" : y${a}z }""", // trying to interpolate an object in a string
         """{ "a" : ${a} }""", // simple cycle
         """[ { "a" : 2, "b" : ${${a}} } ]""", // nested substitution
-        "[ = ]", // = is not a valid token
+        "[ = ]", // = is not a valid token in unquoted text
+        "[ + ]",
+        "[ / ]",
+        "[ # ]",
+        "[ \\ ]",
         "{ include \"bar\" : 10 }", // include with a value after it
         "{ include foo }", // include with unquoted string
         "{ include : { \"a\" : 1 } }", // include used as unquoted key
