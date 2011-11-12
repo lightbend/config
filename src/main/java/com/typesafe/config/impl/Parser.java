@@ -90,8 +90,9 @@ final class Parser {
             URL url, IncludeHandler includer) {
         AbstractConfigValue result = null;
         try {
-            InputStream stream = new BufferedInputStream(url.openStream());
+            InputStream stream = url.openStream();
             try {
+                stream = new BufferedInputStream(stream);
                 result = parse(
                         flavor != null ? flavor : flavorFromExtension(
                                 url.getPath(), origin), origin, stream,
