@@ -16,6 +16,18 @@ abstract class DelegatingConfigObject extends AbstractConfigObject {
     }
 
     @Override
+    protected DelegatingConfigObject newCopy(ConfigTransformer newTransformer) {
+        AbstractConfigObject transformed = underlying
+                .transformed(newTransformer);
+        if (transformed != underlying)
+            return newCopy(transformed);
+        else
+            return this;
+    }
+
+    abstract DelegatingConfigObject newCopy(AbstractConfigObject underlying);
+
+    @Override
     public boolean containsKey(Object key) {
         return underlying.containsKey(key);
     }

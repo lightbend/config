@@ -38,7 +38,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     /**
      * Returns a version of this object that implements the ConfigRoot
      * interface.
-     * 
+     *
      * @return a config root
      */
     protected ConfigRoot asRoot() {
@@ -128,11 +128,14 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     AbstractConfigObject transformed(ConfigTransformer newTransformer) {
-        if (this.transformer != newTransformer)
-            return new TransformedConfigObject(newTransformer, this);
+        if (newTransformer != transformer)
+            return newCopy(newTransformer);
         else
             return this;
     }
+
+    protected abstract AbstractConfigObject newCopy(
+            ConfigTransformer newTransformer);
 
     static private AbstractConfigValue resolve(AbstractConfigObject self,
             String pathExpression,

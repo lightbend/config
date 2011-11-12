@@ -19,8 +19,9 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     final private List<AbstractConfigValue> stack;
 
     ConfigDelayedMergeObject(ConfigOrigin origin,
+            ConfigTransformer transformer,
             List<AbstractConfigValue> stack) {
-        super(origin);
+        super(origin, transformer);
         this.stack = stack;
         if (stack.isEmpty())
             throw new ConfigException.BugOrBroken(
@@ -28,6 +29,11 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
         if (!(stack.get(0) instanceof AbstractConfigObject))
             throw new ConfigException.BugOrBroken(
                     "created a delayed merge object not guaranteed to be an object");
+    }
+
+    ConfigDelayedMergeObject(ConfigOrigin origin,
+            List<AbstractConfigValue> stack) {
+        this(origin, ConfigImpl.defaultConfigTransformer(), stack);
     }
 
     final private static class Root extends ConfigDelayedMergeObject implements
@@ -55,6 +61,11 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     @Override
     protected Root asRoot() {
         return new Root(this);
+    }
+
+    @Override
+    public ConfigDelayedMergeObject newCopy(ConfigTransformer newTransformer) {
+        return new ConfigDelayedMergeObject(origin(), newTransformer, stack);
     }
 
     @Override

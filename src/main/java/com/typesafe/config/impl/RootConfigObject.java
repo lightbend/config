@@ -16,6 +16,11 @@ final class RootConfigObject extends DelegatingConfigObject implements
     }
 
     @Override
+    public RootConfigObject newCopy(AbstractConfigObject underlying) {
+        return new RootConfigObject(underlying);
+    }
+
+    @Override
     public ConfigRoot resolve() {
         return ((AbstractConfigObject) SubstitutionResolver.resolve(this, this))
                 .asRoot();

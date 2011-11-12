@@ -20,18 +20,28 @@ final class SimpleConfigObject extends AbstractConfigObject {
     // this map should never be modified - assume immutable
     final private Map<String, AbstractConfigValue> value;
 
-    SimpleConfigObject(ConfigOrigin origin,
+    SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
             Map<String, AbstractConfigValue> value) {
-        super(origin);
+        super(origin, transformer);
         if (value == null)
             throw new ConfigException.BugOrBroken(
                     "creating config object with null map");
         this.value = value;
     }
 
+    SimpleConfigObject(ConfigOrigin origin,
+            Map<String, AbstractConfigValue> value) {
+        this(origin, ConfigImpl.defaultConfigTransformer(), value);
+    }
+
     @Override
     protected AbstractConfigValue peek(String key) {
         return value.get(key);
+    }
+
+    @Override
+    public SimpleConfigObject newCopy(ConfigTransformer newTransformer) {
+        return new SimpleConfigObject(origin(), newTransformer, value);
     }
 
     @Override
