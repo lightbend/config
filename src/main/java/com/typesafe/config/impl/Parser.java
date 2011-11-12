@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Stack;
 
@@ -273,6 +274,58 @@ final class Parser {
             }
         }
 
+        private static AbstractConfigObject createValueUnderPath(Path path,
+                AbstractConfigValue value) {
+            // for path foo.bar, we are creating
+            // { "foo" : { "bar" : value } }
+            List<String> keys = new ArrayList<String>();
+
+            String key = path.first();
+            Path remaining = path.remainder();
+            while (key != null) {
+                keys.add(key);
+                if (remaining == null) {
+                    break;
+                } else {
+                    key = remaining.first();
+                    remaining = remaining.remainder();
+                }
+            }
+            ListIterator<String> i = keys.listIterator(keys.size());
+            String deepest = i.previous();
+            AbstractConfigObject o = new SimpleConfigObject(value.origin(),
+                    Collections.<String, AbstractConfigValue> singletonMap(
+                            deepest, value));
+            while (i.hasPrevious()) {
+                Map<String, AbstractConfigValue> m = Collections.<String, AbstractConfigValue> singletonMap(
+                        i.previous(), o);
+                o = new SimpleConfigObject(value.origin(), m);
+            }
+
+            return o;
+        }
+
+        private Path parseKey(Token token) {
+            if (flavor == SyntaxFlavor.JSON) {
+                if (Tokens.isValueWithType(token, ConfigValueType.STRING)) {
+                    String key = (String) Tokens.getValue(token).unwrapped();
+                    return Path.newKey(key);
+                } else {
+                    throw parseError("Expecting close brace } or a field name, got "
+                            + token);
+                }
+            } else {
+                List<Token> expression = new ArrayList<Token>();
+                Token t = token;
+                while (Tokens.isValue(t) || Tokens.isUnquotedText(t)) {
+                    expression.add(t);
+                    t = nextToken(); // note: don't cross a newline
+                }
+                putBack(t); // put back the token we ended with
+                return parsePathExpression(expression.iterator(), lineOrigin());
+            }
+        }
+
         private AbstractConfigObject parseObject() {
             // invoked just after the OPEN_CURLY
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
@@ -280,8 +333,13 @@ final class Parser {
             boolean afterComma = false;
             while (true) {
                 Token t = nextTokenIgnoringNewline();
-                if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
-                    String key = (String) Tokens.getValue(t).unwrapped();
+                if (t == Tokens.CLOSE_CURLY) {
+                    if (afterComma) {
+                        throw parseError("expecting a field name after comma, got a close brace }");
+                    }
+                    break;
+                } else {
+                    Path path = parseKey(t);
                     Token afterKey = nextTokenIgnoringNewline();
                     if (afterKey != Tokens.COLON) {
                         throw parseError("Key not followed by a colon, followed by token "
@@ -292,34 +350,45 @@ final class Parser {
                     Token valueToken = nextTokenIgnoringNewline();
                     AbstractConfigValue newValue = parseValue(valueToken);
 
-                    // In strict JSON, dups should be an error; while in
-                    // our custom config language, they should be merged if the
-                    // value is an object (or substitution that could become
-                    // an object).
-                    AbstractConfigValue existing = values.get(key);
+                    String key = path.first();
+                    Path remaining = path.remainder();
 
-                    if (existing != null) {
-                        if (flavor == SyntaxFlavor.JSON) {
-                            throw parseError("JSON does not allow duplicate fields: '"
+                    if (remaining == null) {
+                        AbstractConfigValue existing = values.get(key);
+                        if (existing != null) {
+                            // In strict JSON, dups should be an error; while in
+                            // our custom config language, they should be merged
+                            // if the value is an object (or substitution that
+                            // could become an object).
+
+                            if (flavor == SyntaxFlavor.JSON) {
+                                throw parseError("JSON does not allow duplicate fields: '"
                                     + key
                                     + "' was already seen at "
                                     + existing.origin().description());
-                        } else {
-                            newValue = newValue.withFallback(existing);
+                            } else {
+                                newValue = newValue.withFallback(existing);
+                            }
                         }
+                        values.put(key, newValue);
+                    } else {
+                        if (flavor == SyntaxFlavor.JSON) {
+                            throw new ConfigException.BugOrBroken(
+                                    "somehow got multi-element path in JSON mode");
+                        }
+
+                        AbstractConfigObject obj = createValueUnderPath(
+                                remaining, newValue);
+                        AbstractConfigValue existing = values.get(key);
+                        if (existing != null) {
+                            obj = obj.withFallback(existing);
+                        }
+                        values.put(key, obj);
                     }
-                    values.put(key, newValue);
 
                     afterComma = false;
-                } else if (t == Tokens.CLOSE_CURLY) {
-                    if (afterComma) {
-                        throw parseError("expecting a field name after comma, got a close brace }");
-                    }
-                    break;
-                } else {
-                    throw parseError("Expecting close brace } or a field name, got "
-                            + t);
                 }
+
                 t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_CURLY) {
                     break;
@@ -465,6 +534,11 @@ final class Parser {
         // each builder in "buf" is an element in the path.
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
+
+        if (!expression.hasNext()) {
+            throw new ConfigException.BadPath(origin, "",
+                    "Expecting a field name or path here, but got nothing");
+        }
 
         while (expression.hasNext()) {
             Token t = expression.next();

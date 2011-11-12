@@ -106,8 +106,7 @@ abstract trait TestUtils {
         "{ \"a\" : [ }", // [ is not a valid value
         "{ \"foo\" : 10, }", // extra trailing comma
         "{ \"foo\" : 10, true }", // non-key after comma
-        "{ foo : \"bar\" }", // no quotes on key
-        "{ foo : bar }", // no quotes on key or value
+        "{ foo \n bar : 10 }", // newline in the middle of the unquoted key
         "[ 1, \\", // ends with backslash
         // these two problems are ignored by the lift tokenizer
         "[:\"foo\", \"bar\"]", // colon in an array; lift doesn't throw (tokenizer erases it)
@@ -129,6 +128,7 @@ abstract trait TestUtils {
         "[${]", // unclosed substitution
         "[$]", // '$' by itself
         "[$  ]", // '$' by itself with spaces after
+        "[${}]", // empty substitution (no path)
         """{ "a" : [1,2], "b" : y${a}z }""", // trying to interpolate an array in a string
         """{ "a" : { "c" : 2 }, "b" : y${a}z }""", // trying to interpolate an object in a string
         """{ "a" : ${a} }""", // simple cycle
@@ -143,6 +143,8 @@ abstract trait TestUtils {
         """{ "foo" : "bar" }""",
         """["foo", "bar"]""",
         """{ "foo" : 42 }""",
+        "{ \"foo\"\n : 42 }", // newline after key
+        "{ \"foo\" : \n 42 }", // newline after colon
         """[10, 11]""",
         """[10,"foo"]""",
         """{ "foo" : "bar", "baz" : "boo" }""",
@@ -159,6 +161,13 @@ abstract trait TestUtils {
     private val validConfInvalidJson = List[ParseTest](
         """{ "foo" : bar }""", // no quotes on value
         """{ "foo" : null bar 42 baz true 3.14 "hi" }""", // bunch of values to concat into a string
+        "{ foo : \"bar\" }", // no quotes on key
+        "{ foo : bar }", // no quotes on key or value
+        "{ foo.bar : bar }", // path expression in key
+        "{ foo.\"hello world\".baz : bar }", // partly-quoted path expression in key
+        "{ foo.bar \n : bar }", // newline after path expression in key
+        "{ foo  bar : bar }", // whitespace in the key
+        "{ true : bar }", // key is a non-string token
         ParseTest(true, """{ "foo" : "bar", "foo" : "bar2" }"""), // dup keys - lift just returns both
         "[ foo ]", // not a known token in JSON
         "[ t ]", // start of "true" but ends wrong in JSON

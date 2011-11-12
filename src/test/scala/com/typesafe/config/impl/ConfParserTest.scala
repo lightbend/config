@@ -99,7 +99,7 @@ class ConfParserTest extends TestUtils {
         assertEquals(path("a_c"), parsePath("a_c"))
         assertEquals(path("-"), parsePath("\"-\""))
 
-        for (invalid <- Seq("a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
+        for (invalid <- Seq("", "a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
             try {
                 intercept[ConfigException.BadPath] {
                     parsePath(invalid)
