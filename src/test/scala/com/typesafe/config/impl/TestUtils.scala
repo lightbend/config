@@ -183,6 +183,12 @@ abstract trait TestUtils {
         "{}")
 
     private val validConfInvalidJson = List[ParseTest]("", // empty document
+        " ", // empty document single space
+        "\n", // empty document single newline
+        " \n \n   \n\n\n", // complicated empty document
+        "# foo", // just a comment
+        "# bar\n", // just a comment with a newline
+        "# foo\n//bar", // comment then another with no newline
         """{ "foo" = 42 }""", // equals rather than colon
         """{ foo { "bar" : 42 } }""", // omit the colon for object value
         """{ foo baz { "bar" : 42 } }""", // omit the colon with unquoted key with spaces
