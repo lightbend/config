@@ -15,6 +15,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRoot;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -32,6 +33,22 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     protected AbstractConfigObject(ConfigOrigin origin) {
         this(origin, ConfigImpl.defaultConfigTransformer());
+    }
+
+    /**
+     * Returns a version of this object that implements the ConfigRoot
+     * interface.
+     * 
+     * @return a config root
+     */
+    protected ConfigRoot asRoot() {
+        return new RootConfigObject(this);
+    }
+
+    protected static ConfigRoot resolve(ConfigRoot root) {
+        AbstractConfigValue resolved = SubstitutionResolver.resolve(
+                (AbstractConfigValue) root, (AbstractConfigObject) root);
+        return ((AbstractConfigObject) resolved).asRoot();
     }
 
     /**

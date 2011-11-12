@@ -15,7 +15,7 @@ public final class Config {
      *            configuration for the configuration.
      * @return a configuration object
      */
-    public static ConfigObject load(ConfigConfig configConfig) {
+    public static ConfigRoot load(ConfigConfig configConfig) {
         return ConfigImpl.loadConfig(configConfig);
     }
 
@@ -27,11 +27,15 @@ public final class Config {
      * path may have periods in it if you like but other punctuation or
      * whitespace will probably cause you headaches. Example root paths: "akka",
      * "sbt", "jsoup", "heroku", "mongo", etc.
+     *
+     * This object will already be resolved (substitutions have already been
+     * processed).
+     *
      * @param rootPath
      *            the configuration "domain"
      * @return configuration object for the requested root path
      */
-    public static ConfigObject load(String rootPath) {
+    public static ConfigRoot load(String rootPath) {
         return ConfigImpl.loadConfig(new ConfigConfig(rootPath));
     }
 

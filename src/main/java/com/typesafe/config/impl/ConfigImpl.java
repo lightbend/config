@@ -8,10 +8,11 @@ import java.util.Map;
 import com.typesafe.config.ConfigConfig;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigRoot;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
-    public static ConfigObject loadConfig(ConfigConfig configConfig) {
+    public static ConfigRoot loadConfig(ConfigConfig configConfig) {
         ConfigTransformer transformer = withExtraTransformer(null);
 
         AbstractConfigObject system = null;
@@ -36,10 +37,9 @@ public class ConfigImpl {
 
         AbstractConfigObject merged = AbstractConfigObject.merge(stack);
 
-        AbstractConfigValue resolved = SubstitutionResolver.resolve(merged,
-                merged);
+        ConfigRoot resolved = merged.asRoot().resolve();
 
-        return (AbstractConfigObject) resolved;
+        return resolved;
     }
 
     static ConfigObject getEnvironmentAsConfig() {

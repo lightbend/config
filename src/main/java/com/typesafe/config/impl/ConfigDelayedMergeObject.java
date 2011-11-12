@@ -8,11 +8,12 @@ import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRoot;
 import com.typesafe.config.ConfigValue;
 
 // This is just like ConfigDelayedMerge except we know statically
 // that it will turn out to be an object.
-final class ConfigDelayedMergeObject extends AbstractConfigObject implements
+class ConfigDelayedMergeObject extends AbstractConfigObject implements
         Unresolved {
 
     final private List<AbstractConfigValue> stack;
@@ -27,6 +28,33 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
         if (!(stack.get(0) instanceof AbstractConfigObject))
             throw new ConfigException.BugOrBroken(
                     "created a delayed merge object not guaranteed to be an object");
+    }
+
+    final private static class Root extends ConfigDelayedMergeObject implements
+            ConfigRoot {
+        Root(ConfigDelayedMergeObject original) {
+            super(original.origin(), original.stack);
+        }
+
+        @Override
+        protected Root asRoot() {
+            return this;
+        }
+
+        @Override
+        public ConfigRoot resolve() {
+            return resolve(this);
+        }
+
+        @Override
+        public Root withFallback(ConfigValue value) {
+            return super.withFallback(value).asRoot();
+        }
+    }
+
+    @Override
+    protected Root asRoot() {
+        return new Root(this);
     }
 
     @Override
@@ -44,7 +72,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    public AbstractConfigObject withFallback(ConfigValue other) {
+    public ConfigDelayedMergeObject withFallback(ConfigValue other) {
         if (other instanceof AbstractConfigObject
                 || other instanceof Unresolved) {
             // since we are an object, and the fallback could be,
