@@ -134,6 +134,9 @@ abstract trait TestUtils {
         """{ "a" : ${a} }""", // simple cycle
         """[ { "a" : 2, "b" : ${${a}} } ]""", // nested substitution
         "[ = ]", // = is not a valid token
+        "{ include \"bar\" : 10 }", // include with a value after it
+        "{ include foo }", // include with unquoted string
+        "{ include : { \"a\" : 1 } }", // include used as unquoted key
         "") // empty document again, just for clean formatting of this list ;-)
 
     // We'll automatically try each of these with whitespace modifications
@@ -178,6 +181,11 @@ abstract trait TestUtils {
         "[ trux ]",
         "[ truex ]",
         "[ 10x ]", // number token with trailing junk
+        "{ include \"foo\" }", // valid include
+        "{ include\n\"foo\" }", // include with just a newline separating from string
+        "{ include\"foo\" }", // include with no whitespace after it
+        "[ include ]", // include can be a string value in an array
+        "{ foo : include }", // include can be a field value also
         "[ ${foo} ]",
         "[ ${\"foo\"} ]",
         "[ ${foo.bar} ]",

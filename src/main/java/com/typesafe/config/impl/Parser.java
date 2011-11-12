@@ -326,6 +326,51 @@ final class Parser {
             }
         }
 
+        private static boolean isIncludeKeyword(Token t) {
+            return Tokens.isUnquotedText(t)
+                    && Tokens.getUnquotedText(t).equals("include");
+        }
+
+        private static boolean isUnquotedWhitespace(Token t) {
+            if (!Tokens.isUnquotedText(t))
+                return false;
+
+            String s = Tokens.getUnquotedText(t);
+
+            for (int i = 0; i < s.length(); ++i) {
+                char c = s.charAt(i);
+                if (!Character.isWhitespace(c))
+                    return false;
+            }
+            return true;
+        }
+
+        private void parseInclude(Map<String, AbstractConfigValue> values) {
+            Token t = nextTokenIgnoringNewline();
+            while (isUnquotedWhitespace(t)) {
+                t = nextTokenIgnoringNewline();
+            }
+
+            if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
+                String name = (String) Tokens.getValue(t).unwrapped();
+                AbstractConfigObject obj = includer.include(name);
+
+                for (String key : obj.keySet()) {
+                    AbstractConfigValue v = obj.get(key);
+                    AbstractConfigValue existing = values.get(key);
+                    if (existing != null) {
+                        values.put(key, v.withFallback(existing));
+                    } else {
+                        values.put(key, v);
+                    }
+                }
+
+            } else {
+                throw parseError("include keyword is not followed by a quoted string, but by: "
+                        + t);
+            }
+        }
+
         private AbstractConfigObject parseObject() {
             // invoked just after the OPEN_CURLY
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
@@ -338,6 +383,10 @@ final class Parser {
                         throw parseError("expecting a field name after comma, got a close brace }");
                     }
                     break;
+                } else if (flavor != SyntaxFlavor.JSON && isIncludeKeyword(t)) {
+                    parseInclude(values);
+
+                    afterComma = false;
                 } else {
                     Path path = parseKey(t);
                     Token afterKey = nextTokenIgnoringNewline();

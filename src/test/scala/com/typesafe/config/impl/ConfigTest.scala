@@ -634,4 +634,22 @@ class ConfigTest extends TestUtils {
         assertEquals(57, conf.getInt(""" "a"."b"."c" """))
         assertEquals(103, conf.getInt(""" "a.b.c" """))
     }
+
+    @Test
+    def test03Includes() {
+        val conf = Config.load("test03")
+
+        // include should have overridden the "ints" value in test03
+        assertEquals(42, conf.getInt("test01.ints.fortyTwo"))
+        // include should have been overridden by 42
+        assertEquals(42, conf.getInt("test01.booleans"));
+        assertEquals(42, conf.getInt("test01.booleans"));
+        // include should have gotten .properties and .json also
+        assertEquals("abc", conf.getString("test01.fromProps.abc"))
+        assertEquals("A", conf.getString("test01.fromJsonA"))
+        // test02 was included
+        assertEquals(57, conf.getInt("test02.a.b.c"))
+        // equiv01/original.json was included (it has a slash in the name)
+        assertEquals("a", conf.getString("equiv01.strings.a"))
+    }
 }
