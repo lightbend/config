@@ -156,6 +156,7 @@ abstract trait TestUtils {
         """{ "foo" : [10,11,12], "baz" : "boo" }""",
         """[{},{},{},{}]""",
         """[[[[[[]]]]]]""",
+        """[[1], [1,2], [1,2,3], []]""", // nested multiple-valued array
         """{"a":{"a":{"a":{"a":{"a":{"a":{"a":{"a":42}}}}}}}}""",
         // this long one is mostly to test rendering
         """{ "foo" : { "bar" : "baz", "woo" : "w00t" }, "baz" : { "bar" : "baz", "woo" : [1,2,3,4], "w00t" : true, "a" : false, "b" : 3.14, "c" : null } }""",
