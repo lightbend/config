@@ -420,6 +420,9 @@ final class Tokenizer {
                 case ',':
                     t = Tokens.COMMA;
                     break;
+                case '=':
+                    t = Tokens.EQUALS;
+                    break;
                 case '{':
                     t = Tokens.OPEN_CURLY;
                     break;

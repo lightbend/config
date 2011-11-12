@@ -371,6 +371,14 @@ final class Parser {
             }
         }
 
+        private boolean isKeyValueSeparatorToken(Token t) {
+            if (flavor == SyntaxFlavor.JSON) {
+                return t == Tokens.COLON;
+            } else {
+                return t == Tokens.COLON || t == Tokens.EQUALS;
+            }
+        }
+
         private AbstractConfigObject parseObject() {
             // invoked just after the OPEN_CURLY
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
@@ -390,8 +398,8 @@ final class Parser {
                 } else {
                     Path path = parseKey(t);
                     Token afterKey = nextTokenIgnoringNewline();
-                    if (afterKey != Tokens.COLON) {
-                        throw parseError("Key not followed by a colon, followed by token "
+                    if (!isKeyValueSeparatorToken(afterKey)) {
+                        throw parseError("Key may not be followed by token: "
                                 + afterKey);
                     }
 

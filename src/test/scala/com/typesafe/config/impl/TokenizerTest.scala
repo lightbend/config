@@ -24,35 +24,35 @@ class TokenizerTest extends TestUtils {
         // all token types with no spaces (not sure JSON spec wants this to work,
         // but spec is unclear to me when spaces are required, and banning them
         // is actually extra work).
-        val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
+        val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenTrue, tokenDouble(3.14), tokenFalse,
             tokenLong(42), tokenNull, tokenSubstitution(tokenUnquoted("a.b")),
             tokenKeySubstitution("c.d"), Tokens.newLine(0), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""",:}{]["foo"true3.14false42null${a.b}${"c.d"}""" + "\n"))
+        assertEquals(expected, tokenizeAsList(""",:=}{]["foo"true3.14false42null${a.b}${"c.d"}""" + "\n"))
     }
 
     @Test
     def tokenizeAllTypesWithSingleSpaces() {
-        val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
+        val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
             tokenDouble(3.14), tokenUnquoted(" "), tokenFalse, tokenUnquoted(" "), tokenNull,
             tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "), tokenKeySubstitution("c.d"),
             Tokens.newLine(0), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""" , : } { ] [ "foo" 42 true 3.14 false null ${a.b} ${"c.d"} """ + "\n "))
+        assertEquals(expected, tokenizeAsList(""" , : = } { ] [ "foo" 42 true 3.14 false null ${a.b} ${"c.d"} """ + "\n "))
     }
 
     @Test
     def tokenizeAllTypesWithMultipleSpaces() {
-        val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.CLOSE_CURLY,
+        val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
             tokenDouble(3.14), tokenUnquoted("   "), tokenFalse, tokenUnquoted("   "), tokenNull,
             tokenUnquoted("   "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted("   "),
             tokenKeySubstitution("c.d"),
             Tokens.newLine(0), Tokens.END)
-        assertEquals(expected, tokenizeAsList("""   ,   :   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${"c.d"}  """ + "\n   "))
+        assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${"c.d"}  """ + "\n   "))
     }
 
     @Test

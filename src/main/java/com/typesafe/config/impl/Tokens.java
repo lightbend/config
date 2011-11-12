@@ -237,6 +237,7 @@ final class Tokens {
     final static Token START = new Token(TokenType.START);
     final static Token END = new Token(TokenType.END);
     final static Token COMMA = new Token(TokenType.COMMA);
+    final static Token EQUALS = new Token(TokenType.EQUALS);
     final static Token COLON = new Token(TokenType.COLON);
     final static Token OPEN_CURLY = new Token(TokenType.OPEN_CURLY);
     final static Token CLOSE_CURLY = new Token(TokenType.CLOSE_CURLY);
