@@ -1,7 +1,8 @@
 package com.typesafe.config.impl;
 
 
-final class ConfigUtil {
+/** This is public just for the "config" package to use, don't touch it */
+final public class ConfigUtil {
     static boolean equalsHandlingNull(Object a, Object b) {
         if (a == null && b != null)
             return false;
@@ -49,5 +50,69 @@ final class ConfigUtil {
         }
         sb.append('"');
         return sb.toString();
+    }
+
+    static boolean isWhitespace(int codepoint) {
+        switch (codepoint) {
+        // try to hit the most common ASCII ones first, then the nonbreaking
+        // spaces that Java brokenly leaves out of isWhitespace.
+        case ' ':
+        case '\n':
+        case '\u00A0':
+        case '\u2007':
+        case '\u202F':
+            return true;
+        default:
+            return Character.isWhitespace(codepoint);
+        }
+    }
+
+    /** This is public just for the "config" package to use, don't touch it! */
+    public static String unicodeTrim(String s) {
+        // this is dumb because it looks like there aren't any whitespace
+        // characters that need surrogate encoding. But, points for
+        // pedantic correctness! It's future-proof or something.
+        // String.trim() actually is broken, since there are plenty of
+        // non-ASCII whitespace characters.
+        final int length = s.length();
+        if (length == 0)
+            return s;
+
+        int start = 0;
+        while (true) {
+            char c = s.charAt(start);
+            if (c == ' ' || c == '\n') {
+                start += 1;
+            } else {
+                int cp = s.codePointAt(start);
+                if (isWhitespace(cp))
+                    start += Character.charCount(cp);
+                else
+                    break;
+            }
+        }
+
+        int end = length;
+        while (true) {
+            char c = s.charAt(end - 1);
+            if (c == ' ' || c == '\n') {
+                --end;
+            } else {
+                int cp;
+                int delta;
+                if (Character.isLowSurrogate(c)) {
+                    cp = s.codePointAt(end - 2);
+                    delta = 2;
+                } else {
+                    cp = s.codePointAt(end - 1);
+                    delta = 1;
+                }
+                if (isWhitespace(cp))
+                    end -= delta;
+                else
+                    break;
+            }
+        }
+        return s.substring(start, end);
     }
 }

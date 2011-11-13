@@ -125,13 +125,11 @@ final class Tokenizer {
         }
 
         static boolean isWhitespace(int c) {
-            // hoping this optimizes slightly by catching the most common ' '
-            // case up front.
-            return c == ' ' || c == '\n' || Character.isWhitespace(c);
+            return ConfigUtil.isWhitespace(c);
         }
 
         static boolean isWhitespaceNotNewline(int c) {
-            return c == ' ' || (c != '\n' && Character.isWhitespace(c));
+            return c != '\n' && ConfigUtil.isWhitespace(c);
         }
 
         private int slurpComment() {

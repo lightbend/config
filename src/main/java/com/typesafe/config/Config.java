@@ -3,6 +3,7 @@ package com.typesafe.config;
 import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.impl.ConfigImpl;
+import com.typesafe.config.impl.ConfigUtil;
 
 /**
  * This class holds some global static methods for the config package.
@@ -68,10 +69,11 @@ public final class Config {
      */
     public static long parseDuration(String input,
             ConfigOrigin originForException, String pathForException) {
-        String s = input.trim();
+        String s = ConfigUtil.unicodeTrim(input);
         String originalUnitString = getUnits(s);
         String unitString = originalUnitString;
-        String numberString = s.substring(0, s.length() - unitString.length()).trim();
+        String numberString = ConfigUtil.unicodeTrim(s.substring(0, s.length()
+                - unitString.length()));
         TimeUnit units = null;
 
         // this would be caught later anyway, but the error message
@@ -150,7 +152,7 @@ public final class Config {
      */
     public static long parseMemorySize(String input,
             ConfigOrigin originForException, String pathForException) {
-        String s = input.trim();
+        String s = ConfigUtil.unicodeTrim(input);
         String unitStringMaybePlural = getUnits(s);
         String unitString;
         if (unitStringMaybePlural.endsWith("s"))
@@ -159,9 +161,8 @@ public final class Config {
         else
             unitString = unitStringMaybePlural;
         String unitStringLower = unitString.toLowerCase();
-        String numberString = s.substring(0,
-                s.length() - unitStringMaybePlural.length())
-                .trim();
+        String numberString = ConfigUtil.unicodeTrim(s.substring(0, s.length()
+                - unitStringMaybePlural.length()));
 
         // this would be caught later anyway, but the error message
         // is more helpful if we check it here.
