@@ -271,11 +271,11 @@ final class Tokenizer {
             try {
                 if (containedDecimalOrE) {
                     // force floating point representation
-                    return Tokens
-                            .newDouble(lineOrigin(), Double.parseDouble(s));
+                    return Tokens.newDouble(lineOrigin(),
+                            Double.parseDouble(s), s);
                 } else {
                     // this should throw if the integer is too large for Long
-                    return Tokens.newLong(lineOrigin(), Long.parseLong(s));
+                    return Tokens.newLong(lineOrigin(), Long.parseLong(s), s);
                 }
             } catch (NumberFormatException e) {
                 throw parseError("Invalid number: '" + s

@@ -14,9 +14,9 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configIntEquality() {
-        val a = new ConfigInt(fakeOrigin(), 42)
-        val sameAsA = new ConfigInt(fakeOrigin(), 42)
-        val b = new ConfigInt(fakeOrigin(), 43)
+        val a = intValue(42)
+        val sameAsA = intValue(42)
+        val b = intValue(43)
 
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
@@ -25,9 +25,9 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configLongEquality() {
-        val a = new ConfigLong(fakeOrigin(), Integer.MAX_VALUE + 42L)
-        val sameAsA = new ConfigLong(fakeOrigin(), Integer.MAX_VALUE + 42L)
-        val b = new ConfigLong(fakeOrigin(), Integer.MAX_VALUE + 43L)
+        val a = longValue(Integer.MAX_VALUE + 42L)
+        val sameAsA = longValue(Integer.MAX_VALUE + 42L)
+        val b = longValue(Integer.MAX_VALUE + 43L)
 
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
@@ -36,21 +36,21 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configIntAndLongEquality() {
-        val longValue = new ConfigLong(fakeOrigin(), 42L)
-        val intValue = new ConfigLong(fakeOrigin(), 42)
-        val longValueB = new ConfigLong(fakeOrigin(), 43L)
-        val intValueB = new ConfigLong(fakeOrigin(), 43)
+        val longVal = longValue(42L)
+        val intValue = longValue(42)
+        val longValueB = longValue(43L)
+        val intValueB = longValue(43)
 
-        checkEqualObjects(intValue, longValue)
+        checkEqualObjects(intValue, longVal)
         checkEqualObjects(intValueB, longValueB)
         checkNotEqualObjects(intValue, longValueB)
-        checkNotEqualObjects(intValueB, longValue)
+        checkNotEqualObjects(intValueB, longVal)
     }
 
     private def configMap(pairs: (String, Int)*): java.util.Map[String, AbstractConfigValue] = {
         val m = new java.util.HashMap[String, AbstractConfigValue]()
         for (p <- pairs) {
-            m.put(p._1, new ConfigInt(fakeOrigin(), p._2))
+            m.put(p._1, intValue(p._2))
         }
         m
     }
@@ -308,5 +308,26 @@ class ConfigValueTest extends TestUtils {
         unresolved { dmo.size() }
         unresolved { dmo.values() }
         unresolved { dmo.getInt("foo") }
+    }
+
+    @Test
+    def roundTripNumbersThroughString() {
+        // formats rounded off with E notation
+        val a = "132454454354353245.3254652656454808909932874873298473298472"
+        // formats as 100000.0
+        val b = "1e6"
+        // formats as 5.0E-5
+        val c = "0.00005"
+        // formats as 1E100 (capital E)
+        val d = "1e100"
+
+        val obj = parseObject("{ a : " + a + ", b : " + b + ", c : " + c + ", d : " + d + "}")
+        assertEquals(Seq(a, b, c, d),
+            Seq("a", "b", "c", "d") map { obj.getString(_) })
+
+        // make sure it still works if we're doing concatenation
+        val obj2 = parseObject("{ a : xx " + a + " yy, b : xx " + b + " yy, c : xx " + c + " yy, d : xx " + d + " yy}")
+        assertEquals(Seq(a, b, c, d) map { "xx " + _ + " yy" },
+            Seq("a", "b", "c", "d") map { obj2.getString(_) })
     }
 }

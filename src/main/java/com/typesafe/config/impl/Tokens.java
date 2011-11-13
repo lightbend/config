@@ -264,16 +264,17 @@ final class Tokens {
         return newValue(new ConfigString(origin, value));
     }
 
-    static Token newInt(ConfigOrigin origin, int value) {
-        return newValue(new ConfigInt(origin, value));
+    static Token newInt(ConfigOrigin origin, int value, String originalText) {
+        return newValue(new ConfigInt(origin, value, originalText));
     }
 
-    static Token newDouble(ConfigOrigin origin, double value) {
-        return newValue(new ConfigDouble(origin, value));
+    static Token newDouble(ConfigOrigin origin, double value,
+            String originalText) {
+        return newValue(new ConfigDouble(origin, value, originalText));
     }
 
-    static Token newLong(ConfigOrigin origin, long value) {
-        return newValue(new ConfigLong(origin, value));
+    static Token newLong(ConfigOrigin origin, long value, String originalText) {
+        return newValue(new ConfigLong(origin, value, originalText));
     }
 
     static Token newNull(ConfigOrigin origin) {

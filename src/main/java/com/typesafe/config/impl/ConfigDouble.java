@@ -3,12 +3,12 @@ package com.typesafe.config.impl;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
-final class ConfigDouble extends AbstractConfigValue {
+final class ConfigDouble extends ConfigNumber {
 
     final private double value;
 
-    ConfigDouble(ConfigOrigin origin, double value) {
-        super(origin);
+    ConfigDouble(ConfigOrigin origin, double value, String originalText) {
+        super(origin, originalText);
         this.value = value;
     }
 
@@ -24,6 +24,10 @@ final class ConfigDouble extends AbstractConfigValue {
 
     @Override
     String transformToString() {
-        return Double.toString(value);
+        String s = super.transformToString();
+        if (s == null)
+            return Double.toString(value);
+        else
+            return s;
     }
 }

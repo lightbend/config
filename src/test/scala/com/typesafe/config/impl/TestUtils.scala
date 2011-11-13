@@ -311,12 +311,12 @@ abstract trait TestUtils {
         }
     }
 
-    protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i)
-    protected def longValue(l: Long) = new ConfigLong(fakeOrigin(), l)
+    protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i, null)
+    protected def longValue(l: Long) = new ConfigLong(fakeOrigin(), l, null)
     protected def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)
     protected def nullValue() = new ConfigNull(fakeOrigin())
     protected def stringValue(s: String) = new ConfigString(fakeOrigin(), s)
-    protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d)
+    protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d, null)
 
     protected def parseObject(s: String) = {
         Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s, includer()).asInstanceOf[AbstractConfigObject]
@@ -338,9 +338,9 @@ abstract trait TestUtils {
     def tokenNull = Tokens.newNull(fakeOrigin())
     def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
     def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
-    def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d)
-    def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i)
-    def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l)
+    def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d, null)
+    def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, null)
+    def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, null)
 
     def tokenSubstitution(expression: Token*) = {
         val l = new java.util.ArrayList[Token]

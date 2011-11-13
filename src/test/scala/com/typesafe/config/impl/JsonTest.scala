@@ -55,11 +55,11 @@ class JsonTest extends TestUtils {
             case lift.JField(name, value) =>
                 throw new IllegalStateException("either JField was a toplevel from lift-json or this function is buggy")
             case lift.JInt(i) =>
-                if (i.isValidInt) new ConfigInt(fakeOrigin(), i.intValue) else new ConfigLong(fakeOrigin(), i.longValue)
+                if (i.isValidInt) intValue(i.intValue) else longValue(i.longValue)
             case lift.JBool(b) =>
                 new ConfigBoolean(fakeOrigin(), b)
             case lift.JDouble(d) =>
-                new ConfigDouble(fakeOrigin(), d)
+                doubleValue(d)
             case lift.JString(s) =>
                 new ConfigString(fakeOrigin(), s)
             case lift.JNull =>

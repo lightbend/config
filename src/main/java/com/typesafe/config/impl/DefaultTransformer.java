@@ -16,13 +16,13 @@ final class DefaultTransformer implements ConfigTransformer {
             case NUMBER:
                 try {
                     Long v = Long.parseLong(s);
-                    return new ConfigLong(value.origin(), v);
+                    return new ConfigLong(value.origin(), v, s);
                 } catch (NumberFormatException e) {
                     // try Double
                 }
                 try {
                     Double v = Double.parseDouble(s);
-                    return new ConfigDouble(value.origin(), v);
+                    return new ConfigDouble(value.origin(), v, s);
                 } catch (NumberFormatException e) {
                     // oh well.
                 }
