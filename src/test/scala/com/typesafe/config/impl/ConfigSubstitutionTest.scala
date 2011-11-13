@@ -98,6 +98,10 @@ class ConfigSubstitutionTest extends TestUtils {
         val v = resolveWithoutFallbacks(s, simpleObject)
         // null is supposed to become empty string
         assertEquals(stringValue("start<>end"), v)
+
+        // but when null is NOT a subst, it should not become empty, incidentally
+        val o = parseObject("""{ "a" : null foo bar }""")
+        assertEquals("null foo bar", o.getString("a"))
     }
 
     @Test
