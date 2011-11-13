@@ -60,13 +60,25 @@ class ConfigValueTest extends TestUtils {
         val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val sameAsAMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val bMap = configMap("a" -> 3, "b" -> 4, "c" -> 5)
+        // different keys is a different case in the equals implementation
+        val cMap = configMap("x" -> 3, "y" -> 4, "z" -> 5)
         val a = new SimpleConfigObject(fakeOrigin(), aMap)
         val sameAsA = new SimpleConfigObject(fakeOrigin(), sameAsAMap)
         val b = new SimpleConfigObject(fakeOrigin(), bMap)
+        val c = new SimpleConfigObject(fakeOrigin(), cMap)
 
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
+        checkEqualObjects(b, b)
+        checkEqualObjects(c, c)
         checkNotEqualObjects(a, b)
+        checkNotEqualObjects(a, c)
+        checkNotEqualObjects(b, c)
+
+        val root = a.asRoot()
+        checkEqualObjects(a, root)
+        checkNotEqualObjects(root, b)
+        checkNotEqualObjects(root, c)
     }
 
     @Test

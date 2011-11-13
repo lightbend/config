@@ -3,6 +3,7 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -567,6 +568,58 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             sb.setLength(sb.length() - 1); // chop comma
         sb.append(")");
         return sb.toString();
+    }
+
+    private static boolean mapEquals(Map<String, ConfigValue> a,
+            Map<String, ConfigValue> b) {
+        Set<String> aKeys = a.keySet();
+        Set<String> bKeys = b.keySet();
+
+        if (!aKeys.equals(bKeys))
+            return false;
+
+        for (String key : aKeys) {
+            if (!a.get(key).equals(b.get(key)))
+                return false;
+        }
+        return true;
+    }
+
+    private static int mapHash(Map<String, ConfigValue> m) {
+        // the keys have to be sorted, otherwise we could be equal
+        // to another map but have a different hashcode.
+        List<String> keys = new ArrayList<String>();
+        keys.addAll(m.keySet());
+        Collections.sort(keys);
+
+        int valuesHash = 0;
+        for (String k : keys) {
+            valuesHash += m.get(k).hashCode();
+        }
+        return 41 * (41 + keys.hashCode()) + valuesHash;
+    }
+
+    @Override
+    protected boolean canEqual(Object other) {
+        return other instanceof ConfigObject;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // note that "origin" is deliberately NOT part of equality
+        if (other instanceof ConfigObject) {
+            // optimization to avoid unwrapped() for two ConfigObject,
+            // which is what AbstractConfigValue does.
+            return canEqual(other) && mapEquals(this, ((ConfigObject) other));
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        // note that "origin" is deliberately NOT part of equality
+        return mapHash(this);
     }
 
     private static UnsupportedOperationException weAreImmutable(String method) {
