@@ -31,10 +31,6 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             throw new ConfigException.BugOrBroken("null transformer");
     }
 
-    protected AbstractConfigObject(ConfigOrigin origin) {
-        this(origin, ConfigImpl.defaultConfigTransformer());
-    }
-
     /**
      * Returns a version of this object that implements the ConfigRoot
      * interface.
@@ -74,20 +70,13 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     /**
      * Looks up the path with no transformation, type conversion, or exceptions
-     * (just returns null if path not found).
+     * (just returns null if path not found). Does however resolve the path, if
+     * resolver != null.
      */
-    protected ConfigValue peekPath(Path path) {
-        return peekPath(this, path);
-    }
-
     protected ConfigValue peekPath(Path path, SubstitutionResolver resolver,
             int depth,
             boolean withFallbacks) {
         return peekPath(this, path, resolver, depth, withFallbacks);
-    }
-
-    private static ConfigValue peekPath(AbstractConfigObject self, Path path) {
-        return peekPath(self, path, null, 0, false);
     }
 
     private static ConfigValue peekPath(AbstractConfigObject self, Path path,
