@@ -5,20 +5,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.typesafe.config.ConfigConfig;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRoot;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
-    public static ConfigRoot loadConfig(ConfigConfig configConfig) {
+    public static ConfigRoot loadConfig(String rootPath) {
         ConfigTransformer transformer = withExtraTransformer(null);
 
         AbstractConfigObject system = null;
         try {
-            system = systemPropertiesConfig()
-                    .getObject(configConfig.rootPath());
+            system = systemPropertiesConfig().getObject(rootPath);
         } catch (ConfigException e) {
             // no system props in the requested root path
         }
@@ -32,7 +30,7 @@ public class ConfigImpl {
         // object that the app might be able to pass in.
         IncludeHandler includer = defaultIncluder();
 
-        stack.add(includer.include(configConfig.rootPath()).transformed(
+        stack.add(includer.include(rootPath).transformed(
                 transformer));
 
         AbstractConfigObject merged = AbstractConfigObject.merge(stack);

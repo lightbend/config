@@ -9,16 +9,6 @@ import com.typesafe.config.impl.ConfigUtil;
  * This class holds some global static methods for the config package.
  */
 public final class Config {
-    /**
-     * Loads a configuration object.
-     *
-     * @param configConfig
-     *            configuration for the configuration.
-     * @return a configuration object
-     */
-    public static ConfigRoot load(ConfigConfig configConfig) {
-        return ConfigImpl.loadConfig(configConfig);
-    }
 
     /**
      * Loads a configuration for the given root path. The root path should be a
@@ -37,7 +27,7 @@ public final class Config {
      * @return configuration object for the requested root path
      */
     public static ConfigRoot load(String rootPath) {
-        return ConfigImpl.loadConfig(new ConfigConfig(rootPath));
+        return ConfigImpl.loadConfig(rootPath);
     }
 
     private static String getUnits(String s) {

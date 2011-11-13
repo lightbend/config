@@ -8,7 +8,6 @@ import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigException
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
-import com.typesafe.config.ConfigConfig
 
 class ConfigTest extends TestUtils {
 
@@ -618,11 +617,6 @@ class ConfigTest extends TestUtils {
         } else {
             assertEquals(nullValue, conf.get("system.home"))
         }
-    }
-
-    @Test
-    def test01LoadWithConfigConfig() {
-        val conf = Config.load(new ConfigConfig("test01"))
     }
 
     @Test
