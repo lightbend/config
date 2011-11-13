@@ -38,6 +38,26 @@ abstract class AbstractConfigValue implements ConfigValue {
         return ResolveStatus.RESOLVED;
     }
 
+    /**
+     * This is used when including one file in another; the included file is
+     * relativized to the path it's included into in the parent file. The point
+     * is that if you include a file at foo.bar in the parent, and the included
+     * file as a substitution ${a.b.c}, the included substitution now needs to
+     * be ${foo.bar.a.b.c} because we resolve substitutions globally only after
+     * parsing everything.
+     *
+     * @param prefix
+     * @return value relativized to the given path or the same value if nothing
+     *         to do
+     */
+    AbstractConfigValue relativized(Path prefix) {
+        return this;
+    }
+
+    protected interface Modifier {
+        AbstractConfigValue modifyChild(AbstractConfigValue v);
+    }
+
     @Override
     public AbstractConfigValue withFallback(ConfigValue other) {
         return this;

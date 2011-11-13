@@ -284,4 +284,29 @@ class ConfigSubstitutionTest extends TestUtils {
             throw new Exception("None of the env vars we tried to use for testing were set")
         }
     }
+
+    @Test
+    def fallbackToEnvWhenRelativized() {
+        import scala.collection.JavaConverters._
+
+        val values = new java.util.HashMap[String, AbstractConfigValue]()
+
+        values.put("a", substEnvVarObject.relativized(new Path("a")))
+
+        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values));
+
+        var existed = 0
+        for (k <- resolved.getObject("a").keySet().asScala) {
+            val e = System.getenv(k.toUpperCase());
+            if (e != null) {
+                existed += 1
+                assertEquals(e, resolved.getObject("a").getString(k))
+            } else {
+                assertEquals(nullValue, resolved.getObject("a").get(k))
+            }
+        }
+        if (existed == 0) {
+            throw new Exception("None of the env vars we tried to use for testing were set")
+        }
+    }
 }

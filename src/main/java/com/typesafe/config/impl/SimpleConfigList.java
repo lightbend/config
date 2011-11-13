@@ -47,21 +47,16 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
         return ResolveStatus.fromBoolean(resolved);
     }
 
-    @Override
-    SimpleConfigList resolveSubstitutions(SubstitutionResolver resolver, int depth,
-            boolean withFallbacks) {
-        if (resolved)
-            return this;
-
+    private SimpleConfigList modify(Modifier modifier,
+            ResolveStatus newResolveStatus) {
         // lazy-create for optimization
         List<AbstractConfigValue> changed = null;
         int i = 0;
         for (AbstractConfigValue v : value) {
-            AbstractConfigValue resolved = resolver.resolve(v, depth,
-                    withFallbacks);
+            AbstractConfigValue modified = modifier.modifyChild(v);
 
             // lazy-create the new list if required
-            if (changed == null && resolved != v) {
+            if (changed == null && modified != v) {
                 changed = new ArrayList<AbstractConfigValue>();
                 for (int j = 0; j < i; ++j) {
                     changed.add(value.get(j));
@@ -71,7 +66,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
             // once the new list is created, all elements
             // have to go in it.
             if (changed != null) {
-                changed.add(resolved);
+                changed.add(modified);
             }
 
             i += 1;
@@ -81,11 +76,36 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
             if (changed.size() != value.size())
                 throw new ConfigException.BugOrBroken(
                         "substituted list's size doesn't match");
-            return new SimpleConfigList(origin(), changed,
-                    ResolveStatus.RESOLVED);
+            return new SimpleConfigList(origin(), changed, newResolveStatus);
         } else {
             return this;
         }
+    }
+
+    @Override
+    SimpleConfigList resolveSubstitutions(final SubstitutionResolver resolver,
+            final int depth, final boolean withFallbacks) {
+        if (resolved)
+            return this;
+
+        return modify(new Modifier() {
+            @Override
+            public AbstractConfigValue modifyChild(AbstractConfigValue v) {
+                return resolver.resolve(v, depth, withFallbacks);
+            }
+
+        }, ResolveStatus.RESOLVED);
+    }
+
+    @Override
+    SimpleConfigList relativized(final Path prefix) {
+        return modify(new Modifier() {
+            @Override
+            public AbstractConfigValue modifyChild(AbstractConfigValue v) {
+                return v.relativized(prefix);
+            }
+
+        }, resolveStatus());
     }
 
     @Override

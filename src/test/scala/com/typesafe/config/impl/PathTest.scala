@@ -2,6 +2,7 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
+import scala.collection.JavaConverters._
 
 class PathTest extends TestUtils {
 
@@ -41,5 +42,24 @@ class PathTest extends TestUtils {
         assertEquals("foo.\"bar*\"", path("foo", "bar*").render())
         assertEquals("\"foo.bar\"", path("foo.bar").render())
         assertEquals("foo bar", path("foo bar").render())
+    }
+
+    @Test
+    def pathFromPathList() {
+        assertEquals(path("foo"), new Path(List(path("foo")).asJava))
+        assertEquals(path("foo", "bar", "baz", "boo"), new Path(List(path("foo", "bar"),
+            path("baz", "boo")).asJava))
+    }
+
+    @Test
+    def pathPrepend() {
+        assertEquals(path("foo", "bar"), path("bar").prepend(path("foo")))
+        assertEquals(path("a", "b", "c", "d"), path("c", "d").prepend(path("a", "b")))
+    }
+
+    @Test
+    def pathLength() {
+        assertEquals(1, path("foo").length())
+        assertEquals(2, path("foo", "bar").length())
     }
 }

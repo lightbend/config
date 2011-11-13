@@ -607,6 +607,20 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def test01SystemFallbacks() {
+        val conf = Config.load("test01")
+        val jv = System.getProperty("java.version")
+        assertNotNull(jv)
+        assertEquals(jv, conf.getString("system.javaversion"))
+        val home = System.getenv("HOME")
+        if (home != null) {
+            assertEquals(home, conf.getString("system.home"))
+        } else {
+            assertEquals(nullValue, conf.get("system.home"))
+        }
+    }
+
+    @Test
     def test01LoadWithConfigConfig() {
         val conf = Config.load(new ConfigConfig("test01"))
     }
@@ -651,6 +665,26 @@ class ConfigTest extends TestUtils {
         assertEquals(57, conf.getInt("test02.a.b.c"))
         // equiv01/original.json was included (it has a slash in the name)
         assertEquals("a", conf.getString("equiv01.strings.a"))
+
+        // Now check that substitutions still work
+        assertEquals(42, conf.getInt("test01.ints.fortyTwoAgain"))
+        assertEquals(Seq("a", "b", "c"), conf.getStringList("test01.arrays.ofString").asScala)
+        assertEquals(103, conf.getInt("test02.103_a"))
+
+        // and system fallbacks still work
+        val jv = System.getProperty("java.version")
+        assertNotNull(jv)
+        assertEquals(jv, conf.getString("test01.system.javaversion"))
+        val home = System.getenv("HOME")
+        if (home != null) {
+            assertEquals(home, conf.getString("test01.system.home"))
+        } else {
+            assertEquals(nullValue, conf.get("test01.system.home"))
+        }
+        val concatenated = conf.getString("test01.system.concatenated")
+        assertTrue(concatenated.contains("Your Java version"))
+        assertTrue(concatenated.contains(jv))
+        assertTrue(concatenated.contains(conf.getString("test01.system.userhome")))
     }
 
     @Test

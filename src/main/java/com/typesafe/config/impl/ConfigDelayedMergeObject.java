@@ -92,6 +92,15 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
+    ConfigDelayedMergeObject relativized(Path prefix) {
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+        for (AbstractConfigValue o : stack) {
+            newStack.add(o.relativized(prefix));
+        }
+        return new ConfigDelayedMergeObject(origin(), transformer, newStack);
+    }
+
+    @Override
     public ConfigDelayedMergeObject withFallback(ConfigValue other) {
         if (other instanceof AbstractConfigObject
                 || other instanceof Unmergeable) {

@@ -270,38 +270,61 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         }
     }
 
-    @Override
-    AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
-            int depth,
-            boolean withFallbacks) {
-        if (resolveStatus() == ResolveStatus.RESOLVED)
-            return this;
-
+    private AbstractConfigObject modify(Modifier modifier,
+            ResolveStatus newResolveStatus) {
         Map<String, AbstractConfigValue> changes = null;
         for (String k : keySet()) {
             AbstractConfigValue v = peek(k);
-            AbstractConfigValue resolved = resolver.resolve(v, depth,
-                    withFallbacks);
-            if (resolved != v) {
+            AbstractConfigValue modified = modifier.modifyChild(v);
+            if (modified != v) {
                 if (changes == null)
                     changes = new HashMap<String, AbstractConfigValue>();
-                changes.put(k, resolved);
+                changes.put(k, modified);
             }
         }
         if (changes == null) {
-            return newCopy(transformer, ResolveStatus.RESOLVED);
+            return newCopy(transformer, newResolveStatus);
         } else {
-            Map<String, AbstractConfigValue> resolved = new HashMap<String, AbstractConfigValue>();
+            Map<String, AbstractConfigValue> modified = new HashMap<String, AbstractConfigValue>();
             for (String k : keySet()) {
                 if (changes.containsKey(k)) {
-                    resolved.put(k, changes.get(k));
+                    modified.put(k, changes.get(k));
                 } else {
-                    resolved.put(k, peek(k));
+                    modified.put(k, peek(k));
                 }
             }
-            return new SimpleConfigObject(origin(), transformer, resolved,
-                    ResolveStatus.RESOLVED);
+            return new SimpleConfigObject(origin(), transformer, modified,
+                    newResolveStatus);
         }
+    }
+
+    @Override
+    AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
+            final int depth,
+            final boolean withFallbacks) {
+        if (resolveStatus() == ResolveStatus.RESOLVED)
+            return this;
+
+        return modify(new Modifier() {
+
+            @Override
+            public AbstractConfigValue modifyChild(AbstractConfigValue v) {
+                return resolver.resolve(v, depth, withFallbacks);
+            }
+
+        }, ResolveStatus.RESOLVED);
+    }
+
+    @Override
+    AbstractConfigObject relativized(final Path prefix) {
+        return modify(new Modifier() {
+
+            @Override
+            public AbstractConfigValue modifyChild(AbstractConfigValue v) {
+                return v.relativized(prefix);
+            }
+
+        }, resolveStatus());
     }
 
     @Override

@@ -22,10 +22,18 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     // have to be resolved to values, then if there's more
     // than one piece everything is stringified and concatenated
     final private List<Object> pieces;
+    // the length of any prefixes added with relativized()
+    final int prefixLength;
 
     ConfigSubstitution(ConfigOrigin origin, List<Object> pieces) {
+        this(origin, pieces, 0);
+    }
+
+    private ConfigSubstitution(ConfigOrigin origin, List<Object> pieces,
+            int prefixLength) {
         super(origin);
         this.pieces = pieces;
+        this.prefixLength = prefixLength;
     }
 
     @Override
@@ -104,15 +112,17 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         ConfigValue result = findInObject(resolver.root(), resolver, subst,
                 depth, withFallbacks);
         if (withFallbacks) {
+            // when looking up system props and env variables,
+            // we don't want the prefix that was added when
+            // we were included in another file.
+            Path unprefixed = subst.subPath(prefixLength);
             if (result == null) {
                 result = findInObject(ConfigImpl.systemPropertiesConfig(),
-                        null,
-                        subst, depth, withFallbacks);
+                        null, unprefixed, depth, withFallbacks);
             }
             if (result == null) {
                 result = findInObject(ConfigImpl.envVariablesConfig(), null,
-                        subst,
-                        depth, withFallbacks);
+                        unprefixed, depth, withFallbacks);
             }
         }
         if (result == null) {
@@ -171,6 +181,25 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     @Override
     ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED;
+    }
+
+    // when you graft a substitution into another object,
+    // you have to prefix it with the location in that object
+    // where you grafted it; but save prefixLength so
+    // system property and env variable lookups don't get
+    // broken.
+    @Override
+    ConfigSubstitution relativized(Path prefix) {
+        List<Object> newPieces = new ArrayList<Object>();
+        for (Object p : pieces) {
+            if (p instanceof Path) {
+                newPieces.add(((Path) p).prepend(prefix));
+            } else {
+                newPieces.add(p);
+            }
+        }
+        return new ConfigSubstitution(origin(), newPieces, prefixLength
+                + prefix.length());
     }
 
     @Override

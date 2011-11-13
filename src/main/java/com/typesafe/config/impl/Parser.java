@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -118,6 +119,7 @@ final class Parser {
         final private IncludeHandler includer;
         final private SyntaxFlavor flavor;
         final private ConfigOrigin baseOrigin;
+        final private LinkedList<Path> pathStack;
 
         ParseContext(SyntaxFlavor flavor, ConfigOrigin origin,
                 Iterator<Token> tokens, IncludeHandler includer) {
@@ -127,6 +129,7 @@ final class Parser {
             this.flavor = flavor;
             this.baseOrigin = origin;
             this.includer = includer;
+            this.pathStack = new LinkedList<Path>();
         }
 
         private Token nextToken() {
@@ -397,6 +400,11 @@ final class Parser {
                 String name = (String) Tokens.getValue(t).unwrapped();
                 AbstractConfigObject obj = includer.include(name);
 
+                if (!pathStack.isEmpty()) {
+                    Path prefix = new Path(pathStack);
+                    obj = obj.relativized(prefix);
+                }
+
                 for (String key : obj.keySet()) {
                     AbstractConfigValue v = obj.get(key);
                     AbstractConfigValue existing = values.get(key);
@@ -446,6 +454,9 @@ final class Parser {
                     Path path = parseKey(t);
                     Token afterKey = nextTokenIgnoringNewline();
 
+                    // path must be on-stack while we parse the value
+                    pathStack.push(path);
+
                     Token valueToken;
                     AbstractConfigValue newValue;
                     if (flavor == SyntaxFlavor.CONF
@@ -463,6 +474,8 @@ final class Parser {
                         valueToken = nextTokenIgnoringNewline();
                         newValue = parseValue(valueToken);
                     }
+
+                    pathStack.pop();
 
                     String key = path.first();
                     Path remaining = path.remainder();

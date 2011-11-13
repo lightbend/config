@@ -1,5 +1,8 @@
 package com.typesafe.config.impl;
 
+import java.util.Iterator;
+import java.util.List;
+
 import com.typesafe.config.ConfigException;
 
 final class Path {
@@ -27,12 +30,58 @@ final class Path {
         }
     }
 
+    // append all the paths in the list together into one path
+    Path(List<Path> pathsToConcat) {
+        if (pathsToConcat.isEmpty())
+            throw new ConfigException.BugOrBroken("empty path");
+
+        Iterator<Path> i = pathsToConcat.iterator();
+        Path firstPath = i.next();
+        this.first = firstPath.first;
+
+        PathBuilder pb = new PathBuilder();
+        if (firstPath.remainder != null) {
+            pb.appendPath(firstPath.remainder);
+        }
+        while (i.hasNext()) {
+            pb.appendPath(i.next());
+        }
+        this.remainder = pb.result();
+    }
+
     String first() {
         return first;
     }
 
     Path remainder() {
         return remainder;
+    }
+
+    Path prepend(Path toPrepend) {
+        PathBuilder pb = new PathBuilder();
+        pb.appendPath(toPrepend);
+        pb.appendPath(this);
+        return pb.result();
+    }
+
+    int length() {
+        int count = 1;
+        Path p = remainder;
+        while (p != null) {
+            count += 1;
+            p = p.remainder;
+        }
+        return count;
+    }
+
+    Path subPath(int removeFromFront) {
+        int count = removeFromFront;
+        Path p = this;
+        while (p != null && count > 0) {
+            count -= 1;
+            p = p.remainder;
+        }
+        return p;
     }
 
     @Override
