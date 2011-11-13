@@ -163,12 +163,19 @@ class ConfigValueTest extends TestUtils {
         assertEquals(intValue(2), m.get("b"))
         assertEquals(intValue(3), m.get("c"))
         assertNull(m.get("d"))
+        // get can take a non-string
+        assertNull(m.get(new Object()))
 
         assertTrue(m.containsKey("a"))
         assertFalse(m.containsKey("z"))
+        // containsKey can take a non-string
+        assertFalse(m.containsKey(new Object()))
 
         assertTrue(m.containsValue(intValue(1)))
         assertFalse(m.containsValue(intValue(10)))
+
+        // can take a non-ConfigValue
+        assertFalse(m.containsValue(new Object()))
 
         assertFalse(m.isEmpty())
 
