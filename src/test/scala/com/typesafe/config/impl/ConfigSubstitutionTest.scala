@@ -4,21 +4,26 @@ import org.junit.Assert._
 import org.junit._
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigException
+import com.typesafe.config.ConfigResolveOptions
 
 class ConfigSubstitutionTest extends TestUtils {
 
     private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
-        SubstitutionResolver.resolveWithoutFallbacks(v, v).asInstanceOf[AbstractConfigObject]
+        val options = ConfigResolveOptions.noSystem()
+        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject]
     }
     private def resolveWithoutFallbacks(s: ConfigSubstitution, root: AbstractConfigObject) = {
-        SubstitutionResolver.resolveWithoutFallbacks(s, root)
+        val options = ConfigResolveOptions.noSystem()
+        SubstitutionResolver.resolve(s, root, options)
     }
 
     private def resolve(v: AbstractConfigObject) = {
-        SubstitutionResolver.resolve(v, v).asInstanceOf[AbstractConfigObject]
+        val options = ConfigResolveOptions.defaults()
+        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject]
     }
     private def resolve(s: ConfigSubstitution, root: AbstractConfigObject) = {
-        SubstitutionResolver.resolve(s, root)
+        val options = ConfigResolveOptions.defaults()
+        SubstitutionResolver.resolve(s, root, options)
     }
 
     private val simpleObject = {

@@ -11,7 +11,10 @@ import scala.collection.JavaConverters._
 class ConfParserTest extends TestUtils {
 
     def parseWithoutResolving(s: String) = {
-        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s, includer())
+        val options = ConfigParseOptions.defaults().
+            setOriginDescription("test conf string").
+            setSyntax(ConfigSyntax.CONF);
+        ConfigImpl.parseValue(Parseable.newString(s), options);
     }
 
     def parse(s: String) = {
@@ -21,7 +24,7 @@ class ConfParserTest extends TestUtils {
         // interpolating arrays into strings
         tree match {
             case obj: AbstractConfigObject =>
-                SubstitutionResolver.resolveWithoutFallbacks(tree, obj)
+                SubstitutionResolver.resolve(tree, obj, ConfigResolveOptions.noSystem())
             case _ =>
                 tree
         }

@@ -8,7 +8,7 @@ import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigRoot;
+import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 // This is just like ConfigDelayedMerge except we know statically
@@ -37,30 +37,56 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     final private static class Root extends ConfigDelayedMergeObject implements
-            ConfigRoot {
-        Root(ConfigDelayedMergeObject original) {
+            ConfigRootImpl {
+        final private Path rootPath;
+
+        Root(ConfigDelayedMergeObject original, Path rootPath) {
             super(original.origin(), original.stack);
+            this.rootPath = rootPath;
         }
 
         @Override
-        protected Root asRoot() {
-            return this;
+        protected Root asRoot(Path newRootPath) {
+            if (newRootPath.equals(this.rootPath))
+                return this;
+            else
+                return new Root(this, newRootPath);
         }
 
         @Override
-        public ConfigRoot resolve() {
+        public ConfigRootImpl resolve() {
             return resolve(this);
         }
 
         @Override
+        public ConfigRootImpl resolve(ConfigResolveOptions options) {
+            return resolve(this, options);
+        }
+
+        @Override
         public Root withFallback(ConfigValue value) {
-            return super.withFallback(value).asRoot();
+            return super.withFallback(value).asRoot(rootPath);
+        }
+
+        @Override
+        public Root withFallbacks(ConfigValue... values) {
+            return super.withFallbacks(values).asRoot(rootPath);
+        }
+
+        @Override
+        public String rootPath() {
+            return rootPath.render();
+        }
+
+        @Override
+        public Path rootPathObject() {
+            return rootPath;
         }
     }
 
     @Override
-    protected Root asRoot() {
-        return new Root(this);
+    protected Root asRoot(Path rootPath) {
+        return new Root(this, rootPath);
     }
 
     @Override
@@ -74,10 +100,10 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
 
     @Override
     AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
-            int depth, boolean withFallbacks) {
+            int depth, ConfigResolveOptions options) {
         AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(
                 stack, resolver, depth,
-                withFallbacks);
+                options);
         if (merged instanceof AbstractConfigObject) {
             return (AbstractConfigObject) merged;
         } else {
@@ -120,6 +146,11 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
             // to merge with.
             return this;
         }
+    }
+
+    @Override
+    public ConfigDelayedMergeObject withFallbacks(ConfigValue... others) {
+        return (ConfigDelayedMergeObject) super.withFallbacks(others);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package com.typesafe.config;
 
-
 /**
  * Interface implemented by any configuration value. From the perspective of
  * users of this interface, the object is immutable. It is therefore safe to use
@@ -42,4 +41,13 @@ public interface ConfigValue {
      *         used)
      */
     ConfigValue withFallback(ConfigValue other);
+
+    /**
+     * Convenience method just calls withFallback() on each of the values;
+     * earlier values in the list win over later ones.
+     * 
+     * @param fallbacks
+     * @return a version of the object with the requested fallbacks merged in
+     */
+    ConfigValue withFallbacks(ConfigValue... fallbacks);
 }

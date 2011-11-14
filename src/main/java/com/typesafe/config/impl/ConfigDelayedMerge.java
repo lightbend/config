@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -46,21 +47,20 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
 
     @Override
     AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
-            int depth, boolean withFallbacks) {
-        return resolveSubstitutions(stack, resolver, depth, withFallbacks);
+            int depth, ConfigResolveOptions options) {
+        return resolveSubstitutions(stack, resolver, depth, options);
     }
 
     // static method also used by ConfigDelayedMergeObject
     static AbstractConfigValue resolveSubstitutions(
             List<AbstractConfigValue> stack, SubstitutionResolver resolver,
-            int depth, boolean withFallbacks) {
+            int depth, ConfigResolveOptions options) {
         // to resolve substitutions, we need to recursively resolve
         // the stack of stuff to merge, and then merge the stack.
         List<AbstractConfigObject> toMerge = new ArrayList<AbstractConfigObject>();
 
         for (AbstractConfigValue v : stack) {
-            AbstractConfigValue resolved = resolver.resolve(v, depth,
-                    withFallbacks);
+            AbstractConfigValue resolved = resolver.resolve(v, depth, options);
 
             if (resolved instanceof AbstractConfigObject) {
                 toMerge.add((AbstractConfigObject) resolved);

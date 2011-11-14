@@ -12,11 +12,17 @@ import java.util.Collections
 class JsonTest extends TestUtils {
 
     def parse(s: String): ConfigValue = {
-        Parser.parse(SyntaxFlavor.JSON, new SimpleConfigOrigin("test json string"), s, includer())
+        val options = ConfigParseOptions.defaults().
+            setOriginDescription("test json string").
+            setSyntax(ConfigSyntax.JSON);
+        ConfigImpl.parseValue(Parseable.newString(s), options);
     }
 
     def parseAsConf(s: String): ConfigValue = {
-        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test conf string"), s, includer())
+        val options = ConfigParseOptions.defaults().
+            setOriginDescription("test conf string").
+            setSyntax(ConfigSyntax.CONF);
+        ConfigImpl.parseValue(Parseable.newString(s), options);
     }
 
     private[this] def toLift(value: ConfigValue): lift.JValue = {

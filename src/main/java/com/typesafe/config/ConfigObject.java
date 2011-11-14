@@ -35,6 +35,9 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
     @Override
     ConfigObject withFallback(ConfigValue other);
 
+    @Override
+    ConfigObject withFallbacks(ConfigValue... others);
+
     boolean getBoolean(String path);
 
     Number getNumber(String path);

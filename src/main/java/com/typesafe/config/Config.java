@@ -1,9 +1,16 @@
 package com.typesafe.config;
 
+import java.io.File;
+import java.io.Reader;
+import java.net.URL;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.impl.ConfigImpl;
 import com.typesafe.config.impl.ConfigUtil;
+import com.typesafe.config.impl.Parseable;
 
 /**
  * This class holds some global static methods for the config package.
@@ -11,23 +18,125 @@ import com.typesafe.config.impl.ConfigUtil;
 public final class Config {
 
     /**
-     * Loads a configuration for the given root path. The root path should be a
-     * short word that scopes the package being configured; typically it's the
+     * Loads a configuration for the given root path in a "standard" way.
+     * Oversimplified, if your root path is foo.bar then this will load files
+     * from the classpath: foo-bar.conf, foo-bar.json, foo-bar.properties,
+     * foo-bar-reference.conf, foo-bar-reference.json,
+     * foo-bar-reference.properties. It will override all those files with any
+     * system properties that begin with "foo.bar.", as well.
+     *
+     * The root path should be a path expression, usually just a single short
+     * word, that scopes the package being configured; typically it's the
      * package name or something similar. System properties overriding values in
      * the configuration will have to be prefixed with the root path. The root
      * path may have periods in it if you like but other punctuation or
      * whitespace will probably cause you headaches. Example root paths: "akka",
      * "sbt", "jsoup", "heroku", "mongo", etc.
      *
-     * This object will already be resolved (substitutions have already been
-     * processed).
+     * The loaded object will already be resolved (substitutions have already
+     * been processed). As a result, if you add more fallbacks then they won't
+     * be seen by substitutions. Substitutions are the "${foo.bar}" syntax. If
+     * you want to parse additional files or something then you need to use
+     * loadWithoutResolving().
      *
      * @param rootPath
      *            the configuration "domain"
      * @return configuration object for the requested root path
      */
     public static ConfigRoot load(String rootPath) {
-        return ConfigImpl.loadConfig(rootPath);
+        return loadWithoutResolving(rootPath).resolve();
+    }
+
+    /**
+     * Like load() but does not resolve the object, so you can go ahead and add
+     * more fallbacks and stuff and have them seen by substitutions when you do
+     * call {@link ConfigRoot.resolve()}.
+     *
+     * @param rootPath
+     * @return
+     */
+    public static ConfigRoot loadWithoutResolving(String rootPath) {
+        ConfigRoot system = systemPropertiesRoot(rootPath);
+
+        ConfigValue mainFiles = parse(rootPath, ConfigParseOptions.defaults());
+        ConfigValue referenceFiles = parse(rootPath + ".reference",
+                ConfigParseOptions.defaults());
+
+        return system.withFallbacks(mainFiles, referenceFiles);
+    }
+
+    public static ConfigRoot emptyRoot(String rootPath) {
+        return ConfigImpl.emptyRoot(rootPath);
+    }
+
+    public static ConfigRoot systemPropertiesRoot(String rootPath) {
+        return ConfigImpl.systemPropertiesRoot(rootPath);
+    }
+
+    public static ConfigObject systemProperties() {
+        return ConfigImpl.systemPropertiesAsConfig();
+    }
+
+    public static ConfigObject systemEnvironment() {
+        return ConfigImpl.envVariablesAsConfig();
+    }
+
+    public static ConfigObject parse(Properties properties,
+            ConfigParseOptions options) {
+        return ConfigImpl.parse(properties,
+                options.withFallbackOriginDescription("properties"));
+    }
+
+    public static ConfigObject parse(Reader reader, ConfigParseOptions options) {
+        Parseable p = Parseable.newReader(reader);
+        return ConfigImpl.parse(p,
+                options.withFallbackOriginDescription("Reader"));
+    }
+
+    public static ConfigObject parse(URL url, ConfigParseOptions options) {
+        Parseable p = Parseable.newURL(url);
+        return ConfigImpl.parse(p,
+                options.withFallbackOriginDescription(url.toExternalForm()));
+    }
+
+    public static ConfigObject parse(File file, ConfigParseOptions options) {
+        Parseable p = Parseable.newFile(file);
+        return ConfigImpl.parse(p,
+                options.withFallbackOriginDescription(file.getPath()));
+    }
+
+    public static ConfigObject parse(Class<?> klass, String resource,
+            ConfigParseOptions options) {
+        Parseable p = Parseable.newResource(klass, resource);
+        return ConfigImpl.parse(p,
+                options.withFallbackOriginDescription(resource));
+    }
+
+    /**
+     * Parses classpath resources corresponding to this path expression.
+     * Essentially if the path is "foo.bar" then the resources are
+     * "/foo-bar.conf", "/foo-bar.json", and "/foo-bar.properties". If more than
+     * one of those exists, they are merged.
+     *
+     * @param path
+     * @param options
+     * @return
+     */
+    public static ConfigObject parse(String path, ConfigParseOptions options) {
+        // null originDescription is allowed in parseResourcesForPath
+        return ConfigImpl.parseResourcesForPath(path, options);
+    }
+
+    public static ConfigValue fromAnyRef(Object object) {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    public static ConfigObject fromMap(Map<String, ? extends Object> values) {
+        throw new UnsupportedOperationException("not implemented yet");
+    }
+
+    public static ConfigList fromCollection(Collection<? extends Object> values) {
+        throw new UnsupportedOperationException("not implemented yet");
     }
 
     private static String getUnits(String s) {

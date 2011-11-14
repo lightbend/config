@@ -5,6 +5,9 @@ import org.junit._
 import com.typesafe.config.ConfigOrigin
 import java.io.Reader
 import java.io.StringReader
+import com.typesafe.config.ConfigParseOptions
+import com.typesafe.config.Config
+import com.typesafe.config.ConfigSyntax
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -319,7 +322,10 @@ abstract trait TestUtils {
     protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d, null)
 
     protected def parseObject(s: String) = {
-        Parser.parse(SyntaxFlavor.CONF, new SimpleConfigOrigin("test string"), s, includer()).asInstanceOf[AbstractConfigObject]
+        val options = ConfigParseOptions.defaults().
+            setOriginDescription("test string").
+            setSyntax(ConfigSyntax.CONF);
+        Config.parse(new StringReader(s), options).asInstanceOf[AbstractConfigObject]
     }
 
     protected def subst(ref: String) = {
@@ -354,7 +360,7 @@ abstract trait TestUtils {
     def tokenKeySubstitution(s: String) = tokenSubstitution(tokenString(s))
 
     def tokenize(origin: ConfigOrigin, input: Reader): java.util.Iterator[Token] = {
-        Tokenizer.tokenize(origin, input, SyntaxFlavor.CONF)
+        Tokenizer.tokenize(origin, input, ConfigSyntax.CONF)
     }
 
     def tokenize(input: Reader): java.util.Iterator[Token] = {

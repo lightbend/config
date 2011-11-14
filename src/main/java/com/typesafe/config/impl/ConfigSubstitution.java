@@ -7,6 +7,7 @@ import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -85,7 +86,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     private ConfigValue findInObject(AbstractConfigObject root,
             SubstitutionResolver resolver, /* null if we should not have refs */
             Path subst, int depth,
-            boolean withFallbacks) {
+ ConfigResolveOptions options) {
         if (depth > MAX_DEPTH) {
             throw new ConfigException.BadValue(origin(), subst.render(),
                     "Substitution ${" + subst.render()
@@ -93,7 +94,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         }
 
         ConfigValue result = root.peekPath(subst, resolver, depth,
-                    withFallbacks);
+ options);
 
         if (result instanceof ConfigSubstitution) {
             throw new ConfigException.BugOrBroken(
@@ -108,31 +109,34 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     private ConfigValue resolve(SubstitutionResolver resolver, Path subst,
-            int depth, boolean withFallbacks) {
+            int depth, ConfigResolveOptions options) {
         ConfigValue result = findInObject(resolver.root(), resolver, subst,
-                depth, withFallbacks);
-        if (withFallbacks) {
-            // when looking up system props and env variables,
-            // we don't want the prefix that was added when
-            // we were included in another file.
-            Path unprefixed = subst.subPath(prefixLength);
-            if (result == null) {
-                result = findInObject(ConfigImpl.systemPropertiesConfig(),
-                        null, unprefixed, depth, withFallbacks);
-            }
-            if (result == null) {
-                result = findInObject(ConfigImpl.envVariablesConfig(), null,
-                        unprefixed, depth, withFallbacks);
-            }
+                depth, options);
+
+        // when looking up system props and env variables,
+        // we don't want the prefix that was added when
+        // we were included in another file.
+        Path unprefixed = subst.subPath(prefixLength);
+
+        if (result == null && options.getUseSystemProperties()) {
+            result = findInObject(ConfigImpl.systemPropertiesAsConfig(), null,
+                    unprefixed, depth, options);
         }
+
+        if (result == null && options.getUseSystemEnvironment()) {
+                result = findInObject(ConfigImpl.envVariablesAsConfig(), null,
+                    unprefixed, depth, options);
+        }
+
         if (result == null) {
             result = new ConfigNull(origin());
         }
+
         return result;
     }
 
     private ConfigValue resolve(SubstitutionResolver resolver, int depth,
-            boolean withFallbacks) {
+            ConfigResolveOptions options) {
         if (pieces.size() > 1) {
             // need to concat everything into a string
             StringBuilder sb = new StringBuilder();
@@ -140,8 +144,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                 if (p instanceof String) {
                     sb.append((String) p);
                 } else {
-                    ConfigValue v = resolve(resolver, (Path) p,
-                            depth, withFallbacks);
+                    ConfigValue v = resolve(resolver, (Path) p, depth, options);
                     switch (v.valueType()) {
                     case NULL:
                         // nothing; becomes empty string
@@ -162,19 +165,18 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             if (!(pieces.get(0) instanceof Path))
                 throw new ConfigException.BugOrBroken(
                         "ConfigSubstitution should never contain a single String piece");
-            return resolve(resolver, (Path) pieces.get(0), depth,
-                    withFallbacks);
+            return resolve(resolver, (Path) pieces.get(0), depth, options);
         }
     }
 
     @Override
     AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
             int depth,
-            boolean withFallbacks) {
+            ConfigResolveOptions options) {
         // only ConfigSubstitution adds to depth here, because the depth
         // is the substitution depth not the recursion depth
         AbstractConfigValue resolved = (AbstractConfigValue) resolve(resolver,
-                depth + 1, withFallbacks);
+                depth + 1, options);
         return resolved;
     }
 

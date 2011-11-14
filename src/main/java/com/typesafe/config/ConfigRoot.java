@@ -10,12 +10,24 @@ public interface ConfigRoot extends ConfigObject {
      * Returns a replacement root object with all substitutions (the
      * "${foo.bar}" syntax) resolved. Substitutions are looked up in this root
      * object. A configuration value tree must be resolved before you can use
-     * it.
-     *
+     * it. This method uses ConfigResolveOptions.defaults().
+     * 
      * @return an immutable object with substitutions resolved
      */
     ConfigRoot resolve();
 
+    ConfigRoot resolve(ConfigResolveOptions options);
+
     @Override
     ConfigRoot withFallback(ConfigValue fallback);
+
+    @Override
+    ConfigRoot withFallbacks(ConfigValue... fallbacks);
+
+    /**
+     * Gets the global app name that this root represents.
+     *
+     * @return the app's root config path
+     */
+    String rootPath();
 }

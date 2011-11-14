@@ -117,4 +117,15 @@ final class SimpleConfigObject extends AbstractConfigObject {
         return new SimpleConfigObject(new SimpleConfigOrigin("empty config"),
                 Collections.<String, AbstractConfigValue> emptyMap());
     }
+
+    final static SimpleConfigObject empty(ConfigOrigin origin) {
+        return new SimpleConfigObject(origin,
+                Collections.<String, AbstractConfigValue> emptyMap());
+    }
+
+    final static SimpleConfigObject emptyMissing(ConfigOrigin baseOrigin) {
+        return new SimpleConfigObject(new SimpleConfigOrigin(
+                baseOrigin.description() + " (not found)"),
+                Collections.<String, AbstractConfigValue> emptyMap());
+    }
 }

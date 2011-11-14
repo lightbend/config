@@ -16,7 +16,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigRoot;
+import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -38,14 +38,20 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      *
      * @return a config root
      */
-    protected ConfigRoot asRoot() {
-        return new RootConfigObject(this);
+    protected ConfigRootImpl asRoot(Path rootPath) {
+        return new RootConfigObject(this, rootPath);
     }
 
-    protected static ConfigRoot resolve(ConfigRoot root) {
+    protected static ConfigRootImpl resolve(ConfigRootImpl root) {
+        return resolve(root, ConfigResolveOptions.defaults());
+    }
+
+    protected static ConfigRootImpl resolve(ConfigRootImpl root,
+            ConfigResolveOptions options) {
         AbstractConfigValue resolved = SubstitutionResolver.resolve(
-                (AbstractConfigValue) root, (AbstractConfigObject) root);
-        return ((AbstractConfigObject) resolved).asRoot();
+                (AbstractConfigValue) root, (AbstractConfigObject) root,
+                options);
+        return ((AbstractConfigObject) resolved).asRoot(root.rootPathObject());
     }
 
     /**
@@ -58,12 +64,12 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     protected abstract AbstractConfigValue peek(String key);
 
     protected AbstractConfigValue peek(String key,
-            SubstitutionResolver resolver,
-            int depth, boolean withFallbacks) {
+            SubstitutionResolver resolver, int depth,
+            ConfigResolveOptions options) {
         AbstractConfigValue v = peek(key);
 
         if (v != null && resolver != null) {
-            v = resolver.resolve(v, depth, withFallbacks);
+            v = resolver.resolve(v, depth, options);
         }
 
         return v;
@@ -75,18 +81,18 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      * resolver != null.
      */
     protected ConfigValue peekPath(Path path, SubstitutionResolver resolver,
-            int depth,
-            boolean withFallbacks) {
-        return peekPath(this, path, resolver, depth, withFallbacks);
+            int depth, ConfigResolveOptions options) {
+        return peekPath(this, path, resolver, depth, options);
     }
 
     private static ConfigValue peekPath(AbstractConfigObject self, Path path,
-            SubstitutionResolver resolver, int depth, boolean withFallbacks) {
+            SubstitutionResolver resolver, int depth,
+            ConfigResolveOptions options) {
         String key = path.first();
         Path next = path.remainder();
 
         if (next == null) {
-            ConfigValue v = self.peek(key, resolver, depth, withFallbacks);
+            ConfigValue v = self.peek(key, resolver, depth, options);
             return v;
         } else {
             // it's important to ONLY resolve substitutions here, not
@@ -98,13 +104,12 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             ConfigValue v = self.peek(key);
 
             if (v instanceof ConfigSubstitution && resolver != null) {
-                v = resolver.resolve((AbstractConfigValue) v, depth,
-                        withFallbacks);
+                v = resolver.resolve((AbstractConfigValue) v, depth, options);
             }
 
             if (v instanceof AbstractConfigObject) {
                 return peekPath((AbstractConfigObject) v, next, resolver,
-                        depth, withFallbacks);
+                        depth, options);
             } else {
                 return null;
             }
@@ -175,6 +180,11 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             String originalPath) {
         return resolve(this, pathExpression, expected, transformer,
                 originalPath);
+    }
+
+    @Override
+    public AbstractConfigObject withFallbacks(ConfigValue... others) {
+        return (AbstractConfigObject) super.withFallbacks(others);
     }
 
     @Override
@@ -291,7 +301,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     @Override
     AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
             final int depth,
-            final boolean withFallbacks) {
+            final ConfigResolveOptions options) {
         if (resolveStatus() == ResolveStatus.RESOLVED)
             return this;
 
@@ -299,7 +309,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
             @Override
             public AbstractConfigValue modifyChild(AbstractConfigValue v) {
-                return resolver.resolve(v, depth, withFallbacks);
+                return resolver.resolve(v, depth, options);
             }
 
         }, ResolveStatus.RESOLVED);

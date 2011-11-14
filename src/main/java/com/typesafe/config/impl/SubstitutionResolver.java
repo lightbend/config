@@ -4,6 +4,7 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigResolveOptions;
 
 /**
  * This exists because we have to memoize resolved substitutions as we go
@@ -21,13 +22,12 @@ final class SubstitutionResolver {
     }
 
     AbstractConfigValue resolve(AbstractConfigValue original, int depth,
-            boolean withFallbacks) {
+            ConfigResolveOptions options) {
         if (memos.containsKey(original)) {
             return memos.get(original);
         } else {
             AbstractConfigValue resolved = original.resolveSubstitutions(this,
-                    depth,
-                    withFallbacks);
+                    depth, options);
             if (resolved.resolveStatus() != ResolveStatus.RESOLVED)
                 throw new ConfigException.BugOrBroken(
                         "resolveSubstitutions() did not give us a resolved object");
@@ -40,19 +40,9 @@ final class SubstitutionResolver {
         return this.root;
     }
 
-    private static AbstractConfigValue resolve(AbstractConfigValue value,
-            AbstractConfigObject root, boolean withFallbacks) {
-        SubstitutionResolver resolver = new SubstitutionResolver(root);
-        return resolver.resolve(value, 0, withFallbacks);
-    }
-
     static AbstractConfigValue resolve(AbstractConfigValue value,
-            AbstractConfigObject root) {
-        return resolve(value, root, true /* withFallbacks */);
-    }
-
-    static AbstractConfigValue resolveWithoutFallbacks(
-            AbstractConfigValue value, AbstractConfigObject root) {
-        return resolve(value, root, false /* withFallbacks */);
+            AbstractConfigObject root, ConfigResolveOptions options) {
+        SubstitutionResolver resolver = new SubstitutionResolver(root);
+        return resolver.resolve(value, 0, options);
     }
 }

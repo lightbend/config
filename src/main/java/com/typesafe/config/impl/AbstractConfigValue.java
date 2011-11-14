@@ -1,6 +1,7 @@
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 abstract class AbstractConfigValue implements ConfigValue {
@@ -24,13 +25,13 @@ abstract class AbstractConfigValue implements ConfigValue {
      * @param depth
      *            the number of substitutions followed in resolving the current
      *            one
-     * @param withFallbacks
+     * @param options
      *            whether to look at system props and env vars
      * @return a new value if there were changes, or this if no changes
      */
     AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
             int depth,
-            boolean withFallbacks) {
+            ConfigResolveOptions options) {
         return this;
     }
 
@@ -61,6 +62,15 @@ abstract class AbstractConfigValue implements ConfigValue {
     @Override
     public AbstractConfigValue withFallback(ConfigValue other) {
         return this;
+    }
+
+    @Override
+    public AbstractConfigValue withFallbacks(ConfigValue... fallbacks) {
+        AbstractConfigValue merged = this;
+        for (ConfigValue f : fallbacks) {
+            merged = merged.withFallback(f);
+        }
+        return merged;
     }
 
     AbstractConfigValue transformed(ConfigTransformer transformer) {

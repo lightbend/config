@@ -1,15 +1,8 @@
 package com.typesafe.config.impl;
 
-import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,94 +15,52 @@ import java.util.Stack;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValueType;
 
 final class Parser {
-    /**
-     * Parses an input stream, which must be in UTF-8 encoding and should not be
-     * buffered because we'll use a BufferedReader instead. Does not close the
-     * stream; you have to arrange to do that yourself.
-     */
-    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            InputStream input, IncludeHandler includer) {
-        try {
-            // well, this is messed up. If we aren't going to close
-            // the passed-in InputStream then we have no way to
-            // close these readers. So maybe we should not have an
-            // InputStream version, only a Reader version.
-            Reader reader = new InputStreamReader(input, "UTF-8");
-            reader = new BufferedReader(reader);
-            return parse(flavor, origin, reader,
-                    includer);
-        } catch (UnsupportedEncodingException e) {
-            throw new ConfigException.BugOrBroken(
-                    "Java runtime does not support UTF-8", e);
+
+    static AbstractConfigValue parse(Parseable input, ConfigOrigin origin,
+            ConfigParseOptions options) {
+        return parse(input, origin, options, ConfigImpl.defaultIncluder());
+    }
+
+    static AbstractConfigValue parse(Parseable input, ConfigOrigin origin,
+            ConfigParseOptions baseOptions, IncludeHandler includer) {
+        ConfigSyntax syntax = baseOptions.getSyntax();
+        if (syntax == null) {
+            syntax = input.guessSyntax();
         }
-    }
-
-    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            Reader input, IncludeHandler includer) {
-        Iterator<Token> tokens = Tokenizer.tokenize(origin, input, flavor);
-        return parse(flavor, origin, tokens, includer);
-    }
-
-    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            String input, IncludeHandler includer) {
-        return parse(flavor, origin, new StringReader(input), includer);
-    }
-
-    private static SyntaxFlavor flavorFromExtension(String name,
-            ConfigOrigin origin) {
-        if (name.endsWith(".json"))
-            return SyntaxFlavor.JSON;
-        else if (name.endsWith(".conf"))
-            return SyntaxFlavor.CONF;
-        else
-            throw new ConfigException.IO(origin, "Unknown filename extension");
-    }
-
-    static AbstractConfigValue parse(File f, IncludeHandler includer) {
-        return parse(null, f, includer);
-    }
-
-    static AbstractConfigValue parse(SyntaxFlavor flavor, File f,
-            IncludeHandler includer) {
-        ConfigOrigin origin = new SimpleConfigOrigin(f.getPath());
-        try {
-            return parse(flavor, origin, f.toURI().toURL(), includer);
-        } catch (MalformedURLException e) {
-            throw new ConfigException.IO(origin,
-                    "failed to create url from file path", e);
+        if (syntax == null) {
+            syntax = ConfigSyntax.CONF;
         }
-    }
+        ConfigParseOptions options = baseOptions.setSyntax(syntax);
 
-    static AbstractConfigValue parse(URL url, IncludeHandler includer) {
-        return parse(null, url, includer);
-    }
-
-    static AbstractConfigValue parse(SyntaxFlavor flavor, URL url,
-            IncludeHandler includer) {
-        ConfigOrigin origin = new SimpleConfigOrigin(url.toExternalForm());
-        return parse(flavor, origin, url, includer);
-    }
-
-    static AbstractConfigValue parse(SyntaxFlavor flavor, ConfigOrigin origin,
-            URL url, IncludeHandler includer) {
-        AbstractConfigValue result = null;
         try {
-            InputStream stream = url.openStream();
+            Reader reader = input.reader();
             try {
-                result = parse(
-                        flavor != null ? flavor : flavorFromExtension(
-                                url.getPath(), origin), origin, stream,
-                        includer);
+                Iterator<Token> tokens = Tokenizer.tokenize(origin, reader,
+                        syntax);
+                return parse(tokens, origin, options, includer);
             } finally {
-                stream.close();
+                reader.close();
             }
         } catch (IOException e) {
-            throw new ConfigException.IO(origin, "failed to read url", e);
+            if (options.getAllowMissing()) {
+                return SimpleConfigObject.emptyMissing(origin);
+            } else {
+                throw new ConfigException.IO(origin, e.getMessage(), e);
+            }
         }
-        return result;
+    }
+
+    private static AbstractConfigValue parse(Iterator<Token> tokens,
+            ConfigOrigin origin, ConfigParseOptions options,
+            IncludeHandler includer) {
+        ParseContext context = new ParseContext(options.getSyntax(), origin,
+                tokens, includer);
+        return context.parse();
     }
 
     static private final class ParseContext {
@@ -117,11 +68,11 @@ final class Parser {
         final private Stack<Token> buffer;
         final private Iterator<Token> tokens;
         final private IncludeHandler includer;
-        final private SyntaxFlavor flavor;
+        final private ConfigSyntax flavor;
         final private ConfigOrigin baseOrigin;
         final private LinkedList<Path> pathStack;
 
-        ParseContext(SyntaxFlavor flavor, ConfigOrigin origin,
+        ParseContext(ConfigSyntax flavor, ConfigOrigin origin,
                 Iterator<Token> tokens, IncludeHandler includer) {
             lineNumber = 0;
             buffer = new Stack<Token>();
@@ -140,7 +91,7 @@ final class Parser {
                 t = buffer.pop();
             }
 
-            if (flavor == SyntaxFlavor.JSON) {
+            if (flavor == ConfigSyntax.JSON) {
                 if (Tokens.isUnquotedText(t)) {
                     throw parseError("Token not allowed in valid JSON: '"
                         + Tokens.getUnquotedText(t) + "'");
@@ -172,7 +123,7 @@ final class Parser {
         // either a newline or a comma. The iterator
         // is left just after the comma or the newline.
         private boolean checkElementSeparator() {
-            if (flavor == SyntaxFlavor.JSON) {
+            if (flavor == ConfigSyntax.JSON) {
                 Token t = nextTokenIgnoringNewline();
                 if (t == Tokens.COMMA) {
                     return true;
@@ -206,7 +157,7 @@ final class Parser {
         // value.
         private void consolidateValueTokens() {
             // this trick is not done in JSON
-            if (flavor == SyntaxFlavor.JSON)
+            if (flavor == ConfigSyntax.JSON)
                 return;
 
             List<Token> values = null; // create only if we have value tokens
@@ -351,7 +302,7 @@ final class Parser {
         }
 
         private Path parseKey(Token token) {
-            if (flavor == SyntaxFlavor.JSON) {
+            if (flavor == ConfigSyntax.JSON) {
                 if (Tokens.isValueWithType(token, ConfigValueType.STRING)) {
                     String key = (String) Tokens.getValue(token).unwrapped();
                     return Path.newKey(key);
@@ -422,7 +373,7 @@ final class Parser {
         }
 
         private boolean isKeyValueSeparatorToken(Token t) {
-            if (flavor == SyntaxFlavor.JSON) {
+            if (flavor == ConfigSyntax.JSON) {
                 return t == Tokens.COLON;
             } else {
                 return t == Tokens.COLON || t == Tokens.EQUALS;
@@ -437,7 +388,7 @@ final class Parser {
             while (true) {
                 Token t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_CURLY) {
-                    if (flavor == SyntaxFlavor.JSON && afterComma) {
+                    if (flavor == ConfigSyntax.JSON && afterComma) {
                         throw parseError("expecting a field name after comma, got a close brace }");
                     } else if (!hadOpenCurly) {
                         throw parseError("unbalanced close brace '}' with no open brace");
@@ -446,7 +397,7 @@ final class Parser {
                 } else if (t == Tokens.END && !hadOpenCurly) {
                     putBack(t);
                     break;
-                } else if (flavor != SyntaxFlavor.JSON && isIncludeKeyword(t)) {
+                } else if (flavor != ConfigSyntax.JSON && isIncludeKeyword(t)) {
                     parseInclude(values);
 
                     afterComma = false;
@@ -459,7 +410,7 @@ final class Parser {
 
                     Token valueToken;
                     AbstractConfigValue newValue;
-                    if (flavor == SyntaxFlavor.CONF
+                    if (flavor == ConfigSyntax.CONF
                             && afterKey == Tokens.OPEN_CURLY) {
                         // can omit the ':' or '=' before an object value
                         valueToken = afterKey;
@@ -488,7 +439,7 @@ final class Parser {
                             // if the value is an object (or substitution that
                             // could become an object).
 
-                            if (flavor == SyntaxFlavor.JSON) {
+                            if (flavor == ConfigSyntax.JSON) {
                                 throw parseError("JSON does not allow duplicate fields: '"
                                     + key
                                     + "' was already seen at "
@@ -499,7 +450,7 @@ final class Parser {
                         }
                         values.put(key, newValue);
                     } else {
-                        if (flavor == SyntaxFlavor.JSON) {
+                        if (flavor == ConfigSyntax.JSON) {
                             throw new ConfigException.BugOrBroken(
                                     "somehow got multi-element path in JSON mode");
                         }
@@ -593,7 +544,7 @@ final class Parser {
                     values.add(parseObject(true));
                 } else if (t == Tokens.OPEN_SQUARE) {
                     values.add(parseArray());
-                } else if (flavor != SyntaxFlavor.JSON
+                } else if (flavor != ConfigSyntax.JSON
                         && t == Tokens.CLOSE_SQUARE) {
                     // we allow one trailing comma
                     putBack(t);
@@ -620,7 +571,7 @@ final class Parser {
             } else if (t == Tokens.OPEN_SQUARE) {
                 result = parseArray();
             } else {
-                if (flavor == SyntaxFlavor.JSON) {
+                if (flavor == ConfigSyntax.JSON) {
                     if (t == Tokens.END) {
                         throw parseError("Empty document");
                     } else {
@@ -644,13 +595,6 @@ final class Parser {
                         + t);
             }
         }
-    }
-
-    private static AbstractConfigValue parse(SyntaxFlavor flavor,
-            ConfigOrigin origin, Iterator<Token> tokens, IncludeHandler includer) {
-        ParseContext context = new ParseContext(flavor, origin, tokens,
-                includer);
-        return context.parse();
     }
 
     static class Element {
@@ -762,7 +706,7 @@ final class Parser {
 
         try {
             Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader,
-                    SyntaxFlavor.CONF);
+                    ConfigSyntax.CONF);
             tokens.next(); // drop START
             return parsePathExpression(tokens, apiOrigin);
         } finally {

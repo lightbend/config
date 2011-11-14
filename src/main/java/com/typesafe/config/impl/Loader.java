@@ -14,7 +14,13 @@ import java.util.Properties;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigParseOptions;
 
+/**
+ * FIXME this file needs to die; the load() part should use the code in
+ * ConfigImpl instead and the properties stuff should be in its own file.
+ * 
+ */
 final class Loader {
     static AbstractConfigObject load(String name, IncludeHandler includer) {
         List<AbstractConfigObject> stack = new ArrayList<AbstractConfigObject>();
@@ -65,7 +71,10 @@ final class Loader {
             }
             return fromProperties(url.toExternalForm(), props);
         } else {
-            return forceParsedToObject(Parser.parse(url, includer));
+            return forceParsedToObject(Parser.parse(Parseable.newURL(url),
+                    new SimpleConfigOrigin(url.toExternalForm()),
+                    ConfigParseOptions.defaults(),
+                    includer));
         }
     }
 

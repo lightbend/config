@@ -75,7 +75,7 @@ class ConfigValueTest extends TestUtils {
         checkNotEqualObjects(a, c)
         checkNotEqualObjects(b, c)
 
-        val root = a.asRoot()
+        val root = a.asRoot(path("foo"))
         checkEqualObjects(a, root)
         checkNotEqualObjects(root, b)
         checkNotEqualObjects(root, c)

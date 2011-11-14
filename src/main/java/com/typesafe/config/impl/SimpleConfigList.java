@@ -9,6 +9,7 @@ import java.util.ListIterator;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -84,14 +85,14 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
 
     @Override
     SimpleConfigList resolveSubstitutions(final SubstitutionResolver resolver,
-            final int depth, final boolean withFallbacks) {
+            final int depth, final ConfigResolveOptions options) {
         if (resolved)
             return this;
 
         return modify(new Modifier() {
             @Override
             public AbstractConfigValue modifyChild(AbstractConfigValue v) {
-                return resolver.resolve(v, depth, withFallbacks);
+                return resolver.resolve(v, depth, options);
             }
 
         }, ResolveStatus.RESOLVED);

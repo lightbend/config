@@ -30,6 +30,14 @@ abstract class DelegatingConfigObject extends AbstractConfigObject {
     }
 
     @Override
+    final protected ConfigRootImpl asRoot(Path rootPath) {
+        return asRoot(underlying, rootPath);
+    }
+
+    protected abstract ConfigRootImpl asRoot(AbstractConfigObject underlying,
+            Path rootPath);
+
+    @Override
     public boolean containsKey(Object key) {
         return underlying.containsKey(key);
     }
@@ -52,6 +60,11 @@ abstract class DelegatingConfigObject extends AbstractConfigObject {
     @Override
     public AbstractConfigObject withFallback(ConfigValue value) {
         return underlying.withFallback(value);
+    }
+
+    @Override
+    public AbstractConfigObject withFallbacks(ConfigValue... values) {
+        return underlying.withFallbacks(values);
     }
 
     @Override

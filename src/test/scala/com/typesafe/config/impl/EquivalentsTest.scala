@@ -34,18 +34,20 @@ class EquivalentsTest extends TestUtils {
                 // for purposes of these tests, substitutions are only
                 // against the same file's root, and without looking at
                 // system prop or env variable fallbacks.
-                SubstitutionResolver.resolveWithoutFallbacks(v, v)
+                SubstitutionResolver.resolve(v, v, ConfigResolveOptions.noSystem())
             case v =>
                 v
         }
     }
 
-    private def parse(flavor: SyntaxFlavor, f: File) = {
-        postParse(Parser.parse(flavor, f, includer()))
+    private def parse(flavor: ConfigSyntax, f: File) = {
+        val options = ConfigParseOptions.defaults().setSyntax(flavor)
+        postParse(Config.parse(f, options))
     }
 
     private def parse(f: File) = {
-        postParse(Parser.parse(f, includer()))
+        val options = ConfigParseOptions.defaults()
+        postParse(Config.parse(f, options))
     }
 
     // would like each "equivNN" directory to be a suite and each file in the dir
@@ -75,7 +77,7 @@ class EquivalentsTest extends TestUtils {
                 // check that all .json files can be parsed as .conf,
                 // i.e. .conf must be a superset of JSON
                 if (testFile.getName().endsWith(".json")) {
-                    val parsedAsConf = parse(SyntaxFlavor.CONF, testFile)
+                    val parsedAsConf = parse(ConfigSyntax.CONF, testFile)
                     describeFailure(testFile.getPath() + " parsed as .conf") {
                         assertEquals(original, parsedAsConf)
                     }

@@ -8,6 +8,7 @@ import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigException
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
+import com.typesafe.config.ConfigResolveOptions
 
 class ConfigTest extends TestUtils {
 
@@ -212,13 +213,17 @@ class ConfigTest extends TestUtils {
         }
     }
 
+    private def resolveNoSystem(v: AbstractConfigValue, root: AbstractConfigObject) = {
+        SubstitutionResolver.resolve(v, root, ConfigResolveOptions.noSystem())
+    }
+
     @Test
     def mergeSubstitutedValues() {
         val obj1 = parseObject("""{ "a" : { "x" : 1, "z" : 4 }, "c" : ${a} }""")
         val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
 
         val merged = merge(obj1, obj2)
-        val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+        val resolved = resolveNoSystem(merged, merged) match {
             case x: ConfigObject => x
         }
 
@@ -234,7 +239,7 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
 
         val merged = merge(obj1, obj2)
-        val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+        val resolved = resolveNoSystem(merged, merged) match {
             case x: ConfigObject => x
         }
 
@@ -243,7 +248,7 @@ class ConfigTest extends TestUtils {
         assertEquals(42, resolved.getInt("c.z"))
 
         val merged2 = merge(obj2, obj1)
-        val resolved2 = SubstitutionResolver.resolveWithoutFallbacks(merged2, merged2) match {
+        val resolved2 = resolveNoSystem(merged2, merged2) match {
             case x: ConfigObject => x
         }
 
@@ -268,13 +273,13 @@ class ConfigTest extends TestUtils {
         // that's been overridden, and thus not end up with a cycle as long
         // as we override the problematic link in the cycle.
         val e = intercept[ConfigException.BadValue] {
-            val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), cycleObject)
+            val v = resolveNoSystem(subst("foo"), cycleObject)
         }
         assertTrue(e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : 57 } } } """)
         val merged = merge(fixUpCycle, cycleObject)
-        val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), merged)
+        val v = resolveNoSystem(subst("foo"), merged)
         assertEquals(intValue(57), v);
     }
 
@@ -284,14 +289,14 @@ class ConfigTest extends TestUtils {
         // we have to evaluate the substitution to see if it's an object to merge,
         // so we don't avoid the cycle.
         val e = intercept[ConfigException.BadValue] {
-            val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), cycleObject)
+            val v = resolveNoSystem(subst("foo"), cycleObject)
         }
         assertTrue(e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : { "q" : "u" } } } } """)
         val merged = merge(fixUpCycle, cycleObject)
         val e2 = intercept[ConfigException.BadValue] {
-            val v = SubstitutionResolver.resolveWithoutFallbacks(subst("foo"), merged)
+            val v = resolveNoSystem(subst("foo"), merged)
         }
         assertTrue(e2.getMessage().contains("cycle"))
     }
@@ -303,7 +308,7 @@ class ConfigTest extends TestUtils {
         val obj3 = parseObject("""{ "c" : { "z" : 3, "q" : 6 }, "j" : ${c} }""")
 
         associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
-            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+            val resolved = resolveNoSystem(merged, merged) match {
                 case x: ConfigObject => x
             }
 
@@ -322,7 +327,7 @@ class ConfigTest extends TestUtils {
         val obj3 = parseObject("""{ "c" : { "z" : 3, "q" : 6 }, "j" : ${c} }""")
 
         associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
-            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+            val resolved = resolveNoSystem(merged, merged) match {
                 case x: ConfigObject => x
             }
 
@@ -340,7 +345,7 @@ class ConfigTest extends TestUtils {
         val obj3 = parseObject("""{ "c" : { "z" : 3, "q" : 6 }, "j" : ${c} }""")
 
         associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
-            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+            val resolved = resolveNoSystem(merged, merged) match {
                 case x: ConfigObject => x
             }
 
@@ -360,7 +365,7 @@ class ConfigTest extends TestUtils {
         val obj4 = parseObject("""{ "c" : { "z" : 4, "q" : 8 }, "j" : ${c} }""")
 
         associativeMerge(Seq(obj1, obj2, obj3, obj4)) { merged =>
-            val resolved = SubstitutionResolver.resolveWithoutFallbacks(merged, merged) match {
+            val resolved = resolveNoSystem(merged, merged) match {
                 case x: ConfigObject => x
             }
 
