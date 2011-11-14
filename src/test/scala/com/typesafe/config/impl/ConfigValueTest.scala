@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigValueType
+import com.typesafe.config.ConfigOrigin
 
 class ConfigValueTest extends TestUtils {
 
@@ -329,5 +330,32 @@ class ConfigValueTest extends TestUtils {
         val obj2 = parseObject("{ a : xx " + a + " yy, b : xx " + b + " yy, c : xx " + c + " yy, d : xx " + d + " yy}")
         assertEquals(Seq(a, b, c, d) map { "xx " + _ + " yy" },
             Seq("a", "b", "c", "d") map { obj2.getString(_) })
+    }
+
+    @Test
+    def mergeOriginsWorks() {
+        def o(desc: String, empty: Boolean) = {
+            val values = new java.util.HashMap[String, AbstractConfigValue]()
+            if (!empty)
+                values.put("hello", intValue(37))
+            new SimpleConfigObject(new SimpleConfigOrigin(desc), values);
+        }
+        def m(values: AbstractConfigObject*) = {
+            AbstractConfigObject.mergeOrigins(values: _*).description()
+        }
+
+        // simplest case
+        assertEquals("merge of a,b", m(o("a", false), o("b", false)))
+        // combine duplicate "merge of"
+        assertEquals("merge of a,x,y", m(o("a", false), o("merge of x,y", false)))
+        assertEquals("merge of a,b,x,y", m(o("merge of a,b", false), o("merge of x,y", false)))
+        // ignore empty objects
+        assertEquals("a", m(o("foo", true), o("a", false)))
+        // unless they are all empty, pick the first one
+        assertEquals("foo", m(o("foo", true), o("a", true)))
+        // merge just one
+        assertEquals("foo", m(o("foo", false)))
+        // merge three
+        assertEquals("merge of a,b,c", m(o("a", false), o("b", false), o("c", false)))
     }
 }

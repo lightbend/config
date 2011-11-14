@@ -69,6 +69,10 @@ public final class Config {
         return ConfigImpl.emptyRoot(rootPath);
     }
 
+    public static ConfigObject empty() {
+        return ConfigImpl.empty();
+    }
+
     public static ConfigRoot systemPropertiesRoot(String rootPath) {
         return ConfigImpl.systemPropertiesRoot(rootPath);
     }

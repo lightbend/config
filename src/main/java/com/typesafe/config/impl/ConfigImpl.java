@@ -160,7 +160,13 @@ public class ConfigImpl {
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigRoot emptyRoot(String rootPath) {
-        return SimpleConfigObject.empty().asRoot(Parser.parsePath(rootPath));
+        return SimpleConfigObject.empty(new SimpleConfigOrigin(rootPath))
+                .asRoot(
+                Parser.parsePath(rootPath));
+    }
+
+    public static ConfigObject empty() {
+        return SimpleConfigObject.empty();
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
