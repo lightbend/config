@@ -1,7 +1,5 @@
 package com.typesafe.config.impl;
 
-import java.io.IOException;
-import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -14,6 +12,8 @@ import java.util.Map;
 import java.util.Stack;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigIncludeContext;
+import com.typesafe.config.ConfigIncluder;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
@@ -21,45 +21,11 @@ import com.typesafe.config.ConfigValueType;
 
 final class Parser {
 
-    static AbstractConfigValue parse(Parseable input, ConfigOrigin origin,
-            ConfigParseOptions options) {
-        return parse(input, origin, options, ConfigImpl.defaultIncluder());
-    }
-
-    static AbstractConfigValue parse(Parseable input, ConfigOrigin origin,
-            ConfigParseOptions baseOptions, IncludeHandler includer) {
-        ConfigSyntax syntax = baseOptions.getSyntax();
-        if (syntax == null) {
-            syntax = input.guessSyntax();
-        }
-        if (syntax == null) {
-            syntax = ConfigSyntax.CONF;
-        }
-        ConfigParseOptions options = baseOptions.setSyntax(syntax);
-
-        try {
-            Reader reader = input.reader();
-            try {
-                Iterator<Token> tokens = Tokenizer.tokenize(origin, reader,
-                        syntax);
-                return parse(tokens, origin, options, includer);
-            } finally {
-                reader.close();
-            }
-        } catch (IOException e) {
-            if (options.getAllowMissing()) {
-                return SimpleConfigObject.emptyMissing(origin);
-            } else {
-                throw new ConfigException.IO(origin, e.getMessage(), e);
-            }
-        }
-    }
-
-    private static AbstractConfigValue parse(Iterator<Token> tokens,
+    static AbstractConfigValue parse(Iterator<Token> tokens,
             ConfigOrigin origin, ConfigParseOptions options,
-            IncludeHandler includer) {
+            ConfigIncludeContext includeContext) {
         ParseContext context = new ParseContext(options.getSyntax(), origin,
-                tokens, includer);
+                tokens, options.getIncluder(), includeContext);
         return context.parse();
     }
 
@@ -67,19 +33,22 @@ final class Parser {
         private int lineNumber;
         final private Stack<Token> buffer;
         final private Iterator<Token> tokens;
-        final private IncludeHandler includer;
+        final private ConfigIncluder includer;
+        final private ConfigIncludeContext includeContext;
         final private ConfigSyntax flavor;
         final private ConfigOrigin baseOrigin;
         final private LinkedList<Path> pathStack;
 
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin,
-                Iterator<Token> tokens, IncludeHandler includer) {
+                Iterator<Token> tokens, ConfigIncluder includer,
+                ConfigIncludeContext includeContext) {
             lineNumber = 0;
             buffer = new Stack<Token>();
             this.tokens = tokens;
             this.flavor = flavor;
             this.baseOrigin = origin;
             this.includer = includer;
+            this.includeContext = includeContext;
             this.pathStack = new LinkedList<Path>();
         }
 
@@ -349,7 +318,8 @@ final class Parser {
 
             if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
                 String name = (String) Tokens.getValue(t).unwrapped();
-                AbstractConfigObject obj = includer.include(name);
+                AbstractConfigObject obj = (AbstractConfigObject) includer
+                        .include(includeContext, name);
 
                 if (!pathStack.isEmpty()) {
                     Path prefix = new Path(pathStack);

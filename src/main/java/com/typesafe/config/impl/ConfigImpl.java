@@ -2,38 +2,65 @@ package com.typesafe.config.impl;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigIncludeContext;
+import com.typesafe.config.ConfigIncluder;
 import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigParseable;
 import com.typesafe.config.ConfigRoot;
 import com.typesafe.config.ConfigSyntax;
-import com.typesafe.config.ConfigValue;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
-    private static AbstractConfigObject forceParsedToObject(ConfigValue value) {
-        if (value instanceof AbstractConfigObject) {
-            return (AbstractConfigObject) value;
+
+    private interface NameSource {
+        ConfigParseable nameToParseable(String name);
+    }
+
+    // this function is a little tricky because there are two places we're
+    // trying to use it; for 'include "basename"' in a .conf file, and for
+    // loading app.{conf,json,properties} from classpath.
+    private static ConfigObject fromBasename(NameSource source, String name,
+            ConfigParseOptions options) {
+        ConfigObject obj;
+        if (name.endsWith(".conf") || name.endsWith(".json")
+                || name.endsWith(".properties")) {
+            ConfigParseable p = source.nameToParseable(name);
+            if (p != null) {
+                obj = p.parse(p.options().setAllowMissing(
+                        options.getAllowMissing()));
+            } else {
+                obj = SimpleConfigObject.emptyMissing(new SimpleConfigOrigin(
+                        name));
+            }
         } else {
-            throw new ConfigException.WrongType(value.origin(), "",
-                    "object at file root", value.valueType().name());
+            ConfigParseable confHandle = source.nameToParseable(name + ".conf");
+            ConfigParseable jsonHandle = source.nameToParseable(name + ".json");
+            ConfigParseable propsHandle = source.nameToParseable(name
+                    + ".properties");
+
+            if (!options.getAllowMissing() && confHandle == null
+                    && jsonHandle == null && propsHandle == null) {
+                throw new ConfigException.IO(new SimpleConfigOrigin(name),
+                        "No config files {.conf,.json,.properties} found");
+            }
+
+            obj = SimpleConfigObject.empty(new SimpleConfigOrigin(name));
+            if (confHandle != null)
+                obj = confHandle.parse(confHandle.options()
+                        .setAllowMissing(true).setSyntax(ConfigSyntax.CONF));
+            if (jsonHandle != null)
+                obj = obj.withFallback(jsonHandle.parse(jsonHandle.options()
+                        .setAllowMissing(true).setSyntax(ConfigSyntax.JSON)));
+            if (propsHandle != null)
+                obj = obj.withFallback(propsHandle.parse(propsHandle.options()
+                        .setAllowMissing(true)
+                        .setSyntax(ConfigSyntax.PROPERTIES)));
         }
-    }
 
-    static AbstractConfigValue parseValue(Parseable parseable,
-            ConfigParseOptions options) {
-        ConfigOrigin origin = new SimpleConfigOrigin(
-                options.getOriginDescription());
-        return Parser.parse(parseable, origin, options);
-    }
-
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject parse(Parseable parseable,
-            ConfigParseOptions options) {
-        return forceParsedToObject(parseValue(parseable, options));
+        return obj;
     }
 
     private static String makeResourceBasename(Path path) {
@@ -54,108 +81,19 @@ public class ConfigImpl {
         return sb.toString();
     }
 
-    // ConfigParseOptions has a package-private method for this but I don't want
-    // to make it public
-    static ConfigOrigin originWithSuffix(ConfigParseOptions options,
-            String suffix) {
-        return new SimpleConfigOrigin(options.getOriginDescription() + suffix);
-    }
-
-    static String syntaxSuffix(ConfigSyntax syntax) {
-        switch (syntax) {
-        case PROPERTIES:
-            return ".properties";
-        case CONF:
-            return ".conf";
-        case JSON:
-            return ".json";
-        }
-        throw new ConfigException.BugOrBroken("not a valid ConfigSyntax: "
-                + syntax);
-    }
-
-    static AbstractConfigObject loadForResource(Class<?> loadClass,
-            String basename, ConfigSyntax syntax, ConfigParseOptions options) {
-        String suffix = syntaxSuffix(syntax);
-        String resource = basename + suffix;
-
-        // we want null rather than empty object if missingness is allowed,
-        // so we can handle it.
-        if (options.getAllowMissing()
-                && loadClass.getResource(resource) == null) {
-            return null;
-        } else {
-            return forceParsedToObject(Parser.parse(
-                    Parseable.newResource(loadClass, resource),
-                    originWithSuffix(options, suffix),
-                    options.setSyntax(syntax)));
-        }
-    }
-
-    static AbstractConfigObject checkAllowMissing(AbstractConfigObject obj,
-            ConfigOrigin origin, ConfigParseOptions options) {
-        if (obj == null) {
-            if (options.getAllowMissing()) {
-                return SimpleConfigObject.emptyMissing(origin);
-            } else {
-                throw new ConfigException.IO(origin,
-                        "Resource not found on classpath");
-            }
-        } else {
-            return obj;
-        }
-    }
-
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject parseResourcesForPath(String expression,
-            ConfigParseOptions baseOptions) {
+            final ConfigParseOptions baseOptions) {
         Path path = Parser.parsePath(expression);
         String basename = makeResourceBasename(path);
-
-        Class<?> loadClass = ConfigImpl.class;
-
-        ConfigParseOptions options;
-        if (baseOptions.getOriginDescription() != null)
-            options = baseOptions;
-        else
-            options = baseOptions.setOriginDescription(basename);
-
-        if (options.getSyntax() != null) {
-            ConfigSyntax syntax = options.getSyntax();
-            AbstractConfigObject obj = loadForResource(loadClass, basename,
-                    syntax, options);
-            return checkAllowMissing(obj, originWithSuffix(options, syntaxSuffix(syntax)), options);
-        } else {
-            // we want to try all three then
-
-            ConfigParseOptions allowMissing = options.setAllowMissing(true);
-            AbstractConfigObject conf = loadForResource(loadClass, basename,
-                    ConfigSyntax.CONF, allowMissing);
-            AbstractConfigObject json = loadForResource(loadClass, basename,
-                    ConfigSyntax.JSON, allowMissing);
-            AbstractConfigObject props = loadForResource(loadClass, basename,
-                    ConfigSyntax.PROPERTIES, allowMissing);
-
-            ConfigOrigin baseOrigin = new SimpleConfigOrigin(options
-                    .getOriginDescription());
-
-            if (!options.getAllowMissing() && conf == null && json == null && props == null) {
-                throw new ConfigException.IO(baseOrigin,
-                        "No config files {.conf,.json,.properties} found on classpath");
+        NameSource source = new NameSource() {
+            @Override
+            public ConfigParseable nameToParseable(String name) {
+                return Parseable.newResource(ConfigImpl.class, name,
+                        baseOptions);
             }
-
-            AbstractConfigObject merged = SimpleConfigObject
-                    .empty(baseOrigin);
-
-            if (conf != null)
-                merged = merged.withFallback(conf);
-            if (json != null)
-                merged = merged.withFallback(json);
-            if (props != null)
-                merged = merged.withFallback(props);
-
-            return merged;
-        }
+        };
+        return fromBasename(source, basename, baseOptions);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
@@ -179,13 +117,6 @@ public class ConfigImpl {
         }
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject parse(Properties properties,
-            ConfigParseOptions options) {
-        return Loader
-                .fromProperties(options.getOriginDescription(), properties);
-    }
-
     private static ConfigTransformer defaultTransformer = null;
 
     synchronized static ConfigTransformer defaultConfigTransformer() {
@@ -195,17 +126,56 @@ public class ConfigImpl {
         return defaultTransformer;
     }
 
-    private static IncludeHandler defaultIncluder = null;
+    private static class SimpleIncluder implements ConfigIncluder {
 
-    synchronized static IncludeHandler defaultIncluder() {
-        if (defaultIncluder == null) {
-            defaultIncluder = new IncludeHandler() {
+        private ConfigIncluder fallback;
 
+        SimpleIncluder(ConfigIncluder fallback) {
+            this.fallback = fallback;
+        }
+
+        @Override
+        public ConfigObject include(final ConfigIncludeContext context,
+                String name) {
+            NameSource source = new NameSource() {
                 @Override
-                public AbstractConfigObject include(String name) {
-                    return Loader.load(name, this);
+                public ConfigParseable nameToParseable(String name) {
+                    return context.relativeTo(name);
                 }
             };
+
+            ConfigObject obj = fromBasename(source, name, ConfigParseOptions
+                    .defaults().setAllowMissing(true));
+
+            // now use the fallback includer if any and merge
+            // its result.
+            if (fallback != null) {
+                return obj.withFallback(fallback.include(context, name));
+            } else {
+                return obj;
+            }
+        }
+
+        @Override
+        public ConfigIncluder withFallback(ConfigIncluder fallback) {
+            if (this == fallback) {
+                throw new ConfigException.BugOrBroken(
+                        "trying to create includer cycle");
+            } else if (this.fallback == fallback) {
+                return this;
+            } else if (this.fallback != null) {
+                return new SimpleIncluder(this.fallback.withFallback(fallback));
+            } else {
+                return new SimpleIncluder(fallback);
+            }
+        }
+    }
+
+    private static ConfigIncluder defaultIncluder = null;
+
+    synchronized static ConfigIncluder defaultIncluder() {
+        if (defaultIncluder == null) {
+            defaultIncluder = new SimpleIncluder(null);
         }
         return defaultIncluder;
     }
@@ -221,7 +191,10 @@ public class ConfigImpl {
     }
 
     private static AbstractConfigObject loadSystemProperties() {
-        return Loader.fromProperties("system property", System.getProperties());
+        return (AbstractConfigObject) Parseable.newProperties(
+                System.getProperties(),
+                ConfigParseOptions.defaults().setOriginDescription(
+                        "system properties")).parse();
     }
 
     // this is a hack to let us set system props in the test suite

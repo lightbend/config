@@ -14,7 +14,7 @@ class ConfParserTest extends TestUtils {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test conf string").
             setSyntax(ConfigSyntax.CONF);
-        ConfigImpl.parseValue(Parseable.newString(s), options);
+        Parseable.newString(s, options).parseValue().asInstanceOf[AbstractConfigValue]
     }
 
     def parse(s: String) = {

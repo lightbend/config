@@ -14,6 +14,11 @@ import com.typesafe.config.impl.Parseable;
 
 /**
  * This class holds some global static methods for the config package.
+ *
+ * The methods with "load" in the name do some sort of higher-level operation
+ * potentially parsing multiple resources and resolving substitutions, while the
+ * ones with "parse" in the name just create a ConfigValue from a resource and
+ * nothing else.
  */
 public final class Config {
 
@@ -87,33 +92,24 @@ public final class Config {
 
     public static ConfigObject parse(Properties properties,
             ConfigParseOptions options) {
-        return ConfigImpl.parse(properties,
-                options.withFallbackOriginDescription("properties"));
+        return Parseable.newProperties(properties, options).parse();
     }
 
     public static ConfigObject parse(Reader reader, ConfigParseOptions options) {
-        Parseable p = Parseable.newReader(reader);
-        return ConfigImpl.parse(p,
-                options.withFallbackOriginDescription("Reader"));
+        return Parseable.newReader(reader, options).parse();
     }
 
     public static ConfigObject parse(URL url, ConfigParseOptions options) {
-        Parseable p = Parseable.newURL(url);
-        return ConfigImpl.parse(p,
-                options.withFallbackOriginDescription(url.toExternalForm()));
+        return Parseable.newURL(url, options).parse();
     }
 
     public static ConfigObject parse(File file, ConfigParseOptions options) {
-        Parseable p = Parseable.newFile(file);
-        return ConfigImpl.parse(p,
-                options.withFallbackOriginDescription(file.getPath()));
+        return Parseable.newFile(file, options).parse();
     }
 
     public static ConfigObject parse(Class<?> klass, String resource,
             ConfigParseOptions options) {
-        Parseable p = Parseable.newResource(klass, resource);
-        return ConfigImpl.parse(p,
-                options.withFallbackOriginDescription(resource));
+        return Parseable.newResource(klass, resource, options).parse();
     }
 
     /**

@@ -15,14 +15,14 @@ class JsonTest extends TestUtils {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test json string").
             setSyntax(ConfigSyntax.JSON);
-        ConfigImpl.parseValue(Parseable.newString(s), options);
+        Parseable.newString(s, options).parseValue();
     }
 
     def parseAsConf(s: String): ConfigValue = {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test conf string").
             setSyntax(ConfigSyntax.CONF);
-        ConfigImpl.parseValue(Parseable.newString(s), options);
+        Parseable.newString(s, options).parseValue();
     }
 
     private[this] def toLift(value: ConfigValue): lift.JValue = {
