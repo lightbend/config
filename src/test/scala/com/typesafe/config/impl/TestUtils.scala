@@ -232,6 +232,8 @@ abstract trait TestUtils {
         "{ include\"foo\" }", // include with no whitespace after it
         "[ include ]", // include can be a string value in an array
         "{ foo : include }", // include can be a field value also
+        "{ include \"foo\", \"a\" : \"b\" }", // valid include followed by comma and field
+        "{ foo include : 42 }", // valid to have a key not starting with include
         "[ ${foo} ]",
         "[ ${\"foo\"} ]",
         "[ ${foo.bar} ]",
