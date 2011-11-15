@@ -247,8 +247,10 @@ public final class Config {
      * Parses a memory-size string. If no units are specified in the string, it
      * is assumed to be in bytes. The returned value is in bytes. The purpose of
      * this function is to implement the memory-size-related methods in the
-     * ConfigObject interface.
-     *
+     * ConfigObject interface. The units parsed are interpreted as powers of
+     * two, that is, the convention for memory rather than the convention for
+     * disk space.
+     * 
      * @param input
      *            the string to parse
      * @param originForException
@@ -259,7 +261,7 @@ public final class Config {
      * @throws ConfigException
      *             if string is invalid
      */
-    public static long parseMemorySize(String input,
+    public static long parseMemorySizeInBytes(String input,
             ConfigOrigin originForException, String pathForException) {
         String s = ConfigUtil.unicodeTrim(input);
         String unitStringMaybePlural = getUnits(s);

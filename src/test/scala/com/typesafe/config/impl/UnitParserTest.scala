@@ -38,7 +38,7 @@ class UnitParserTest extends TestUtils {
     }
 
     @Test
-    def parseMemorySize() {
+    def parseMemorySizeInBytes() {
         val oneMegs = List("1048576", "1048576b", "1048576bytes", "1048576byte",
             "1048576  b", "1048576  bytes",
             "    1048576  b   ", "  1048576  bytes   ",
@@ -47,7 +47,7 @@ class UnitParserTest extends TestUtils {
             "1m", "1M", "1 M", "1 megabytes", "1 megabyte",
             "0.0009765625g", "0.0009765625G", "0.0009765625 gigabytes", "0.0009765625 gigabyte")
 
-        def parseMem(s: String) = Config.parseMemorySize(s, fakeOrigin(), "test")
+        def parseMem(s: String) = Config.parseMemorySizeInBytes(s, fakeOrigin(), "test")
 
         for (s <- oneMegs) {
             val result = parseMem(s)
@@ -61,13 +61,13 @@ class UnitParserTest extends TestUtils {
 
         // bad units
         val e = intercept[ConfigException.BadValue] {
-            Config.parseMemorySize("100 dollars", fakeOrigin(), "test")
+            Config.parseMemorySizeInBytes("100 dollars", fakeOrigin(), "test")
         }
         assertTrue(e.getMessage().contains("size unit"))
 
         // bad number
         val e2 = intercept[ConfigException.BadValue] {
-            Config.parseMemorySize("1 00 bytes", fakeOrigin(), "test")
+            Config.parseMemorySizeInBytes("1 00 bytes", fakeOrigin(), "test")
         }
         assertTrue(e2.getMessage().contains("size number"))
     }

@@ -414,13 +414,13 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public Long getMemorySize(String path) {
+    public Long getMemorySizeInBytes(String path) {
         Long size = null;
         try {
             size = getLong(path);
         } catch (ConfigException.WrongType e) {
             ConfigValue v = find(path, ConfigValueType.STRING, path);
-            size = Config.parseMemorySize((String) v.unwrapped(), v.origin(),
+            size = Config.parseMemorySizeInBytes((String) v.unwrapped(), v.origin(),
                     path);
         }
         return size;
@@ -534,7 +534,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public List<Long> getMemorySizeList(String path) {
+    public List<Long> getMemorySizeInBytesList(String path) {
         List<Long> l = new ArrayList<Long>();
         List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
@@ -542,7 +542,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                 l.add(((Number) v.unwrapped()).longValue());
             } else if (v.valueType() == ConfigValueType.STRING) {
                 String s = (String) v.unwrapped();
-                Long n = Config.parseMemorySize(s, v.origin(), path);
+                Long n = Config.parseMemorySizeInBytes(s, v.origin(), path);
                 l.add(n);
             } else {
                 throw new ConfigException.WrongType(v.origin(), path,

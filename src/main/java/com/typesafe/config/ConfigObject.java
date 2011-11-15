@@ -68,10 +68,12 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
      */
     ConfigValue getValue(String path);
 
-    /** Get value as a size in bytes (parses special strings like "128M") */
-    // rename getSizeInBytes ? clearer. allows a megabyte version
-    // or just getBytes is consistent with getMilliseconds
-    Long getMemorySize(String path);
+    /**
+     * Get value as a size in bytes (parses special strings like "128M"). The
+     * size units are interpreted as for memory, not as for disk space, so they
+     * are in powers of two.
+     */
+    Long getMemorySizeInBytes(String path);
 
     /**
      * Get value as a duration in milliseconds. If the value is already a
@@ -114,7 +116,7 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
     List<? extends Object> getAnyRefList(String path);
 
-    List<Long> getMemorySizeList(String path);
+    List<Long> getMemorySizeInBytesList(String path);
 
     List<Long> getMillisecondsList(String path);
 
