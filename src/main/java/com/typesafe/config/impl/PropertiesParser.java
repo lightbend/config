@@ -4,13 +4,15 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 
-import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
 final class PropertiesParser {
@@ -21,18 +23,7 @@ final class PropertiesParser {
         return fromProperties(origin, props);
     }
 
-    static void verifyPath(String path) {
-        if (path.startsWith("."))
-            throw new ConfigException.BadPath(path, "Path starts with '.'");
-        if (path.endsWith("."))
-            throw new ConfigException.BadPath(path, "Path ends with '.'");
-        if (path.contains(".."))
-            throw new ConfigException.BadPath(path,
-                    "Path contains '..' (empty element)");
-    }
-
     static String lastElement(String path) {
-        verifyPath(path);
         int i = path.lastIndexOf('.');
         if (i < 0)
             return path;
@@ -41,7 +32,6 @@ final class PropertiesParser {
     }
 
     static String exceptLastElement(String path) {
-        verifyPath(path);
         int i = path.lastIndexOf('.');
         if (i < 0)
             return null;
@@ -51,67 +41,86 @@ final class PropertiesParser {
 
     static AbstractConfigObject fromProperties(ConfigOrigin origin,
             Properties props) {
-        Map<String, Map<String, AbstractConfigValue>> scopes = new HashMap<String, Map<String, AbstractConfigValue>>();
+        /*
+         * First, build a list of paths that will have values, either strings or
+         * objects.
+         */
+        Set<String> scopePaths = new HashSet<String>();
+        Set<String> valuePaths = new HashSet<String>();
         Enumeration<?> i = props.propertyNames();
         while (i.hasMoreElements()) {
             Object o = i.nextElement();
             if (o instanceof String) {
-                try {
-                    String path = (String) o;
-                    String last = lastElement(path);
-                    String exceptLast = exceptLastElement(path);
-                    if (exceptLast == null)
-                        exceptLast = "";
-                    Map<String, AbstractConfigValue> scope = scopes
-                            .get(exceptLast);
-                    if (scope == null) {
-                        scope = new HashMap<String, AbstractConfigValue>();
-                        scopes.put(exceptLast, scope);
-                    }
-                    String value = props.getProperty(path);
-                    scope.put(last, new ConfigString(origin, value));
-                } catch (ConfigException.BadPath e) {
-                    // just skip this one (log it?)
+                // add value's path
+                String path = (String) o;
+                valuePaths.add(path);
+
+                // all parent paths are objects
+                String next = exceptLastElement(path);
+                while (next != null) {
+                    scopePaths.add(next);
+                    next = exceptLastElement(next);
                 }
             }
         }
 
-        // pull out the list of objects that go inside other objects
-        List<String> childPaths = new ArrayList<String>();
-        for (String path : scopes.keySet()) {
-            if (path != "")
-                childPaths.add(path);
+        /*
+         * If any string values are also objects containing other values, drop
+         * those string values - objects "win".
+         */
+        valuePaths.removeAll(scopePaths);
+
+        /*
+         * Create maps for the object-valued values.
+         */
+        Map<String, AbstractConfigValue> root = new HashMap<String, AbstractConfigValue>();
+        Map<String, Map<String, AbstractConfigValue>> scopes = new HashMap<String, Map<String, AbstractConfigValue>>();
+
+        for (String path : scopePaths) {
+            Map<String, AbstractConfigValue> scope = new HashMap<String, AbstractConfigValue>();
+            scopes.put(path, scope);
         }
 
-        // put everything in its parent, ensuring all parents exist
-        for (String path : childPaths) {
+        /* Store string values in the associated scope maps */
+        for (String path : valuePaths) {
             String parentPath = exceptLastElement(path);
-            if (parentPath == null)
-                parentPath = "";
+            Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
+                    .get(parentPath) : root;
 
-            Map<String, AbstractConfigValue> parent = scopes.get(parentPath);
-            if (parent == null) {
-                parent = new HashMap<String, AbstractConfigValue>();
-                scopes.put(parentPath, parent);
-            }
-            // NOTE: we are evil and cheating, we mutate the map we
-            // provide to SimpleConfigObject, which is not allowed by
-            // its contract, but since we know nobody has a ref to this
-            // SimpleConfigObject yet we can get away with it.
-            // Also we assume here that any info based on the map that
-            // SimpleConfigObject computes and caches in its constructor
-            // will not change. Basically this is a bad hack.
-            AbstractConfigObject o = new SimpleConfigObject(origin,
-                    scopes.get(path), ResolveStatus.RESOLVED);
-            String basename = lastElement(path);
-            parent.put(basename, o);
+            String last = lastElement(path);
+            String value = props.getProperty(path);
+            parent.put(last, new ConfigString(origin, value));
         }
 
-        Map<String, AbstractConfigValue> root = scopes.get("");
-        if (root == null) {
-            // this would happen only if you had no properties at all
-            // in "props"
-            root = Collections.<String, AbstractConfigValue> emptyMap();
+        /*
+         * Make a list of scope paths from longest to shortest, so children go
+         * before parents.
+         */
+        List<String> sortedScopePaths = new ArrayList<String>();
+        sortedScopePaths.addAll(scopePaths);
+        // sort descending by length
+        Collections.sort(sortedScopePaths, new Comparator<String>() {
+            @Override
+            public int compare(String a, String b) {
+                return b.length() - a.length();
+            }
+        });
+
+        /*
+         * Create ConfigObject for each scope map, working from children to
+         * parents to avoid modifying any already-created ConfigObject. This is
+         * where we need the sorted list.
+         */
+        for (String scopePath : sortedScopePaths) {
+            Map<String, AbstractConfigValue> scope = scopes.get(scopePath);
+
+            String parentPath = exceptLastElement(scopePath);
+            Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
+                    .get(parentPath) : root;
+
+            AbstractConfigObject o = new SimpleConfigObject(origin, scope,
+                    ResolveStatus.RESOLVED);
+            parent.put(lastElement(scopePath), o);
         }
 
         // return root config object
