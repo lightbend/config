@@ -46,10 +46,18 @@ class UnitParserTest extends TestUtils {
             "1024k", "1024K", "1024 kilobytes", "1024 kilobyte",
             "1m", "1M", "1 M", "1 megabytes", "1 megabyte",
             "0.0009765625g", "0.0009765625G", "0.0009765625 gigabytes", "0.0009765625 gigabyte")
+
+        def parseMem(s: String) = Config.parseMemorySize(s, fakeOrigin(), "test")
+
         for (s <- oneMegs) {
-            val result = Config.parseMemorySize(s, fakeOrigin(), "test")
+            val result = parseMem(s)
             assertEquals(1024 * 1024, result)
         }
+
+        assertEquals(1024 * 1024 * 1024 * 1024, parseMem("1t"))
+        assertEquals(1024 * 1024 * 1024 * 1024, parseMem(" 1 T "))
+        assertEquals(1024 * 1024 * 1024 * 1024, parseMem("1 terabyte"))
+        assertEquals(1024 * 1024 * 1024 * 1024, parseMem(" 1  terabytes  "))
 
         // bad units
         val e = intercept[ConfigException.BadValue] {

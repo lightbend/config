@@ -235,7 +235,7 @@ public final class Config {
 
     private static enum MemoryUnit {
         BYTES(1), KILOBYTES(1024), MEGABYTES(1024 * 1024), GIGABYTES(
-                1024 * 1024 * 1024);
+                1024 * 1024 * 1024), TERABYTES(1024 * 1024 * 1024 * 1024);
 
         int bytes;
         MemoryUnit(int bytes) {
@@ -293,10 +293,12 @@ public final class Config {
             units = MemoryUnit.MEGABYTES;
         } else if (unitStringLower.equals("g") || unitString.equals("gigabyte")) {
             units = MemoryUnit.GIGABYTES;
+        } else if (unitStringLower.equals("t") || unitString.equals("terabyte")) {
+            units = MemoryUnit.TERABYTES;
         } else {
             throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse size unit '"
-                            + unitStringMaybePlural + "' (try b, k, m, g)");
+                            + unitStringMaybePlural + "' (try b, k, m, g, t)");
         }
 
         try {
