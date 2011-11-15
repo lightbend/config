@@ -28,6 +28,7 @@ public class ConfigImpl {
         if (name.endsWith(".conf") || name.endsWith(".json")
                 || name.endsWith(".properties")) {
             ConfigParseable p = source.nameToParseable(name);
+
             if (p != null) {
                 obj = p.parse(p.options().setAllowMissing(
                         options.getAllowMissing()));
@@ -47,17 +48,30 @@ public class ConfigImpl {
                         "No config files {.conf,.json,.properties} found");
             }
 
+            ConfigSyntax syntax = options.getSyntax();
+
             obj = SimpleConfigObject.empty(new SimpleConfigOrigin(name));
-            if (confHandle != null)
+            if (confHandle != null
+                    && (syntax == null || syntax == ConfigSyntax.CONF)) {
                 obj = confHandle.parse(confHandle.options()
                         .setAllowMissing(true).setSyntax(ConfigSyntax.CONF));
-            if (jsonHandle != null)
-                obj = obj.withFallback(jsonHandle.parse(jsonHandle.options()
-                        .setAllowMissing(true).setSyntax(ConfigSyntax.JSON)));
-            if (propsHandle != null)
-                obj = obj.withFallback(propsHandle.parse(propsHandle.options()
+            }
+
+            if (jsonHandle != null
+                    && (syntax == null || syntax == ConfigSyntax.JSON)) {
+                ConfigObject parsed = jsonHandle.parse(jsonHandle
+                        .options().setAllowMissing(true)
+                        .setSyntax(ConfigSyntax.JSON));
+                obj = obj.withFallback(parsed);
+            }
+
+            if (propsHandle != null
+                    && (syntax == null || syntax == ConfigSyntax.PROPERTIES)) {
+                ConfigObject parsed = propsHandle.parse(propsHandle.options()
                         .setAllowMissing(true)
-                        .setSyntax(ConfigSyntax.PROPERTIES)));
+                        .setSyntax(ConfigSyntax.PROPERTIES));
+                obj = obj.withFallback(parsed);
+            }
         }
 
         return obj;

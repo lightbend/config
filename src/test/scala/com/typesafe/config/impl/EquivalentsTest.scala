@@ -87,8 +87,8 @@ class EquivalentsTest extends TestUtils {
 
         // This is a little "checksum" to be sure we really tested what we were expecting.
         // it breaks every time you add a file, so you have to update it.
-        assertEquals(2, dirCount)
+        assertEquals(3, dirCount)
         // this is the number of files not named original.*
-        assertEquals(12, fileCount)
+        assertEquals(13, fileCount)
     }
 }

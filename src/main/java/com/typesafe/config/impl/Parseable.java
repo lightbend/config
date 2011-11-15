@@ -200,38 +200,27 @@ public abstract class Parseable implements ConfigParseable {
         };
     }
 
-    private static URL urlParent(URL url) {
-        String path = url.getPath();
-        if (path == null)
-            return null;
-
-        File f = new File(path);
-
-        String parent = f.getParent();
-
-        try {
-            return new URL(url.getProtocol(), url.getHost(), url.getPort(),
-                    parent);
-        } catch (MalformedURLException e) {
-            return null;
-        }
-    }
-
     static URL relativeTo(URL url, String filename) {
         // I'm guessing this completely fails on Windows, help wanted
         if (new File(filename).isAbsolute())
             return null;
 
-        URL parentURL = urlParent(url);
-        if (parentURL == null)
-            return null;
         try {
-        URI parent = parentURL.toURI();
-        URI relative = new URI(null, null, "/" + filename, null);
-        return parent.relativize(relative).toURL();
+            URI siblingURI = url.toURI();
+            URI relative = new URI(filename);
+
+            // this seems wrong, but it's documented that the last
+            // element of the path in siblingURI gets stripped out,
+            // so to get something in the same directory as
+            // siblingURI we just call resolve().
+            URL resolved = siblingURI.resolve(relative).toURL();
+
+            return resolved;
         } catch (MalformedURLException e) {
             return null;
         } catch (URISyntaxException e) {
+            return null;
+        } catch (IllegalArgumentException e) {
             return null;
         }
     }
@@ -335,7 +324,10 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigParseable relativeTo(String filename) {
-            return newURL(relativeTo(input, filename), options()
+            URL url = relativeTo(input, filename);
+            if (url == null)
+                return null;
+            return newURL(url, options()
                     .setOriginDescription(null));
         }
 
@@ -382,8 +374,10 @@ public abstract class Parseable implements ConfigParseable {
         @Override
         ConfigParseable relativeTo(String filename) {
             try {
-                return newURL(relativeTo(input.toURI().toURL(), filename),
-                        options().setOriginDescription(null));
+                URL url = relativeTo(input.toURI().toURL(), filename);
+                if (url == null)
+                    return null;
+                return newURL(url, options().setOriginDescription(null));
             } catch (MalformedURLException e) {
                 return null;
             }

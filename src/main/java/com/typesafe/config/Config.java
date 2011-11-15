@@ -52,6 +52,12 @@ public final class Config {
         return loadWithoutResolving(rootPath).resolve();
     }
 
+    public static ConfigRoot load(String rootPath,
+            ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
+        return loadWithoutResolving(rootPath, parseOptions).resolve(
+                resolveOptions);
+    }
+
     /**
      * Like load() but does not resolve the object, so you can go ahead and add
      * more fallbacks and stuff and have them seen by substitutions when you do
@@ -61,11 +67,15 @@ public final class Config {
      * @return
      */
     public static ConfigRoot loadWithoutResolving(String rootPath) {
+        return loadWithoutResolving(rootPath, ConfigParseOptions.defaults());
+    }
+
+    public static ConfigRoot loadWithoutResolving(String rootPath,
+            ConfigParseOptions options) {
         ConfigRoot system = systemPropertiesRoot(rootPath);
 
-        ConfigValue mainFiles = parse(rootPath, ConfigParseOptions.defaults());
-        ConfigValue referenceFiles = parse(rootPath + ".reference",
-                ConfigParseOptions.defaults());
+        ConfigValue mainFiles = parse(rootPath, options);
+        ConfigValue referenceFiles = parse(rootPath + ".reference", options);
 
         return system.withFallbacks(mainFiles, referenceFiles);
     }
