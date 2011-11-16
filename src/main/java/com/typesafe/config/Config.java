@@ -81,12 +81,21 @@ public final class Config {
     }
 
     public static ConfigRoot emptyRoot(String rootPath) {
-        return ConfigImpl.emptyRoot(rootPath);
+        return emptyRoot(rootPath, null);
     }
 
     public static ConfigObject empty() {
-        return ConfigImpl.empty();
+        return empty(null);
     }
+
+    public static ConfigRoot emptyRoot(String rootPath, String originDescription) {
+        return ConfigImpl.emptyRoot(rootPath, originDescription);
+    }
+
+    public static ConfigObject empty(String originDescription) {
+        return ConfigImpl.empty(originDescription);
+    }
+
 
     public static ConfigRoot systemPropertiesRoot(String rootPath) {
         return ConfigImpl.systemPropertiesRoot(rootPath);
@@ -250,7 +259,7 @@ public final class Config {
      * ConfigObject interface. The units parsed are interpreted as powers of
      * two, that is, the convention for memory rather than the convention for
      * disk space.
-     * 
+     *
      * @param input
      *            the string to parse
      * @param originForException

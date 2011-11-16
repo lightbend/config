@@ -71,4 +71,13 @@ class PublicApiTest extends TestUtils {
             conf.getInt("fromProps.one")
         }
     }
+
+    @Test
+    def emptyObjects() {
+        assertEquals(0, Config.empty().size())
+        assertEquals(0, Config.empty("foo").size())
+        assertEquals("foo", Config.empty("foo").origin().description())
+        assertEquals(0, Config.emptyRoot("foo.bar").size())
+        assertEquals("foo.bar", Config.emptyRoot("foo.bar").origin().description())
+    }
 }

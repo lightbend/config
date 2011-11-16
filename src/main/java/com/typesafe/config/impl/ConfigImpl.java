@@ -111,14 +111,17 @@ public class ConfigImpl {
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigRoot emptyRoot(String rootPath) {
-        return SimpleConfigObject.empty(new SimpleConfigOrigin(rootPath))
+    public static ConfigRoot emptyRoot(String rootPath, String originDescription) {
+        String desc = originDescription != null ? originDescription : rootPath;
+        return SimpleConfigObject.empty(new SimpleConfigOrigin(desc))
                 .asRoot(
                 Parser.parsePath(rootPath));
     }
 
-    public static ConfigObject empty() {
-        return SimpleConfigObject.empty();
+    public static ConfigObject empty(String originDescription) {
+        return SimpleConfigObject
+                .empty(originDescription != null ? new SimpleConfigOrigin(
+                        originDescription) : null);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */

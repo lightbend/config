@@ -113,16 +113,20 @@ final class SimpleConfigObject extends AbstractConfigObject {
         return new HashSet<ConfigValue>(value.values());
     }
 
-    final static String EMPTY_NAME = "empty config";
+    final private static String EMPTY_NAME = "empty config";
+    final private static SimpleConfigObject emptyInstance = empty(new SimpleConfigOrigin(
+            EMPTY_NAME));
 
     final static SimpleConfigObject empty() {
-        return new SimpleConfigObject(new SimpleConfigOrigin(EMPTY_NAME),
-                Collections.<String, AbstractConfigValue> emptyMap());
+        return emptyInstance;
     }
 
     final static SimpleConfigObject empty(ConfigOrigin origin) {
-        return new SimpleConfigObject(origin,
-                Collections.<String, AbstractConfigValue> emptyMap());
+        if (origin == null)
+            return empty();
+        else
+            return new SimpleConfigObject(origin,
+                    Collections.<String, AbstractConfigValue> emptyMap());
     }
 
     final static SimpleConfigObject emptyMissing(ConfigOrigin baseOrigin) {
