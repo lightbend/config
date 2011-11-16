@@ -422,4 +422,17 @@ class ConfigValueTest extends TestUtils {
         assertEquals(Int.MaxValue + 1L, nD(Int.MaxValue + 1.0).unwrapped())
         assertEquals(Int.MinValue - 1L, nD(Int.MinValue - 1.0).unwrapped())
     }
+
+    @Test
+    def automaticBooleanConversions() {
+        val trues = parseObject("{ a=true, b=yes, c=on }")
+        assertEquals(true, trues.getBoolean("a"))
+        assertEquals(true, trues.getBoolean("b"))
+        assertEquals(true, trues.getBoolean("c"))
+
+        val falses = parseObject("{ a=false, b=no, c=off }")
+        assertEquals(false, falses.getBoolean("a"))
+        assertEquals(false, falses.getBoolean("b"))
+        assertEquals(false, falses.getBoolean("c"))
+    }
 }

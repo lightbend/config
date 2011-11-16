@@ -652,11 +652,11 @@ implementation should attempt to convert types as follows:
    representation that would be a valid number in JSON.
  - boolean to string: should become the string "true" or "false"
  - string to number: parse the number with the JSON rules
- - string to boolean: the strings "true", "yes", "false", "no"
-   should be converted to boolean values. It's tempting to
-   support a long list of other ways to write a boolean, but
-   for interoperability and keeping it simple, it's recommended to
-   stick to these four.
+ - string to boolean: the strings "true", "yes", "on", "false",
+   "no", "off" should be converted to boolean values. It's
+   tempting to support a long list of other ways to write a
+   boolean, but for interoperability and keeping it simple, it's
+   recommended to stick to these six.
  - string to null: the string `"null"` should be converted to a
    null value if the application specifically asks for a null
    value, though there's probably no reason an app would do this.
