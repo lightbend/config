@@ -21,6 +21,7 @@ class UtilTest extends TestUtils {
         assertEquals("", ConfigUtil.unicodeTrim(""))
         assertEquals("a", ConfigUtil.unicodeTrim("a"))
         assertEquals("abc", ConfigUtil.unicodeTrim("abc"))
+        assertEquals("", ConfigUtil.unicodeTrim("   \n   \n  \u00A0 "))
         assertEquals(supplementaryChars, ConfigUtil.unicodeTrim(supplementaryChars))
 
         val s = " \u00A0 \n  " + supplementaryChars + "  \n  \u00A0 "

@@ -79,7 +79,7 @@ final public class ConfigUtil {
             return s;
 
         int start = 0;
-        while (true) {
+        while (start < length) {
             char c = s.charAt(start);
             if (c == ' ' || c == '\n') {
                 start += 1;
@@ -93,7 +93,7 @@ final public class ConfigUtil {
         }
 
         int end = length;
-        while (true) {
+        while (end > start) {
             char c = s.charAt(end - 1);
             if (c == ' ' || c == '\n') {
                 --end;
