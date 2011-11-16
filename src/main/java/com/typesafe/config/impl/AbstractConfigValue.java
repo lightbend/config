@@ -4,6 +4,13 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
+/**
+ * 
+ * Trying very hard to avoid a parent reference in config values; when you have
+ * a tree like this, the availability of parent() tends to result in a lot of
+ * improperly-factored and non-modular code. Please don't add parent().
+ *
+ */
 abstract class AbstractConfigValue implements ConfigValue {
 
     final private ConfigOrigin origin;
