@@ -22,14 +22,8 @@ import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements
         ConfigObject {
-    final protected ConfigTransformer transformer;
-
-    protected AbstractConfigObject(ConfigOrigin origin,
-            ConfigTransformer transformer) {
+    protected AbstractConfigObject(ConfigOrigin origin) {
         super(origin);
-        this.transformer = transformer;
-        if (transformer == null)
-            throw new ConfigException.BugOrBroken("null transformer");
     }
 
     /**
@@ -128,34 +122,23 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return peeked != null && peeked.valueType() != ConfigValueType.NULL;
     }
 
-    @Override
-    AbstractConfigObject transformed(ConfigTransformer newTransformer) {
-        if (newTransformer != transformer)
-            return newCopy(newTransformer, resolveStatus());
-        else
-            return this;
-    }
-
-    protected abstract AbstractConfigObject newCopy(
-            ConfigTransformer newTransformer, ResolveStatus status);
+    protected abstract AbstractConfigObject newCopy(ResolveStatus status);
 
     static private AbstractConfigValue resolve(AbstractConfigObject self,
-            String pathExpression,
-            ConfigValueType expected, ConfigTransformer transformer,
+            String pathExpression, ConfigValueType expected,
             String originalPath) {
         Path path = Path.newPath(pathExpression);
-        return find(self, path, expected, transformer, originalPath);
+        return find(self, path, expected, originalPath);
     }
 
     static private AbstractConfigValue findKey(AbstractConfigObject self,
-            String key, ConfigValueType expected,
-            ConfigTransformer transformer, String originalPath) {
+            String key, ConfigValueType expected, String originalPath) {
         AbstractConfigValue v = self.peek(key);
         if (v == null)
             throw new ConfigException.Missing(originalPath);
 
-        if (expected != null && transformer != null)
-            v = transformer.transform(v, expected);
+        if (expected != null)
+            v = DefaultTransformer.transform(v, expected);
 
         if (v.valueType() == ConfigValueType.NULL)
             throw new ConfigException.Null(v.origin(), originalPath,
@@ -168,24 +151,24 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     static private AbstractConfigValue find(AbstractConfigObject self,
-            Path path, ConfigValueType expected, ConfigTransformer transformer,
+            Path path, ConfigValueType expected,
             String originalPath) {
         String key = path.first();
         Path next = path.remainder();
         if (next == null) {
-            return findKey(self, key, expected, transformer, originalPath);
+            return findKey(self, key, expected, originalPath);
         } else {
-            AbstractConfigObject o = (AbstractConfigObject) findKey(self,
-                    key, ConfigValueType.OBJECT, transformer, originalPath);
+            AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
+                    ConfigValueType.OBJECT, originalPath);
             assert (o != null); // missing was supposed to throw
-            return find(o, next, expected, transformer, originalPath);
+            return find(o, next, expected, originalPath);
         }
     }
 
     AbstractConfigValue find(String pathExpression,
             ConfigValueType expected,
             String originalPath) {
-        return resolve(this, pathExpression, expected, transformer,
+        return resolve(this, pathExpression, expected,
                 originalPath);
     }
 
@@ -311,7 +294,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             }
         }
         if (changes == null) {
-            return newCopy(transformer, newResolveStatus);
+            return newCopy(newResolveStatus);
         } else {
             Map<String, AbstractConfigValue> modified = new HashMap<String, AbstractConfigValue>();
             for (String k : keySet()) {
@@ -321,7 +304,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                     modified.put(k, peek(k));
                 }
             }
-            return new SimpleConfigObject(origin(), transformer, modified,
+            return new SimpleConfigObject(origin(), modified,
                     newResolveStatus);
         }
     }
@@ -411,7 +394,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     public AbstractConfigObject getObject(String path) {
         AbstractConfigObject obj = (AbstractConfigObject) find(path,
                 ConfigValueType.OBJECT, path);
-        return obj.transformed(this.transformer);
+        return obj;
     }
 
     @Override
@@ -460,8 +443,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         for (ConfigValue cv : list) {
             // variance would be nice, but stupid cast will do
             AbstractConfigValue v = (AbstractConfigValue) cv;
-            if (expected != null && transformer != null) {
-                v = transformer.transform(v, expected);
+            if (expected != null) {
+                v = DefaultTransformer.transform(v, expected);
             }
             if (v.valueType() != expected)
                 throw new ConfigException.WrongType(v.origin(), path,
@@ -525,7 +508,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             if (v.valueType() != ConfigValueType.OBJECT)
                 throw new ConfigException.WrongType(v.origin(), path,
                         ConfigValueType.OBJECT.name(), v.valueType().name());
-            l.add(((AbstractConfigObject) v).transformed(this.transformer));
+            l.add((ConfigObject) v);
         }
         return l;
     }

@@ -9,20 +9,18 @@ import com.typesafe.config.ConfigValue;
 abstract class DelegatingConfigObject extends AbstractConfigObject {
     final private AbstractConfigObject underlying;
 
-    DelegatingConfigObject(ConfigTransformer transformer,
-            AbstractConfigObject underlying) {
-        super(underlying.origin(), transformer);
+    DelegatingConfigObject(AbstractConfigObject underlying) {
+        super(underlying.origin());
         this.underlying = underlying;
     }
 
     @Override
-    protected DelegatingConfigObject newCopy(ConfigTransformer newTransformer,
-            ResolveStatus newStatus) {
-        return newCopy(underlying, newTransformer, newStatus);
+    protected DelegatingConfigObject newCopy(ResolveStatus newStatus) {
+        return newCopy(underlying, newStatus);
     }
 
     abstract DelegatingConfigObject newCopy(AbstractConfigObject underlying,
-            ConfigTransformer newTransformer, ResolveStatus newStatus);
+            ResolveStatus newStatus);
 
     @Override
     ResolveStatus resolveStatus() {

@@ -254,15 +254,6 @@ public class ConfigImpl {
         }
     }
 
-    private static ConfigTransformer defaultTransformer = null;
-
-    synchronized static ConfigTransformer defaultConfigTransformer() {
-        if (defaultTransformer == null) {
-            defaultTransformer = new DefaultTransformer();
-        }
-        return defaultTransformer;
-    }
-
     private static class SimpleIncluder implements ConfigIncluder {
 
         private ConfigIncluder fallback;

@@ -73,10 +73,6 @@ abstract class AbstractConfigValue implements ConfigValue {
         return merged;
     }
 
-    AbstractConfigValue transformed(ConfigTransformer transformer) {
-        return this;
-    }
-
     protected boolean canEqual(Object other) {
         return other instanceof ConfigValue;
     }

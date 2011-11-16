@@ -9,7 +9,7 @@ final class RootConfigObject extends DelegatingConfigObject implements
     final private Path rootPath;
 
     RootConfigObject(AbstractConfigObject underlying, Path rootPath) {
-        super(underlying.transformer, underlying);
+        super(underlying);
         this.rootPath = rootPath;
     }
 
@@ -24,9 +24,8 @@ final class RootConfigObject extends DelegatingConfigObject implements
 
     @Override
     public RootConfigObject newCopy(AbstractConfigObject underlying,
-            ConfigTransformer newTransformer, ResolveStatus newStatus) {
-        return new RootConfigObject(underlying.newCopy(newTransformer,
-                newStatus), rootPath);
+            ResolveStatus newStatus) {
+        return new RootConfigObject(underlying.newCopy(newStatus), rootPath);
     }
 
     @Override

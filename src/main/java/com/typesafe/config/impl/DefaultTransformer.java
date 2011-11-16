@@ -5,10 +5,9 @@ import com.typesafe.config.ConfigValueType;
 /**
  * Default automatic type transformations.
  */
-final class DefaultTransformer implements ConfigTransformer {
+final class DefaultTransformer {
 
-    @Override
-    public AbstractConfigValue transform(AbstractConfigValue value,
+    static AbstractConfigValue transform(AbstractConfigValue value,
             ConfigValueType requested) {
         if (value.valueType() == ConfigValueType.STRING) {
             String s = (String) value.unwrapped();

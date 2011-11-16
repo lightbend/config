@@ -18,9 +18,9 @@ final class SimpleConfigObject extends AbstractConfigObject {
     final private Map<String, AbstractConfigValue> value;
     final private boolean resolved;
 
-    SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
+    SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value, ResolveStatus status) {
-        super(origin, transformer);
+        super(origin);
         if (value == null)
             throw new ConfigException.BugOrBroken(
                     "creating config object with null map");
@@ -28,20 +28,10 @@ final class SimpleConfigObject extends AbstractConfigObject {
         this.resolved = status == ResolveStatus.RESOLVED;
     }
 
-    SimpleConfigObject(ConfigOrigin origin, ConfigTransformer transformer,
+    SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value) {
-        this(origin, transformer, value, ResolveStatus.fromValues(value
+        this(origin, value, ResolveStatus.fromValues(value
                 .values()));
-    }
-
-    SimpleConfigObject(ConfigOrigin origin,
-            Map<String, AbstractConfigValue> value, ResolveStatus status) {
-        this(origin, ConfigImpl.defaultConfigTransformer(), value, status);
-    }
-
-    SimpleConfigObject(ConfigOrigin origin,
-            Map<String, AbstractConfigValue> value) {
-        this(origin, value, ResolveStatus.fromValues(value.values()));
     }
 
     @Override
@@ -50,9 +40,8 @@ final class SimpleConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    public SimpleConfigObject newCopy(ConfigTransformer newTransformer,
-            ResolveStatus newStatus) {
-        return new SimpleConfigObject(origin(), newTransformer, value,
+    public SimpleConfigObject newCopy(ResolveStatus newStatus) {
+        return new SimpleConfigObject(origin(), value,
                 newStatus);
     }
 
