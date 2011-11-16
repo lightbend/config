@@ -269,4 +269,11 @@ class ConfParserTest extends TestUtils {
             parseObject("""{ "a" : "y" "b" : "z" }""")
         }
     }
+
+    @Test
+    def keysWithSlash() {
+        val obj = parseObject("""/a/b/c=42, x/y/z : 32""")
+        assertEquals(42, obj.getInt("/a/b/c"))
+        assertEquals(32, obj.getInt("x/y/z"))
+    }
 }

@@ -27,8 +27,9 @@ Implementation-wise, the format should have these properties:
    heuristic. It should be clear what's invalid and invalid files
    should generate errors.
  - require minimal look-ahead; should be able to tokenize the file
-   by looking at only the current character and the next
-   character.
+   by looking at only the next three characters. (right now, the
+   only reason to look at three is to find "//" comments;
+   otherwise you can parse looking at two.)
 
 HOCON is significantly harder to specify and to parse than
 JSON. Think of it as moving the work from the person maintaining
@@ -182,8 +183,10 @@ A sequence of characters outside of a quoted string is a string
 value if:
 
  - it does not contain "forbidden characters" '$', '"', '{', '}',
-   '[', ']', ':', '=', ',', '+', '#', '/', '\' (backslash), or
+   '[', ']', ':', '=', ',', '+', '#', '\' (backslash), or
    whitespace.
+ - it does not contain the two-character string "//" (which
+   starts a comment)
  - its initial characters do not parse as `true`, `false`, `null`,
    or a number.
 
@@ -199,9 +202,9 @@ the unquoted string `bar` but `bar10.0` is the unquoted string
 `bar10.0`.
 
 In general, once an unquoted string begins, it continues until a
-forbidden character is encountered. Embedded (non-initial)
-booleans, nulls, and numbers are not recognized as such, they are
-part of the string.
+forbidden character or the two-character string "//" is
+encountered. Embedded (non-initial) booleans, nulls, and numbers
+are not recognized as such, they are part of the string.
 
 An unquoted string may not _begin_ with the digits 0-9 or with a
 hyphen (`-`, 0x002D) because those are valid characters to begin a

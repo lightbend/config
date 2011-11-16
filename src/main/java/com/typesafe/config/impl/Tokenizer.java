@@ -84,7 +84,7 @@ final class Tokenizer {
 
         final private ConfigOrigin origin;
         final private Reader input;
-        private int oneCharBuffer;
+        final private LinkedList<Integer> buffer;
         private int lineNumber;
         final private Queue<Token> tokens;
         final private WhitespaceSaver whitespaceSaver;
@@ -94,7 +94,7 @@ final class Tokenizer {
             this.origin = origin;
             this.input = input;
             this.allowComments = allowComments;
-            oneCharBuffer = -1;
+            this.buffer = new LinkedList<Integer>();
             lineNumber = 0;
             tokens = new LinkedList<Token>();
             tokens.add(Tokens.START);
@@ -102,27 +102,29 @@ final class Tokenizer {
         }
 
 
-        private int nextChar() {
-            if (oneCharBuffer >= 0) {
-                int c = oneCharBuffer;
-                oneCharBuffer = -1;
-                return c;
-            } else {
+        // this should ONLY be called from nextCharSkippingComments
+        // or when inside a quoted string, everything else should
+        // use nextCharSkippingComments().
+        private int nextCharRaw() {
+            if (buffer.isEmpty()) {
                 try {
                     return input.read();
                 } catch (IOException e) {
                     throw new ConfigException.IO(origin, "read error: "
                             + e.getMessage(), e);
                 }
+            } else {
+                int c = buffer.pop();
+                return c;
             }
         }
 
         private void putBack(int c) {
-            if (oneCharBuffer >= 0) {
+            if (buffer.size() > 2) {
                 throw new ConfigException.BugOrBroken(
-                        "bug: attempt to putBack() twice in a row");
+                        "bug: putBack() three times, undesirable look-ahead");
             }
-            oneCharBuffer = c;
+            buffer.push(c);
         }
 
         static boolean isWhitespace(int c) {
@@ -135,29 +137,26 @@ final class Tokenizer {
 
         private int slurpComment() {
             for (;;) {
-                int c = nextChar();
+                int c = nextCharRaw();
                 if (c == -1 || c == '\n') {
                     return c;
                 }
             }
         }
 
-        // get next char, skipping non-newline whitespace
-        private int nextCharAfterWhitespace(WhitespaceSaver saver) {
+        // get next char, skipping comments
+        private int nextCharSkippingComments() {
             for (;;) {
-                int c = nextChar();
+                int c = nextCharRaw();
 
                 if (c == -1) {
                     return -1;
                 } else {
-                    if (isWhitespaceNotNewline(c)) {
-                        saver.add(c);
-                        continue;
-                    } else if (allowComments) {
+                    if (allowComments) {
                         if (c == '#') {
                             return slurpComment();
                         } else if (c == '/') {
-                            int maybeSecondSlash = nextChar();
+                            int maybeSecondSlash = nextCharRaw();
                             if (maybeSecondSlash == '/') {
                                 return slurpComment();
                             } else {
@@ -167,6 +166,24 @@ final class Tokenizer {
                         } else {
                             return c;
                         }
+                    } else {
+                        return c;
+                    }
+                }
+            }
+        }
+
+        // get next char, skipping non-newline whitespace
+        private int nextCharAfterWhitespace(WhitespaceSaver saver) {
+            for (;;) {
+                int c = nextCharSkippingComments();
+
+                if (c == -1) {
+                    return -1;
+                } else {
+                    if (isWhitespaceNotNewline(c)) {
+                        saver.add(c);
+                        continue;
                     } else {
                         return c;
                     }
@@ -208,7 +225,7 @@ final class Tokenizer {
         // chars JSON allows to be part of a number
         static final String numberChars = "0123456789eE+-.";
         // chars that stop an unquoted string
-        static final String notInUnquotedText = "$\"{}[]:=,\\+#/";
+        static final String notInUnquotedText = "$\"{}[]:=,\\+#";
 
         // The rules here are intended to maximize convenience while
         // avoiding confusion with real valid JSON. Basically anything
@@ -217,7 +234,7 @@ final class Tokenizer {
         private Token pullUnquotedText() {
             ConfigOrigin origin = lineOrigin();
             StringBuilder sb = new StringBuilder();
-            int c = nextChar();
+            int c = nextCharSkippingComments();
             while (true) {
                 if (c == -1) {
                     break;
@@ -244,7 +261,7 @@ final class Tokenizer {
                         return Tokens.newBoolean(origin, false);
                 }
 
-                c = nextChar();
+                c = nextCharSkippingComments();
             }
 
             // put back the char that ended the unquoted text
@@ -258,12 +275,12 @@ final class Tokenizer {
             StringBuilder sb = new StringBuilder();
             sb.appendCodePoint(firstChar);
             boolean containedDecimalOrE = false;
-            int c = nextChar();
+            int c = nextCharSkippingComments();
             while (c != -1 && numberChars.indexOf(c) >= 0) {
                 if (c == '.' || c == 'e' || c == 'E')
                     containedDecimalOrE = true;
                 sb.appendCodePoint(c);
-                c = nextChar();
+                c = nextCharSkippingComments();
             }
             // the last character we looked at wasn't part of the number, put it
             // back
@@ -285,7 +302,7 @@ final class Tokenizer {
         }
 
         private void pullEscapeSequence(StringBuilder sb) {
-            int escaped = nextChar();
+            int escaped = nextCharRaw();
             if (escaped == -1)
                 throw parseError("End of input but backslash in string had nothing after it");
 
@@ -318,7 +335,7 @@ final class Tokenizer {
                 // kind of absurdly slow, but screw it for now
                 char[] a = new char[4];
                 for (int i = 0; i < 4; ++i) {
-                    int c = nextChar();
+                    int c = nextCharSkippingComments();
                     if (c == -1)
                         throw parseError("End of input but expecting 4 hex digits for \\uXXXX escape");
                     a[i] = (char) c;
@@ -346,7 +363,7 @@ final class Tokenizer {
             StringBuilder sb = new StringBuilder();
             int c = '\0'; // value doesn't get used
             do {
-                c = nextChar();
+                c = nextCharRaw();
                 if (c == -1)
                     throw parseError("End of input but string quote was still open");
 
@@ -364,7 +381,7 @@ final class Tokenizer {
         private Token pullSubstitution() {
             // the initial '$' has already been consumed
             ConfigOrigin origin = lineOrigin();
-            int c = nextChar();
+            int c = nextCharSkippingComments();
             if (c != '{') {
                 throw parseError("'$' not followed by {");
             }

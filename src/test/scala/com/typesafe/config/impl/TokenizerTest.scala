@@ -2,10 +2,15 @@ package com.typesafe.config.impl
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
-
 import com.typesafe.config.ConfigException
 
 class TokenizerTest extends TestUtils {
+
+    // FIXME most of this file should be using this method
+    private def tokenizerTest(expected: List[Token], s: String) {
+        assertEquals(List(Tokens.START) ++ expected ++ List(Tokens.END),
+            tokenizeAsList(s))
+    }
 
     @Test
     def tokenizeEmptyString() {
@@ -89,6 +94,14 @@ class TokenizerTest extends TestUtils {
     def tokenizeTrueAndSpaceAndUnquotedText() {
         val expected = List(Tokens.START, tokenTrue, tokenUnquoted(" "), tokenUnquoted("foo"), Tokens.END)
         assertEquals(expected, tokenizeAsList("""true foo"""))
+    }
+
+    @Test
+    def tokenizeUnquotedTextContainingSlash() {
+        tokenizerTest(List(tokenUnquoted("a/b/c/")), "a/b/c/")
+        tokenizerTest(List(tokenUnquoted("/")), "/")
+        tokenizerTest(List(tokenUnquoted("/"), tokenUnquoted(" "), tokenUnquoted("/")), "/ /")
+        tokenizerTest(Nil, "//")
     }
 
     @Test
@@ -181,5 +194,17 @@ class TokenizerTest extends TestUtils {
                     tokenizeAsList(t.s))
             }
         }
+    }
+
+    @Test
+    def commentsIgnoredInVariousContext() {
+        tokenizerTest(List(tokenString("//bar")), "\"//bar\"")
+        tokenizerTest(List(tokenString("#bar")), "\"#bar\"")
+        tokenizerTest(List(tokenUnquoted("bar")), "bar//comment")
+        tokenizerTest(List(tokenUnquoted("bar")), "bar#comment")
+        tokenizerTest(List(tokenInt(10)), "10//comment")
+        tokenizerTest(List(tokenInt(10)), "10#comment")
+        tokenizerTest(List(tokenDouble(3.14)), "3.14//comment")
+        tokenizerTest(List(tokenDouble(3.14)), "3.14#comment")
     }
 }

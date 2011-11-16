@@ -151,11 +151,12 @@ abstract trait TestUtils {
         """[ { "a" : 2, "b" : ${${a}} } ]""", // nested substitution
         "[ = ]", // = is not a valid token in unquoted text
         "[ + ]",
-        "[ / ]",
         "[ # ]",
         "[ \\ ]",
         "[ # comment ]",
         "${ #comment }",
+        "[ // comment ]",
+        "${ // comment }",
         "{ include \"bar\" : 10 }", // include with a value after it
         "{ include foo }", // include with unquoted string
         "{ include : { \"a\" : 1 } }") // include used as unquoted key
@@ -227,6 +228,7 @@ abstract trait TestUtils {
         "[ trux ]",
         "[ truex ]",
         "[ 10x ]", // number token with trailing junk
+        "[ / ]", // unquoted string "slash"
         "{ include \"foo\" }", // valid include
         "{ include\n\"foo\" }", // include with just a newline separating from string
         "{ include\"foo\" }", // include with no whitespace after it
@@ -262,6 +264,7 @@ abstract trait TestUtils {
 , 11]""",
         """[ 10 // comment
 , 11]""",
+        """{ /a/b/c : 10 }""", // key has a slash in it
         ParseTest(false, true, "[${ foo.bar}]"), // substitution with leading spaces
         ParseTest(false, true, "[${foo.bar }]"), // substitution with trailing spaces
         ParseTest(false, true, "[${ \"foo.bar\"}]"), // substitution with leading spaces and quoted
