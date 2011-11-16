@@ -147,6 +147,10 @@ Use dotted notation for unquoted keys:
     foo.bar=10
     foo.baz=12
 
+Put the dotted-notation fields on a single line:
+
+    foo.bar=10, foo.baz=12
+
 The syntax is well-defined (including handling of whitespace and
 escaping). But it handles many reasonable ways you might want to
 format the file.
