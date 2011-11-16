@@ -236,8 +236,8 @@ public final class Config {
                 return (long) (Double.parseDouble(numberString) * nanosInUnit);
             }
         } catch (NumberFormatException e) {
-            throw new ConfigException.BadValue(originForException, pathForException,
- "Could not parse duration number '"
+            throw new ConfigException.BadValue(originForException,
+                    pathForException, "Could not parse duration number '"
                             + numberString + "'");
         }
     }
