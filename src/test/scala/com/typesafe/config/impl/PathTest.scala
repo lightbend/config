@@ -73,7 +73,7 @@ class PathTest extends TestUtils {
         }
 
         intercept[ConfigException.BadPath] {
-            Path.newPath("")
+            Path.newPath("..")
         }
     }
 }
