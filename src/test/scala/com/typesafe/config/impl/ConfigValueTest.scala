@@ -14,6 +14,17 @@ import com.typesafe.config.ConfigOrigin
 class ConfigValueTest extends TestUtils {
 
     @Test
+    def configOriginEquality() {
+        val a = new SimpleConfigOrigin("foo")
+        val sameAsA = new SimpleConfigOrigin("foo")
+        val b = new SimpleConfigOrigin("bar")
+
+        checkEqualObjects(a, a)
+        checkEqualObjects(a, sameAsA)
+        checkNotEqualObjects(a, b)
+    }
+
+    @Test
     def configIntEquality() {
         val a = intValue(42)
         val sameAsA = intValue(42)
@@ -152,6 +163,8 @@ class ConfigValueTest extends TestUtils {
         dm.toString()
         val dmo = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
         dmo.toString()
+
+        fakeOrigin().toString()
     }
 
     private def unsupported(body: => Unit) {

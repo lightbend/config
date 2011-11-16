@@ -15,4 +15,23 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         return description;
     }
 
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof SimpleConfigOrigin) {
+            return this.description
+                    .equals(((SimpleConfigOrigin) other).description);
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return description.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "ConfigOrigin(" + description + ")";
+    }
 }
