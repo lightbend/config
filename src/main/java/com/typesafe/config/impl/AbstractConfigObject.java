@@ -122,6 +122,13 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
+    public boolean hasPath(String pathExpression) {
+        Path path = Path.newPath(pathExpression);
+        ConfigValue peeked = peekPath(path, null, 0, null);
+        return peeked != null && peeked.valueType() != ConfigValueType.NULL;
+    }
+
+    @Override
     AbstractConfigObject transformed(ConfigTransformer newTransformer) {
         if (newTransformer != transformer)
             return newCopy(newTransformer, resolveStatus());

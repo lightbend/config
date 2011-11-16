@@ -371,4 +371,38 @@ class ConfigValueTest extends TestUtils {
         // merge three
         assertEquals("merge of a,b,c", m(o("a", false), o("b", false), o("c", false)))
     }
+
+    @Test
+    def hasPathWorks() {
+        val empty = parseObject("{}")
+
+        assertFalse(empty.hasPath("foo"))
+
+        val obj = parseObject("a=null, b.c.d=11, foo=bar")
+
+        // returns true for the non-null values
+        assertTrue(obj.hasPath("foo"))
+        assertTrue(obj.hasPath("b.c.d"))
+        assertTrue(obj.hasPath("b.c"))
+        assertTrue(obj.hasPath("b"))
+
+        // hasPath() is false for null values but containsKey is true
+        assertEquals(nullValue(), obj.get("a"))
+        assertTrue(obj.containsKey("a"))
+        assertFalse(obj.hasPath("a"))
+
+        // false for totally absent values
+        assertFalse(obj.containsKey("notinhere"))
+        assertFalse(obj.hasPath("notinhere"))
+
+        // throws proper exceptions
+        intercept[ConfigException.BadPath] {
+            empty.hasPath("a.")
+        }
+
+        intercept[ConfigException.BadPath] {
+            empty.hasPath("..")
+        }
+
+    }
 }

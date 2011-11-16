@@ -18,10 +18,13 @@ import java.util.Map;
  * files, sometimes double quotes are needed around special characters.)
  *
  * ConfigObject implements the standard Java Map interface, but the mutator
- * methods all throw UnsupportedOperationException.
+ * methods all throw UnsupportedOperationException. This Map is immutable.
  *
- * TODO add OrNull variants of all these getters? Or better to avoid convenience
- * API for that?
+ * The Map may contain null values, which will have ConfigValue.valueType() ==
+ * ConfigValueType.NULL. When using methods from the Map interface, such as
+ * get() or containsKey(), these null ConfigValue will be visible. But hasPath()
+ * returns false for null values, and getInt() etc. throw ConfigException.Null
+ * for null values.
  */
 public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
@@ -37,6 +40,25 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
     @Override
     ConfigObject withFallbacks(ConfigValue... others);
+
+    /**
+     * Checks whether a value is present and non-null at the given path. This
+     * differs in two ways from containsKey(): it looks for a path expression,
+     * not a key; and it returns false for null values, while containsKey()
+     * returns true indicating that the object contains a null value for the
+     * key.
+     * 
+     * If a path exists according to hasPath(), then getValue() will never throw
+     * an exception. However, the typed getters, such as getInt(), will still
+     * throw if the value is not convertible to the requested type.
+     *
+     * @param path
+     *            the path expression
+     * @return true if a non-null value is present at the path
+     * @throws ConfigException.BadPath
+     *             if the path expression is invalid
+     */
+    boolean hasPath(String path);
 
     boolean getBoolean(String path);
 
