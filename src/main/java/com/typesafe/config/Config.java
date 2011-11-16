@@ -96,7 +96,6 @@ public final class Config {
         return ConfigImpl.empty(originDescription);
     }
 
-
     public static ConfigRoot systemPropertiesRoot(String rootPath) {
         return ConfigImpl.systemPropertiesRoot(rootPath);
     }
@@ -146,16 +145,101 @@ public final class Config {
         return ConfigImpl.parseResourcesForPath(path, options);
     }
 
+    /**
+     * Creates a ConfigValue from a plain Java boxed value, which may be a
+     * Boolean, Number, String, Map, Iterable, or null. A Map must be a Map from
+     * String to more values that can be supplied to fromAnyRef(). An Iterable
+     * must iterate over more values that can be supplied to fromAnyRef(). A Map
+     * will become a ConfigObject and an Iterable will become a ConfigList. If
+     * the Iterable is not an ordered collection, results could be strange,
+     * since ConfigList is ordered.
+     * 
+     * The originDescription will be used to set the origin() field on the
+     * ConfigValue. It should normally be the name of the file the values came
+     * from, or something short describing the value such as "default settings".
+     * The originDescription is prefixed to error messages so users can tell
+     * where problematic values are coming from.
+     * 
+     * Supplying the result of ConfigValue.unwrapped() to this function is
+     * guaranteed to work and should give you back a ConfigValue that matches
+     * the one you unwrapped. The re-wrapped ConfigValue will lose some
+     * information that was present in the original such as its origin, but it
+     * will have matching values.
+     * 
+     * This function throws if you supply a value that cannot be converted to a
+     * ConfigValue, but supplying such a value is a bug in your program, so you
+     * should never handle the exception. Just fix your program (or report a bug
+     * against this library).
+     * 
+     * @param object
+     *            object to convert to ConfigValue
+     * @param originDescription
+     *            name of origin file or brief description of what the value is
+     * @return a new value
+     */
+    public static ConfigValue fromAnyRef(Object object, String originDescription) {
+        return ConfigImpl.fromAnyRef(object, originDescription);
+    }
+
+    /**
+     * See the fromAnyRef() documentation for details. This is a typesafe
+     * wrapper that only works on Map and returns ConfigObject rather than
+     * ConfigValue.
+     *
+     * @param values
+     * @param originDescription
+     * @return
+     */
+    public static ConfigObject fromMap(Map<String, ? extends Object> values,
+            String originDescription) {
+        return (ConfigObject) fromAnyRef(values, originDescription);
+    }
+
+    /**
+     * See the fromAnyRef() documentation for details. This is a typesafe
+     * wrapper that only works on Iterable and returns ConfigList rather than
+     * ConfigValue.
+     *
+     * @param values
+     * @param originDescription
+     * @return
+     */
+    public static ConfigList fromIterable(Iterable<? extends Object> values,
+            String originDescription) {
+        return (ConfigList) fromAnyRef(values, originDescription);
+    }
+
+    /**
+     * See the other overload of fromAnyRef() for details, this one just uses a
+     * default origin description.
+     *
+     * @param object
+     * @return
+     */
     public static ConfigValue fromAnyRef(Object object) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return fromAnyRef(object, null);
     }
 
+    /**
+     * See the other overload of fromMap() for details, this one just uses a
+     * default origin description.
+     *
+     * @param values
+     * @return
+     */
     public static ConfigObject fromMap(Map<String, ? extends Object> values) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return fromMap(values, null);
     }
 
-    public static ConfigList fromCollection(Collection<? extends Object> values) {
-        throw new UnsupportedOperationException("not implemented yet");
+    /**
+     * See the other overload of fromIterable() for details, this one just uses
+     * a default origin description.
+     *
+     * @param values
+     * @return
+     */
+    public static ConfigList fromIterable(Collection<? extends Object> values) {
+        return fromIterable(values, null);
     }
 
     private static String getUnits(String s) {
@@ -205,7 +289,8 @@ public final class Config {
             unitString = unitString + "s";
 
         // note that this is deliberately case-sensitive
-        if (unitString.equals("") || unitString.equals("ms") || unitString.equals("milliseconds")) {
+        if (unitString.equals("") || unitString.equals("ms")
+                || unitString.equals("milliseconds")) {
             units = TimeUnit.MILLISECONDS;
         } else if (unitString.equals("us") || unitString.equals("microseconds")) {
             units = TimeUnit.MICROSECONDS;
@@ -227,7 +312,8 @@ public final class Config {
         }
 
         try {
-            // if the string is purely digits, parse as an integer to avoid possible precision loss;
+            // if the string is purely digits, parse as an integer to avoid
+            // possible precision loss;
             // otherwise as a double.
             if (numberString.matches("[0-9]+")) {
                 return units.toNanos(Long.parseLong(numberString));
@@ -247,6 +333,7 @@ public final class Config {
                 1024 * 1024 * 1024), TERABYTES(1024 * 1024 * 1024 * 1024);
 
         int bytes;
+
         MemoryUnit(int bytes) {
             this.bytes = bytes;
         }
@@ -324,8 +411,7 @@ public final class Config {
         } catch (NumberFormatException e) {
             throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse memory size number '"
-                            + numberString
-                            + "'");
+                            + numberString + "'");
         }
     }
 }

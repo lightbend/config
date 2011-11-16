@@ -316,6 +316,10 @@ abstract trait TestUtils {
         }
     }
 
+    // it's important that these do NOT use the public API to create the
+    // instances, because we may be testing that the public API returns the
+    // right instance by comparing to these, so using public API here would
+    // make the test compare public API to itself.
     protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i, null)
     protected def longValue(l: Long) = new ConfigLong(fakeOrigin(), l, null)
     protected def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)

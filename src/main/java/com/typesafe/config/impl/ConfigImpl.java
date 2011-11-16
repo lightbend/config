@@ -1,16 +1,22 @@
 package com.typesafe.config.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigIncludeContext;
 import com.typesafe.config.ConfigIncluder;
 import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigParseable;
 import com.typesafe.config.ConfigRoot;
 import com.typesafe.config.ConfigSyntax;
+import com.typesafe.config.ConfigValue;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
@@ -119,9 +125,123 @@ public class ConfigImpl {
     }
 
     public static ConfigObject empty(String originDescription) {
-        return SimpleConfigObject
-                .empty(originDescription != null ? new SimpleConfigOrigin(
-                        originDescription) : null);
+        ConfigOrigin origin = originDescription != null ? new SimpleConfigOrigin(
+                originDescription) : null;
+        return emptyObject(origin);
+    }
+
+    static AbstractConfigObject empty(ConfigOrigin origin) {
+        return emptyObject(origin);
+    }
+
+    // default origin for values created with fromAnyRef and no origin specified
+    final private static ConfigOrigin defaultValueOrigin = new SimpleConfigOrigin(
+            "hardcoded value");
+    final private static ConfigBoolean defaultTrueValue = new ConfigBoolean(
+            defaultValueOrigin, true);
+    final private static ConfigBoolean defaultFalseValue = new ConfigBoolean(
+            defaultValueOrigin, false);
+    final private static ConfigNull defaultNullValue = new ConfigNull(
+            defaultValueOrigin);
+    final private static SimpleConfigList defaultEmptyList = new SimpleConfigList(
+            defaultValueOrigin, Collections.<AbstractConfigValue> emptyList());
+    final private static SimpleConfigObject defaultEmptyObject = SimpleConfigObject
+            .empty(defaultValueOrigin);
+
+    private static SimpleConfigList emptyList(ConfigOrigin origin) {
+        if (origin == null || origin == defaultValueOrigin)
+            return defaultEmptyList;
+        else
+            return new SimpleConfigList(origin,
+                    Collections.<AbstractConfigValue> emptyList());
+    }
+
+    private static AbstractConfigObject emptyObject(ConfigOrigin origin) {
+        // we want null origin to go to SimpleConfigObject.empty() to get the
+        // origin "empty config" rather than "hardcoded value"
+        if (origin == defaultValueOrigin)
+            return defaultEmptyObject;
+        else
+            return SimpleConfigObject.empty(origin);
+    }
+
+    private static ConfigOrigin valueOrigin(String originDescription) {
+        if (originDescription == null)
+            return defaultValueOrigin;
+        else
+            return new SimpleConfigOrigin(originDescription);
+    }
+
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static ConfigValue fromAnyRef(Object object, String originDescription) {
+        ConfigOrigin origin = valueOrigin(originDescription);
+        return fromAnyRef(object, origin);
+    }
+
+    static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin) {
+        if (origin == null)
+            throw new ConfigException.BugOrBroken(
+                    "origin not supposed to be null");
+
+        if (object == null) {
+            if (origin != defaultValueOrigin)
+                return new ConfigNull(origin);
+            else
+                return defaultNullValue;
+        } else if (object instanceof Boolean) {
+            if (origin != defaultValueOrigin) {
+                return new ConfigBoolean(origin, (Boolean) object);
+            } else if ((Boolean) object) {
+                return defaultTrueValue;
+            } else {
+                return defaultFalseValue;
+            }
+        } else if (object instanceof String) {
+            return new ConfigString(origin, (String) object);
+        } else if (object instanceof Number) {
+            if (object instanceof Double) {
+                return new ConfigDouble(origin, (Double) object, null);
+            } else if (object instanceof Integer) {
+                return new ConfigInt(origin, (Integer) object, null);
+            } else if (object instanceof Long) {
+                return new ConfigLong(origin, (Long) object, null);
+            } else {
+                return new ConfigDouble(origin,
+                        ((Number) object).doubleValue(), null);
+            }
+        } else if (object instanceof Map) {
+            if (((Map<?, ?>) object).isEmpty())
+                return emptyObject(origin);
+
+            Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
+            for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
+                Object key = entry.getKey();
+                if (!(key instanceof String))
+                    throw new ConfigException.BugOrBroken(
+                            "bug in method caller: not valid to create ConfigObject from map with non-String key: "
+                                    + key);
+                AbstractConfigValue value = fromAnyRef(entry.getValue(), origin);
+                values.put((String) key, value);
+            }
+
+            return new SimpleConfigObject(origin, values);
+        } else if (object instanceof Iterable) {
+            Iterator<?> i = ((Iterable<?>) object).iterator();
+            if (!i.hasNext())
+                return emptyList(origin);
+
+            List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
+            while (i.hasNext()) {
+                AbstractConfigValue v = fromAnyRef(i.next(), origin);
+                values.add(v);
+            }
+
+            return new SimpleConfigList(origin, values);
+        } else {
+            throw new ConfigException.BugOrBroken(
+                    "bug in method caller: not valid to create ConfigValue from: "
+                            + object);
+        }
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
