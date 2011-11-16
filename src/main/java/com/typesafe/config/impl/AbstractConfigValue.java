@@ -121,22 +121,4 @@ abstract class AbstractConfigValue implements ConfigValue {
     String transformToString() {
         return null;
     }
-
-    static ConfigNumber newNumber(ConfigOrigin origin, long number,
-            String originalText) {
-        if (number <= Integer.MAX_VALUE && number >= Integer.MIN_VALUE)
-            return new ConfigInt(origin, (int) number, originalText);
-        else
-            return new ConfigLong(origin, number, originalText);
-    }
-
-    static ConfigNumber newNumber(ConfigOrigin origin, double number,
-            String originalText) {
-        long asLong = (long) number;
-        if (asLong == number) {
-            return newNumber(origin, asLong, originalText);
-        } else {
-            return new ConfigDouble(origin, number, originalText);
-        }
-    }
 }

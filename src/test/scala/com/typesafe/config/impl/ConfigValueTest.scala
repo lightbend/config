@@ -408,8 +408,8 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def newNumberWorks() {
-        def nL(v: Long) = AbstractConfigValue.newNumber(fakeOrigin(), v, null)
-        def nD(v: Double) = AbstractConfigValue.newNumber(fakeOrigin(), v, null)
+        def nL(v: Long) = ConfigNumber.newNumber(fakeOrigin(), v, null)
+        def nD(v: Double) = ConfigNumber.newNumber(fakeOrigin(), v, null)
 
         // the general idea is that the destination type should depend
         // only on the actual numeric value, not on the type of the source
