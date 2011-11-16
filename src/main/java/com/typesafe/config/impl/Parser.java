@@ -711,6 +711,8 @@ final class Parser {
     // we just have something like "foo" or "foo.bar"
     private static Path speculativeFastParsePath(String path) {
         String s = ConfigUtil.unicodeTrim(path);
+        if (s.isEmpty())
+            return null;
         if (hasUnsafeChars(s))
             return null;
         if (s.startsWith(".") || s.endsWith(".") || s.contains(".."))

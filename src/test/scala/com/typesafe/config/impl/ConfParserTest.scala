@@ -54,23 +54,47 @@ class ConfParserTest extends TestUtils {
     }
 
     private def parsePath(s: String): Path = {
+        var firstException: ConfigException = null
+        var secondException: ConfigException = null
+
         // parse first by wrapping into a whole document and using
         // the regular parser.
-        val tree = parseWithoutResolving("[${" + s + "}]")
-        val result = tree match {
-            case list: ConfigList =>
-                list.get(0) match {
-                    case subst: ConfigSubstitution =>
-                        subst.pieces().get(0) match {
-                            case p: Path => p
-                        }
-                }
+        val result = try {
+            val tree = parseWithoutResolving("[${" + s + "}]")
+            tree match {
+                case list: ConfigList =>
+                    list.get(0) match {
+                        case subst: ConfigSubstitution =>
+                            subst.pieces().get(0) match {
+                                case p: Path => p
+                            }
+                    }
+            }
+        } catch {
+            case e: ConfigException =>
+                firstException = e
+                null
         }
 
         // also parse with the standalone path parser and be sure the
         // outcome is the same.
-        val shouldBeSame = Parser.parsePath(s)
-        assertEquals(result, shouldBeSame)
+        try {
+            val shouldBeSame = Parser.parsePath(s)
+            assertEquals(result, shouldBeSame)
+        } catch {
+            case e: ConfigException =>
+                secondException = e
+        }
+
+        if (firstException == null && secondException != null)
+            throw new AssertionError("only the standalone path parser threw", secondException)
+        if (firstException != null && secondException == null)
+            throw new AssertionError("only the whole-document parser threw", firstException)
+
+        if (firstException != null)
+            throw firstException
+        if (secondException != null)
+            throw new RuntimeException("wtf, should have thrown because not equal")
 
         result
     }
@@ -102,14 +126,14 @@ class ConfParserTest extends TestUtils {
         assertEquals(path("a_c"), parsePath("a_c"))
         assertEquals(path("-"), parsePath("\"-\""))
 
-        for (invalid <- Seq("", "a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
+        for (invalid <- Seq("", " ", "  \n   \n  ", "a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
             try {
                 intercept[ConfigException.BadPath] {
                     parsePath(invalid)
                 }
             } catch {
                 case e =>
-                    System.err.println("failed on: " + invalid);
+                    System.err.println("failed on: '" + invalid + "'");
                     throw e;
             }
         }

@@ -3,6 +3,7 @@ package com.typesafe.config.impl
 import org.junit.Assert._
 import org.junit._
 import scala.collection.JavaConverters._
+import com.typesafe.config.ConfigException
 
 class PathTest extends TestUtils {
 
@@ -61,5 +62,18 @@ class PathTest extends TestUtils {
     def pathLength() {
         assertEquals(1, path("foo").length())
         assertEquals(2, path("foo", "bar").length())
+    }
+
+    @Test
+    def pathsAreInvalid() {
+        // this test is just of the Path.newPath() wrapper, the extensive
+        // test of different paths is over in ConfParserTest
+        intercept[ConfigException.BadPath] {
+            Path.newPath("")
+        }
+
+        intercept[ConfigException.BadPath] {
+            Path.newPath("")
+        }
     }
 }
