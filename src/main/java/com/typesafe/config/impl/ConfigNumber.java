@@ -18,4 +18,48 @@ abstract class ConfigNumber extends AbstractConfigValue {
     String transformToString() {
         return originalText;
     }
+
+    protected abstract long longValue();
+
+    protected abstract double doubleValue();
+
+    private boolean isWhole() {
+        long asLong = longValue();
+        return asLong == doubleValue();
+    }
+
+    @Override
+    protected boolean canEqual(Object other) {
+        return other instanceof ConfigNumber;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // note that "origin" is deliberately NOT part of equality
+        if (canEqual(other)) {
+            ConfigNumber n = (ConfigNumber) other;
+            if (isWhole()) {
+                return n.isWhole() && this.longValue() == n.longValue();
+            } else {
+                return (!n.isWhole()) && this.doubleValue() == n.doubleValue();
+            }
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        // note that "origin" is deliberately NOT part of equality
+
+        // this matches what standard Long.hashCode and Double.hashCode
+        // do, though I don't think it really matters.
+        long asLong;
+        if (isWhole()) {
+            asLong = longValue();
+        } else {
+            asLong = Double.doubleToLongBits(doubleValue());
+        }
+        return (int) (asLong ^ (asLong >>> 32));
+    }
 }

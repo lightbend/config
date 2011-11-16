@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 /**
- * 
+ *
  * Trying very hard to avoid a parent reference in config values; when you have
  * a tree like this, the availability of parent() tends to result in a lot of
  * improperly-factored and non-modular code. Please don't add parent().
@@ -120,5 +120,23 @@ abstract class AbstractConfigValue implements ConfigValue {
     // other strings or by the DefaultTransformer.
     String transformToString() {
         return null;
+    }
+
+    static ConfigNumber newNumber(ConfigOrigin origin, long number,
+            String originalText) {
+        if (number <= Integer.MAX_VALUE && number >= Integer.MIN_VALUE)
+            return new ConfigInt(origin, (int) number, originalText);
+        else
+            return new ConfigLong(origin, number, originalText);
+    }
+
+    static ConfigNumber newNumber(ConfigOrigin origin, double number,
+            String originalText) {
+        long asLong = (long) number;
+        if (asLong == number) {
+            return newNumber(origin, asLong, originalText);
+        } else {
+            return new ConfigDouble(origin, number, originalText);
+        }
     }
 }

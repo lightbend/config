@@ -404,7 +404,7 @@ class ConfigTest extends TestUtils {
         assertEquals(stringValue("abcd"), conf.getValue("strings.abcd"))
 
         // get stuff with getAny
-        assertEquals(42L, conf.getAnyRef("ints.fortyTwo"))
+        assertEquals(42, conf.getAnyRef("ints.fortyTwo"))
         assertEquals("abcd", conf.getAnyRef("strings.abcd"))
         assertEquals(false, conf.getAnyRef("booleans.falseAgain"))
 

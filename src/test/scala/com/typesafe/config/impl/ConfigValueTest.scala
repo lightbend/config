@@ -405,4 +405,21 @@ class ConfigValueTest extends TestUtils {
         }
 
     }
+
+    @Test
+    def newNumberWorks() {
+        def nL(v: Long) = AbstractConfigValue.newNumber(fakeOrigin(), v, null)
+        def nD(v: Double) = AbstractConfigValue.newNumber(fakeOrigin(), v, null)
+
+        // the general idea is that the destination type should depend
+        // only on the actual numeric value, not on the type of the source
+        // value.
+        assertEquals(3.14, nD(3.14).unwrapped())
+        assertEquals(1, nL(1).unwrapped())
+        assertEquals(1, nD(1.0).unwrapped())
+        assertEquals(Int.MaxValue + 1L, nL(Int.MaxValue + 1L).unwrapped())
+        assertEquals(Int.MinValue - 1L, nL(Int.MinValue - 1L).unwrapped())
+        assertEquals(Int.MaxValue + 1L, nD(Int.MaxValue + 1.0).unwrapped())
+        assertEquals(Int.MinValue - 1L, nD(Int.MinValue - 1.0).unwrapped())
+    }
 }

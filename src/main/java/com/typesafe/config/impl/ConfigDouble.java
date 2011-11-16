@@ -30,4 +30,14 @@ final class ConfigDouble extends ConfigNumber {
         else
             return s;
     }
+
+    @Override
+    protected long longValue() {
+        return (long) value;
+    }
+
+    @Override
+    protected double doubleValue() {
+        return value;
+    }
 }

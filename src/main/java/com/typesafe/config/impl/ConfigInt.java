@@ -23,35 +23,21 @@ final class ConfigInt extends ConfigNumber {
     }
 
     @Override
-    protected boolean canEqual(Object other) {
-        return other instanceof ConfigInt || other instanceof ConfigLong;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-        // note that "origin" is deliberately NOT part of equality
-        if (other instanceof ConfigInt) {
-            return this.value == ((ConfigInt) other).value;
-        } else if (other instanceof ConfigLong) {
-            Long l = ((ConfigLong) other).unwrapped();
-            return l.intValue() == l && this.value == l.intValue();
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public int hashCode() {
-        // note that "origin" is deliberately NOT part of equality
-        return value;
-    }
-
-    @Override
     String transformToString() {
         String s = super.transformToString();
         if (s == null)
             return Integer.toString(value);
         else
             return s;
+    }
+
+    @Override
+    protected long longValue() {
+        return value;
+    }
+
+    @Override
+    protected double doubleValue() {
+        return value;
     }
 }
