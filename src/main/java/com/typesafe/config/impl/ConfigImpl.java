@@ -199,6 +199,11 @@ public class ConfigImpl {
         } else if (object instanceof String) {
             return new ConfigString(origin, (String) object);
         } else if (object instanceof Number) {
+            // here we always keep the same type that was passed to us,
+            // rather than figuring out if a Long would fit in an Int
+            // or a Double has no fractional part. i.e. deliberately
+            // not using ConfigNumber.newNumber() when we have a
+            // Double, Integer, or Long.
             if (object instanceof Double) {
                 return new ConfigDouble(origin, (Double) object, null);
             } else if (object instanceof Integer) {
@@ -206,7 +211,7 @@ public class ConfigImpl {
             } else if (object instanceof Long) {
                 return new ConfigLong(origin, (Long) object, null);
             } else {
-                return new ConfigDouble(origin,
+                return ConfigNumber.newNumber(origin,
                         ((Number) object).doubleValue(), null);
             }
         } else if (object instanceof Map) {
