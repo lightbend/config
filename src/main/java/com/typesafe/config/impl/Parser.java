@@ -578,6 +578,11 @@ final class Parser {
             this.canBeEmpty = canBeEmpty;
             this.sb = new StringBuilder(initial);
         }
+
+        @Override
+        public String toString() {
+            return "Element(" + sb.toString() + "," + canBeEmpty + ")";
+        }
     }
 
     private static void addPathText(List<Element> buf, boolean wasQuoted,
@@ -603,12 +608,18 @@ final class Parser {
 
     private static Path parsePathExpression(Iterator<Token> expression,
             ConfigOrigin origin) {
+        return parsePathExpression(expression, origin, null);
+    }
+
+    // originalText may be null if not available
+    private static Path parsePathExpression(Iterator<Token> expression,
+            ConfigOrigin origin, String originalText) {
         // each builder in "buf" is an element in the path.
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
 
         if (!expression.hasNext()) {
-            throw new ConfigException.BadPath(origin, "",
+            throw new ConfigException.BadPath(origin, originalText,
                     "Expecting a field name or path here, but got nothing");
         }
 
@@ -643,7 +654,7 @@ final class Parser {
                 } else if (Tokens.isUnquotedText(t)) {
                     text = Tokens.getUnquotedText(t);
                 } else {
-                    throw new ConfigException.BadPath(origin,
+                    throw new ConfigException.BadPath(origin, originalText,
                             "Token not allowed in path expression: "
                             + t);
                 }
@@ -657,8 +668,8 @@ final class Parser {
             if (e.sb.length() == 0 && !e.canBeEmpty) {
                 throw new ConfigException.BadPath(
                         origin,
-                        buf.toString(),
-                        "path has a leading, trailing, or two adjacent period '.' (use \"\" empty string if you want an empty element)");
+                        originalText,
+                        "path has a leading, trailing, or two adjacent period '.' (use quoted \"\" empty string if you want an empty element)");
             } else {
                 pb.appendKey(e.sb.toString());
             }
@@ -680,7 +691,7 @@ final class Parser {
             Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader,
                     ConfigSyntax.CONF);
             tokens.next(); // drop START
-            return parsePathExpression(tokens, apiOrigin);
+            return parsePathExpression(tokens, apiOrigin, path);
         } finally {
             reader.close();
         }

@@ -297,7 +297,8 @@ final class Tokenizer {
                 }
             } catch (NumberFormatException e) {
                 throw parseError("Invalid number: '" + s
-                        + "' (if this is in a path, try quoting it)", e);
+                                + "' (if this is in a path, try quoting it with double quotes)",
+                        e);
             }
         }
 

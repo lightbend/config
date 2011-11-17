@@ -129,7 +129,9 @@ public class ConfigException extends RuntimeException {
 
         public BadPath(ConfigOrigin origin, String path, String message,
                 Throwable cause) {
-            super(origin, "Invalid path '" + path + "': " + message, cause);
+            super(origin,
+                    path != null ? ("Invalid path '" + path + "': " + message)
+                            : message, cause);
         }
 
         public BadPath(ConfigOrigin origin, String path, String message) {
@@ -137,7 +139,8 @@ public class ConfigException extends RuntimeException {
         }
 
         public BadPath(String path, String message, Throwable cause) {
-            super("Invalid path '" + path + "': " + message, cause);
+            super(path != null ? ("Invalid path '" + path + "': " + message)
+                    : message, cause);
         }
 
         public BadPath(String path, String message) {
@@ -145,7 +148,7 @@ public class ConfigException extends RuntimeException {
         }
 
         public BadPath(ConfigOrigin origin, String message) {
-            super(origin, message);
+            this(origin, null, message);
         }
     }
 
