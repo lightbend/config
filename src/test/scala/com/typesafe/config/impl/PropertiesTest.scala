@@ -35,6 +35,15 @@ class PropertiesTest extends TestUtils {
     }
 
     @Test
+    def pathObjectCreating() {
+        def p(key: String) = PropertiesParser.pathFromPropertyKey(key)
+
+        assertEquals(path("a"), p("a"))
+        assertEquals(path("a", "b"), p("a.b"))
+        assertEquals(path(""), p(""))
+    }
+
+    @Test
     def funkyPathsInProperties() {
         def testPath(propsPath: String, confPath: String) {
             val props = new Properties()

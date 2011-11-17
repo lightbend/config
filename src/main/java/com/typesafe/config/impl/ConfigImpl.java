@@ -175,10 +175,19 @@ public class ConfigImpl {
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigValue fromAnyRef(Object object, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
-        return fromAnyRef(object, origin);
+        return fromAnyRef(object, origin, FromMapMode.KEYS_ARE_KEYS);
     }
 
-    static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin) {
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static ConfigObject fromPathMap(
+            Map<String, ? extends Object> pathMap, String originDescription) {
+        ConfigOrigin origin = valueOrigin(originDescription);
+        return (ConfigObject) fromAnyRef(pathMap, origin,
+                FromMapMode.KEYS_ARE_PATHS);
+    }
+
+    static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
+            FromMapMode mapMode) {
         if (origin == null)
             throw new ConfigException.BugOrBroken(
                     "origin not supposed to be null");
@@ -218,18 +227,23 @@ public class ConfigImpl {
             if (((Map<?, ?>) object).isEmpty())
                 return emptyObject(origin);
 
-            Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
-            for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
-                Object key = entry.getKey();
-                if (!(key instanceof String))
-                    throw new ConfigException.BugOrBroken(
-                            "bug in method caller: not valid to create ConfigObject from map with non-String key: "
-                                    + key);
-                AbstractConfigValue value = fromAnyRef(entry.getValue(), origin);
-                values.put((String) key, value);
-            }
+            if (mapMode == FromMapMode.KEYS_ARE_KEYS) {
+                Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
+                for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
+                    Object key = entry.getKey();
+                    if (!(key instanceof String))
+                        throw new ConfigException.BugOrBroken(
+                                "bug in method caller: not valid to create ConfigObject from map with non-String key: "
+                                        + key);
+                    AbstractConfigValue value = fromAnyRef(entry.getValue(),
+                            origin, mapMode);
+                    values.put((String) key, value);
+                }
 
-            return new SimpleConfigObject(origin, values);
+                return new SimpleConfigObject(origin, values);
+            } else {
+                return PropertiesParser.fromPathMap(origin, (Map<?, ?>) object);
+            }
         } else if (object instanceof Iterable) {
             Iterator<?> i = ((Iterable<?>) object).iterator();
             if (!i.hasNext())
@@ -237,7 +251,7 @@ public class ConfigImpl {
 
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
             while (i.hasNext()) {
-                AbstractConfigValue v = fromAnyRef(i.next(), origin);
+                AbstractConfigValue v = fromAnyRef(i.next(), origin, mapMode);
                 values.add(v);
             }
 

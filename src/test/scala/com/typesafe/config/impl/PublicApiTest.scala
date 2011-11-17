@@ -176,6 +176,47 @@ class PublicApiTest extends TestUtils {
         assertEquals(reunwrapped, unwrapped)
     }
 
+    private def testFromPathMap(expectedValue: ConfigObject, createFrom: java.util.Map[String, Object]) {
+        assertEquals(expectedValue, Config.fromPathMap(createFrom))
+        assertEquals(defaultValueDesc, Config.fromPathMap(createFrom).origin().description())
+        assertEquals(expectedValue, Config.fromPathMap(createFrom, "foo"))
+        assertEquals("foo", Config.fromPathMap(createFrom, "foo").origin().description())
+    }
+
+    @Test
+    def fromJavaPathMap() {
+        // first the same tests as with fromMap
+        val emptyMapValue = Collections.emptyMap[String, AbstractConfigValue]
+        val aMapValue = Map("a" -> 1, "b" -> 2, "c" -> 3).mapValues(intValue(_): AbstractConfigValue).asJava
+        testFromPathMap(new SimpleConfigObject(fakeOrigin(), emptyMapValue),
+            Collections.emptyMap[String, Object])
+        testFromPathMap(new SimpleConfigObject(fakeOrigin(), aMapValue),
+            Map("a" -> 1, "b" -> 2, "c" -> 3).asInstanceOf[Map[String, AnyRef]].asJava)
+
+        assertEquals("hardcoded value", Config.fromPathMap(Map("a" -> 1, "b" -> 2, "c" -> 3).asJava).origin().description())
+        assertEquals("foo", Config.fromPathMap(Map("a" -> 1, "b" -> 2, "c" -> 3).asJava, "foo").origin().description())
+
+        // now some tests with paths; be sure to test nested path maps
+        val simplePathMapValue = Map("x.y" -> 4, "z" -> 5).asInstanceOf[Map[String, AnyRef]].asJava
+        val pathMapValue = Map("a.c" -> 1, "b" -> simplePathMapValue).asInstanceOf[Map[String, AnyRef]].asJava
+
+        val obj = Config.fromPathMap(pathMapValue)
+
+        assertEquals(2, obj.size)
+        assertEquals(4, obj.getInt("b.x.y"))
+        assertEquals(5, obj.getInt("b.z"))
+        assertEquals(1, obj.getInt("a.c"))
+    }
+
+    @Test
+    def brokenPathMap() {
+        // "a" is both number 1 and an object
+        val pathMapValue = Map("a" -> 1, "a.b" -> 2).asInstanceOf[Map[String, AnyRef]].asJava
+        intercept[ConfigException.BugOrBroken] {
+            Config.fromPathMap(pathMapValue)
+        }
+    }
+
     private def resource(filename: String) = {
         val resourceDir = new File("src/test/resources")
         if (!resourceDir.exists())

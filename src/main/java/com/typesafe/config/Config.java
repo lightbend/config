@@ -228,6 +228,9 @@ public final class Config {
      * wrapped in ConfigValue. To get nested ConfigObject, some of the values in
      * the map would have to be more maps.
      *
+     * There is a separate fromPathMap() that interprets the keys in the map as
+     * path expressions.
+     *
      * @param values
      * @param originDescription
      * @return
@@ -235,6 +238,27 @@ public final class Config {
     public static ConfigObject fromMap(Map<String, ? extends Object> values,
             String originDescription) {
         return (ConfigObject) fromAnyRef(values, originDescription);
+    }
+
+    /**
+     * Similar to fromMap(), but the keys in the map are path expressions,
+     * rather than keys. This is more convenient if you are writing literal maps
+     * in code, and less convenient if you are getting your maps from some data
+     * source such as a parser.
+     *
+     * An exception will be thrown (and it is a bug in the caller of the method)
+     * if a path is both an object and a value, for example if you had both
+     * "a=foo" and "a.b=bar", then "a" is both the string "foo" and the parent
+     * object of "b". The caller of this method should ensure that doesn't
+     * happen.
+     * 
+     * @param values
+     * @param originDescription
+     * @return
+     */
+    public static ConfigObject fromPathMap(
+            Map<String, ? extends Object> values, String originDescription) {
+        return ConfigImpl.fromPathMap(values, originDescription);
     }
 
     /**
@@ -271,6 +295,17 @@ public final class Config {
      */
     public static ConfigObject fromMap(Map<String, ? extends Object> values) {
         return fromMap(values, null);
+    }
+
+    /**
+     * See the other overload of fromPathMap() for details, this one just uses a
+     * default origin description.
+     *
+     * @param values
+     * @return
+     */
+    public static ConfigObject fromPathMap(Map<String, ? extends Object> values) {
+        return fromPathMap(values, null);
     }
 
     /**

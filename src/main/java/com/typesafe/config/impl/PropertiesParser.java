@@ -5,7 +5,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +12,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
 final class PropertiesParser {
@@ -39,69 +39,127 @@ final class PropertiesParser {
             return path.substring(0, i);
     }
 
+    static Path pathFromPropertyKey(String key) {
+        String last = lastElement(key);
+        String exceptLast = exceptLastElement(key);
+        Path path = new Path(last, null);
+        while (exceptLast != null) {
+            last = lastElement(exceptLast);
+            exceptLast = exceptLastElement(exceptLast);
+            path = new Path(last, path);
+        }
+        return path;
+    }
+
     static AbstractConfigObject fromProperties(ConfigOrigin origin,
             Properties props) {
-        /*
-         * First, build a list of paths that will have values, either strings or
-         * objects.
-         */
-        Set<String> scopePaths = new HashSet<String>();
-        Set<String> valuePaths = new HashSet<String>();
-        Enumeration<?> i = props.propertyNames();
-        while (i.hasMoreElements()) {
-            Object o = i.nextElement();
-            if (o instanceof String) {
-                // add value's path
-                String path = (String) o;
-                valuePaths.add(path);
+        Map<Path, Object> pathMap = new HashMap<Path, Object>();
+        for (Map.Entry<Object, Object> entry : props.entrySet()) {
+            Object key = entry.getKey();
+            if (key instanceof String) {
+                Path path = pathFromPropertyKey((String) key);
+                pathMap.put(path, entry.getValue());
+            }
+        }
+        return fromPathMap(origin, pathMap, true /* from properties */);
+    }
 
-                // all parent paths are objects
-                String next = exceptLastElement(path);
-                while (next != null) {
-                    scopePaths.add(next);
-                    next = exceptLastElement(next);
+    static AbstractConfigObject fromPathMap(ConfigOrigin origin,
+            Map<?, ?> pathExpressionMap) {
+        Map<Path, Object> pathMap = new HashMap<Path, Object>();
+        for (Map.Entry<?, ?> entry : pathExpressionMap.entrySet()) {
+            Object keyObj = entry.getKey();
+            if (!(keyObj instanceof String)) {
+                throw new ConfigException.BugOrBroken(
+                        "Map has a non-string as a key, expecting a path expression as a String");
+            }
+            Path path = Path.newPath((String) keyObj);
+            pathMap.put(path, entry.getValue());
+        }
+        return fromPathMap(origin, pathMap, false /* from properties */);
+    }
+
+    private static AbstractConfigObject fromPathMap(ConfigOrigin origin,
+            Map<Path, Object> pathMap, boolean convertedFromProperties) {
+        /*
+         * First, build a list of paths that will have values, either string or
+         * object values.
+         */
+        Set<Path> scopePaths = new HashSet<Path>();
+        Set<Path> valuePaths = new HashSet<Path>();
+        for (Path path : pathMap.keySet()) {
+            // add value's path
+            valuePaths.add(path);
+
+            // all parent paths are objects
+            Path next = path.parent();
+            while (next != null) {
+                scopePaths.add(next);
+                next = next.parent();
+            }
+        }
+
+        if (convertedFromProperties) {
+            /*
+             * If any string values are also objects containing other values,
+             * drop those string values - objects "win".
+             */
+            valuePaths.removeAll(scopePaths);
+        } else {
+            /* If we didn't start out as properties, then this is an error. */
+            for (Path path : valuePaths) {
+                if (scopePaths.contains(path)) {
+                    throw new ConfigException.BugOrBroken(
+                            "In the map, path '"
+                                    + path.render()
+                                    + "' occurs as both the parent object of a value and as a value. "
+                                    + "Because Map has no defined ordering, this is a broken situation.");
                 }
             }
         }
 
         /*
-         * If any string values are also objects containing other values, drop
-         * those string values - objects "win".
-         */
-        valuePaths.removeAll(scopePaths);
-
-        /*
          * Create maps for the object-valued values.
          */
         Map<String, AbstractConfigValue> root = new HashMap<String, AbstractConfigValue>();
-        Map<String, Map<String, AbstractConfigValue>> scopes = new HashMap<String, Map<String, AbstractConfigValue>>();
+        Map<Path, Map<String, AbstractConfigValue>> scopes = new HashMap<Path, Map<String, AbstractConfigValue>>();
 
-        for (String path : scopePaths) {
+        for (Path path : scopePaths) {
             Map<String, AbstractConfigValue> scope = new HashMap<String, AbstractConfigValue>();
             scopes.put(path, scope);
         }
 
         /* Store string values in the associated scope maps */
-        for (String path : valuePaths) {
-            String parentPath = exceptLastElement(path);
+        for (Path path : valuePaths) {
+            Path parentPath = path.parent();
             Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
                     .get(parentPath) : root;
 
-            String last = lastElement(path);
-            String value = props.getProperty(path);
-            parent.put(last, new ConfigString(origin, value));
+            String last = path.last();
+            Object rawValue = pathMap.get(path);
+            AbstractConfigValue value;
+            if (convertedFromProperties) {
+                value = new ConfigString(origin, (String) rawValue);
+            } else {
+                value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
+                        FromMapMode.KEYS_ARE_PATHS);
+            }
+            parent.put(last, value);
         }
 
         /*
          * Make a list of scope paths from longest to shortest, so children go
          * before parents.
          */
-        List<String> sortedScopePaths = new ArrayList<String>();
+        List<Path> sortedScopePaths = new ArrayList<Path>();
         sortedScopePaths.addAll(scopePaths);
         // sort descending by length
-        Collections.sort(sortedScopePaths, new Comparator<String>() {
+        Collections.sort(sortedScopePaths, new Comparator<Path>() {
             @Override
-            public int compare(String a, String b) {
+            public int compare(Path a, Path b) {
+                // Path.length() is O(n) so in theory this sucks
+                // but in practice we can make Path precompute length
+                // if it ever matters.
                 return b.length() - a.length();
             }
         });
@@ -111,16 +169,16 @@ final class PropertiesParser {
          * parents to avoid modifying any already-created ConfigObject. This is
          * where we need the sorted list.
          */
-        for (String scopePath : sortedScopePaths) {
+        for (Path scopePath : sortedScopePaths) {
             Map<String, AbstractConfigValue> scope = scopes.get(scopePath);
 
-            String parentPath = exceptLastElement(scopePath);
+            Path parentPath = scopePath.parent();
             Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
                     .get(parentPath) : root;
 
             AbstractConfigObject o = new SimpleConfigObject(origin, scope,
                     ResolveStatus.RESOLVED);
-            parent.put(lastElement(scopePath), o);
+            parent.put(scopePath.last(), o);
         }
 
         // return root config object
