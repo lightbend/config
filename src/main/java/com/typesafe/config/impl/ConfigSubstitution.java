@@ -85,16 +85,14 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
     private ConfigValue findInObject(AbstractConfigObject root,
             SubstitutionResolver resolver, /* null if we should not have refs */
-            Path subst, int depth,
- ConfigResolveOptions options) {
+            Path subst, int depth, ConfigResolveOptions options) {
         if (depth > MAX_DEPTH) {
             throw new ConfigException.BadValue(origin(), subst.render(),
                     "Substitution ${" + subst.render()
                             + "} is part of a cycle of substitutions");
         }
 
-        ConfigValue result = root.peekPath(subst, resolver, depth,
- options);
+        ConfigValue result = root.peekPath(subst, resolver, depth, options);
 
         if (result instanceof ConfigSubstitution) {
             throw new ConfigException.BugOrBroken(
