@@ -7,17 +7,33 @@ import java.util.Map;
  * A ConfigObject is a read-only configuration object, which may have nested
  * child objects. Implementations of ConfigObject should be immutable (at least
  * from the perspective of anyone using this interface).
+ * 
+ * Throughout the API, there is a distinction between "keys" and "paths". A key
+ * is a key in a JSON object; it's just a string that's the key in a map. A
+ * "path" is a parseable expression with a syntax and it refers to a series of
+ * keys. A path is used to traverse nested ConfigObject by looking up each key
+ * in the path. Path expressions are described in the spec for "HOCON", which
+ * can be found at https://github.com/havocp/config/blob/master/HOCON.md; in
+ * brief, a path is period-separated so "a.b.c" looks for key c in object b in
+ * object a in the root object. Sometimes double quotes are needed around
+ * special characters in path expressions.
  *
- * The getters all have the same semantics; they throw ConfigException.Missing
- * if the value is entirely unset, and ConfigException.WrongType if you ask for
- * a type that the value can't be converted to. ConfigException.Null is a
- * subclass of ConfigException.WrongType thrown if the value is null. The "path"
- * parameters for all the getters have periods between the key names, so the
- * path "a.b.c" looks for key c in object b in object a in the root object. (The
- * syntax for paths is the same as in ${} substitution expressions in config
- * files, sometimes double quotes are needed around special characters.)
+ * ConfigObject implements java.util.Map<String,ConfigValue>. For all methods
+ * implementing the Map interface, the keys are just plain keys; not a parseable
+ * path expression. In methods implementing Map, a ConfigValue with
+ * ConfigValue.valueType() of ConfigValueType.NULL will be distinct from a
+ * missing value. java.util.Map.containsKey() returns true if the map contains a
+ * value of type ConfigValueType.NULL at that key.
  *
- * ConfigObject implements the standard Java Map interface, but the mutator
+ * ConfigObject has another set of "getters", such as getValue() and getAnyRef()
+ * and getInt(), with more convenient semantics than java.util.Map.get(). These
+ * "getters" throw ConfigException.Missing if the value is entirely unset, and
+ * ConfigException.WrongType if you ask for a type that the value can't be
+ * converted to. ConfigException.Null is a subclass of ConfigException.WrongType
+ * thrown if the value is null. These getters also use path expressions, rather
+ * than keys, as described above.
+ *
+ * While ConfigObject implements the standard Java Map interface, the mutator
  * methods all throw UnsupportedOperationException. This Map is immutable.
  *
  * The Map may contain null values, which will have ConfigValue.valueType() ==
@@ -47,7 +63,7 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
      * not a key; and it returns false for null values, while containsKey()
      * returns true indicating that the object contains a null value for the
      * key.
-     * 
+     *
      * If a path exists according to hasPath(), then getValue() will never throw
      * an exception. However, the typed getters, such as getInt(), will still
      * throw if the value is not convertible to the requested type.

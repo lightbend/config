@@ -19,6 +19,16 @@ import com.typesafe.config.impl.Parseable;
  * potentially parsing multiple resources and resolving substitutions, while the
  * ones with "parse" in the name just create a ConfigValue from a resource and
  * nothing else.
+ *
+ * Throughout the API, there is a distinction between "keys" and "paths". A key
+ * is a key in a JSON object; it's just a string that's the key in a map. A
+ * "path" is a parseable expression with a syntax and it refers to a series of
+ * keys. A path is used to traverse nested ConfigObject by looking up each key
+ * in the path. Path expressions are described in the spec for "HOCON", which
+ * can be found at https://github.com/havocp/config/blob/master/HOCON.md; in
+ * brief, a path is period-separated so "a.b.c" looks for key c in object b in
+ * object a in the root object. Sometimes double quotes are needed around
+ * special characters in path expressions.
  */
 public final class Config {
 
@@ -108,6 +118,25 @@ public final class Config {
         return ConfigImpl.envVariablesAsConfig();
     }
 
+    /**
+     * Converts a Java Properties object to a ConfigObject using the rules
+     * documented in https://github.com/havocp/config/blob/master/HOCON.md The
+     * keys in the Properties object are split on the period character '.' and
+     * treated as paths. The values will all end up as string values. If you
+     * have both "a=foo" and "a.b=bar" in your properties file, so "a" is both
+     * the object containing "b" and the string "foo", then the string value is
+     * dropped.
+     *
+     * If you want to get System.getProperties() as a ConfigObject, it's better
+     * to use the systemProperties() or systemPropertiesRoot() methods. Those
+     * methods are able to use a cached global singleton ConfigObject for the
+     * system properties.
+     *
+     * @param properties
+     *            a Java Properties object
+     * @param options
+     * @return
+     */
     public static ConfigObject parse(Properties properties,
             ConfigParseOptions options) {
         return Parseable.newProperties(properties, options).parse();
@@ -153,24 +182,29 @@ public final class Config {
      * will become a ConfigObject and an Iterable will become a ConfigList. If
      * the Iterable is not an ordered collection, results could be strange,
      * since ConfigList is ordered.
-     * 
+     *
+     * In a Map passed to fromAnyRef(), the map's keys are plain keys, not path
+     * expressions. So if your Map has a key "foo.bar" then you will get one
+     * object with a key called "foo.bar", rather than an object with a key
+     * "foo" containing another object with a key "bar".
+     *
      * The originDescription will be used to set the origin() field on the
      * ConfigValue. It should normally be the name of the file the values came
      * from, or something short describing the value such as "default settings".
      * The originDescription is prefixed to error messages so users can tell
      * where problematic values are coming from.
-     * 
+     *
      * Supplying the result of ConfigValue.unwrapped() to this function is
      * guaranteed to work and should give you back a ConfigValue that matches
      * the one you unwrapped. The re-wrapped ConfigValue will lose some
      * information that was present in the original such as its origin, but it
      * will have matching values.
-     * 
+     *
      * This function throws if you supply a value that cannot be converted to a
      * ConfigValue, but supplying such a value is a bug in your program, so you
      * should never handle the exception. Just fix your program (or report a bug
      * against this library).
-     * 
+     *
      * @param object
      *            object to convert to ConfigValue
      * @param originDescription
@@ -185,6 +219,14 @@ public final class Config {
      * See the fromAnyRef() documentation for details. This is a typesafe
      * wrapper that only works on Map and returns ConfigObject rather than
      * ConfigValue.
+     *
+     * If your Map has a key "foo.bar" then you will get one object with a key
+     * called "foo.bar", rather than an object with a key "foo" containing
+     * another object with a key "bar". The keys in the map are keys; not path
+     * expressions. That is, the Map corresponds exactly to a single
+     * ConfigObject. The keys will not be parsed or modified, and the values are
+     * wrapped in ConfigValue. To get nested ConfigObject, some of the values in
+     * the map would have to be more maps.
      *
      * @param values
      * @param originDescription
