@@ -99,10 +99,6 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                     "peek or peekPath returned an unresolved substitution");
         }
 
-        if (result != null && result.valueType() == ConfigValueType.NULL) {
-            result = null;
-        }
-
         return result;
     }
 

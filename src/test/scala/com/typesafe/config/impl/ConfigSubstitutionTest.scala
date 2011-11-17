@@ -5,6 +5,7 @@ import org.junit._
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigResolveOptions
+import com.typesafe.config.Config
 
 class ConfigSubstitutionTest extends TestUtils {
 
@@ -291,6 +292,28 @@ class ConfigSubstitutionTest extends TestUtils {
         }
         if (existed == 0) {
             throw new Exception("None of the env vars we tried to use for testing were set")
+        }
+    }
+
+    @Test
+    def noFallbackToEnvIfValuesAreNull() {
+        import scala.collection.JavaConverters._
+
+        // create a fallback object with all the env var names
+        // set to null. we want to be sure this blocks
+        // lookup in the environment. i.e. if there is a
+        // { HOME : null } then ${HOME} should be null.
+        val nullsMap = new java.util.HashMap[String, Object]
+        for (k <- substEnvVarObject.keySet().asScala) {
+            nullsMap.put(k.toUpperCase(), null);
+        }
+        val nulls = Config.fromMap(nullsMap, "nulls map")
+
+        val resolved = resolve(substEnvVarObject.withFallback(nulls))
+
+        for (k <- resolved.keySet().asScala) {
+            assertNotNull(resolved.get(k))
+            assertEquals(nullValue, resolved.get(k))
         }
     }
 
