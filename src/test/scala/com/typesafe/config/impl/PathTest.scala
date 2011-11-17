@@ -65,6 +65,19 @@ class PathTest extends TestUtils {
     }
 
     @Test
+    def pathParent() {
+        assertNull(path("a").parent())
+        assertEquals(path("a"), path("a", "b").parent())
+        assertEquals(path("a", "b"), path("a", "b", "c").parent())
+    }
+
+    @Test
+    def pathLast() {
+        assertEquals("a", path("a").last())
+        assertEquals("b", path("a", "b").last())
+    }
+
+    @Test
     def pathsAreInvalid() {
         // this test is just of the Path.newPath() wrapper, the extensive
         // test of different paths is over in ConfParserTest
