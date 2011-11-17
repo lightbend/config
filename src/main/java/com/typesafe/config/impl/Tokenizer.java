@@ -95,7 +95,7 @@ final class Tokenizer {
             this.input = input;
             this.allowComments = allowComments;
             this.buffer = new LinkedList<Integer>();
-            lineNumber = 0;
+            lineNumber = 1;
             tokens = new LinkedList<Token>();
             tokens.add(Tokens.START);
             whitespaceSaver = new WhitespaceSaver();

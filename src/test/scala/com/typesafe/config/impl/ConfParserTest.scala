@@ -276,4 +276,40 @@ class ConfParserTest extends TestUtils {
         assertEquals(42, obj.getInt("/a/b/c"))
         assertEquals(32, obj.getInt("x/y/z"))
     }
+
+    private def lineNumberTest(num: Int, text: String) {
+        val e = intercept[ConfigException] {
+            parseObject(text)
+        }
+        if (!e.getMessage.contains(num + ":"))
+            throw new Exception("error message did not contain line '" + num + "' '" + text.replace("\n", "\\n") + "'", e)
+    }
+
+    @Test
+    def lineNumbersInErrors() {
+        // error is at the last char
+        lineNumberTest(1, "}")
+        lineNumberTest(2, "\n}")
+        lineNumberTest(3, "\n\n}")
+
+        // error is before a final newline
+        lineNumberTest(1, "}\n")
+        lineNumberTest(2, "\n}\n")
+        lineNumberTest(3, "\n\n}\n")
+
+        // with unquoted string
+        lineNumberTest(1, "foo")
+        lineNumberTest(2, "\nfoo")
+        lineNumberTest(3, "\n\nfoo")
+
+        // with quoted string
+        lineNumberTest(1, "\"foo\"")
+        lineNumberTest(2, "\n\"foo\"")
+        lineNumberTest(3, "\n\n\"foo\"")
+
+        // newline in middle of number uses the line the number was on
+        lineNumberTest(1, "1e\n")
+        lineNumberTest(2, "\n1e\n")
+        lineNumberTest(3, "\n\n1e\n")
+    }
 }

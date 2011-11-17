@@ -20,7 +20,7 @@ class TokenizerTest extends TestUtils {
 
     @Test
     def tokenizeNewlines() {
-        assertEquals(List(Tokens.START, Tokens.newLine(0), Tokens.newLine(1), Tokens.END),
+        assertEquals(List(Tokens.START, Tokens.newLine(1), Tokens.newLine(2), Tokens.END),
             tokenizeAsList("\n\n"))
     }
 
@@ -33,7 +33,7 @@ class TokenizerTest extends TestUtils {
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenTrue, tokenDouble(3.14), tokenFalse,
             tokenLong(42), tokenNull, tokenSubstitution(tokenUnquoted("a.b")),
-            tokenKeySubstitution("c.d"), Tokens.newLine(0), Tokens.END)
+            tokenKeySubstitution("c.d"), Tokens.newLine(1), Tokens.END)
         assertEquals(expected, tokenizeAsList(""",:=}{]["foo"true3.14false42null${a.b}${"c.d"}""" + "\n"))
     }
 
@@ -44,7 +44,7 @@ class TokenizerTest extends TestUtils {
             tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
             tokenDouble(3.14), tokenUnquoted(" "), tokenFalse, tokenUnquoted(" "), tokenNull,
             tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "), tokenKeySubstitution("c.d"),
-            Tokens.newLine(0), Tokens.END)
+            Tokens.newLine(1), Tokens.END)
         assertEquals(expected, tokenizeAsList(""" , : = } { ] [ "foo" 42 true 3.14 false null ${a.b} ${"c.d"} """ + "\n "))
     }
 
@@ -56,7 +56,7 @@ class TokenizerTest extends TestUtils {
             tokenDouble(3.14), tokenUnquoted("   "), tokenFalse, tokenUnquoted("   "), tokenNull,
             tokenUnquoted("   "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted("   "),
             tokenKeySubstitution("c.d"),
-            Tokens.newLine(0), Tokens.END)
+            Tokens.newLine(1), Tokens.END)
         assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${"c.d"}  """ + "\n   "))
     }
 
@@ -106,14 +106,14 @@ class TokenizerTest extends TestUtils {
 
     @Test
     def tokenizeUnquotedTextTrimsSpaces() {
-        val expected = List(Tokens.START, tokenUnquoted("foo"), Tokens.newLine(0), Tokens.END)
+        val expected = List(Tokens.START, tokenUnquoted("foo"), Tokens.newLine(1), Tokens.END)
         assertEquals(expected, tokenizeAsList("    foo     \n"))
     }
 
     @Test
     def tokenizeUnquotedTextKeepsInternalSpaces() {
         val expected = List(Tokens.START, tokenUnquoted("foo"), tokenUnquoted("  "), tokenUnquoted("bar"),
-            tokenUnquoted(" "), tokenUnquoted("baz"), Tokens.newLine(0), Tokens.END)
+            tokenUnquoted(" "), tokenUnquoted("baz"), Tokens.newLine(1), Tokens.END)
         assertEquals(expected, tokenizeAsList("    foo  bar baz   \n"))
     }
 
@@ -121,7 +121,7 @@ class TokenizerTest extends TestUtils {
     def tokenizeMixedUnquotedQuoted() {
         val expected = List(Tokens.START, tokenUnquoted("foo"),
             tokenString("bar"), tokenUnquoted("baz"),
-            Tokens.newLine(0), Tokens.END)
+            Tokens.newLine(1), Tokens.END)
         assertEquals(expected, tokenizeAsList("    foo\"bar\"baz   \n"))
     }
 
