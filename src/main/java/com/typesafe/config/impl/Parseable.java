@@ -35,7 +35,7 @@ import com.typesafe.config.ConfigValue;
  */
 public abstract class Parseable implements ConfigParseable {
     private ConfigIncludeContext includeContext;
-    private ConfigParseOptions options;
+    private ConfigParseOptions initialOptions;
 
     protected Parseable() {
 
@@ -60,7 +60,7 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     protected void postConstruct(ConfigParseOptions baseOptions) {
-        this.options = fixupOptions(baseOptions);
+        this.initialOptions = fixupOptions(baseOptions);
 
         this.includeContext = new ConfigIncludeContext() {
             @Override
@@ -121,19 +121,19 @@ public abstract class Parseable implements ConfigParseable {
         try {
             Reader reader = reader();
             try {
-                if (options.getSyntax() == ConfigSyntax.PROPERTIES) {
+                if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
                     return PropertiesParser.parse(reader, origin);
                 } else {
                     Iterator<Token> tokens = Tokenizer.tokenize(origin, reader,
-                            options.getSyntax());
-                    return Parser.parse(tokens, origin, options,
+                            finalOptions.getSyntax());
+                    return Parser.parse(tokens, origin, finalOptions,
                             includeContext());
                 }
             } finally {
                 reader.close();
             }
         } catch (IOException e) {
-            if (options.getAllowMissing()) {
+            if (finalOptions.getAllowMissing()) {
                 return SimpleConfigObject.emptyMissing(origin);
             } else {
                 throw new ConfigException.IO(origin, e.getMessage(), e);
@@ -158,7 +158,7 @@ public abstract class Parseable implements ConfigParseable {
 
     @Override
     public ConfigParseOptions options() {
-        return options;
+        return initialOptions;
     }
 
     @Override

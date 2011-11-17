@@ -6,6 +6,7 @@ import scala.collection.JavaConverters._
 import com.typesafe.config._
 import java.util.Collections
 import java.util.TreeSet
+import java.io.File
 
 class PublicApiTest extends TestUtils {
     @Test
@@ -172,5 +173,46 @@ class PublicApiTest extends TestUtils {
         val reunwrapped = rewrapped.unwrapped()
         assertEquals(conf, rewrapped)
         assertEquals(reunwrapped, unwrapped)
+    }
+
+    private def resource(filename: String) = {
+        val resourceDir = new File("src/test/resources")
+        if (!resourceDir.exists())
+            throw new RuntimeException("This test can only be run from the project's root directory")
+        new File(resourceDir, filename)
+    }
+
+    @Test
+    def defaultParseOptions() {
+        val d = ConfigParseOptions.defaults()
+        assertEquals(true, d.getAllowMissing())
+        assertNull(d.getIncluder())
+        assertNull(d.getOriginDescription())
+        assertNull(d.getSyntax())
+    }
+
+    @Test
+    def allowMissing() {
+        val e = intercept[ConfigException.IO] {
+            Config.parse(resource("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
+        }
+        assertTrue(e.getMessage.contains("No such"))
+
+        val conf = Config.parse(resource("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
+        assertTrue(conf.isEmpty())
+    }
+
+    @Test
+    def includesCanBeMissingThoughFileCannot() {
+        // test03.conf contains some nonexistent includes. check that
+        // setAllowMissing on the file (which is not missing) doesn't
+        // change that the includes are allowed to be missing.
+        // This can break because some options might "propagate" through
+        // to includes, but we don't want them all to do so.
+        val conf = Config.parse(resource("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
+        assertEquals(42, conf.getInt("test01.booleans"))
+
+        val conf2 = Config.parse(resource("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
+        assertEquals(conf, conf2)
     }
 }

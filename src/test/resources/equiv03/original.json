@@ -8,7 +8,7 @@
        "b" : 507,
        "c" : {
            "fromConf" : 89,
-           "fromProp" : true
+           "fromProp" : "true"
        }
    }
 }
