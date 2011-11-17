@@ -188,9 +188,9 @@ class ConfigTest extends TestUtils {
 
     @Test
     def mergeObjectThenPrimitiveThenObject() {
-        // the semantic here is that the primitive gets ignored, because
-        // it can't be merged with the object. But potentially it should
-        // throw an exception even, or warn.
+        // the semantic here is that the primitive blocks the
+        // object that occurs at lower priority. This is consistent
+        // with duplicate keys in the same file.
         val obj1 = parseObject("""{ "a" : { "b" : 42 } }""")
         val obj2 = parseObject("""{ "a" : 2 }""")
         val obj3 = parseObject("""{ "a" : { "b" : 43, "c" : 44 } }""")
@@ -198,8 +198,13 @@ class ConfigTest extends TestUtils {
         val merged = merge(obj1, obj2, obj3)
         assertEquals(42, merged.getInt("a.b"))
         assertEquals(1, merged.size)
-        assertEquals(44, merged.getInt("a.c"))
-        assertEquals(2, merged.getObject("a").size())
+        assertEquals(1, merged.getObject("a").size())
+
+        val merged2 = merge(obj3, obj2, obj1)
+        assertEquals(43, merged2.getInt("a.b"))
+        assertEquals(44, merged2.getInt("a.c"))
+        assertEquals(1, merged2.size)
+        assertEquals(2, merged2.getObject("a").size())
     }
 
     @Test

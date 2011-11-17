@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -273,9 +274,15 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         } else if (stack.size() == 1) {
             return stack.get(0);
         } else {
-            AbstractConfigObject merged = stack.get(0);
-            for (int i = 1; i < stack.size(); ++i) {
-                merged = merged.withFallback(stack.get(i));
+            // to be consistent with the semantics of duplicate keys
+            // in the same file, we have to go backward like this.
+            // importantly, a primitive value always permanently
+            // hides a previous object value.
+            ListIterator<AbstractConfigObject> i = stack.listIterator(stack
+                    .size());
+            AbstractConfigObject merged = i.previous();
+            while (i.hasPrevious()) {
+                merged = i.previous().withFallback(merged);
             }
             return merged;
         }

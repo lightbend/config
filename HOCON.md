@@ -150,7 +150,12 @@ To merge objects:
    these same rules.
 
 Object merge can be prevented by setting the key to another value
-first.
+first. This is because merging is always done two values at a
+time; if you set a key to an object, a non-object, then an object,
+first the non-object falls back to the object (non-object always
+wins), and then the object falls back to the non-object (no
+merging, object is the new value). So the two objects never see
+each other.
 
 These two are equivalent:
 
@@ -756,6 +761,48 @@ for hard drives (powers of ten scale).
 might wish to support both the SI power of ten units and the IEC
 power of two units. But until an implementation needs that, no
 such thing is documented here.)
+
+### Config object merging and file merging
+
+It may be useful to offer a method to merge two objects. If such a
+method is provided, it should work as if the two objects were
+duplicate values for the same key in the same file. (See the
+section earlier on duplicate key handling.)
+
+As with duplicate keys, an intermediate non-object value "hides"
+earlier object values. So say you merge three objects in this
+order:
+
+ - `{ a : { x : 1 } }`  (first priority)
+ - `{ a : 42 }` (fallback)
+ - `{ a : { y : 2 } }` (another fallback)
+
+The result would be `{ a : { x : 1 } }`. The two objects are not
+merged because they are not "adjacent"; the merging is done in
+pairs, and when `42` is paired with `{ y : 2 }`, `42` simply wins
+and loses all information about what it overrode.
+
+But if you re-ordered like this:
+
+ - `{ a : { x : 1 } }`  (first priority)
+ - `{ a : { y : 2 } }` (fallback)
+ - `{ a : 42 }` (another fallback)
+
+Now the result would be `{ a : { x : 1, y : 2 } }` because the two
+objects are adjacent.
+
+This rule for merging objects loaded from different files is
+_exactly_ the same behavior as for merging duplicate fields in the
+same file. All merging works the same way.
+
+Needless to say, normally it's well-defined whether a config
+setting is supposed to be a number or an object. This kind of
+weird pathology where the two are mixed should not be happening.
+
+The one place where it matters, though, is that it allows you to
+"clear" an object and start over by setting it to null and then
+setting it back to a new object. So this behavior gives people a
+way to get rid of default fallback values they don't want.
 
 ### Java properties mapping
 
