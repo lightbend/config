@@ -189,6 +189,23 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
+    def duplicateKeyObjectNullObject() {
+        // null is supposed to "reset" the object at key "a"
+        val obj = parseObject("""{ a : { b : 1 }, a : null, a : { c : 2 } }""")
+        assertEquals(1, obj.size())
+        assertEquals(1, obj.getObject("a").size())
+        assertEquals(2, obj.getInt("a.c"))
+    }
+
+    @Test
+    def duplicateKeyObjectNumberObject() {
+        val obj = parseObject("""{ a : { b : 1 }, a : 42, a : { c : 2 } }""")
+        assertEquals(1, obj.size())
+        assertEquals(1, obj.getObject("a").size())
+        assertEquals(2, obj.getInt("a.c"))
+    }
+
+    @Test
     def impliedCommaHandling() {
         val valids = Seq(
             """
