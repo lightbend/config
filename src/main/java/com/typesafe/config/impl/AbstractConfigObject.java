@@ -23,8 +23,16 @@ import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements
         ConfigObject {
+    final private SimpleConfig config;
+
     protected AbstractConfigObject(ConfigOrigin origin) {
         super(origin);
+        this.config = new SimpleConfig(this);
+    }
+
+    @Override
+    public Config toConfig() {
+        return config;
     }
 
     /**

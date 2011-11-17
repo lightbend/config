@@ -13,24 +13,43 @@ import com.typesafe.config.impl.ConfigUtil;
 import com.typesafe.config.impl.Parseable;
 
 /**
- * This class holds some global static methods for the config package.
+ * This class represents an immutable map from config paths to config values. It
+ * also contains some static methods for creating configs.
  *
- * The methods with "load" in the name do some sort of higher-level operation
- * potentially parsing multiple resources and resolving substitutions, while the
- * ones with "parse" in the name just create a ConfigValue from a resource and
- * nothing else.
+ * The static methods with "load" in the name do some sort of higher-level
+ * operation potentially parsing multiple resources and resolving substitutions,
+ * while the ones with "parse" in the name just create a ConfigValue from a
+ * resource and nothing else.
  *
  * Throughout the API, there is a distinction between "keys" and "paths". A key
  * is a key in a JSON object; it's just a string that's the key in a map. A
  * "path" is a parseable expression with a syntax and it refers to a series of
- * keys. A path is used to traverse nested ConfigObject by looking up each key
- * in the path. Path expressions are described in the spec for "HOCON", which
- * can be found at https://github.com/havocp/config/blob/master/HOCON.md; in
- * brief, a path is period-separated so "a.b.c" looks for key c in object b in
- * object a in the root object. Sometimes double quotes are needed around
- * special characters in path expressions.
+ * keys. Path expressions are described in the spec for "HOCON", which can be
+ * found at https://github.com/havocp/config/blob/master/HOCON.md; in brief, a
+ * path is period-separated so "a.b.c" looks for key c in object b in object a
+ * in the root object. Sometimes double quotes are needed around special
+ * characters in path expressions.
+ *
+ * The API for a Config is in terms of path expressions, while the API for a
+ * ConfigObject is in terms of keys. Conceptually, Config is a one-level map
+ * from paths to values, while a ConfigObject is a tree of maps from keys to
+ * values.
+ *
+ * Config is an immutable object and thus safe to use from multiple threads.
  */
-public final class Config {
+public abstract class Config {
+    protected Config() {
+    }
+
+    /**
+     * Gets the config as a tree of ConfigObject. This is a constant-time
+     * operation (it is not proportional to the number of values in the Config).
+     *
+     * @return
+     */
+    public abstract ConfigObject toObject();
+
+    public abstract ConfigOrigin origin();
 
     /**
      * Loads a configuration for the given root path in a "standard" way.
@@ -251,7 +270,7 @@ public final class Config {
      * "a=foo" and "a.b=bar", then "a" is both the string "foo" and the parent
      * object of "b". The caller of this method should ensure that doesn't
      * happen.
-     * 
+     *
      * @param values
      * @param originDescription
      * @return

@@ -7,7 +7,7 @@ import java.util.Map;
  * A ConfigObject is a read-only configuration object, which may have nested
  * child objects. Implementations of ConfigObject should be immutable (at least
  * from the perspective of anyone using this interface).
- * 
+ *
  * Throughout the API, there is a distinction between "keys" and "paths". A key
  * is a key in a JSON object; it's just a string that's the key in a map. A
  * "path" is a parseable expression with a syntax and it refers to a series of
@@ -43,6 +43,15 @@ import java.util.Map;
  * for null values.
  */
 public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
+
+    /**
+     * Converts this object to a Config instance, enabling you to use path
+     * expressions to find values in the object. This is a constant-time
+     * operation (it is not proportional to the size of the object).
+     * 
+     * @return
+     */
+    Config toConfig();
 
     /**
      * Recursively unwraps the object, returning a map from String to whatever
