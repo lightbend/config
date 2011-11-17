@@ -9,6 +9,8 @@ import com.typesafe.config.ConfigException
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
+import java.io.File
+import com.typesafe.config.ConfigParseOptions
 
 class ConfigTest extends TestUtils {
 
@@ -699,5 +701,13 @@ class ConfigTest extends TestUtils {
         assertEquals(8, conf.getInt("akka.event-handler-dispatcher.max-pool-size"))
         assertEquals("round-robin", conf.getString("akka.actor.deployment.\"/app/service-ping\".router"))
         assertEquals(true, conf.getBoolean("akka.stm.quick-release"))
+    }
+
+    @Test
+    def test05LoadPlayApplicationConf() {
+        val conf = Config.load("test05")
+
+        assertEquals("prod", conf.getString("%prod.application.mode"))
+        assertEquals("Yet another blog", conf.getString("blog.title"))
     }
 }
