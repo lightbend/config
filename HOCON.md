@@ -290,13 +290,20 @@ substitutions. This means that you can't nest substitutions inside
 other substitutions, and you can't have substitutions in keys.
 
 When concatenating the path expression, any `.` characters outside
-quoted strings or numbers are understood as path separators, while
-inside quoted strings and numbers `.` has no special meaning. So
+quoted strings are understood as path separators, while inside
+quoted strings `.` has no special meaning. So
 `foo.bar."hello.world"` would be a path with three elements,
 looking up key `foo`, key `bar`, then key `hello.world`.
 
- - `10.0foo` is a number then unquoted string `foo` so this would
-   be a single-element path.
+The main tricky point is that `.` characters in numbers do count
+as a path separator. When dealing with a number as part of a path
+expression, it's essential to retain the _original_ string
+representation of the number as it appeared in the file (rather
+than converting it back to a string with a generic
+number-to-string library function).
+
+ - `10.0foo` is a number then unquoted string `foo` and should
+   be the two-element path with `10` and `0foo` as the elements.
  - `foo10.0` is an unquoted string with a `.` in it, so this would
    be a two-element path with `foo10` and `0` as the elements.
  - `foo"10.0"` is an unquoted then a quoted string which are

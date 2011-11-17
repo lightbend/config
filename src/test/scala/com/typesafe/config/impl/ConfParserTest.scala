@@ -126,6 +126,13 @@ class ConfParserTest extends TestUtils {
         assertEquals(path("a_c"), parsePath("a_c"))
         assertEquals(path("-"), parsePath("\"-\""))
 
+        // here 10.0 is part of an unquoted string
+        assertEquals(path("foo10", "0"), parsePath("foo10.0"))
+        // here 10.0 is a number that gets value-concatenated
+        assertEquals(path("10", "0foo"), parsePath("10.0foo"))
+        // just a number
+        assertEquals(path("10", "0"), parsePath("10.0"))
+
         for (invalid <- Seq("", " ", "  \n   \n  ", "a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
             try {
                 intercept[ConfigException.BadPath] {
