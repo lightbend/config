@@ -137,7 +137,7 @@ class TokenizerTest extends TestUtils {
         assertEquals('6', "\\u0046"(5))
 
         val tests = List[UnescapeTest]((""" "" """, ""),
-            (" \"\0\" ", "\0"), // nul byte
+            (" \"\\u0000\" ", "\0"), // nul byte
             (""" "\"\\\/\b\f\n\r\t" """, "\"\\/\b\f\n\r\t"),
             ("\"\\u0046\"", "F"),
             ("\"\\u0046\\u0046\"", "FF"))

@@ -219,6 +219,12 @@ value. Again, these characters are not special _inside_ an
 unquoted string; they only trigger number parsing if they appear
 initially.
 
+Note that quoted JSON strings may not contain control characters
+(control characters include some whitespace characters, such as
+newline). This rule is from the JSON spec. However, unquoted
+strings have no restriction on control characters, other than the
+ones listed as "forbidden characters" above.
+
 ### Value concatenation
 
 The value of an object field or an array element may consist of

@@ -153,6 +153,7 @@ abstract trait TestUtils {
         "[ + ]",
         "[ # ]",
         "[ \\ ]",
+        ParseTest(true, "[ \"foo\nbar\" ]"), // unescaped newline in quoted string, lift doesn't care
         "[ # comment ]",
         "${ #comment }",
         "[ // comment ]",

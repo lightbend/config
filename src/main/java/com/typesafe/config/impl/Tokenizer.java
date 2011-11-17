@@ -358,6 +358,18 @@ final class Tokenizer {
             }
         }
 
+        private ConfigException controlCharacterError(int c) {
+            String asString;
+            if (c == '\n')
+                asString = "newline";
+            else if (c == '\t')
+                asString = "tab";
+            else
+                asString = String.format("control character 0x%x", c);
+            return parseError("JSON does not allow unescaped " + asString
+                    + " in quoted strings, use a backslash escape");
+        }
+
         private Token pullQuotedString() {
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
@@ -371,6 +383,8 @@ final class Tokenizer {
                     pullEscapeSequence(sb);
                 } else if (c == '"') {
                     // end the loop, done!
+                } else if (Character.isISOControl(c)) {
+                    throw controlCharacterError(c);
                 } else {
                     sb.appendCodePoint(c);
                 }
