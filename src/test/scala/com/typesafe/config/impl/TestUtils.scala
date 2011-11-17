@@ -8,6 +8,7 @@ import java.io.StringReader
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigSyntax
+import com.typesafe.config.ConfigFactory
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -332,10 +333,14 @@ abstract trait TestUtils {
     protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d, null)
 
     protected def parseObject(s: String) = {
+        parseConfig(s).toObject
+    }
+
+    protected def parseConfig(s: String) = {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test string").
             setSyntax(ConfigSyntax.CONF);
-        Config.parse(new StringReader(s), options).asInstanceOf[AbstractConfigObject]
+        ConfigFactory.parse(new StringReader(s), options).asInstanceOf[SimpleConfig]
     }
 
     protected def subst(ref: String) = {

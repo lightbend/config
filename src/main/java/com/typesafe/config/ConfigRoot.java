@@ -5,13 +5,13 @@ package com.typesafe.config;
  * resolve substitutions against it. So it can have a resolve() method that
  * doesn't require you to pass in an object to resolve against.
  */
-public interface ConfigRoot extends ConfigObject {
+public interface ConfigRoot extends Config {
     /**
      * Returns a replacement root object with all substitutions (the
      * "${foo.bar}" syntax) resolved. Substitutions are looked up in this root
      * object. A configuration value tree must be resolved before you can use
      * it. This method uses ConfigResolveOptions.defaults().
-     * 
+     *
      * @return an immutable object with substitutions resolved
      */
     ConfigRoot resolve();
@@ -19,10 +19,10 @@ public interface ConfigRoot extends ConfigObject {
     ConfigRoot resolve(ConfigResolveOptions options);
 
     @Override
-    ConfigRoot withFallback(ConfigValue fallback);
+    ConfigRoot withFallback(ConfigMergeable fallback);
 
     @Override
-    ConfigRoot withFallbacks(ConfigValue... fallbacks);
+    ConfigRoot withFallbacks(ConfigMergeable... fallbacks);
 
     /**
      * Gets the global app name that this root represents.

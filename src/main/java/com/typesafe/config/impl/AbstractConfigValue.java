@@ -1,5 +1,6 @@
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
@@ -67,15 +68,23 @@ abstract class AbstractConfigValue implements ConfigValue {
     }
 
     @Override
-    public AbstractConfigValue withFallback(ConfigValue other) {
+    public AbstractConfigValue toValue() {
         return this;
     }
 
     @Override
-    public AbstractConfigValue withFallbacks(ConfigValue... fallbacks) {
+    public AbstractConfigValue withFallback(ConfigMergeable other) {
+        return this;
+    }
+
+    @Override
+    public AbstractConfigValue withFallbacks(ConfigMergeable... fallbacks) {
+        // note: this is a no-op unless the subclass overrides withFallback().
+        // But we need to do this because subclass withFallback() may not
+        // just "return this"
         AbstractConfigValue merged = this;
-        for (ConfigValue f : fallbacks) {
-            merged = merged.withFallback(f);
+        for (ConfigMergeable f : fallbacks) {
+            merged = merged.withFallback(f.toValue());
         }
         return merged;
     }

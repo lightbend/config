@@ -6,12 +6,13 @@ import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigResolveOptions
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 
 class ConfigSubstitutionTest extends TestUtils {
 
     private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
-        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject]
+        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolveWithoutFallbacks(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
@@ -20,7 +21,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
     private def resolve(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
-        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject]
+        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolve(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
@@ -106,7 +107,7 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(stringValue("start<>end"), v)
 
         // but when null is NOT a subst, it should not become empty, incidentally
-        val o = parseObject("""{ "a" : null foo bar }""")
+        val o = parseConfig("""{ "a" : null foo bar }""")
         assertEquals("null foo bar", o.getString("a"))
     }
 
@@ -281,13 +282,13 @@ class ConfigSubstitutionTest extends TestUtils {
         val resolved = resolve(substEnvVarObject)
 
         var existed = 0
-        for (k <- resolved.keySet().asScala) {
+        for (k <- resolved.toObject.keySet().asScala) {
             val e = System.getenv(k.toUpperCase());
             if (e != null) {
                 existed += 1
                 assertEquals(e, resolved.getString(k))
             } else {
-                assertEquals(nullValue, resolved.get(k))
+                assertEquals(nullValue, resolved.toObject.get(k))
             }
         }
         if (existed == 0) {
@@ -307,13 +308,13 @@ class ConfigSubstitutionTest extends TestUtils {
         for (k <- substEnvVarObject.keySet().asScala) {
             nullsMap.put(k.toUpperCase(), null);
         }
-        val nulls = Config.fromMap(nullsMap, "nulls map")
+        val nulls = ConfigFactory.parseMap(nullsMap, "nulls map")
 
         val resolved = resolve(substEnvVarObject.withFallback(nulls))
 
-        for (k <- resolved.keySet().asScala) {
-            assertNotNull(resolved.get(k))
-            assertEquals(nullValue, resolved.get(k))
+        for (k <- resolved.toObject.keySet().asScala) {
+            assertNotNull(resolved.toObject.get(k))
+            assertEquals(nullValue, resolved.toObject.get(k))
         }
     }
 
@@ -332,7 +333,7 @@ class ConfigSubstitutionTest extends TestUtils {
             val e = System.getenv(k.toUpperCase());
             if (e != null) {
                 existed += 1
-                assertEquals(e, resolved.getObject("a").getString(k))
+                assertEquals(e, resolved.getConfig("a").getString(k))
             } else {
                 assertEquals(nullValue, resolved.getObject("a").get(k))
             }

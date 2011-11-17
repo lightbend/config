@@ -153,17 +153,17 @@ class ConfParserTest extends TestUtils {
 
     @Test
     def duplicateKeyLastWins() {
-        val obj = parseObject("""{ "a" : 10, "a" : 11 } """)
+        val obj = parseConfig("""{ "a" : 10, "a" : 11 } """)
 
-        assertEquals(1, obj.size())
+        assertEquals(1, obj.toObject.size())
         assertEquals(11, obj.getInt("a"))
     }
 
     @Test
     def duplicateKeyObjectsMerged() {
-        val obj = parseObject("""{ "a" : { "x" : 1, "y" : 2 }, "a" : { "x" : 42, "z" : 100 } }""")
+        val obj = parseConfig("""{ "a" : { "x" : 1, "y" : 2 }, "a" : { "x" : 42, "z" : 100 } }""")
 
-        assertEquals(1, obj.size())
+        assertEquals(1, obj.toObject.size())
         assertEquals(3, obj.getObject("a").size())
         assertEquals(42, obj.getInt("a.x"))
         assertEquals(2, obj.getInt("a.y"))
@@ -172,9 +172,9 @@ class ConfParserTest extends TestUtils {
 
     @Test
     def duplicateKeyObjectsMergedRecursively() {
-        val obj = parseObject("""{ "a" : { "b" : { "x" : 1, "y" : 2 } }, "a" : { "b" : { "x" : 42, "z" : 100 } } }""")
+        val obj = parseConfig("""{ "a" : { "b" : { "x" : 1, "y" : 2 } }, "a" : { "b" : { "x" : 42, "z" : 100 } } }""")
 
-        assertEquals(1, obj.size())
+        assertEquals(1, obj.toObject.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(3, obj.getObject("a.b").size())
         assertEquals(42, obj.getInt("a.b.x"))
@@ -184,9 +184,9 @@ class ConfParserTest extends TestUtils {
 
     @Test
     def duplicateKeyObjectsMergedRecursivelyDeeper() {
-        val obj = parseObject("""{ "a" : { "b" : { "c" : { "x" : 1, "y" : 2 } } }, "a" : { "b" : { "c" : { "x" : 42, "z" : 100 } } } }""")
+        val obj = parseConfig("""{ "a" : { "b" : { "c" : { "x" : 1, "y" : 2 } } }, "a" : { "b" : { "c" : { "x" : 42, "z" : 100 } } } }""")
 
-        assertEquals(1, obj.size())
+        assertEquals(1, obj.toObject.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(1, obj.getObject("a.b").size())
         assertEquals(3, obj.getObject("a.b.c").size())
@@ -198,16 +198,16 @@ class ConfParserTest extends TestUtils {
     @Test
     def duplicateKeyObjectNullObject() {
         // null is supposed to "reset" the object at key "a"
-        val obj = parseObject("""{ a : { b : 1 }, a : null, a : { c : 2 } }""")
-        assertEquals(1, obj.size())
+        val obj = parseConfig("""{ a : { b : 1 }, a : null, a : { c : 2 } }""")
+        assertEquals(1, obj.toObject.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(2, obj.getInt("a.c"))
     }
 
     @Test
     def duplicateKeyObjectNumberObject() {
-        val obj = parseObject("""{ a : { b : 1 }, a : 42, a : { c : 2 } }""")
-        assertEquals(1, obj.size())
+        val obj = parseConfig("""{ a : { b : 1 }, a : 42, a : { c : 2 } }""")
+        assertEquals(1, obj.toObject.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(2, obj.getInt("a.c"))
     }
@@ -263,8 +263,8 @@ class ConfParserTest extends TestUtils {
         var tested = 0;
         for (v <- valids; change <- changes) {
             tested += 1;
-            val obj = parseObject(change(v))
-            assertEquals(3, obj.size())
+            val obj = parseConfig(change(v))
+            assertEquals(3, obj.toObject.size())
             assertEquals("y", obj.getString("a"))
             assertEquals("z", obj.getString("b"))
             assertEquals(Seq(1, 2, 3), obj.getIntList("c").asScala)
@@ -273,37 +273,37 @@ class ConfParserTest extends TestUtils {
         assertEquals(valids.length * changes.length, tested)
 
         // with no newline or comma, we do value concatenation
-        val noNewlineInArray = parseObject(" { c : [ 1 2 3 ] } ")
+        val noNewlineInArray = parseConfig(" { c : [ 1 2 3 ] } ")
         assertEquals(Seq("1 2 3"), noNewlineInArray.getStringList("c").asScala)
 
-        val noNewlineInArrayWithQuoted = parseObject(""" { c : [ "4" "5" "6" ] } """)
+        val noNewlineInArrayWithQuoted = parseConfig(""" { c : [ "4" "5" "6" ] } """)
         assertEquals(Seq("4 5 6"), noNewlineInArrayWithQuoted.getStringList("c").asScala)
 
-        val noNewlineInObject = parseObject(" { a : b c } ")
+        val noNewlineInObject = parseConfig(" { a : b c } ")
         assertEquals("b c", noNewlineInObject.getString("a"))
 
-        val noNewlineAtEnd = parseObject("a : b")
+        val noNewlineAtEnd = parseConfig("a : b")
         assertEquals("b", noNewlineAtEnd.getString("a"))
 
         intercept[ConfigException] {
-            parseObject("{ a : y b : z }")
+            parseConfig("{ a : y b : z }")
         }
 
         intercept[ConfigException] {
-            parseObject("""{ "a" : "y" "b" : "z" }""")
+            parseConfig("""{ "a" : "y" "b" : "z" }""")
         }
     }
 
     @Test
     def keysWithSlash() {
-        val obj = parseObject("""/a/b/c=42, x/y/z : 32""")
+        val obj = parseConfig("""/a/b/c=42, x/y/z : 32""")
         assertEquals(42, obj.getInt("/a/b/c"))
         assertEquals(32, obj.getInt("x/y/z"))
     }
 
     private def lineNumberTest(num: Int, text: String) {
         val e = intercept[ConfigException] {
-            parseObject(text)
+            parseConfig(text)
         }
         if (!e.getMessage.contains(num + ":"))
             throw new Exception("error message did not contain line '" + num + "' '" + text.replace("\n", "\\n") + "'", e)

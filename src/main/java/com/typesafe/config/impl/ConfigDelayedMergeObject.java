@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
@@ -28,59 +29,6 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
         if (!(stack.get(0) instanceof AbstractConfigObject))
             throw new ConfigException.BugOrBroken(
                     "created a delayed merge object not guaranteed to be an object");
-    }
-
-    final private static class Root extends ConfigDelayedMergeObject implements
-            ConfigRootImpl {
-        final private Path rootPath;
-
-        Root(ConfigDelayedMergeObject original, Path rootPath) {
-            super(original.origin(), original.stack);
-            this.rootPath = rootPath;
-        }
-
-        @Override
-        protected Root asRoot(Path newRootPath) {
-            if (newRootPath.equals(this.rootPath))
-                return this;
-            else
-                return new Root(this, newRootPath);
-        }
-
-        @Override
-        public ConfigRootImpl resolve() {
-            return resolve(this);
-        }
-
-        @Override
-        public ConfigRootImpl resolve(ConfigResolveOptions options) {
-            return resolve(this, options);
-        }
-
-        @Override
-        public Root withFallback(ConfigValue value) {
-            return super.withFallback(value).asRoot(rootPath);
-        }
-
-        @Override
-        public Root withFallbacks(ConfigValue... values) {
-            return super.withFallbacks(values).asRoot(rootPath);
-        }
-
-        @Override
-        public String rootPath() {
-            return rootPath.render();
-        }
-
-        @Override
-        public Path rootPathObject() {
-            return rootPath;
-        }
-    }
-
-    @Override
-    protected Root asRoot(Path rootPath) {
-        return new Root(this, rootPath);
     }
 
     @Override
@@ -120,7 +68,9 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    public ConfigDelayedMergeObject withFallback(ConfigValue other) {
+    public ConfigDelayedMergeObject withFallback(ConfigMergeable mergeable) {
+        ConfigValue other = mergeable.toValue();
+
         if (other instanceof AbstractConfigObject
                 || other instanceof Unmergeable) {
             // since we are an object, and the fallback could be,
@@ -142,7 +92,7 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    public ConfigDelayedMergeObject withFallbacks(ConfigValue... others) {
+    public ConfigDelayedMergeObject withFallbacks(ConfigMergeable... others) {
         return (ConfigDelayedMergeObject) super.withFallbacks(others);
     }
 

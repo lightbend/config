@@ -1,4 +1,5 @@
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigFactory
 object Util {
     def time(body: () => Unit, iterations: Int): Long = {
         // warm up
@@ -26,7 +27,7 @@ object Util {
 
 object FileLoad extends App {
     def task() {
-        val conf = Config.load("test04")
+        val conf = ConfigFactory.load("test04")
         if (!"2.0-SNAPSHOT".equals(conf.getString("akka.version"))) {
             throw new Exception("broken file load")
         }
@@ -39,7 +40,7 @@ object FileLoad extends App {
 }
 
 object Resolve extends App {
-    val conf = Config.load("test02")
+    val conf = ConfigFactory.load("test02")
 
     def task() {
         conf.resolve()

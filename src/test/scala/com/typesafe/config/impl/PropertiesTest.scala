@@ -5,6 +5,7 @@ import org.junit._
 import java.util.Properties
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigParseOptions
+import com.typesafe.config.ConfigFactory
 
 class PropertiesTest extends TestUtils {
     @Test
@@ -50,7 +51,7 @@ class PropertiesTest extends TestUtils {
 
             props.setProperty(propsPath, propsPath)
 
-            val conf = Config.parse(props, ConfigParseOptions.defaults())
+            val conf = ConfigFactory.parse(props, ConfigParseOptions.defaults())
 
             assertEquals(propsPath, conf.getString(confPath))
         }
@@ -82,9 +83,9 @@ class PropertiesTest extends TestUtils {
         props.setProperty("x.y", "bar")
         props.setProperty("x.y.z", "foo")
 
-        val conf = Config.parse(props, ConfigParseOptions.defaults())
+        val conf = ConfigFactory.parse(props, ConfigParseOptions.defaults())
 
-        assertEquals(2, conf.size())
+        assertEquals(2, conf.toObject.size())
         assertEquals("foo", conf.getString("a.b"))
         assertEquals("foo", conf.getString("x.y.z"))
     }

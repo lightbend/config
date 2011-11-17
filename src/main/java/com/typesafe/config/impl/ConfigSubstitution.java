@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
@@ -51,7 +52,9 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    public AbstractConfigValue withFallback(ConfigValue other) {
+    public AbstractConfigValue withFallback(ConfigMergeable mergeable) {
+        ConfigValue other = mergeable.toValue();
+
         if (other instanceof AbstractConfigObject
                 || other instanceof Unmergeable) {
             // if we turn out to be an object, and the fallback also does,
@@ -113,12 +116,12 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         Path unprefixed = subst.subPath(prefixLength);
 
         if (result == null && options.getUseSystemProperties()) {
-            result = findInObject(ConfigImpl.systemPropertiesAsConfig(), null,
+            result = findInObject(ConfigImpl.systemPropertiesAsConfigObject(), null,
                     unprefixed, depth, options);
         }
 
         if (result == null && options.getUseSystemEnvironment()) {
-                result = findInObject(ConfigImpl.envVariablesAsConfig(), null,
+                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null,
                     unprefixed, depth, options);
         }
 

@@ -87,10 +87,23 @@ class ConfigValueTest extends TestUtils {
         checkNotEqualObjects(a, c)
         checkNotEqualObjects(b, c)
 
-        val root = a.asRoot(path("foo"))
-        checkEqualObjects(a, root)
-        checkNotEqualObjects(root, b)
-        checkNotEqualObjects(root, c)
+        // the config for an equal object is also equal
+        val config = a.toConfig()
+        checkEqualObjects(config, config)
+        checkEqualObjects(config, sameAsA.toConfig())
+        checkEqualObjects(a.toConfig(), config)
+        checkNotEqualObjects(config, b.toConfig())
+        checkNotEqualObjects(config, c.toConfig())
+
+        // configs are not equal to objects
+        checkNotEqualObjects(a, a.toConfig())
+        checkNotEqualObjects(b, b.toConfig())
+
+        // configs are equal to the same config as a root
+        val root = config.asRoot(path("foo"))
+        checkEqualObjects(config, root)
+        checkNotEqualObjects(b.toConfig(), root)
+        checkNotEqualObjects(c.toConfig(), root)
     }
 
     @Test
@@ -321,7 +334,7 @@ class ConfigValueTest extends TestUtils {
         unresolved { dmo.keySet() }
         unresolved { dmo.size() }
         unresolved { dmo.values() }
-        unresolved { dmo.getInt("foo") }
+        unresolved { dmo.toConfig.getInt("foo") }
     }
 
     @Test
@@ -335,12 +348,12 @@ class ConfigValueTest extends TestUtils {
         // formats as 1E100 (capital E)
         val d = "1e100"
 
-        val obj = parseObject("{ a : " + a + ", b : " + b + ", c : " + c + ", d : " + d + "}")
+        val obj = parseConfig("{ a : " + a + ", b : " + b + ", c : " + c + ", d : " + d + "}")
         assertEquals(Seq(a, b, c, d),
             Seq("a", "b", "c", "d") map { obj.getString(_) })
 
         // make sure it still works if we're doing concatenation
-        val obj2 = parseObject("{ a : xx " + a + " yy, b : xx " + b + " yy, c : xx " + c + " yy, d : xx " + d + " yy}")
+        val obj2 = parseConfig("{ a : xx " + a + " yy, b : xx " + b + " yy, c : xx " + c + " yy, d : xx " + d + " yy}")
         assertEquals(Seq(a, b, c, d) map { "xx " + _ + " yy" },
             Seq("a", "b", "c", "d") map { obj2.getString(_) })
     }
@@ -374,11 +387,11 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def hasPathWorks() {
-        val empty = parseObject("{}")
+        val empty = parseConfig("{}")
 
         assertFalse(empty.hasPath("foo"))
 
-        val obj = parseObject("a=null, b.c.d=11, foo=bar")
+        val obj = parseConfig("a=null, b.c.d=11, foo=bar")
 
         // returns true for the non-null values
         assertTrue(obj.hasPath("foo"))
@@ -387,12 +400,12 @@ class ConfigValueTest extends TestUtils {
         assertTrue(obj.hasPath("b"))
 
         // hasPath() is false for null values but containsKey is true
-        assertEquals(nullValue(), obj.get("a"))
-        assertTrue(obj.containsKey("a"))
+        assertEquals(nullValue(), obj.toObject.get("a"))
+        assertTrue(obj.toObject.containsKey("a"))
         assertFalse(obj.hasPath("a"))
 
         // false for totally absent values
-        assertFalse(obj.containsKey("notinhere"))
+        assertFalse(obj.toObject.containsKey("notinhere"))
         assertFalse(obj.hasPath("notinhere"))
 
         // throws proper exceptions
@@ -425,12 +438,12 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def automaticBooleanConversions() {
-        val trues = parseObject("{ a=true, b=yes, c=on }")
+        val trues = parseObject("{ a=true, b=yes, c=on }").toConfig
         assertEquals(true, trues.getBoolean("a"))
         assertEquals(true, trues.getBoolean("b"))
         assertEquals(true, trues.getBoolean("c"))
 
-        val falses = parseObject("{ a=false, b=no, c=off }")
+        val falses = parseObject("{ a=false, b=no, c=off }").toConfig
         assertEquals(false, falses.getBoolean("a"))
         assertEquals(false, falses.getBoolean("b"))
         assertEquals(false, falses.getBoolean("c"))

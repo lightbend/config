@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigIncludeContext;
 import com.typesafe.config.ConfigIncluder;
@@ -119,15 +120,19 @@ public class ConfigImpl {
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigRoot emptyRoot(String rootPath, String originDescription) {
         String desc = originDescription != null ? originDescription : rootPath;
-        return SimpleConfigObject.empty(new SimpleConfigOrigin(desc))
-                .asRoot(
-                Parser.parsePath(rootPath));
+        return emptyObject(desc).toConfig().asRoot(
+                Path.newPath(rootPath));
     }
 
-    public static ConfigObject empty(String originDescription) {
+    static AbstractConfigObject emptyObject(String originDescription) {
         ConfigOrigin origin = originDescription != null ? new SimpleConfigOrigin(
                 originDescription) : null;
         return emptyObject(origin);
+    }
+
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static Config emptyConfig(String originDescription) {
+        return emptyObject(originDescription).toConfig();
     }
 
     static AbstractConfigObject empty(ConfigOrigin origin) {
@@ -267,9 +272,10 @@ public class ConfigImpl {
     public static ConfigRoot systemPropertiesRoot(String rootPath) {
         Path path = Parser.parsePath(rootPath);
         try {
-            return systemPropertiesAsConfig().getObject(rootPath).asRoot(path);
+            return systemPropertiesAsConfigObject().toConfig().getConfig(rootPath)
+                    .asRoot(path);
         } catch (ConfigException.Missing e) {
-            return SimpleConfigObject.empty().asRoot(path);
+            return emptyObject("system properties").toConfig().asRoot(path);
         }
     }
 
@@ -329,8 +335,7 @@ public class ConfigImpl {
 
     private static AbstractConfigObject systemProperties = null;
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public synchronized static AbstractConfigObject systemPropertiesAsConfig() {
+    synchronized static AbstractConfigObject systemPropertiesAsConfigObject() {
         if (systemProperties == null) {
             systemProperties = loadSystemProperties();
         }
@@ -344,6 +349,11 @@ public class ConfigImpl {
                         "system properties")).parse();
     }
 
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static Config systemPropertiesAsConfig() {
+        return systemPropertiesAsConfigObject().toConfig();
+    }
+
     // this is a hack to let us set system props in the test suite
     synchronized static void dropSystemPropertiesConfig() {
         systemProperties = null;
@@ -351,8 +361,7 @@ public class ConfigImpl {
 
     private static AbstractConfigObject envVariables = null;
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public synchronized static AbstractConfigObject envVariablesAsConfig() {
+    synchronized static AbstractConfigObject envVariablesAsConfigObject() {
         if (envVariables == null) {
             envVariables = loadEnvVariables();
         }
@@ -369,5 +378,10 @@ public class ConfigImpl {
         }
         return new SimpleConfigObject(new SimpleConfigOrigin("env variables"),
                 m, ResolveStatus.RESOLVED);
+    }
+
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static Config envVariablesAsConfig() {
+        return envVariablesAsConfigObject().toConfig();
     }
 }

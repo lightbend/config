@@ -1,12 +1,19 @@
 package com.typesafe.config;
 
-import java.util.List;
 import java.util.Map;
 
 /**
  * A ConfigObject is a read-only configuration object, which may have nested
  * child objects. Implementations of ConfigObject should be immutable (at least
- * from the perspective of anyone using this interface).
+ * from the perspective of anyone using this interface) and thus thread-safe.
+ *
+ * In most cases you want to use the Config interface rather than this one. Call
+ * toConfig() to convert a ConfigObject to a config.
+ *
+ * The API for a ConfigObject is in terms of keys, while the API for a Config is
+ * in terms of path expressions. Conceptually, ConfigObject is a tree of maps
+ * from keys to values, while a ConfigObject is a one-level map from paths to
+ * values.
  *
  * Throughout the API, there is a distinction between "keys" and "paths". A key
  * is a key in a JSON object; it's just a string that's the key in a map. A
@@ -18,29 +25,17 @@ import java.util.Map;
  * object a in the root object. Sometimes double quotes are needed around
  * special characters in path expressions.
  *
- * ConfigObject implements java.util.Map<String,ConfigValue>. For all methods
- * implementing the Map interface, the keys are just plain keys; not a parseable
- * path expression. In methods implementing Map, a ConfigValue with
- * ConfigValue.valueType() of ConfigValueType.NULL will be distinct from a
- * missing value. java.util.Map.containsKey() returns true if the map contains a
- * value of type ConfigValueType.NULL at that key.
- *
- * ConfigObject has another set of "getters", such as getValue() and getAnyRef()
- * and getInt(), with more convenient semantics than java.util.Map.get(). These
- * "getters" throw ConfigException.Missing if the value is entirely unset, and
- * ConfigException.WrongType if you ask for a type that the value can't be
- * converted to. ConfigException.Null is a subclass of ConfigException.WrongType
- * thrown if the value is null. These getters also use path expressions, rather
- * than keys, as described above.
+ * ConfigObject implements java.util.Map<String,ConfigValue> and all methods
+ * work with keys, not path expressions.
  *
  * While ConfigObject implements the standard Java Map interface, the mutator
  * methods all throw UnsupportedOperationException. This Map is immutable.
  *
  * The Map may contain null values, which will have ConfigValue.valueType() ==
- * ConfigValueType.NULL. When using methods from the Map interface, such as
- * get() or containsKey(), these null ConfigValue will be visible. But hasPath()
- * returns false for null values, and getInt() etc. throw ConfigException.Null
- * for null values.
+ * ConfigValueType.NULL. If get() returns Java's null then the key was not
+ * present in the parsed file (or wherever this value tree came from). If get()
+ * returns a ConfigValue with type ConfigValueType.NULL then the key was set to
+ * null explicitly.
  */
 public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
@@ -48,7 +43,7 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
      * Converts this object to a Config instance, enabling you to use path
      * expressions to find values in the object. This is a constant-time
      * operation (it is not proportional to the size of the object).
-     * 
+     *
      * @return
      */
     Config toConfig();
@@ -61,113 +56,10 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
     Map<String, Object> unwrapped();
 
     @Override
-    ConfigObject withFallback(ConfigValue other);
+    ConfigObject withFallback(ConfigMergeable other);
 
     @Override
-    ConfigObject withFallbacks(ConfigValue... others);
-
-    /**
-     * Checks whether a value is present and non-null at the given path. This
-     * differs in two ways from containsKey(): it looks for a path expression,
-     * not a key; and it returns false for null values, while containsKey()
-     * returns true indicating that the object contains a null value for the
-     * key.
-     *
-     * If a path exists according to hasPath(), then getValue() will never throw
-     * an exception. However, the typed getters, such as getInt(), will still
-     * throw if the value is not convertible to the requested type.
-     *
-     * @param path
-     *            the path expression
-     * @return true if a non-null value is present at the path
-     * @throws ConfigException.BadPath
-     *             if the path expression is invalid
-     */
-    boolean hasPath(String path);
-
-    boolean getBoolean(String path);
-
-    Number getNumber(String path);
-
-    int getInt(String path);
-
-    long getLong(String path);
-
-    double getDouble(String path);
-
-    String getString(String path);
-
-    ConfigObject getObject(String path);
-
-    /**
-     * Gets the value at the path as an unwrapped Java boxed value (Boolean,
-     * Integer, Long, etc.)
-     */
-    Object getAnyRef(String path);
-
-    /**
-     * Gets the value at the given path, unless the value is a null value or
-     * missing, in which case it throws just like the other getters. Use get()
-     * from the Map interface if you want an unprocessed value.
-     *
-     * @param path
-     * @return
-     */
-    ConfigValue getValue(String path);
-
-    /**
-     * Get value as a size in bytes (parses special strings like "128M"). The
-     * size units are interpreted as for memory, not as for disk space, so they
-     * are in powers of two.
-     */
-    Long getMemorySizeInBytes(String path);
-
-    /**
-     * Get value as a duration in milliseconds. If the value is already a
-     * number, then it's left alone; if it's a string, it's parsed understanding
-     * units suffixes like "10m" or "5ns"
-     */
-    Long getMilliseconds(String path);
-
-    /**
-     * Get value as a duration in nanoseconds. If the value is already a number
-     * it's taken as milliseconds and converted to nanoseconds. If it's a
-     * string, it's parsed understanding unit suffixes.
-     */
-    Long getNanoseconds(String path);
-
-    /**
-     * Gets a list value (with any element type) as a ConfigList, which
-     * implements java.util.List<ConfigValue>. Throws if the path is unset or
-     * null.
-     *
-     * @param path
-     *            the path to the list value.
-     * @return the ConfigList at the path
-     */
-    ConfigList getList(String path);
-
-    List<Boolean> getBooleanList(String path);
-
-    List<Number> getNumberList(String path);
-
-    List<Integer> getIntList(String path);
-
-    List<Long> getLongList(String path);
-
-    List<Double> getDoubleList(String path);
-
-    List<String> getStringList(String path);
-
-    List<? extends ConfigObject> getObjectList(String path);
-
-    List<? extends Object> getAnyRefList(String path);
-
-    List<Long> getMemorySizeInBytesList(String path);
-
-    List<Long> getMillisecondsList(String path);
-
-    List<Long> getNanosecondsList(String path);
+    ConfigObject withFallbacks(ConfigMergeable... others);
 
     /**
      * Gets a ConfigValue at the given key, or returns null if there is no

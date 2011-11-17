@@ -20,19 +20,19 @@ class UnitParserTest extends TestUtils {
             "1.1574074074074073e-05d", "1.1574074074074073e-05  days", "1.1574074074074073e-05day")
         val oneSecInNanos = TimeUnit.SECONDS.toNanos(1)
         for (s <- oneSecs) {
-            val result = Config.parseDuration(s, fakeOrigin(), "test")
+            val result = SimpleConfig.parseDuration(s, fakeOrigin(), "test")
             assertEquals(oneSecInNanos, result)
         }
 
         // bad units
         val e = intercept[ConfigException.BadValue] {
-            Config.parseDuration("100 dollars", fakeOrigin(), "test")
+            SimpleConfig.parseDuration("100 dollars", fakeOrigin(), "test")
         }
         assertTrue(e.getMessage().contains("time unit"))
 
         // bad number
         val e2 = intercept[ConfigException.BadValue] {
-            Config.parseDuration("1 00 seconds", fakeOrigin(), "test")
+            SimpleConfig.parseDuration("1 00 seconds", fakeOrigin(), "test")
         }
         assertTrue(e2.getMessage().contains("duration number"))
     }
@@ -47,7 +47,7 @@ class UnitParserTest extends TestUtils {
             "1m", "1M", "1 M", "1 megabytes", "1 megabyte",
             "0.0009765625g", "0.0009765625G", "0.0009765625 gigabytes", "0.0009765625 gigabyte")
 
-        def parseMem(s: String) = Config.parseMemorySizeInBytes(s, fakeOrigin(), "test")
+        def parseMem(s: String) = SimpleConfig.parseMemorySizeInBytes(s, fakeOrigin(), "test")
 
         for (s <- oneMegs) {
             val result = parseMem(s)
@@ -61,13 +61,13 @@ class UnitParserTest extends TestUtils {
 
         // bad units
         val e = intercept[ConfigException.BadValue] {
-            Config.parseMemorySizeInBytes("100 dollars", fakeOrigin(), "test")
+            SimpleConfig.parseMemorySizeInBytes("100 dollars", fakeOrigin(), "test")
         }
         assertTrue(e.getMessage().contains("size unit"))
 
         // bad number
         val e2 = intercept[ConfigException.BadValue] {
-            Config.parseMemorySizeInBytes("1 00 bytes", fakeOrigin(), "test")
+            SimpleConfig.parseMemorySizeInBytes("1 00 bytes", fakeOrigin(), "test")
         }
         assertTrue(e2.getMessage().contains("size number"))
     }

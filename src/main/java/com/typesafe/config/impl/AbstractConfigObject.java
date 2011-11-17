@@ -10,11 +10,9 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
-import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigList;
+import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
@@ -31,30 +29,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public Config toConfig() {
+    public SimpleConfig toConfig() {
         return config;
-    }
-
-    /**
-     * Returns a version of this object that implements the ConfigRoot
-     * interface.
-     *
-     * @return a config root
-     */
-    protected ConfigRootImpl asRoot(Path rootPath) {
-        return new RootConfigObject(this, rootPath);
-    }
-
-    protected static ConfigRootImpl resolve(ConfigRootImpl root) {
-        return resolve(root, ConfigResolveOptions.defaults());
-    }
-
-    protected static ConfigRootImpl resolve(ConfigRootImpl root,
-            ConfigResolveOptions options) {
-        AbstractConfigValue resolved = SubstitutionResolver.resolve(
-                (AbstractConfigValue) root, (AbstractConfigObject) root,
-                options);
-        return ((AbstractConfigObject) resolved).asRoot(root.rootPathObject());
     }
 
     /**
@@ -124,70 +100,17 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return ConfigValueType.OBJECT;
     }
 
-    @Override
-    public boolean hasPath(String pathExpression) {
-        Path path = Path.newPath(pathExpression);
-        ConfigValue peeked = peekPath(path, null, 0, null);
-        return peeked != null && peeked.valueType() != ConfigValueType.NULL;
-    }
-
     protected abstract AbstractConfigObject newCopy(ResolveStatus status);
 
-    static private AbstractConfigValue resolve(AbstractConfigObject self,
-            String pathExpression, ConfigValueType expected,
-            String originalPath) {
-        Path path = Path.newPath(pathExpression);
-        return find(self, path, expected, originalPath);
-    }
-
-    static private AbstractConfigValue findKey(AbstractConfigObject self,
-            String key, ConfigValueType expected, String originalPath) {
-        AbstractConfigValue v = self.peek(key);
-        if (v == null)
-            throw new ConfigException.Missing(originalPath);
-
-        if (expected != null)
-            v = DefaultTransformer.transform(v, expected);
-
-        if (v.valueType() == ConfigValueType.NULL)
-            throw new ConfigException.Null(v.origin(), originalPath,
-                    expected != null ? expected.name() : null);
-        else if (expected != null && v.valueType() != expected)
-            throw new ConfigException.WrongType(v.origin(), originalPath,
-                    expected.name(), v.valueType().name());
-        else
-            return v;
-    }
-
-    static private AbstractConfigValue find(AbstractConfigObject self,
-            Path path, ConfigValueType expected,
-            String originalPath) {
-        String key = path.first();
-        Path next = path.remainder();
-        if (next == null) {
-            return findKey(self, key, expected, originalPath);
-        } else {
-            AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
-                    ConfigValueType.OBJECT, originalPath);
-            assert (o != null); // missing was supposed to throw
-            return find(o, next, expected, originalPath);
-        }
-    }
-
-    AbstractConfigValue find(String pathExpression,
-            ConfigValueType expected,
-            String originalPath) {
-        return resolve(this, pathExpression, expected,
-                originalPath);
-    }
-
     @Override
-    public AbstractConfigObject withFallbacks(ConfigValue... others) {
+    public AbstractConfigObject withFallbacks(ConfigMergeable... others) {
         return (AbstractConfigObject) super.withFallbacks(others);
     }
 
     @Override
-    public AbstractConfigObject withFallback(ConfigValue other) {
+    public AbstractConfigObject withFallback(ConfigMergeable mergeable) {
+        ConfigValue other = mergeable.toValue();
+
         if (other instanceof Unmergeable) {
             List<AbstractConfigValue> stack = new ArrayList<AbstractConfigValue>();
             stack.add(this);
@@ -359,234 +282,6 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             return peek((String) key);
         else
             return null;
-    }
-
-    @Override
-    public AbstractConfigValue getValue(String path) {
-        return find(path, null, path);
-    }
-
-    @Override
-    public boolean getBoolean(String path) {
-        ConfigValue v = find(path, ConfigValueType.BOOLEAN, path);
-        return (Boolean) v.unwrapped();
-    }
-
-    @Override
-    public Number getNumber(String path) {
-        ConfigValue v = find(path, ConfigValueType.NUMBER, path);
-        return (Number) v.unwrapped();
-    }
-
-    @Override
-    public int getInt(String path) {
-        return getNumber(path).intValue();
-    }
-
-    @Override
-    public long getLong(String path) {
-        return getNumber(path).longValue();
-    }
-
-    @Override
-    public double getDouble(String path) {
-        return getNumber(path).doubleValue();
-    }
-
-    @Override
-    public String getString(String path) {
-        ConfigValue v = find(path, ConfigValueType.STRING, path);
-        return (String) v.unwrapped();
-    }
-
-    @Override
-    public ConfigList getList(String path) {
-        AbstractConfigValue v = find(path, ConfigValueType.LIST, path);
-        return (ConfigList) v;
-    }
-
-    @Override
-    public AbstractConfigObject getObject(String path) {
-        AbstractConfigObject obj = (AbstractConfigObject) find(path,
-                ConfigValueType.OBJECT, path);
-        return obj;
-    }
-
-    @Override
-    public Object getAnyRef(String path) {
-        ConfigValue v = find(path, null, path);
-        return v.unwrapped();
-    }
-
-    @Override
-    public Long getMemorySizeInBytes(String path) {
-        Long size = null;
-        try {
-            size = getLong(path);
-        } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING, path);
-            size = Config.parseMemorySizeInBytes((String) v.unwrapped(), v.origin(),
-                    path);
-        }
-        return size;
-    }
-
-    @Override
-    public Long getMilliseconds(String path) {
-        long ns = getNanoseconds(path);
-        long ms = TimeUnit.NANOSECONDS.toMillis(ns);
-        return ms;
-    }
-
-    @Override
-    public Long getNanoseconds(String path) {
-        Long ns = null;
-        try {
-            ns = TimeUnit.MILLISECONDS.toNanos(getLong(path));
-        } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING, path);
-            ns = Config.parseDuration((String) v.unwrapped(), v.origin(), path);
-        }
-        return ns;
-    }
-
-    @SuppressWarnings("unchecked")
-    private <T> List<T> getHomogeneousUnwrappedList(String path,
-            ConfigValueType expected) {
-        List<T> l = new ArrayList<T>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue cv : list) {
-            // variance would be nice, but stupid cast will do
-            AbstractConfigValue v = (AbstractConfigValue) cv;
-            if (expected != null) {
-                v = DefaultTransformer.transform(v, expected);
-            }
-            if (v.valueType() != expected)
-                throw new ConfigException.WrongType(v.origin(), path,
-                        "list of " + expected.name(), "list of "
-                                + v.valueType().name());
-            l.add((T) v.unwrapped());
-        }
-        return l;
-    }
-
-    @Override
-    public List<Boolean> getBooleanList(String path) {
-        return getHomogeneousUnwrappedList(path, ConfigValueType.BOOLEAN);
-    }
-
-    @Override
-    public List<Number> getNumberList(String path) {
-        return getHomogeneousUnwrappedList(path, ConfigValueType.NUMBER);
-    }
-
-    @Override
-    public List<Integer> getIntList(String path) {
-        List<Integer> l = new ArrayList<Integer>();
-        List<Number> numbers = getNumberList(path);
-        for (Number n : numbers) {
-            l.add(n.intValue());
-        }
-        return l;
-    }
-
-    @Override
-    public List<Long> getLongList(String path) {
-        List<Long> l = new ArrayList<Long>();
-        List<Number> numbers = getNumberList(path);
-        for (Number n : numbers) {
-            l.add(n.longValue());
-        }
-        return l;
-    }
-
-    @Override
-    public List<Double> getDoubleList(String path) {
-        List<Double> l = new ArrayList<Double>();
-        List<Number> numbers = getNumberList(path);
-        for (Number n : numbers) {
-            l.add(n.doubleValue());
-        }
-        return l;
-    }
-
-    @Override
-    public List<String> getStringList(String path) {
-        return getHomogeneousUnwrappedList(path, ConfigValueType.STRING);
-    }
-
-    @Override
-    public List<ConfigObject> getObjectList(String path) {
-        List<ConfigObject> l = new ArrayList<ConfigObject>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            if (v.valueType() != ConfigValueType.OBJECT)
-                throw new ConfigException.WrongType(v.origin(), path,
-                        ConfigValueType.OBJECT.name(), v.valueType().name());
-            l.add((ConfigObject) v);
-        }
-        return l;
-    }
-
-    @Override
-    public List<? extends Object> getAnyRefList(String path) {
-        List<Object> l = new ArrayList<Object>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            l.add(v.unwrapped());
-        }
-        return l;
-    }
-
-    @Override
-    public List<Long> getMemorySizeInBytesList(String path) {
-        List<Long> l = new ArrayList<Long>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(((Number) v.unwrapped()).longValue());
-            } else if (v.valueType() == ConfigValueType.STRING) {
-                String s = (String) v.unwrapped();
-                Long n = Config.parseMemorySizeInBytes(s, v.origin(), path);
-                l.add(n);
-            } else {
-                throw new ConfigException.WrongType(v.origin(), path,
-                        "memory size string or number of bytes", v.valueType()
-                                .name());
-            }
-        }
-        return l;
-    }
-
-    @Override
-    public List<Long> getMillisecondsList(String path) {
-        List<Long> nanos = getNanosecondsList(path);
-        List<Long> l = new ArrayList<Long>();
-        for (Long n : nanos) {
-            l.add(TimeUnit.NANOSECONDS.toMillis(n));
-        }
-        return l;
-    }
-
-    @Override
-    public List<Long> getNanosecondsList(String path) {
-        List<Long> l = new ArrayList<Long>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(TimeUnit.MILLISECONDS.toNanos(((Number) v.unwrapped())
-                        .longValue()));
-            } else if (v.valueType() == ConfigValueType.STRING) {
-                String s = (String) v.unwrapped();
-                Long n = Config.parseDuration(s, v.origin(), path);
-                l.add(n);
-            } else {
-                throw new ConfigException.WrongType(v.origin(), path,
-                        "duration string or number of nanoseconds", v
-                                .valueType().name());
-            }
-        }
-        return l;
     }
 
     @Override

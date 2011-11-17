@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
@@ -100,7 +101,9 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     }
 
     @Override
-    public AbstractConfigValue withFallback(ConfigValue other) {
+    public AbstractConfigValue withFallback(ConfigMergeable mergeable) {
+        ConfigValue other = mergeable.toValue();
+
         if (other instanceof AbstractConfigObject
                 || other instanceof Unmergeable) {
             // if we turn out to be an object, and the fallback also does,

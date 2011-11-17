@@ -5,7 +5,7 @@ package com.typesafe.config;
  * users of this interface, the object is immutable. It is therefore safe to use
  * from multiple threads.
  */
-public interface ConfigValue {
+public interface ConfigValue extends ConfigMergeable {
     /**
      * The origin of the value, for debugging and error messages.
      *
@@ -27,27 +27,9 @@ public interface ConfigValue {
      */
     Object unwrapped();
 
-    /**
-     * Returns a new value computed by merging this value with another, with
-     * keys in this value "winning" over the other one. Only ConfigObject has
-     * anything to do in this method (it merges the fallback keys into itself).
-     * All other values just return the original value, since they automatically
-     * override any fallback.
-     *
-     * @param other
-     *            an object whose keys should be used if the keys are not
-     *            present in this one
-     * @return a new object (or the original one, if the fallback doesn't get
-     *         used)
-     */
-    ConfigValue withFallback(ConfigValue other);
+    @Override
+    ConfigValue withFallback(ConfigMergeable other);
 
-    /**
-     * Convenience method just calls withFallback() on each of the values;
-     * earlier values in the list win over later ones.
-     * 
-     * @param fallbacks
-     * @return a version of the object with the requested fallbacks merged in
-     */
-    ConfigValue withFallbacks(ConfigValue... fallbacks);
+    @Override
+    ConfigValue withFallbacks(ConfigMergeable... fallbacks);
 }
