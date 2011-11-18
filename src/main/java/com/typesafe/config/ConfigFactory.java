@@ -147,6 +147,10 @@ public final class ConfigFactory {
                 .toConfig();
     }
 
+    public static Config parseString(String s, ConfigParseOptions options) {
+        return Parseable.newString(s, options).parse().toConfig();
+    }
+
     /**
      * Parses classpath resources corresponding to this path expression.
      * Essentially if the path is "foo.bar" then the resources are

@@ -340,7 +340,7 @@ abstract trait TestUtils {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test string").
             setSyntax(ConfigSyntax.CONF);
-        ConfigFactory.parseReader(new StringReader(s), options).asInstanceOf[SimpleConfig]
+        ConfigFactory.parseString(s, options).asInstanceOf[SimpleConfig]
     }
 
     protected def subst(ref: String) = {
