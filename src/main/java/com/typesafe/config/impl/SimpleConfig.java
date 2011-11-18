@@ -59,6 +59,13 @@ class SimpleConfig implements Config {
         return new RootConfig(underlying, newRootPath);
     }
 
+    static protected RootConfig newRootIfObjectChanged(RootConfig self, AbstractConfigObject underlying) {
+        if (underlying == self.object)
+            return self;
+        else
+            return new RootConfig(underlying, self.rootPathObject());
+    }
+
     protected AbstractConfigObject resolvedObject(ConfigResolveOptions options) {
         AbstractConfigValue resolved = SubstitutionResolver.resolve(object,
                 object, options);

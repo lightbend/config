@@ -5,7 +5,6 @@ package com.typesafe.config.impl;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -16,7 +15,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigIncludeContext;
 import com.typesafe.config.ConfigIncluder;
-import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
@@ -27,21 +25,6 @@ import com.typesafe.config.ConfigValue;
 
 /** This is public but is only supposed to be used by the "config" package */
 public class ConfigImpl {
-
-    static <T extends ConfigMergeable> T merge(Class<T> klass, T first,
-            ConfigMergeable... others) {
-        List<ConfigMergeable> stack = Arrays.asList(others);
-        return merge(klass, first, stack);
-    }
-
-    static <T extends ConfigMergeable> T merge(Class<T> klass, T first,
-            List<? extends ConfigMergeable> stack) {
-        ConfigMergeable merged = first;
-        for (ConfigMergeable fallback : stack) {
-            merged = merged.withFallback(fallback);
-        }
-        return klass.cast(merged);
-    }
 
     private interface NameSource {
         ConfigParseable nameToParseable(String name);

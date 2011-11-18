@@ -15,6 +15,7 @@ import com.typesafe.config.ConfigResolveOptions
 import java.io.File
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigMergeable
 
 class ConfigTest extends TestUtils {
 
@@ -83,7 +84,10 @@ class ConfigTest extends TestUtils {
         val trees = Seq(m(allObjects: _*)) ++ makeTrees(allObjects)
         for (tree <- trees) {
             // if this fails, we were not associative.
-            assertEquals(trees(0), tree)
+            if (!trees(0).equals(tree))
+                throw new AssertionError("Merge was not associative, " +
+                    "verify that it should not be, then don't use associativeMerge " +
+                    "for this one.\none: " + trees(0) + "\ntwo: " + tree)
         }
 
         for (tree <- trees) {
@@ -443,6 +447,61 @@ class ConfigTest extends TestUtils {
             assertEquals(4, resolved.getInt("j.z"))
             assertEquals(5, resolved.getInt("j.q"))
         }
+    }
+
+    private def ignoresFallbacks(m: ConfigMergeable) = {
+        m match {
+            case v: AbstractConfigValue =>
+                v.ignoresFallbacks()
+            case c: SimpleConfig =>
+                c.toObject.ignoresFallbacks()
+        }
+    }
+
+    private def testIgnoredMergesDoNothing(nonEmpty: ConfigMergeable) {
+        // falling back to a primitive once should switch us to "ignoreFallbacks" mode
+        // and then twice should "return this". Falling back to an empty object should
+        // return this unless the empty object was ignoreFallbacks and then we should
+        // "catch" its ignoreFallbacks.
+
+        // some of what this tests is just optimization, not API contract (withFallback
+        // can return a new object anytime it likes) but want to be sure we do the
+        // optimizations.
+
+        val empty = SimpleConfigObject.empty(null)
+        val primitive = intValue(42)
+        val emptyIgnoringFallbacks = empty.withFallback(primitive)
+        val nonEmptyIgnoringFallbacks = nonEmpty.withFallback(primitive)
+
+        assertEquals(false, empty.ignoresFallbacks())
+        assertEquals(true, primitive.ignoresFallbacks())
+        assertEquals(true, emptyIgnoringFallbacks.ignoresFallbacks())
+        assertEquals(false, ignoresFallbacks(nonEmpty))
+        assertEquals(true, ignoresFallbacks(nonEmptyIgnoringFallbacks))
+
+        assertTrue(nonEmpty ne nonEmptyIgnoringFallbacks)
+        assertTrue(empty ne emptyIgnoringFallbacks)
+
+        // falling back from primitive just returns this
+        assertTrue(primitive eq primitive.withFallback(empty))
+        assertTrue(primitive eq primitive.withFallback(nonEmpty))
+        assertTrue(primitive eq primitive.withFallback(nonEmptyIgnoringFallbacks))
+
+        // falling back again from an ignoreFallbacks should be a no-op, return this
+        assertTrue(nonEmptyIgnoringFallbacks eq nonEmptyIgnoringFallbacks.withFallback(empty))
+        assertTrue(nonEmptyIgnoringFallbacks eq nonEmptyIgnoringFallbacks.withFallback(primitive))
+        assertTrue(emptyIgnoringFallbacks eq emptyIgnoringFallbacks.withFallback(empty))
+        assertTrue(emptyIgnoringFallbacks eq emptyIgnoringFallbacks.withFallback(primitive))
+    }
+
+    @Test
+    def ignoredMergesDoNothing() {
+        val conf = parseConfig("{ a : 1 }")
+        testIgnoredMergesDoNothing(conf)
+
+        // ConfigRoot mode uses a little different codepath
+        val root = conf.asRoot(path("whatever"))
+        testIgnoredMergesDoNothing(root)
     }
 
     @Test

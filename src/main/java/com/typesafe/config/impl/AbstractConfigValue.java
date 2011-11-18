@@ -3,6 +3,7 @@
  */
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
@@ -75,6 +76,10 @@ abstract class AbstractConfigValue implements ConfigValue {
         return this;
     }
 
+    protected AbstractConfigValue newCopy(boolean ignoresFallbacks) {
+        return this;
+    }
+
     // this is virtualized rather than a field because only some subclasses
     // really need to store the boolean, and they may be able to pack it
     // with another boolean to save space.
@@ -82,9 +87,50 @@ abstract class AbstractConfigValue implements ConfigValue {
         return true;
     }
 
+    private ConfigException badMergeException() {
+        if (ignoresFallbacks())
+            throw new ConfigException.BugOrBroken(
+                    "method should not have been called with ignoresFallbacks=true"
+                            + getClass().getSimpleName());
+        else
+            throw new ConfigException.BugOrBroken("should override this in "
+                    + getClass().getSimpleName());
+    }
+
+    protected AbstractConfigValue mergedWithTheUnmergeable(Unmergeable fallback) {
+        throw badMergeException();
+    }
+
+    protected AbstractConfigValue mergedWithObject(AbstractConfigObject fallback) {
+        throw badMergeException();
+    }
+
     @Override
-    public AbstractConfigValue withFallback(ConfigMergeable other) {
-        return this;
+    public AbstractConfigValue withFallback(ConfigMergeable mergeable) {
+        if (ignoresFallbacks()) {
+            return this;
+        } else {
+            ConfigValue other = mergeable.toValue();
+
+            if (other instanceof Unmergeable) {
+                return mergedWithTheUnmergeable((Unmergeable) other);
+            } else if (other instanceof AbstractConfigObject) {
+                AbstractConfigObject fallback = (AbstractConfigObject) other;
+                if (fallback.resolveStatus() == ResolveStatus.RESOLVED && fallback.isEmpty()) {
+                    if (fallback.ignoresFallbacks())
+                        return newCopy(true /* ignoresFallbacks */);
+                    else
+                        return this;
+                } else {
+                    return mergedWithObject((AbstractConfigObject) other);
+                }
+            } else {
+                // falling back to a non-object doesn't merge anything, and also
+                // prohibits merging any objects that we fall back to later.
+                // so we have to switch to ignoresFallbacks mode.
+                return newCopy(true /* ignoresFallbacks */);
+            }
+        }
     }
 
     protected boolean canEqual(Object other) {

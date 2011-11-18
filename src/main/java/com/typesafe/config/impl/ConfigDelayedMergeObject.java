@@ -28,8 +28,8 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
         this(origin, stack, false /* ignoresFallbacks */);
     }
 
-    private ConfigDelayedMergeObject(ConfigOrigin origin,
-            List<AbstractConfigValue> stack, boolean ignoresFallbacks) {
+    ConfigDelayedMergeObject(ConfigOrigin origin, List<AbstractConfigValue> stack,
+            boolean ignoresFallbacks) {
         super(origin);
         this.stack = stack;
         this.ignoresFallbacks = ignoresFallbacks;
@@ -40,10 +40,16 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
         if (!(stack.get(0) instanceof AbstractConfigObject))
             throw new ConfigException.BugOrBroken(
                     "created a delayed merge object not guaranteed to be an object");
+
+        for (AbstractConfigValue v : stack) {
+            if (v instanceof ConfigDelayedMerge || v instanceof ConfigDelayedMergeObject)
+                throw new ConfigException.BugOrBroken(
+                        "placed nested DelayedMerge in a ConfigDelayedMergeObject, should have consolidated stack");
+        }
     }
 
     @Override
-    public ConfigDelayedMergeObject newCopy(ResolveStatus status,
+    protected ConfigDelayedMergeObject newCopy(ResolveStatus status,
             boolean ignoresFallbacks) {
         if (status != resolveStatus())
             throw new ConfigException.BugOrBroken(
@@ -86,30 +92,22 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    public ConfigDelayedMergeObject withFallback(ConfigMergeable mergeable) {
-        ConfigValue other = mergeable.toValue();
+    protected ConfigDelayedMergeObject mergedWithObject(AbstractConfigObject fallback) {
+        if (ignoresFallbacks)
+            throw new ConfigException.BugOrBroken("should not be reached");
 
-        if (ignoresFallbacks) {
-            return this;
-        } else if (other instanceof AbstractConfigObject
-                || other instanceof Unmergeable) {
-            // since we are an object, and the fallback could be,
-            // then a merge may be required; delay until we resolve.
-            List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
-            newStack.addAll(stack);
-            if (other instanceof Unmergeable)
-                newStack.addAll(((Unmergeable) other).unmergedValues());
-            else
-                newStack.add((AbstractConfigValue) other);
-            return new ConfigDelayedMergeObject(
-                    AbstractConfigObject.mergeOrigins(newStack), newStack,
-                    ignoresFallbacks);
-        } else {
-            // if the other is not an object, there won't be anything
-            // to merge with but we do need to ignore any fallbacks
-            // that occur after it.
-            return newCopy(resolveStatus(), true /* ignoresFallbacks */);
-        }
+        // since we are an object, and the fallback is, we'll need to
+        // merge the fallback once we resolve.
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+        newStack.addAll(stack);
+        newStack.add(fallback);
+        return new ConfigDelayedMergeObject(AbstractConfigObject.mergeOrigins(newStack), newStack,
+                fallback.ignoresFallbacks());
+    }
+
+    @Override
+    public ConfigDelayedMergeObject withFallback(ConfigMergeable mergeable) {
+        return (ConfigDelayedMergeObject) super.withFallback(mergeable);
     }
 
     @Override

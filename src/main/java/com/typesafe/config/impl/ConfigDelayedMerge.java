@@ -8,10 +8,8 @@ import java.util.Collection;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
-import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -29,8 +27,8 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     final private List<AbstractConfigValue> stack;
     final private boolean ignoresFallbacks;
 
-    private ConfigDelayedMerge(ConfigOrigin origin,
-            List<AbstractConfigValue> stack, boolean ignoresFallbacks) {
+    ConfigDelayedMerge(ConfigOrigin origin, List<AbstractConfigValue> stack,
+            boolean ignoresFallbacks) {
         super(origin);
         this.stack = stack;
         this.ignoresFallbacks = ignoresFallbacks;
@@ -38,6 +36,11 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
             throw new ConfigException.BugOrBroken(
                     "creating empty delayed merge value");
 
+        for (AbstractConfigValue v : stack) {
+            if (v instanceof ConfigDelayedMerge || v instanceof ConfigDelayedMergeObject)
+                throw new ConfigException.BugOrBroken(
+                        "placed nested DelayedMerge in a ConfigDelayedMerge, should have consolidated stack");
+        }
     }
 
     ConfigDelayedMerge(ConfigOrigin origin, List<AbstractConfigValue> stack) {
@@ -67,18 +70,19 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
             List<AbstractConfigValue> stack, SubstitutionResolver resolver,
             int depth, ConfigResolveOptions options) {
         // to resolve substitutions, we need to recursively resolve
-        // the stack of stuff to merge, and then merge the stack.
-        List<AbstractConfigValue> toMerge = new ArrayList<AbstractConfigValue>();
+        // the stack of stuff to merge, and merge the stack so
+        // we won't be a delayed merge anymore.
 
+        AbstractConfigValue merged = null;
         for (AbstractConfigValue v : stack) {
             AbstractConfigValue resolved = resolver.resolve(v, depth, options);
-            toMerge.add(resolved);
+            if (merged == null)
+                merged = resolved;
+            else
+                merged = merged.withFallback(resolved);
         }
 
-        // we shouldn't have a delayed merge object with an empty stack, so
-        // it should be safe to ignore the toMerge.isEmpty case.
-        return ConfigImpl.merge(AbstractConfigValue.class, toMerge.get(0),
-                toMerge.subList(1, toMerge.size()));
+        return merged;
     }
 
     @Override
@@ -101,29 +105,31 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     }
 
     @Override
-    public AbstractConfigValue withFallback(ConfigMergeable mergeable) {
-        ConfigValue other = mergeable.toValue();
+    protected final ConfigDelayedMerge mergedWithTheUnmergeable(Unmergeable fallback) {
+        if (ignoresFallbacks)
+            throw new ConfigException.BugOrBroken("should not be reached");
 
-        if (ignoresFallbacks) {
-            return this;
-        } else if (other instanceof AbstractConfigObject
-                || other instanceof Unmergeable) {
-            // if we turn out to be an object, and the fallback also does,
-            // then a merge may be required; delay until we resolve.
-            List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
-            newStack.addAll(stack);
-            if (other instanceof Unmergeable)
-                newStack.addAll(((Unmergeable) other).unmergedValues());
-            else
-                newStack.add((AbstractConfigValue) other);
-            return new ConfigDelayedMerge(
-                    AbstractConfigObject.mergeOrigins(newStack), newStack,
-                    ignoresFallbacks);
-        } else {
-            // if the other is not an object, there won't be anything
-            // to merge with, so we are it even if we are an object.
-            return new ConfigDelayedMerge(origin(), stack, true /* ignoresFallbacks */);
-        }
+        // if we turn out to be an object, and the fallback also does,
+        // then a merge may be required; delay until we resolve.
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+        newStack.addAll(stack);
+        newStack.addAll(fallback.unmergedValues());
+        return new ConfigDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack,
+                ((AbstractConfigValue) fallback).ignoresFallbacks());
+    }
+
+    @Override
+    protected final ConfigDelayedMerge mergedWithObject(AbstractConfigObject fallback) {
+        if (ignoresFallbacks)
+            throw new ConfigException.BugOrBroken("should not be reached");
+
+        // if we turn out to be an object, and the fallback also does,
+        // then a merge may be required; delay until we resolve.
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+        newStack.addAll(stack);
+        newStack.add(fallback);
+        return new ConfigDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack,
+                fallback.ignoresFallbacks());
     }
 
     @Override
