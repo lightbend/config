@@ -1,5 +1,6 @@
 /.classpath
 /.project
 /.cache
+/.settings
 /bin
 target/
