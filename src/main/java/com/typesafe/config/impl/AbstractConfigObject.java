@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -192,31 +191,6 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     static ConfigOrigin mergeOrigins(AbstractConfigObject... stack) {
         return mergeOrigins(Arrays.asList(stack));
-    }
-
-    /**
-     * Stack should be from overrides to fallbacks (earlier items win). Objects
-     * have their keys combined into a new object, while other kinds of value
-     * are just first-one-wins.
-     */
-    static AbstractConfigObject merge(List<AbstractConfigObject> stack) {
-        if (stack.isEmpty()) {
-            return SimpleConfigObject.empty();
-        } else if (stack.size() == 1) {
-            return stack.get(0);
-        } else {
-            // to be consistent with the semantics of duplicate keys
-            // in the same file, we have to go backward like this.
-            // importantly, a primitive value always permanently
-            // hides a previous object value.
-            ListIterator<AbstractConfigObject> i = stack.listIterator(stack
-                    .size());
-            AbstractConfigObject merged = i.previous();
-            while (i.hasPrevious()) {
-                merged = i.previous().withFallback(merged);
-            }
-            return merged;
-        }
     }
 
     private AbstractConfigObject modify(Modifier modifier,

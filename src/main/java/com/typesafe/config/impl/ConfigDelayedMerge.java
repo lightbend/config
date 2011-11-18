@@ -58,32 +58,17 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
             int depth, ConfigResolveOptions options) {
         // to resolve substitutions, we need to recursively resolve
         // the stack of stuff to merge, and then merge the stack.
-        List<AbstractConfigObject> toMerge = new ArrayList<AbstractConfigObject>();
+        List<AbstractConfigValue> toMerge = new ArrayList<AbstractConfigValue>();
 
         for (AbstractConfigValue v : stack) {
             AbstractConfigValue resolved = resolver.resolve(v, depth, options);
-
-            if (resolved instanceof AbstractConfigObject) {
-                toMerge.add((AbstractConfigObject) resolved);
-            } else {
-                if (toMerge.isEmpty()) {
-                    // done, we'll ignore any objects anyway since we
-                    // now have a non-object value. There is a semantic
-                    // effect to this optimization though: we won't detect
-                    // any cycles or other errors in the objects we are
-                    // not resolving. In other cases (without substitutions
-                    // involved) we might detect those errors.
-                    return resolved;
-                } else {
-                    // look for more objects to merge, since once we have
-                    // an object we merge all objects even if there are
-                    // intervening non-objects.
-                    continue;
-                }
-            }
+            toMerge.add(resolved);
         }
 
-        return AbstractConfigObject.merge(toMerge);
+        // we shouldn't have a delayed merge object with an empty stack, so
+        // it should be safe to ignore the toMerge.isEmpty case.
+        return ConfigImpl.merge(AbstractConfigValue.class, toMerge.get(0),
+                toMerge.subList(1, toMerge.size()));
     }
 
     @Override

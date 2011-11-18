@@ -82,11 +82,7 @@ abstract class AbstractConfigValue implements ConfigValue {
         // note: this is a no-op unless the subclass overrides withFallback().
         // But we need to do this because subclass withFallback() may not
         // just "return this"
-        AbstractConfigValue merged = this;
-        for (ConfigMergeable f : fallbacks) {
-            merged = merged.withFallback(f.toValue());
-        }
-        return merged;
+        return ConfigImpl.merge(AbstractConfigValue.class, this, fallbacks);
     }
 
     protected boolean canEqual(Object other) {

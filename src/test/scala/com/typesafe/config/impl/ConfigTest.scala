@@ -15,8 +15,31 @@ import com.typesafe.config.ConfigFactory
 
 class ConfigTest extends TestUtils {
 
+    private def resolveNoSystem(v: AbstractConfigValue, root: AbstractConfigObject) = {
+        SubstitutionResolver.resolve(v, root, ConfigResolveOptions.noSystem())
+    }
+
+    private def resolveNoSystem(v: SimpleConfig, root: SimpleConfig) = {
+        SubstitutionResolver.resolve(v.toObject, root.toObject,
+            ConfigResolveOptions.noSystem()).asInstanceOf[AbstractConfigObject].toConfig
+    }
+
+    def mergeUnresolved(toMerge: AbstractConfigObject*) = {
+        if (toMerge.isEmpty) {
+            SimpleConfigObject.empty()
+        } else {
+            val obj = toMerge(0).withFallbacks(toMerge.slice(1, toMerge.size): _*)
+            obj match {
+                case x: AbstractConfigObject => x
+            }
+        }
+    }
+
     def merge(toMerge: AbstractConfigObject*) = {
-        AbstractConfigObject.merge(toMerge.toList.asJava)
+        val obj = mergeUnresolved(toMerge: _*)
+        resolveNoSystem(obj, obj) match {
+            case x: AbstractConfigObject => x
+        }
     }
 
     // In many cases, we expect merging to be associative. It is
@@ -25,7 +48,7 @@ class ConfigTest extends TestUtils {
     // in that case, if an association starts with the non-object
     // value, then the value after the non-object value gets lost.
     private def associativeMerge(allObjects: Seq[AbstractConfigObject])(assertions: SimpleConfig => Unit) {
-        def m(toMerge: AbstractConfigObject*) = merge(toMerge: _*)
+        def m(toMerge: AbstractConfigObject*) = mergeUnresolved(toMerge: _*)
 
         def makeTrees(objects: Seq[AbstractConfigObject]): Iterator[AbstractConfigObject] = {
             objects.length match {
@@ -188,6 +211,23 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def mergeOverrideObjectAndSubstitution() {
+        val obj1 = parseObject("""{ "a" : 1 }""")
+        val obj2 = parseObject("""{ "a" : { "b" : ${c} }, "c" : 42 }""")
+        val merged = merge(obj1, obj2).toConfig
+
+        assertEquals(1, merged.getInt("a"))
+        assertEquals(2, merged.toObject.size)
+
+        val merged2 = merge(obj2, obj1).toConfig
+
+        assertEquals(42, merged2.getConfig("a").getInt("b"))
+        assertEquals(42, merged2.getInt("a.b"))
+        assertEquals(2, merged2.toObject.size)
+        assertEquals(1, merged2.getObject("a").size)
+    }
+
+    @Test
     def mergeObjectThenPrimitiveThenObject() {
         // the semantic here is that the primitive blocks the
         // object that occurs at lower priority. This is consistent
@@ -211,6 +251,29 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def mergeObjectThenSubstitutionThenObject() {
+        // the semantic here is that the primitive blocks the
+        // object that occurs at lower priority. This is consistent
+        // with duplicate keys in the same file.
+        val obj1 = parseObject("""{ "a" : { "b" : ${f} } }""")
+        val obj2 = parseObject("""{ "a" : 2 }""")
+        val obj3 = parseObject("""{ "a" : { "b" : ${d}, "c" : ${e} }, "d" : 43, "e" : 44, "f" : 42 }""")
+
+        val merged = merge(obj1, obj2, obj3).toConfig
+
+        assertEquals(42, merged.getInt("a.b"))
+        assertEquals(4, merged.toObject.size)
+        assertEquals(1, merged.getObject("a").size())
+
+        val merged2 = merge(obj3, obj2, obj1).toConfig
+
+        assertEquals(43, merged2.getInt("a.b"))
+        assertEquals(44, merged2.getInt("a.c"))
+        assertEquals(4, merged2.toObject.size)
+        assertEquals(2, merged2.getObject("a").size())
+    }
+
+    @Test
     def mergePrimitiveThenObjectThenPrimitive() {
         // the primitive should override the object
         val obj1 = parseObject("""{ "a" : 1 }""")
@@ -223,13 +286,19 @@ class ConfigTest extends TestUtils {
         }
     }
 
-    private def resolveNoSystem(v: AbstractConfigValue, root: AbstractConfigObject) = {
-        SubstitutionResolver.resolve(v, root, ConfigResolveOptions.noSystem())
-    }
+    @Test
+    def mergeSubstitutionThenObjectThenSubstitution() {
+        // the substitution should override the object
+        val obj1 = parseObject("""{ "a" : ${b}, "b" : 1 }""")
+        val obj2 = parseObject("""{ "a" : { "b" : 42 } }""")
+        val obj3 = parseObject("""{ "a" : ${c}, "c" : 2 }""")
 
-    private def resolveNoSystem(v: SimpleConfig, root: SimpleConfig) = {
-        SubstitutionResolver.resolve(v.toObject, root.toObject,
-            ConfigResolveOptions.noSystem()).asInstanceOf[AbstractConfigObject].toConfig
+        associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
+            val resolved = resolveNoSystem(merged, merged)
+
+            assertEquals(1, resolved.getInt("a"))
+            assertEquals(3, resolved.toObject.size)
+        }
     }
 
     @Test
@@ -237,10 +306,7 @@ class ConfigTest extends TestUtils {
         val obj1 = parseObject("""{ "a" : { "x" : 1, "z" : 4 }, "c" : ${a} }""")
         val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
 
-        val merged = merge(obj1, obj2)
-        val resolved = (resolveNoSystem(merged, merged) match {
-            case x: ConfigObject => x
-        }).toConfig
+        val resolved = merge(obj1, obj2).toConfig
 
         assertEquals(3, resolved.getObject("c").size())
         assertEquals(1, resolved.getInt("c.x"))
@@ -253,19 +319,13 @@ class ConfigTest extends TestUtils {
         val obj1 = parseObject("""{ "a" : { "x" : 1, "z" : 4 }, "c" : { "z" : 42 } }""")
         val obj2 = parseObject("""{ "b" : { "y" : 2, "z" : 5 }, "c" : ${b} }""")
 
-        val merged = merge(obj1, obj2)
-        val resolved = (resolveNoSystem(merged, merged) match {
-            case x: ConfigObject => x
-        }).toConfig
+        val resolved = merge(obj1, obj2).toConfig
 
         assertEquals(2, resolved.getObject("c").size())
         assertEquals(2, resolved.getInt("c.y"))
         assertEquals(42, resolved.getInt("c.z"))
 
-        val merged2 = merge(obj2, obj1)
-        val resolved2 = (resolveNoSystem(merged2, merged2) match {
-            case x: ConfigObject => x
-        }).toConfig
+        val resolved2 = merge(obj2, obj1).toConfig
 
         assertEquals(2, resolved2.getObject("c").size())
         assertEquals(2, resolved2.getInt("c.y"))
@@ -293,7 +353,7 @@ class ConfigTest extends TestUtils {
         assertTrue(e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : 57 } } } """)
-        val merged = merge(fixUpCycle, cycleObject)
+        val merged = mergeUnresolved(fixUpCycle, cycleObject)
         val v = resolveNoSystem(subst("foo"), merged)
         assertEquals(intValue(57), v);
     }
@@ -309,7 +369,7 @@ class ConfigTest extends TestUtils {
         assertTrue(e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : { "q" : "u" } } } } """)
-        val merged = merge(fixUpCycle, cycleObject)
+        val merged = mergeUnresolved(fixUpCycle, cycleObject)
         val e2 = intercept[ConfigException.BadValue] {
             val v = resolveNoSystem(subst("foo"), merged)
         }
