@@ -327,7 +327,8 @@ class ConfigValueTest extends TestUtils {
 
         // ConfigDelayedMergeObject
         val emptyObj = SimpleConfigObject.empty()
-        val dmo = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
+        val dmo = new ConfigDelayedMergeObject(fakeOrigin(),
+            List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
         assertEquals(ConfigValueType.OBJECT, dmo.valueType())
         unresolved { dmo.unwrapped() }
         unresolved { dmo.containsKey(null) }

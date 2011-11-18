@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 import com.typesafe.config.Config;
@@ -37,22 +36,11 @@ public class ConfigImpl {
 
     static <T extends ConfigMergeable> T merge(Class<T> klass, T first,
             List<? extends ConfigMergeable> stack) {
-        if (stack.isEmpty()) {
-            return first;
-        } else {
-            // to be consistent with the semantics of duplicate keys
-            // in the same file, we have to go backward like this.
-            // importantly, a primitive value always permanently
-            // hides a previous object value.
-            ListIterator<? extends ConfigMergeable> i = stack
-                    .listIterator(stack.size());
-            ConfigMergeable merged = i.previous();
-            while (i.hasPrevious()) {
-                merged = i.previous().withFallback(merged);
-            }
-            merged = first.withFallback(merged);
-            return klass.cast(merged);
+        ConfigMergeable merged = first;
+        for (ConfigMergeable fallback : stack) {
+            merged = merged.withFallback(fallback);
         }
+        return klass.cast(merged);
     }
 
     private interface NameSource {
@@ -428,7 +416,7 @@ public class ConfigImpl {
                     new SimpleConfigOrigin("env var " + key), entry.getValue()));
         }
         return new SimpleConfigObject(new SimpleConfigOrigin("env variables"),
-                m, ResolveStatus.RESOLVED);
+                m, ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */

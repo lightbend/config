@@ -102,7 +102,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return ConfigValueType.OBJECT;
     }
 
-    protected abstract AbstractConfigObject newCopy(ResolveStatus status);
+    protected abstract AbstractConfigObject newCopy(ResolveStatus status,
+            boolean ignoresFallbacks);
 
     @Override
     public AbstractConfigObject withFallbacks(ConfigMergeable... others) {
@@ -113,7 +114,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     public AbstractConfigObject withFallback(ConfigMergeable mergeable) {
         ConfigValue other = mergeable.toValue();
 
-        if (other instanceof Unmergeable) {
+        if (ignoresFallbacks()) {
+            return this;
+        } else if (other instanceof Unmergeable) {
             List<AbstractConfigValue> stack = new ArrayList<AbstractConfigValue>();
             stack.add(this);
             stack.addAll(((Unmergeable) other).unmergedValues());
@@ -143,12 +146,14 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                         allResolved = false;
                 }
                 return new SimpleConfigObject(mergeOrigins(this, fallback),
-                        merged, ResolveStatus.fromBoolean(allResolved));
+                        merged, ResolveStatus.fromBoolean(allResolved),
+                        ignoresFallbacks());
             }
         } else {
-            // falling back to a non-object has no effect, we just override
-            // primitive values.
-            return this;
+            // falling back to a non-object doesn't merge anything, and also
+            // prohibits merging any objects that we fall back to later.
+            // so we have to switch to ignoresFallbacks mode.
+            return newCopy(resolveStatus(), true /* ignoresFallbacks */);
         }
     }
 
@@ -209,7 +214,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             }
         }
         if (changes == null) {
-            return newCopy(newResolveStatus);
+            return newCopy(newResolveStatus, ignoresFallbacks());
         } else {
             Map<String, AbstractConfigValue> modified = new HashMap<String, AbstractConfigValue>();
             for (String k : keySet()) {
@@ -219,8 +224,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                     modified.put(k, peek(k));
                 }
             }
-            return new SimpleConfigObject(origin(), modified,
-                    newResolveStatus);
+            return new SimpleConfigObject(origin(), modified, newResolveStatus,
+                    ignoresFallbacks());
         }
     }
 
@@ -314,7 +319,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     public boolean equals(Object other) {
-        // note that "origin" is deliberately NOT part of equality
+        // note that "origin" is deliberately NOT part of equality.
+        // neither are other "extras" like ignoresFallbacks or resolve status.
         if (other instanceof ConfigObject) {
             // optimization to avoid unwrapped() for two ConfigObject,
             // which is what AbstractConfigValue does.
@@ -327,6 +333,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     @Override
     public int hashCode() {
         // note that "origin" is deliberately NOT part of equality
+        // neither are other "extras" like ignoresFallbacks or resolve status.
         return mapHash(this);
     }
 

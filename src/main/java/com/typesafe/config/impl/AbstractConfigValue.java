@@ -75,6 +75,13 @@ abstract class AbstractConfigValue implements ConfigValue {
         return this;
     }
 
+    // this is virtualized rather than a field because only some subclasses
+    // really need to store the boolean, and they may be able to pack it
+    // with another boolean to save space.
+    protected boolean ignoresFallbacks() {
+        return true;
+    }
+
     @Override
     public AbstractConfigValue withFallback(ConfigMergeable other) {
         return this;

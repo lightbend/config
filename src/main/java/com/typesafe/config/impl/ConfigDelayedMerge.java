@@ -27,14 +27,21 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
 
     // earlier items in the stack win
     final private List<AbstractConfigValue> stack;
+    final private boolean ignoresFallbacks;
 
-    ConfigDelayedMerge(ConfigOrigin origin, List<AbstractConfigValue> stack) {
+    private ConfigDelayedMerge(ConfigOrigin origin,
+            List<AbstractConfigValue> stack, boolean ignoresFallbacks) {
         super(origin);
         this.stack = stack;
+        this.ignoresFallbacks = ignoresFallbacks;
         if (stack.isEmpty())
             throw new ConfigException.BugOrBroken(
                     "creating empty delayed merge value");
 
+    }
+
+    ConfigDelayedMerge(ConfigOrigin origin, List<AbstractConfigValue> stack) {
+        this(origin, stack, false /* ignoresFallbacks */);
     }
 
     @Override
@@ -85,14 +92,21 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
         for (AbstractConfigValue o : stack) {
             newStack.add(o.relativized(prefix));
         }
-        return new ConfigDelayedMerge(origin(), newStack);
+        return new ConfigDelayedMerge(origin(), newStack, ignoresFallbacks);
+    }
+
+    @Override
+    protected boolean ignoresFallbacks() {
+        return ignoresFallbacks;
     }
 
     @Override
     public AbstractConfigValue withFallback(ConfigMergeable mergeable) {
         ConfigValue other = mergeable.toValue();
 
-        if (other instanceof AbstractConfigObject
+        if (ignoresFallbacks) {
+            return this;
+        } else if (other instanceof AbstractConfigObject
                 || other instanceof Unmergeable) {
             // if we turn out to be an object, and the fallback also does,
             // then a merge may be required; delay until we resolve.
@@ -103,11 +117,12 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
             else
                 newStack.add((AbstractConfigValue) other);
             return new ConfigDelayedMerge(
-                    AbstractConfigObject.mergeOrigins(newStack), newStack);
+                    AbstractConfigObject.mergeOrigins(newStack), newStack,
+                    ignoresFallbacks);
         } else {
             // if the other is not an object, there won't be anything
             // to merge with, so we are it even if we are an object.
-            return this;
+            return new ConfigDelayedMerge(origin(), stack, true /* ignoresFallbacks */);
         }
     }
 

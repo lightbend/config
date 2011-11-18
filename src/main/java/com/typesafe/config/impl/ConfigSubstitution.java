@@ -28,17 +28,19 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     // than one piece everything is stringified and concatenated
     final private List<Object> pieces;
     // the length of any prefixes added with relativized()
-    final int prefixLength;
+    final private int prefixLength;
+    final private boolean ignoresFallbacks;
 
     ConfigSubstitution(ConfigOrigin origin, List<Object> pieces) {
-        this(origin, pieces, 0);
+        this(origin, pieces, 0, false);
     }
 
     private ConfigSubstitution(ConfigOrigin origin, List<Object> pieces,
-            int prefixLength) {
+            int prefixLength, boolean ignoresFallbacks) {
         super(origin);
         this.pieces = pieces;
         this.prefixLength = prefixLength;
+        this.ignoresFallbacks = ignoresFallbacks;
     }
 
     @Override
@@ -58,7 +60,9 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     public AbstractConfigValue withFallback(ConfigMergeable mergeable) {
         ConfigValue other = mergeable.toValue();
 
-        if (other instanceof AbstractConfigObject
+        if (ignoresFallbacks) {
+            return this;
+        } else if (other instanceof AbstractConfigObject
                 || other instanceof Unmergeable) {
             // if we turn out to be an object, and the fallback also does,
             // then a merge may be required; delay until we resolve.
@@ -73,7 +77,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         } else {
             // if the other is not an object, there won't be anything
             // to merge with, so we are it even if we are an object.
-            return this;
+            return new ConfigSubstitution(origin(), pieces, prefixLength, true /* ignoresFallbacks */);
         }
     }
 
@@ -201,7 +205,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             }
         }
         return new ConfigSubstitution(origin(), newPieces, prefixLength
-                + prefix.length());
+                + prefix.length(), ignoresFallbacks);
     }
 
     @Override
