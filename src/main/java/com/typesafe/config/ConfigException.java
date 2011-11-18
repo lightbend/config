@@ -69,13 +69,20 @@ public class ConfigException extends RuntimeException {
             this(path, null);
         }
 
+        protected Missing(ConfigOrigin origin, String message, Throwable cause) {
+            super(origin, message, cause);
+        }
+
+        protected Missing(ConfigOrigin origin, String message) {
+            this(origin, message, null);
+        }
     }
 
     /**
-     * Exception indicates that the type was wrong and specifically the value
-     * was null instead of a real value.
+     * Exception indicates that the setting was treated as missing because it
+     * was set to null.
      */
-    public static class Null extends WrongType {
+    public static class Null extends Missing {
         private static final long serialVersionUID = 1L;
 
         private static String makeMessage(String path, String expected) {

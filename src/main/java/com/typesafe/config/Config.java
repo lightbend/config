@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * This class represents an immutable map from config paths to config values. It
  * also contains some static methods for creating configs.
- * 
+ *
  * Throughout the API, there is a distinction between "keys" and "paths". A key
  * is a key in a JSON object; it's just a string that's the key in a map. A
  * "path" is a parseable expression with a syntax and it refers to a series of
@@ -14,30 +14,30 @@ import java.util.List;
  * path is period-separated so "a.b.c" looks for key c in object b in object a
  * in the root object. Sometimes double quotes are needed around special
  * characters in path expressions.
- * 
+ *
  * The API for a Config is in terms of path expressions, while the API for a
  * ConfigObject is in terms of keys. Conceptually, Config is a one-level map
  * from paths to values, while a ConfigObject is a tree of maps from keys to
  * values.
- * 
+ *
  * Another difference between Config and ConfigObject is that conceptually,
  * ConfigValue with valueType() of ConfigValueType.NULL exist in a ConfigObject,
  * while a Config treats null values as if they were missing.
- * 
+ *
  * Config is an immutable object and thus safe to use from multiple threads.
- * 
+ *
  * The "getters" on a Config all work in the same way. They never return null,
- * or a ConfigValue with valueType() of ConfigValueType.NULL. If the value is
- * completely absent then ConfigException.Missing will be thrown, and if the
- * value is present but null, ConfigException.Null will be thrown.
- * ConfigException.Null is a subclass of ConfigException.WrongType, where
+ * nor do they return a ConfigValue with valueType() of ConfigValueType.NULL.
+ * Instead, they throw ConfigException.Missing if the value is completely absent
+ * or set to null. If the value is set to null, a subtype of
+ * ConfigException.Missing called ConfigException.Null will be thrown.
  * ConfigException.WrongType will be thrown anytime you ask for a type and the
  * value has an incompatible type. Reasonable type conversions are performed for
  * you though.
  *
  * If you want to iterate over the contents of a Config, you have to get its
  * ConfigObject with toObject, and then iterate over the ConfigObject.
- * 
+ *
  */
 public interface Config extends ConfigMergeable {
     /**
@@ -80,25 +80,93 @@ public interface Config extends ConfigMergeable {
 
     boolean isEmpty();
 
+    /**
+     *
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to boolean
+     */
     boolean getBoolean(String path);
 
+    /**
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a number
+     */
     Number getNumber(String path);
 
+    /**
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to an int
+     */
     int getInt(String path);
 
+    /**
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a long
+     */
     long getLong(String path);
 
+    /**
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a double
+     */
     double getDouble(String path);
 
+    /**
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a string
+     */
     String getString(String path);
 
+    /**
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to an object
+     */
     ConfigObject getObject(String path);
 
+    /**
+     * @param path
+     * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a Config
+     */
     Config getConfig(String path);
 
     /**
      * Gets the value at the path as an unwrapped Java boxed value (Boolean,
      * Integer, Long, etc.)
+     *
+     * @throws ConfigException.Missing
+     *             if value is absent or null
      */
     Object getAnyRef(String path);
 
@@ -109,6 +177,8 @@ public interface Config extends ConfigMergeable {
      *
      * @param path
      * @return
+     * @throws ConfigException.Missing
+     *             if value is absent or null
      */
     ConfigValue getValue(String path);
 
@@ -116,6 +186,13 @@ public interface Config extends ConfigMergeable {
      * Get value as a size in bytes (parses special strings like "128M"). The
      * size units are interpreted as for memory, not as for disk space, so they
      * are in powers of two.
+     *
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a memory size
      */
     Long getMemorySizeInBytes(String path);
 
@@ -123,6 +200,13 @@ public interface Config extends ConfigMergeable {
      * Get value as a duration in milliseconds. If the value is already a
      * number, then it's left alone; if it's a string, it's parsed understanding
      * units suffixes like "10m" or "5ns"
+     *
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a number of milliseconds
      */
     Long getMilliseconds(String path);
 
@@ -130,6 +214,13 @@ public interface Config extends ConfigMergeable {
      * Get value as a duration in nanoseconds. If the value is already a number
      * it's taken as milliseconds and converted to nanoseconds. If it's a
      * string, it's parsed understanding unit suffixes.
+     *
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a number of nanoseconds
      */
     Long getNanoseconds(String path);
 
@@ -141,6 +232,10 @@ public interface Config extends ConfigMergeable {
      * @param path
      *            the path to the list value.
      * @return the ConfigList at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a ConfigList
      */
     ConfigList getList(String path);
 
