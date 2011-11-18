@@ -28,3 +28,5 @@ findbugsReportName := "findbugs.html"
 seq(jacoco.settings : _*)
 
 seq(javadoc.JavadocPlugin.javadocSettings: _*)
+
+doc := error("use the 'javadoc' task instead of 'doc'")
