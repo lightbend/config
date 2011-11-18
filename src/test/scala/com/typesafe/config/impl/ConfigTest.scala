@@ -482,6 +482,12 @@ class ConfigTest extends TestUtils {
         assertTrue(nonEmpty ne nonEmptyIgnoringFallbacks)
         assertTrue(empty ne emptyIgnoringFallbacks)
 
+        // falling back from one object to another should not make us ignore fallbacks
+        assertEquals(false, ignoresFallbacks(nonEmpty.withFallback(empty)))
+        assertEquals(false, ignoresFallbacks(empty.withFallback(nonEmpty)))
+        assertEquals(false, ignoresFallbacks(empty.withFallback(empty)))
+        assertEquals(false, ignoresFallbacks(nonEmpty.withFallback(nonEmpty)))
+
         // falling back from primitive just returns this
         assertTrue(primitive eq primitive.withFallback(empty))
         assertTrue(primitive eq primitive.withFallback(nonEmpty))
