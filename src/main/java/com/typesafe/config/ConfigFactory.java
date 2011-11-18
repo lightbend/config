@@ -141,10 +141,43 @@ public final class ConfigFactory {
         return Parseable.newFile(file, options).parse().toConfig();
     }
 
+    /**
+     * Parses a file. If the fileBasename already ends in a known extension,
+     * just parses it according to that extension. If the fileBasename does not
+     * end in an extension, then parse all known extensions and merge whatever
+     * is found. If options force a specific syntax, only parse files with an
+     * extension matching that syntax. If options.getAllowMissing() is true,
+     * then no files have to exist; if false, then at least one file has to
+     * exist.
+     *
+     * @param fileBasename
+     * @param options
+     * @return
+     */
+    public static Config parseFileAnySyntax(File fileBasename,
+            ConfigParseOptions options) {
+        return ConfigImpl.parseFileAnySyntax(fileBasename, options).toConfig();
+    }
+
     public static Config parseResource(Class<?> klass, String resource,
             ConfigParseOptions options) {
         return Parseable.newResource(klass, resource, options).parse()
                 .toConfig();
+    }
+
+    /**
+     * Same behavior as parseFileAnySyntax() but for classpath resources
+     * instead.
+     *
+     * @param klass
+     * @param resourceBasename
+     * @param options
+     * @return
+     */
+    public static Config parseResourceAnySyntax(Class<?> klass, String resourceBasename,
+            ConfigParseOptions options) {
+        return ConfigImpl.parseResourceAnySyntax(klass, resourceBasename,
+                options).toConfig();
     }
 
     public static Config parseString(String s, ConfigParseOptions options) {

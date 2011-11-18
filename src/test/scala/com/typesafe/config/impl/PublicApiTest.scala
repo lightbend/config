@@ -321,4 +321,33 @@ class PublicApiTest extends TestUtils {
         assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
             included.map(_.name))
     }
+
+    @Test
+    def anySyntax() {
+        // test01 has all three syntaxes; first load with basename
+        val conf = ConfigFactory.parseFileAnySyntax(resourceFile("test01"), ConfigParseOptions.defaults())
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertEquals("A", conf.getString("fromJsonA"))
+        assertEquals("true", conf.getString("fromProps.bool"))
+
+        // now include a suffix, should only load one of them
+        val onlyProps = ConfigFactory.parseFileAnySyntax(resourceFile("test01.properties"), ConfigParseOptions.defaults())
+        assertFalse(onlyProps.hasPath("ints.fortyTwo"))
+        assertFalse(onlyProps.hasPath("fromJsonA"))
+        assertEquals("true", onlyProps.getString("fromProps.bool"))
+
+        // force only one syntax via options
+        val onlyPropsViaOptions = ConfigFactory.parseFileAnySyntax(resourceFile("test01.properties"),
+            ConfigParseOptions.defaults().setSyntax(ConfigSyntax.PROPERTIES))
+        assertFalse(onlyPropsViaOptions.hasPath("ints.fortyTwo"))
+        assertFalse(onlyPropsViaOptions.hasPath("fromJsonA"))
+        assertEquals("true", onlyPropsViaOptions.getString("fromProps.bool"))
+
+        // make sure it works with resources too
+        val fromResources = ConfigFactory.parseResourceAnySyntax(classOf[PublicApiTest], "/test01",
+            ConfigParseOptions.defaults())
+        assertEquals(42, fromResources.getInt("ints.fortyTwo"))
+        assertEquals("A", fromResources.getString("fromJsonA"))
+        assertEquals("true", fromResources.getString("fromProps.bool"))
+    }
 }

@@ -1,5 +1,6 @@
 package com.typesafe.config.impl;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,9 +56,10 @@ public class ConfigImpl {
         ConfigParseable nameToParseable(String name);
     }
 
-    // this function is a little tricky because there are two places we're
-    // trying to use it; for 'include "basename"' in a .conf file, and for
-    // loading app.{conf,json,properties} from classpath.
+    // this function is a little tricky because there are three places we're
+    // trying to use it; for 'include "basename"' in a .conf file, for
+    // loading app.{conf,json,properties} from classpath, and for
+    // loading app.{conf,json,properties} from the filesystem.
     private static ConfigObject fromBasename(NameSource source, String name,
             ConfigParseOptions options) {
         ConfigObject obj;
@@ -136,14 +138,31 @@ public class ConfigImpl {
             final ConfigParseOptions baseOptions) {
         Path path = Parser.parsePath(expression);
         String basename = makeResourceBasename(path);
+        return parseResourceAnySyntax(ConfigImpl.class, basename, baseOptions);
+    }
+
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static ConfigObject parseResourceAnySyntax(final Class<?> klass,
+            String resourceBasename, final ConfigParseOptions baseOptions) {
         NameSource source = new NameSource() {
             @Override
             public ConfigParseable nameToParseable(String name) {
-                return Parseable.newResource(ConfigImpl.class, name,
-                        baseOptions);
+                return Parseable.newResource(klass, name, baseOptions);
             }
         };
-        return fromBasename(source, basename, baseOptions);
+        return fromBasename(source, resourceBasename, baseOptions);
+    }
+
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static ConfigObject parseFileAnySyntax(final File basename,
+            final ConfigParseOptions baseOptions) {
+        NameSource source = new NameSource() {
+            @Override
+            public ConfigParseable nameToParseable(String name) {
+                return Parseable.newFile(new File(name), baseOptions);
+            }
+        };
+        return fromBasename(source, basename.getPath(), baseOptions);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
