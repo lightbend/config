@@ -139,15 +139,20 @@ class SimpleConfig implements Config {
         return (Boolean) v.unwrapped();
     }
 
+    private ConfigNumber getConfigNumber(String path) {
+        ConfigValue v = find(path, ConfigValueType.NUMBER, path);
+        return (ConfigNumber) v;
+    }
+
     @Override
     public Number getNumber(String path) {
-        ConfigValue v = find(path, ConfigValueType.NUMBER, path);
-        return (Number) v.unwrapped();
+        return getConfigNumber(path).unwrapped();
     }
 
     @Override
     public int getInt(String path) {
-        return getNumber(path).intValue();
+        ConfigNumber n = getConfigNumber(path);
+        return n.intValueRangeChecked(path);
     }
 
     @Override
@@ -255,9 +260,9 @@ class SimpleConfig implements Config {
     @Override
     public List<Integer> getIntList(String path) {
         List<Integer> l = new ArrayList<Integer>();
-        List<Number> numbers = getNumberList(path);
-        for (Number n : numbers) {
-            l.add(n.intValue());
+        List<AbstractConfigValue> numbers = getHomogeneousWrappedList(path, ConfigValueType.NUMBER);
+        for (AbstractConfigValue v : numbers) {
+            l.add(((ConfigNumber) v).intValueRangeChecked(path));
         }
         return l;
     }

@@ -505,6 +505,20 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def integerRangeChecks() {
+        val conf = parseConfig("{ tooNegative: " + (Integer.MIN_VALUE - 1L) + ", tooPositive: " + (Integer.MAX_VALUE + 1L) + "}")
+        val en = intercept[ConfigException.WrongType] {
+            conf.getInt("tooNegative")
+        }
+        assertTrue(en.getMessage.contains("range"))
+
+        val ep = intercept[ConfigException.WrongType] {
+            conf.getInt("tooPositive")
+        }
+        assertTrue(ep.getMessage.contains("range"))
+    }
+
+    @Test
     def test01Getting() {
         val conf = ConfigFactory.load("test01")
 

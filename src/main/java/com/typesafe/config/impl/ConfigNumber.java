@@ -3,6 +3,7 @@
  */
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
 abstract class ConfigNumber extends AbstractConfigValue {
@@ -18,8 +19,20 @@ abstract class ConfigNumber extends AbstractConfigValue {
     }
 
     @Override
+    public abstract Number unwrapped();
+
+    @Override
     String transformToString() {
         return originalText;
+    }
+
+    int intValueRangeChecked(String path) {
+        long l = longValue();
+        if (l < Integer.MIN_VALUE || l > Integer.MAX_VALUE) {
+            throw new ConfigException.WrongType(origin(), path, "32-bit integer",
+                    "out-of-range value " + l);
+        }
+        return (int) l;
     }
 
     protected abstract long longValue();
