@@ -1,3 +1,6 @@
+/**
+ *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
+ */
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config._

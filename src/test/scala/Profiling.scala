@@ -1,3 +1,6 @@
+/**
+ *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
+ */
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 object Util {
