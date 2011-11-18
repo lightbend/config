@@ -31,10 +31,7 @@ class ConfigTest extends TestUtils {
         if (toMerge.isEmpty) {
             SimpleConfigObject.empty()
         } else {
-            val obj = toMerge(0).withFallbacks(toMerge.slice(1, toMerge.size): _*)
-            obj match {
-                case x: AbstractConfigObject => x
-            }
+            toMerge.reduce((first, second) => first.withFallback(second))
         }
     }
 

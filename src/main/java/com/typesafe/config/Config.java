@@ -57,9 +57,6 @@ public interface Config extends ConfigMergeable {
     Config withFallback(ConfigMergeable other);
 
     @Override
-    Config withFallbacks(ConfigMergeable... others);
-
-    @Override
     ConfigObject toValue();
 
     /**

@@ -32,7 +32,4 @@ public interface ConfigValue extends ConfigMergeable {
 
     @Override
     ConfigValue withFallback(ConfigMergeable other);
-
-    @Override
-    ConfigValue withFallbacks(ConfigMergeable... fallbacks);
 }

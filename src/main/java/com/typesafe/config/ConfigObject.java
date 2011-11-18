@@ -61,9 +61,6 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
     @Override
     ConfigObject withFallback(ConfigMergeable other);
 
-    @Override
-    ConfigObject withFallbacks(ConfigMergeable... others);
-
     /**
      * Gets a ConfigValue at the given key, or returns null if there is no
      * value. The returned ConfigValue may have ConfigValueType.NULL or any

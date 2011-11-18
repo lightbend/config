@@ -24,9 +24,6 @@ public interface ConfigRoot extends Config {
     @Override
     ConfigRoot withFallback(ConfigMergeable fallback);
 
-    @Override
-    ConfigRoot withFallbacks(ConfigMergeable... fallbacks);
-
     /**
      * Gets the global app name that this root represents.
      *

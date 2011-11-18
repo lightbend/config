@@ -45,12 +45,6 @@ final class RootConfig extends SimpleConfig implements ConfigRoot {
         return super.withFallback(value).asRoot(rootPath);
     }
 
-    @Override
-    public RootConfig withFallbacks(ConfigMergeable... values) {
-        // this can return "this" if the withFallbacks does nothing
-        return super.withFallbacks(values).asRoot(rootPath);
-    }
-
     Path rootPathObject() {
         return rootPath;
     }

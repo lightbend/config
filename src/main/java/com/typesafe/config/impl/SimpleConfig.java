@@ -389,13 +389,6 @@ class SimpleConfig implements Config {
     }
 
     @Override
-    public SimpleConfig withFallbacks(ConfigMergeable... others) {
-        // this can return "this" if the withFallbacks doesn't need a new
-        // ConfigObject
-        return object.withFallbacks(others).toConfig();
-    }
-
-    @Override
     public final boolean equals(Object other) {
         if (other instanceof SimpleConfig) {
             return object.equals(((SimpleConfig) other).object);

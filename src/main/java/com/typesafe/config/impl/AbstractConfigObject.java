@@ -106,11 +106,6 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             boolean ignoresFallbacks);
 
     @Override
-    public AbstractConfigObject withFallbacks(ConfigMergeable... others) {
-        return (AbstractConfigObject) super.withFallbacks(others);
-    }
-
-    @Override
     public AbstractConfigObject withFallback(ConfigMergeable mergeable) {
         ConfigValue other = mergeable.toValue();
 

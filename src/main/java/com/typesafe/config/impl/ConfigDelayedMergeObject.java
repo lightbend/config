@@ -113,11 +113,6 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    public ConfigDelayedMergeObject withFallbacks(ConfigMergeable... others) {
-        return (ConfigDelayedMergeObject) super.withFallbacks(others);
-    }
-
-    @Override
     public Collection<AbstractConfigValue> unmergedValues() {
         return stack;
     }

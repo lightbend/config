@@ -77,7 +77,7 @@ public final class ConfigFactory {
         Config referenceFiles = parseResourcesForPath(rootPath + ".reference",
                 options);
 
-        return system.withFallbacks(mainFiles, referenceFiles);
+        return system.withFallback(mainFiles).withFallback(referenceFiles);
     }
 
     public static ConfigRoot emptyRoot(String rootPath) {

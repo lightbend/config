@@ -87,14 +87,6 @@ abstract class AbstractConfigValue implements ConfigValue {
         return this;
     }
 
-    @Override
-    public AbstractConfigValue withFallbacks(ConfigMergeable... fallbacks) {
-        // note: this is a no-op unless the subclass overrides withFallback().
-        // But we need to do this because subclass withFallback() may not
-        // just "return this"
-        return ConfigImpl.merge(AbstractConfigValue.class, this, fallbacks);
-    }
-
     protected boolean canEqual(Object other) {
         return other instanceof ConfigValue;
     }

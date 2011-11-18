@@ -38,14 +38,4 @@ public interface ConfigMergeable {
      *         used)
      */
     ConfigMergeable withFallback(ConfigMergeable other);
-
-    /**
-     * Convenience method just calls withFallback() on each of the values;
-     * earlier values in the list win over later ones. The semantics of merging
-     * are described in https://github.com/havocp/config/blob/master/HOCON.md
-     *
-     * @param fallbacks
-     * @return a version of the object with the requested fallbacks merged in
-     */
-    ConfigMergeable withFallbacks(ConfigMergeable... others);
 }
