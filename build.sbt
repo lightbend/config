@@ -26,3 +26,5 @@ findbugsReportType := ReportType.Html
 findbugsReportName := "findbugs.html"
 
 seq(jacoco.settings : _*)
+
+seq(javadoc.JavadocPlugin.javadocSettings: _*)
