@@ -217,7 +217,7 @@ class PublicApiTest extends TestUtils {
         }
     }
 
-    private def resource(filename: String) = {
+    private def resourceFile(filename: String) = {
         val resourceDir = new File("src/test/resources")
         if (!resourceDir.exists())
             throw new RuntimeException("This test can only be run from the project's root directory")
@@ -236,11 +236,11 @@ class PublicApiTest extends TestUtils {
     @Test
     def allowMissing() {
         val e = intercept[ConfigException.IO] {
-            ConfigFactory.parse(resource("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
+            ConfigFactory.parseFile(resourceFile("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
         }
         assertTrue(e.getMessage.contains("No such"))
 
-        val conf = ConfigFactory.parse(resource("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
+        val conf = ConfigFactory.parseFile(resourceFile("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
         assertTrue(conf.isEmpty())
     }
 
@@ -251,10 +251,10 @@ class PublicApiTest extends TestUtils {
         // change that the includes are allowed to be missing.
         // This can break because some options might "propagate" through
         // to includes, but we don't want them all to do so.
-        val conf = ConfigFactory.parse(resource("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
+        val conf = ConfigFactory.parseFile(resourceFile("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
         assertEquals(42, conf.getInt("test01.booleans"))
 
-        val conf2 = ConfigFactory.parse(resource("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
+        val conf2 = ConfigFactory.parseFile(resourceFile("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
         assertEquals(conf, conf2)
     }
 
@@ -288,7 +288,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def includersAreUsedWithFiles() {
-        val included = whatWasIncluded(ConfigFactory.parse(resource("test03.conf"), _))
+        val included = whatWasIncluded(ConfigFactory.parseFile(resourceFile("test03.conf"), _))
 
         assertEquals(List("test01", "test02.conf", "equiv01/original.json",
             "nothere", "nothere.conf", "nothere.json", "nothere.properties"),
@@ -298,7 +298,7 @@ class PublicApiTest extends TestUtils {
     @Test
     def includersAreUsedRecursivelyWithFiles() {
         // includes.conf has recursive includes in it
-        val included = whatWasIncluded(ConfigFactory.parse(resource("equiv03/includes.conf"), _))
+        val included = whatWasIncluded(ConfigFactory.parseFile(resourceFile("equiv03/includes.conf"), _))
 
         assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
             included.map(_.name))
@@ -306,7 +306,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def includersAreUsedWithClasspath() {
-        val included = whatWasIncluded(ConfigFactory.parse(classOf[PublicApiTest], "/test03.conf", _))
+        val included = whatWasIncluded(ConfigFactory.parseResource(classOf[PublicApiTest], "/test03.conf", _))
 
         assertEquals(List("test01", "test02.conf", "equiv01/original.json",
             "nothere", "nothere.conf", "nothere.json", "nothere.properties"),
@@ -316,7 +316,7 @@ class PublicApiTest extends TestUtils {
     @Test
     def includersAreUsedRecursivelyWithClasspath() {
         // includes.conf has recursive includes in it
-        val included = whatWasIncluded(ConfigFactory.parse(classOf[PublicApiTest], "/equiv03/includes.conf", _))
+        val included = whatWasIncluded(ConfigFactory.parseResource(classOf[PublicApiTest], "/equiv03/includes.conf", _))
 
         assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
             included.map(_.name))

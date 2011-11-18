@@ -42,12 +42,12 @@ class EquivalentsTest extends TestUtils {
 
     private def parse(flavor: ConfigSyntax, f: File) = {
         val options = ConfigParseOptions.defaults().setSyntax(flavor)
-        postParse(ConfigFactory.parse(f, options).toObject)
+        postParse(ConfigFactory.parseFile(f, options).toObject)
     }
 
     private def parse(f: File) = {
         val options = ConfigParseOptions.defaults()
-        postParse(ConfigFactory.parse(f, options).toObject)
+        postParse(ConfigFactory.parseFile(f, options).toObject)
     }
 
     // would like each "equivNN" directory to be a suite and each file in the dir

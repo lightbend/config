@@ -70,8 +70,9 @@ public final class ConfigFactory {
             ConfigParseOptions options) {
         ConfigRoot system = systemPropertiesRoot(rootPath);
 
-        Config mainFiles = parse(rootPath, options);
-        Config referenceFiles = parse(rootPath + ".reference", options);
+        Config mainFiles = parseResourcesForPath(rootPath, options);
+        Config referenceFiles = parseResourcesForPath(rootPath + ".reference",
+                options);
 
         return system.withFallbacks(mainFiles, referenceFiles);
     }
@@ -123,24 +124,24 @@ public final class ConfigFactory {
      * @param options
      * @return
      */
-    public static Config parse(Properties properties,
+    public static Config parseProperties(Properties properties,
             ConfigParseOptions options) {
         return Parseable.newProperties(properties, options).parse().toConfig();
     }
 
-    public static Config parse(Reader reader, ConfigParseOptions options) {
+    public static Config parseReader(Reader reader, ConfigParseOptions options) {
         return Parseable.newReader(reader, options).parse().toConfig();
     }
 
-    public static Config parse(URL url, ConfigParseOptions options) {
+    public static Config parseURL(URL url, ConfigParseOptions options) {
         return Parseable.newURL(url, options).parse().toConfig();
     }
 
-    public static Config parse(File file, ConfigParseOptions options) {
+    public static Config parseFile(File file, ConfigParseOptions options) {
         return Parseable.newFile(file, options).parse().toConfig();
     }
 
-    public static Config parse(Class<?> klass, String resource,
+    public static Config parseResource(Class<?> klass, String resource,
             ConfigParseOptions options) {
         return Parseable.newResource(klass, resource, options).parse()
                 .toConfig();
@@ -156,9 +157,10 @@ public final class ConfigFactory {
      * @param options
      * @return
      */
-    public static Config parse(String path, ConfigParseOptions options) {
+    public static Config parseResourcesForPath(String rootPath,
+            ConfigParseOptions options) {
         // null originDescription is allowed in parseResourcesForPath
-        return ConfigImpl.parseResourcesForPath(path, options).toConfig();
+        return ConfigImpl.parseResourcesForPath(rootPath, options).toConfig();
     }
 
     /**

@@ -51,7 +51,7 @@ class PropertiesTest extends TestUtils {
 
             props.setProperty(propsPath, propsPath)
 
-            val conf = ConfigFactory.parse(props, ConfigParseOptions.defaults())
+            val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
 
             assertEquals(propsPath, conf.getString(confPath))
         }
@@ -83,7 +83,7 @@ class PropertiesTest extends TestUtils {
         props.setProperty("x.y", "bar")
         props.setProperty("x.y.z", "foo")
 
-        val conf = ConfigFactory.parse(props, ConfigParseOptions.defaults())
+        val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
 
         assertEquals(2, conf.toObject.size())
         assertEquals("foo", conf.getString("a.b"))
