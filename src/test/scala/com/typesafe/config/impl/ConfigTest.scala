@@ -43,14 +43,9 @@ class ConfigTest extends TestUtils {
         }
     }
 
-    // In many cases, we expect merging to be associative. It is
-    // not, however, when an object value is the first value,
-    // a non-object value follows, and then an object after that;
-    // in that case, if an association starts with the non-object
-    // value, then the value after the non-object value gets lost.
+    // Merging should always be associative (same results however the values are grouped,
+    // as long as they remain in the same order)
     private def associativeMerge(allObjects: Seq[AbstractConfigObject])(assertions: SimpleConfig => Unit) {
-        def m(toMerge: AbstractConfigObject*) = mergeUnresolved(toMerge: _*)
-
         def makeTrees(objects: Seq[AbstractConfigObject]): Iterator[AbstractConfigObject] = {
             objects.length match {
                 case 0 => Iterator.empty
@@ -58,30 +53,27 @@ class ConfigTest extends TestUtils {
                     Iterator(objects(0))
                 }
                 case 2 => {
-                    Iterator(m(objects(0), objects(1)))
-                }
-                case 3 => {
-                    Seq(m(m(objects(0), objects(1)), objects(2)),
-                        m(objects(0), m(objects(1), objects(2))),
-                        m(objects(0), objects(1), objects(2))).iterator
+                    Iterator(objects(0).withFallback(objects(1)))
                 }
                 case n => {
-                    // obviously if n gets very high we will be sad ;-)
-                    val trees = for {
+                    val leftSplits = for {
                         i <- (1 until n)
                         val pair = objects.splitAt(i)
-                        first <- makeTrees(pair._1)
-                        second <- makeTrees(pair._2)
-                    } yield m(first, second)
-                    Iterator(m(objects: _*)) ++ trees.iterator
+                        val first = pair._1.reduceLeft(_.withFallback(_))
+                        val second = pair._2.reduceLeft(_.withFallback(_))
+                    } yield first.withFallback(second)
+                    val rightSplits = for {
+                        i <- (1 until n)
+                        val pair = objects.splitAt(i)
+                        val first = pair._1.reduceRight(_.withFallback(_))
+                        val second = pair._2.reduceRight(_.withFallback(_))
+                    } yield first.withFallback(second)
+                    leftSplits.iterator ++ rightSplits.iterator
                 }
             }
         }
 
-        // the extra m(allObjects: _*) here is redundant but want to
-        // be sure we do it first, and guard against makeTrees
-        // being insane.
-        val trees = Seq(m(allObjects: _*)) ++ makeTrees(allObjects)
+        val trees = makeTrees(allObjects).toSeq
         for (tree <- trees) {
             // if this fails, we were not associative.
             if (!trees(0).equals(tree))
@@ -143,13 +135,14 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "b" : 2 }""")
         val obj3 = parseObject("""{ "c" : 3 }""")
         val obj4 = parseObject("""{ "d" : 4 }""")
-        val merged = merge(obj1, obj2, obj3, obj4).toConfig
 
-        assertEquals(1, merged.getInt("a"))
-        assertEquals(2, merged.getInt("b"))
-        assertEquals(3, merged.getInt("c"))
-        assertEquals(4, merged.getInt("d"))
-        assertEquals(4, merged.toObject.size)
+        associativeMerge(Seq(obj1, obj2, obj3, obj4)) { merged =>
+            assertEquals(1, merged.getInt("a"))
+            assertEquals(2, merged.getInt("b"))
+            assertEquals(3, merged.getInt("c"))
+            assertEquals(4, merged.getInt("d"))
+            assertEquals(4, merged.toObject.size)
+        }
     }
 
     @Test
@@ -158,15 +151,15 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "a" : 2 }""")
         val obj3 = parseObject("""{ "a" : 3 }""")
         val obj4 = parseObject("""{ "a" : 4 }""")
-        val merged = merge(obj1, obj2, obj3, obj4).toConfig
+        associativeMerge(Seq(obj1, obj2, obj3, obj4)) { merged =>
+            assertEquals(1, merged.getInt("a"))
+            assertEquals(1, merged.toObject.size)
+        }
 
-        assertEquals(1, merged.getInt("a"))
-        assertEquals(1, merged.toObject.size)
-
-        val merged2 = merge(obj4, obj3, obj2, obj1).toConfig
-
-        assertEquals(4, merged2.getInt("a"))
-        assertEquals(1, merged2.toObject.size)
+        associativeMerge(Seq(obj4, obj3, obj2, obj1)) { merged2 =>
+            assertEquals(4, merged2.getInt("a"))
+            assertEquals(1, merged2.toObject.size)
+        }
     }
 
     @Test
@@ -240,18 +233,18 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "a" : 2 }""")
         val obj3 = parseObject("""{ "a" : { "b" : 43, "c" : 44 } }""")
 
-        val merged = merge(obj1, obj2, obj3).toConfig
+        associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
+            assertEquals(42, merged.getInt("a.b"))
+            assertEquals(1, merged.toObject.size)
+            assertEquals(1, merged.getObject("a").size())
+        }
 
-        assertEquals(42, merged.getInt("a.b"))
-        assertEquals(1, merged.toObject.size)
-        assertEquals(1, merged.getObject("a").size())
-
-        val merged2 = merge(obj3, obj2, obj1).toConfig
-
-        assertEquals(43, merged2.getInt("a.b"))
-        assertEquals(44, merged2.getInt("a.c"))
-        assertEquals(1, merged2.toObject.size)
-        assertEquals(2, merged2.getObject("a").size())
+        associativeMerge(Seq(obj3, obj2, obj1)) { merged2 =>
+            assertEquals(43, merged2.getInt("a.b"))
+            assertEquals(44, merged2.getInt("a.c"))
+            assertEquals(1, merged2.toObject.size)
+            assertEquals(2, merged2.getObject("a").size())
+        }
     }
 
     @Test
@@ -263,18 +256,20 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "a" : 2 }""")
         val obj3 = parseObject("""{ "a" : { "b" : ${d}, "c" : ${e} }, "d" : 43, "e" : 44, "f" : 42 }""")
 
-        val merged = merge(obj1, obj2, obj3).toConfig
+        associativeMerge(Seq(obj1, obj2, obj3)) { unresolved =>
+            val merged = resolveNoSystem(unresolved, unresolved)
+            assertEquals(42, merged.getInt("a.b"))
+            assertEquals(4, merged.toObject.size)
+            assertEquals(1, merged.getObject("a").size())
+        }
 
-        assertEquals(42, merged.getInt("a.b"))
-        assertEquals(4, merged.toObject.size)
-        assertEquals(1, merged.getObject("a").size())
-
-        val merged2 = merge(obj3, obj2, obj1).toConfig
-
-        assertEquals(43, merged2.getInt("a.b"))
-        assertEquals(44, merged2.getInt("a.c"))
-        assertEquals(4, merged2.toObject.size)
-        assertEquals(2, merged2.getObject("a").size())
+        associativeMerge(Seq(obj3, obj2, obj1)) { unresolved =>
+            val merged2 = resolveNoSystem(unresolved, unresolved)
+            assertEquals(43, merged2.getInt("a.b"))
+            assertEquals(44, merged2.getInt("a.c"))
+            assertEquals(4, merged2.toObject.size)
+            assertEquals(2, merged2.getObject("a").size())
+        }
     }
 
     @Test
