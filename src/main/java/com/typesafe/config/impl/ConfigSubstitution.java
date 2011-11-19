@@ -45,14 +45,15 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     @Override
     public ConfigValueType valueType() {
         throw new ConfigException.NotResolved(
-                "tried to get value type on an unresolved substitution: "
+                "need to call resolve() on root config; tried to get value type on an unresolved substitution: "
                         + this);
     }
 
     @Override
     public Object unwrapped() {
         throw new ConfigException.NotResolved(
-                "tried to unwrap an unresolved substitution: " + this);
+                "need to call resolve() on root config; tried to unwrap an unresolved substitution: "
+                        + this);
     }
 
     @Override
