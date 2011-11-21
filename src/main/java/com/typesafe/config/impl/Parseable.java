@@ -228,34 +228,6 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    private final static class ParseableInputStream extends Parseable {
-        final private InputStream input;
-
-        ParseableInputStream(InputStream input, ConfigParseOptions options) {
-            this.input = input;
-            postConstruct(options);
-        }
-
-        @Override
-        protected Reader reader() {
-            return doNotClose(readerFromStream(input));
-        }
-
-        @Override
-        String originDescription() {
-            return "InputStream";
-        }
-    }
-
-    /**
-     * note that we will never close this stream; you have to do it when parsing
-     * is complete.
-     */
-    public static Parseable newInputStream(InputStream input,
-            ConfigParseOptions options) {
-        return new ParseableInputStream(input, options);
-    }
-
     private final static class ParseableReader extends Parseable {
         final private Reader reader;
 
