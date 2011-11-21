@@ -2,6 +2,7 @@ import de.johoop.findbugs4sbt.FindBugs._
 import de.johoop.findbugs4sbt.ReportType
 import de.johoop.jacoco4sbt._
 import JacocoPlugin._
+import javadoc.JavadocPlugin._
 
 name := "config"
 
@@ -27,6 +28,8 @@ findbugsReportName := "findbugs.html"
 
 seq(jacoco.settings : _*)
 
-seq(javadoc.JavadocPlugin.javadocSettings: _*)
+seq(javadocSettings: _*)
+
+JavadocKeys.javadocOptions += "-exclude com.typesafe.config.impl"
 
 doc := error("use the 'javadoc' task instead of 'doc'")
