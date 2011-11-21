@@ -52,13 +52,13 @@ public final class ConfigResolveOptions {
      *         disabled
      */
     public static ConfigResolveOptions noSystem() {
-        return new ConfigResolveOptions(false, false);
+        return defaults().setUseSystemEnvironment(false).setUseSystemProperties(false);
     }
 
     /**
      * Returns options with use of Java system properties set to the given
      * value.
-     * 
+     *
      * @param value
      *            true to resolve substitutions falling back to Java system
      *            properties.
@@ -70,7 +70,7 @@ public final class ConfigResolveOptions {
 
     /**
      * Returns options with use of environment variables set to the given value.
-     * 
+     *
      * @param value
      *            true to resolve substitutions falling back to environment
      *            variables.
@@ -83,7 +83,7 @@ public final class ConfigResolveOptions {
     /**
      * Returns whether the options enable use of system properties. This method
      * is mostly used by the config lib internally, not by applications.
-     * 
+     *
      * @return true if system properties should be used
      */
     public boolean getUseSystemProperties() {
@@ -94,7 +94,7 @@ public final class ConfigResolveOptions {
      * Returns whether the options enable use of system environment variables.
      * This method is mostly used by the config lib internally, not by
      * applications.
-     * 
+     *
      * @return true if environment variables should be used
      */
     public boolean getUseSystemEnvironment() {
