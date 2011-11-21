@@ -11,6 +11,8 @@ import java.util.Collections
 import java.util.TreeSet
 import java.io.File
 import scala.collection.mutable
+import equiv03.SomethingInEquiv03
+import java.io.StringReader
 
 class PublicApiTest extends TestUtils {
     @Test
@@ -318,11 +320,44 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def includersAreUsedRecursivelyWithClasspath() {
-        // includes.conf has recursive includes in it
+        // includes.conf has recursive includes in it; here we look it up
+        // with an "absolute" class path resource.
         val included = whatWasIncluded(ConfigFactory.parseResource(classOf[PublicApiTest], "/equiv03/includes.conf", _))
 
         assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
             included.map(_.name))
+    }
+
+    @Test
+    def includersAreUsedRecursivelyWithClasspathRelativeResource() {
+        // includes.conf has recursive includes in it; here we look it up
+        // with a "class-relative" class path resource
+        val included = whatWasIncluded(ConfigFactory.parseResource(classOf[SomethingInEquiv03], "includes.conf", _))
+
+        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
+            included.map(_.name))
+    }
+
+    @Test
+    def includersAreUsedRecursivelyWithURL() {
+        // includes.conf has recursive includes in it; here we look it up
+        // with a URL
+        val included = whatWasIncluded(ConfigFactory.parseURL(resourceFile("/equiv03/includes.conf").toURI.toURL, _))
+
+        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
+            included.map(_.name))
+    }
+
+    @Test
+    def stringParsing() {
+        val conf = ConfigFactory.parseString("{ a : b }", ConfigParseOptions.defaults())
+        assertEquals("b", conf.getString("a"))
+    }
+
+    @Test
+    def readerParsing() {
+        val conf = ConfigFactory.parseReader(new StringReader("{ a : b }"), ConfigParseOptions.defaults())
+        assertEquals("b", conf.getString("a"))
     }
 
     @Test

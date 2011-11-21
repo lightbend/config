@@ -10,6 +10,10 @@ import java.io.StringReader
 import com.typesafe.config._
 import java.util.HashMap
 import scala.collection.JavaConverters._
+import java.io.File
+import java.net.URL
+import java.util.Properties
+import java.io.ByteArrayInputStream
 
 class ConfParserTest extends TestUtils {
 
@@ -338,5 +342,16 @@ class ConfParserTest extends TestUtils {
         lineNumberTest(1, "1e\n")
         lineNumberTest(2, "\n1e\n")
         lineNumberTest(3, "\n\n1e\n")
+    }
+
+    @Test
+    def toStringForParseables() {
+        // just be sure the toString don't throw, to get test coverage
+        val options = ConfigParseOptions.defaults()
+        Parseable.newFile(new File("foo"), options).toString
+        Parseable.newResource(classOf[ConfParserTest], "foo", options).toString
+        Parseable.newURL(new URL("file:///foo"), options).toString
+        Parseable.newProperties(new Properties(), options).toString
+        Parseable.newReader(new StringReader("{}"), options).toString
     }
 }

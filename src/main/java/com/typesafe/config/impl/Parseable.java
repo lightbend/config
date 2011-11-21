@@ -439,7 +439,7 @@ public abstract class Parseable implements ConfigParseable {
         @Override
         ConfigParseable relativeTo(String filename) {
             // not using File.isAbsolute because resource paths always use '/'
-            // (?)
+            // on all platforms
             if (filename.startsWith("/"))
                 return null;
 
@@ -450,7 +450,7 @@ public abstract class Parseable implements ConfigParseable {
             // search a classpath.
             File parent = new File(resource).getParentFile();
             if (parent == null)
-                return newResource(klass, "/" + filename, options()
+                return newResource(klass, filename, options()
                         .setOriginDescription(null));
             else
                 return newResource(klass, new File(parent, filename).getPath(),
