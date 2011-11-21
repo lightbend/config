@@ -631,13 +631,17 @@ For plain files on the filesystem:
 
 For resources located on the Java classpath:
 
- - included resources are looked up in the same class or class
-   loader as the including resource.
- - if the included resource name starts with '/' then it
-   should be passed to `getResource()` as-is.
- - if the included resource name does not start with '/'
-   then it should have the "directory" of the including resource
-   prepended to it, before passing it to `getResource()`.
+ - included resources are looked up by calling `getResource()` on
+   the same class or class loader used to look up the including
+   resource.
+ - if the included resource name is absolute (starts with '/')
+   then it should be passed to `getResource()` as-is.
+ - if the included resource name does not start with '/' then it
+   should have the "directory" of the including resource.
+   prepended to it, before passing it to `getResource()`.  If the
+   including resource is not absolute (no '/') and has no "parent
+   directory" (is just a single path element), then the included
+   relative resource name should be left as-is.
  - it would be wrong to use `getResource()` to get a URL and then
    locate the included name relative to that URL, because a class
    loader is not required to have a one-to-one mapping between
