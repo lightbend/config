@@ -175,9 +175,9 @@ public final class ConfigFactory {
     }
 
     /**
-     * Same behavior as parseFileAnySyntax() but for classpath resources
-     * instead.
-     *
+     * Same behavior as {@link #parseFileAnySyntax(File,ConfigParseOptions)} but
+     * for classpath resources instead.
+     * 
      * @param klass
      * @param resourceBasename
      * @param options
@@ -198,7 +198,7 @@ public final class ConfigFactory {
      * Essentially if the path is "foo.bar" then the resources are
      * "/foo-bar.conf", "/foo-bar.json", and "/foo-bar.properties". If more than
      * one of those exists, they are merged.
-     * 
+     *
      * @param rootPath
      * @param options
      * @return the parsed configuration
