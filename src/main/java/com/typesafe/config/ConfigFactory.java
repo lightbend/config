@@ -13,12 +13,18 @@ import com.typesafe.config.impl.ConfigImpl;
 import com.typesafe.config.impl.Parseable;
 
 /**
- * This class contains static methods for creating Config objects.
+ * Contains static methods for creating {@link Config} instances.
  *
+ * <p>
+ * See also {@link ConfigValueFactory} which contains static methods for
+ * converting Java values into a {@link ConfigObject}. You can then convert a
+ * {@code ConfigObject} into a {@code Config} with {@link ConfigObject#toConfig}.
+ *
+ * <p>
  * The static methods with "load" in the name do some sort of higher-level
  * operation potentially parsing multiple resources and resolving substitutions,
- * while the ones with "parse" in the name just create a ConfigValue from a
- * resource and nothing else.
+ * while the ones with "parse" in the name just create a {@link ConfigValue}
+ * from a resource and nothing else.
  */
 public final class ConfigFactory {
     /**
@@ -45,7 +51,7 @@ public final class ConfigFactory {
      *
      * @param rootPath
      *            the configuration "domain"
-     * @return configuration object for the requested root path
+     * @return configuration for the requested root path
      */
     public static ConfigRoot load(String rootPath) {
         return loadWithoutResolving(rootPath).resolve();
@@ -60,10 +66,10 @@ public final class ConfigFactory {
     /**
      * Like load() but does not resolve the object, so you can go ahead and add
      * more fallbacks and stuff and have them seen by substitutions when you do
-     * call {@link ConfigRoot.resolve()}.
+     * call {@link ConfigRoot#resolve}.
      *
      * @param rootPath
-     * @return
+     * @return configuration for the requested root path
      */
     public static ConfigRoot loadWithoutResolving(String rootPath) {
         return loadWithoutResolving(rootPath, ConfigParseOptions.defaults());
@@ -125,7 +131,7 @@ public final class ConfigFactory {
      * @param properties
      *            a Java Properties object
      * @param options
-     * @return
+     * @return the parsed configuration
      */
     public static Config parseProperties(Properties properties,
             ConfigParseOptions options) {
@@ -155,7 +161,7 @@ public final class ConfigFactory {
      *
      * @param fileBasename
      * @param options
-     * @return
+     * @return the parsed configuration
      */
     public static Config parseFileAnySyntax(File fileBasename,
             ConfigParseOptions options) {
@@ -175,7 +181,7 @@ public final class ConfigFactory {
      * @param klass
      * @param resourceBasename
      * @param options
-     * @return
+     * @return the parsed configuration
      */
     public static Config parseResourceAnySyntax(Class<?> klass, String resourceBasename,
             ConfigParseOptions options) {
@@ -192,10 +198,10 @@ public final class ConfigFactory {
      * Essentially if the path is "foo.bar" then the resources are
      * "/foo-bar.conf", "/foo-bar.json", and "/foo-bar.properties". If more than
      * one of those exists, they are merged.
-     *
-     * @param path
+     * 
+     * @param rootPath
      * @param options
-     * @return
+     * @return the parsed configuration
      */
     public static Config parseResourcesForPath(String rootPath,
             ConfigParseOptions options) {
@@ -204,12 +210,15 @@ public final class ConfigFactory {
     }
 
     /**
-     * Similar to ConfigValueFactory.fromMap(), but the keys in the map are path
-     * expressions, rather than keys; and correspondingly it returns a Config
-     * instead of a ConfigObject. This is more convenient if you are writing
-     * literal maps in code, and less convenient if you are getting your maps
-     * from some data source such as a parser.
+     * Creates a {@code Config} based on a {@link java.util.Map} from paths to
+     * plain Java values. Similar to
+     * {@link ConfigValueFactory#fromMap(Map,String)}, except the keys in the
+     * map are path expressions, rather than keys; and correspondingly it
+     * returns a {@code Config} instead of a {@code ConfigObject}. This is more
+     * convenient if you are writing literal maps in code, and less convenient
+     * if you are getting your maps from some data source such as a parser.
      *
+     * <p>
      * An exception will be thrown (and it is a bug in the caller of the method)
      * if a path is both an object and a value, for example if you had both
      * "a=foo" and "a.b=bar", then "a" is both the string "foo" and the parent
@@ -221,7 +230,7 @@ public final class ConfigFactory {
      *            description of what this map represents, like a filename, or
      *            "default settings" (origin description is used in error
      *            messages)
-     * @return
+     * @return the map converted to a {@code Config}
      */
     public static Config parseMap(Map<String, ? extends Object> values,
             String originDescription) {
@@ -229,11 +238,11 @@ public final class ConfigFactory {
     }
 
     /**
-     * See the other overload of parseMap() for details, this one just uses a
-     * default origin description.
+     * See the other overload of {@link #parseMap(Map, String)} for details,
+     * this one just uses a default origin description.
      *
      * @param values
-     * @return
+     * @return the map converted to a {@code Config}
      */
     public static Config parseMap(Map<String, ? extends Object> values) {
         return parseMap(values, null);
