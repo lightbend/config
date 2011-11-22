@@ -155,6 +155,42 @@ The syntax is well-defined (including handling of whitespace and
 escaping). But it handles many reasonable ways you might want to
 format the file.
 
+### Uses of Substitutions
+
+The `${foo.bar}` substitution feature lets you avoid cut-and-paste
+in some nice ways.
+
+#### Factor out common values
+
+This is the obvious use,
+
+    standard-timeout = 10ms
+    foo.timeout = ${standard-timeout}
+    bar.timeout = ${standard-timeout}
+
+#### Inheritance
+
+If you duplicate a field with an object value, then the objects
+are merged with last-one-wins. So:
+
+    foo = { a : 42, c : 5 }
+    foo = { b : 43, c : 6}
+
+means the same as:
+
+    foo = { a : 42, b : 43, c : 6 }
+
+You can take advantage of this for "inheritance":
+
+    data-center-generic = { cluster-size = 6 }
+    data-center-east = ${data-center-generic}
+    data-center-east = { name = "east" }
+    data-center-west = ${data-center-generic}
+    data-center-west = { name = "west", cluster-size = 8 }
+
+Using `include` statements you could split this across multiple
+files, too.
+
 ## Future Directions
 
 Here are some features that might be nice to add.
