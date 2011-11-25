@@ -42,36 +42,64 @@ class UnitParserTest extends TestUtils {
 
     @Test
     def parseMemorySizeInBytes() {
-        val oneMegs = List("1048576", "1048576b", "1048576bytes", "1048576byte",
+        def parseMem(s: String) = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
+
+        val oneMebis = List("1048576", "1048576b", "1048576bytes", "1048576byte",
             "1048576  b", "1048576  bytes",
             "    1048576  b   ", "  1048576  bytes   ",
             "1048576B",
-            "1024k", "1024K", "1024 kilobytes", "1024 kilobyte",
-            "1m", "1M", "1 M", "1 megabytes", "1 megabyte",
-            "0.0009765625g", "0.0009765625G", "0.0009765625 gigabytes", "0.0009765625 gigabyte")
+            "1024k", "1024K", "1024Ki", "1024KiB", "1024 kibibytes", "1024 kibibyte",
+            "1m", "1M", "1 M", "1Mi", "1MiB", "1 mebibytes", "1 mebibyte",
+            "0.0009765625g", "0.0009765625G", "0.0009765625Gi", "0.0009765625GiB", "0.0009765625 gibibytes", "0.0009765625 gibibyte")
 
-        def parseMem(s: String) = SimpleConfig.parseMemorySizeInBytes(s, fakeOrigin(), "test")
-
-        for (s <- oneMegs) {
+        for (s <- oneMebis) {
             val result = parseMem(s)
             assertEquals(1024 * 1024, result)
         }
 
-        assertEquals(1024 * 1024 * 1024 * 1024, parseMem("1t"))
-        assertEquals(1024 * 1024 * 1024 * 1024, parseMem(" 1 T "))
-        assertEquals(1024 * 1024 * 1024 * 1024, parseMem("1 terabyte"))
-        assertEquals(1024 * 1024 * 1024 * 1024, parseMem(" 1  terabytes  "))
+        val oneMegas = List("1000000", "1000000b", "1000000bytes", "1000000byte",
+            "1000000  b", "1000000  bytes",
+            "    1000000  b   ", "  1000000  bytes   ",
+            "1000000B",
+            "1000kB", "1000 kilobytes", "1000 kilobyte",
+            "1MB", "1 megabytes", "1 megabyte",
+            ".001GB", ".001 gigabytes", ".001 gigabyte")
+
+        for (s <- oneMegas) {
+            val result = parseMem(s)
+            assertEquals(1000 * 1000, result)
+        }
+
+        var result = 1024L * 1024 * 1024
+        for (unit <- Seq("tebi", "pebi", "exbi", "zebi", "yobi")) {
+            val first = unit.substring(0, 1).toUpperCase()
+            result = result * 1024;
+            assertEquals(result, parseMem("1" + first))
+            assertEquals(result, parseMem("1" + first + "i"))
+            assertEquals(result, parseMem("1" + first + "iB"))
+            assertEquals(result, parseMem("1" + unit + "byte"))
+            assertEquals(result, parseMem("1" + unit + "bytes"))
+        }
+
+        result = 1000L * 1000 * 1000
+        for (unit <- Seq("tera", "peta", "exa", "zetta", "yotta")) {
+            val first = unit.substring(0, 1).toUpperCase()
+            result = result * 1000;
+            assertEquals(result, parseMem("1" + first + "B"))
+            assertEquals(result, parseMem("1" + unit + "byte"))
+            assertEquals(result, parseMem("1" + unit + "bytes"))
+        }
 
         // bad units
         val e = intercept[ConfigException.BadValue] {
-            SimpleConfig.parseMemorySizeInBytes("100 dollars", fakeOrigin(), "test")
+            SimpleConfig.parseBytes("100 dollars", fakeOrigin(), "test")
         }
-        assertTrue(e.getMessage().contains("size unit"))
+        assertTrue(e.getMessage().contains("size-in-bytes unit"))
 
         // bad number
         val e2 = intercept[ConfigException.BadValue] {
-            SimpleConfig.parseMemorySizeInBytes("1 00 bytes", fakeOrigin(), "test")
+            SimpleConfig.parseBytes("1 00 bytes", fakeOrigin(), "test")
         }
-        assertTrue(e2.getMessage().contains("size number"))
+        assertTrue(e2.getMessage().contains("size-in-bytes number"))
     }
 }

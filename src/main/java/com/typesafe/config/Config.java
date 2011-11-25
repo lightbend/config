@@ -289,25 +289,23 @@ public interface Config extends ConfigMergeable {
     ConfigValue getValue(String path);
 
     /**
-     * Gets a value as a size in bytes (parses special strings like "128M"). The
-     * size units are interpreted as for memory, not as for disk space, so they
-     * are in powers of two. If the value is already a number, then it's left
-     * alone; if it's a string, it's parsed understanding unit suffixes such as
-     * "128K", as documented in the <a
-     * href="https://github.com/havocp/config/blob/master/HOCON.md">the
+     * Gets a value as a size in bytes (parses special strings like "128M"). If
+     * the value is already a number, then it's left alone; if it's a string,
+     * it's parsed understanding unit suffixes such as "128K", as documented in
+     * the <a href="https://github.com/havocp/config/blob/master/HOCON.md">the
      * spec</a>.
      *
      * @param path
      *            path expression
-     * @return the memory size value at the requested path, in bytes
+     * @return the value at the requested path, in bytes
      * @throws ConfigException.Missing
      *             if value is absent or null
      * @throws ConfigException.WrongType
      *             if value is not convertible to Long or String
      * @throws ConfigException.BadValue
-     *             if value cannot be parsed as a memory size
+     *             if value cannot be parsed as a size in bytes
      */
-    Long getMemorySizeInBytes(String path);
+    Long getBytes(String path);
 
     /**
      * Get value as a duration in milliseconds. If the value is already a

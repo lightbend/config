@@ -4,7 +4,9 @@
 package com.typesafe.config.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.typesafe.config.Config;
@@ -183,13 +185,13 @@ class SimpleConfig implements Config {
     }
 
     @Override
-    public Long getMemorySizeInBytes(String path) {
+    public Long getBytes(String path) {
         Long size = null;
         try {
             size = getLong(path);
         } catch (ConfigException.WrongType e) {
             ConfigValue v = find(path, ConfigValueType.STRING, path);
-            size = parseMemorySizeInBytes((String) v.unwrapped(),
+            size = parseBytes((String) v.unwrapped(),
                     v.origin(), path);
         }
         return size;
@@ -333,7 +335,7 @@ class SimpleConfig implements Config {
                 l.add(((Number) v.unwrapped()).longValue());
             } else if (v.valueType() == ConfigValueType.STRING) {
                 String s = (String) v.unwrapped();
-                Long n = parseMemorySizeInBytes(s, v.origin(), path);
+                Long n = parseBytes(s, v.origin(), path);
                 l.add(n);
             } else {
                 throw new ConfigException.WrongType(v.origin(), path,
@@ -496,23 +498,87 @@ class SimpleConfig implements Config {
     }
 
     private static enum MemoryUnit {
-        BYTES(1), KILOBYTES(1024), MEGABYTES(1024 * 1024), GIGABYTES(
-                1024 * 1024 * 1024), TERABYTES(1024 * 1024 * 1024 * 1024);
+        BYTES("", 1024, 0),
 
-        int bytes;
+        KILOBYTES("kilo", 1000, 1),
+        MEGABYTES("mega", 1000, 2),
+        GIGABYTES("giga", 1000, 3),
+        TERABYTES("tera", 1000, 4),
+        PETABYTES("peta", 1000, 5),
+        EXABYTES("exa", 1000, 6),
+        ZETTABYTES("zetta", 1000, 7),
+        YOTTABYTES("yotta", 1000, 8),
 
-        MemoryUnit(int bytes) {
+        KIBIBYTES("kibi", 1024, 1),
+        MEBIBYTES("mebi", 1024, 2),
+        GIBIBYTES("gibi", 1024, 3),
+        TEBIBYTES("tebi", 1024, 4),
+        PEBIBYTES("pebi", 1024, 5),
+        EXBIBYTES("exbi", 1024, 6),
+        ZEBIBYTES("zebi", 1024, 7),
+        YOBIBYTES("yobi", 1024, 8);
+
+        final String prefix;
+        final int powerOf;
+        final int power;
+        final long bytes;
+
+        MemoryUnit(String prefix, int powerOf, int power) {
+            this.prefix = prefix;
+            this.powerOf = powerOf;
+            this.power = power;
+            int i = power;
+            long bytes = 1;
+            while (i > 0) {
+                bytes *= powerOf;
+                --i;
+            }
             this.bytes = bytes;
+        }
+
+        private static Map<String, MemoryUnit> makeUnitsMap() {
+            Map<String, MemoryUnit> map = new HashMap<String, MemoryUnit>();
+            for (MemoryUnit unit : MemoryUnit.values()) {
+                map.put(unit.prefix + "byte", unit);
+                map.put(unit.prefix + "bytes", unit);
+                if (unit.prefix.length() == 0) {
+                    map.put("b", unit);
+                    map.put("B", unit);
+                    map.put("", unit); // no unit specified means bytes
+                } else {
+                    String first = unit.prefix.substring(0, 1);
+                    String firstUpper = first.toUpperCase();
+                    if (unit.powerOf == 1024) {
+                        map.put(first, unit);             // 512m
+                        map.put(firstUpper, unit);        // 512M
+                        map.put(firstUpper + "i", unit);  // 512Mi
+                        map.put(firstUpper + "iB", unit); // 512MiB
+                    } else if (unit.powerOf == 1000) {
+                        if (unit.power == 1) {
+                            map.put(first + "B", unit);      // 512kB
+                        } else {
+                            map.put(firstUpper + "B", unit); // 512MB
+                        }
+                    } else {
+                        throw new RuntimeException("broken MemoryUnit enum");
+                    }
+                }
+            }
+            return map;
+        }
+
+        private static Map<String, MemoryUnit> unitsMap = makeUnitsMap();
+
+        static MemoryUnit parseUnit(String unit) {
+            return unitsMap.get(unit);
         }
     }
 
     /**
-     * Parses a memory-size string. If no units are specified in the string, it
-     * is assumed to be in bytes. The returned value is in bytes. The purpose of
-     * this function is to implement the memory-size-related methods in the
-     * ConfigObject interface. The units parsed are interpreted as powers of
-     * two, that is, the convention for memory rather than the convention for
-     * disk space.
+     * Parses a size-in-bytes string. If no units are specified in the string,
+     * it is assumed to be in bytes. The returned value is in bytes. The purpose
+     * of this function is to implement the size-in-bytes-related methods in the
+     * Config interface.
      *
      * @param input
      *            the string to parse
@@ -524,19 +590,12 @@ class SimpleConfig implements Config {
      * @throws ConfigException
      *             if string is invalid
      */
-    public static long parseMemorySizeInBytes(String input,
-            ConfigOrigin originForException, String pathForException) {
+    public static long parseBytes(String input, ConfigOrigin originForException,
+            String pathForException) {
         String s = ConfigUtil.unicodeTrim(input);
-        String unitStringMaybePlural = getUnits(s);
-        String unitString;
-        if (unitStringMaybePlural.endsWith("s"))
-            unitString = unitStringMaybePlural.substring(0,
-                    unitStringMaybePlural.length() - 1);
-        else
-            unitString = unitStringMaybePlural;
-        String unitStringLower = unitString.toLowerCase();
-        String numberString = ConfigUtil.unicodeTrim(s.substring(0, s.length()
-                - unitStringMaybePlural.length()));
+        String unitString = getUnits(s);
+        String numberString = ConfigUtil.unicodeTrim(s.substring(0,
+                s.length() - unitString.length()));
 
         // this would be caught later anyway, but the error message
         // is more helpful if we check it here.
@@ -545,40 +604,25 @@ class SimpleConfig implements Config {
                     pathForException, "No number in size-in-bytes value '"
                             + input + "'");
 
-        MemoryUnit units = null;
+        MemoryUnit units = MemoryUnit.parseUnit(unitString);
 
-        // the short abbreviations are case-insensitive but you can't write the
-        // long form words in all caps.
-        if (unitString.equals("") || unitStringLower.equals("b")
-                || unitString.equals("byte")) {
-            units = MemoryUnit.BYTES;
-        } else if (unitStringLower.equals("k") || unitString.equals("kilobyte")) {
-            units = MemoryUnit.KILOBYTES;
-        } else if (unitStringLower.equals("m") || unitString.equals("megabyte")) {
-            units = MemoryUnit.MEGABYTES;
-        } else if (unitStringLower.equals("g") || unitString.equals("gigabyte")) {
-            units = MemoryUnit.GIGABYTES;
-        } else if (unitStringLower.equals("t") || unitString.equals("terabyte")) {
-            units = MemoryUnit.TERABYTES;
-        } else {
-            throw new ConfigException.BadValue(originForException,
-                    pathForException, "Could not parse size unit '"
-                            + unitStringMaybePlural + "' (try b, k, m, g, t)");
+        if (units == null) {
+            throw new ConfigException.BadValue(originForException, pathForException,
+                    "Could not parse size-in-bytes unit '" + unitString
+                            + "' (try k, K, kB, KiB, kilobytes, kibibytes)");
         }
 
         try {
             // if the string is purely digits, parse as an integer to avoid
-            // possible precision loss;
-            // otherwise as a double.
+            // possible precision loss; otherwise as a double.
             if (numberString.matches("[0-9]+")) {
                 return Long.parseLong(numberString) * units.bytes;
             } else {
                 return (long) (Double.parseDouble(numberString) * units.bytes);
             }
         } catch (NumberFormatException e) {
-            throw new ConfigException.BadValue(originForException,
-                    pathForException, "Could not parse memory size number '"
-                            + numberString + "'");
+            throw new ConfigException.BadValue(originForException, pathForException,
+                    "Could not parse size-in-bytes number '" + numberString + "'");
         }
     }
 }

@@ -752,8 +752,8 @@ must be lowercase. Exactly these strings are supported:
 
 ### Size in bytes format
 
-Implementations may wish to support a `getMemorySizeInBytes()`
-returning a size in bytes.
+Implementations may wish to support a `getBytes()` returning a
+size in bytes.
 
 This can use the general "units format" described above; bare
 numbers are taken to be in bytes already, while strings are
@@ -763,21 +763,49 @@ The one-letter unit strings may be uppercase (note: duration units
 are always lowercase, so this convention is specific to size
 units).
 
-Exactly these strings are supported:
+There is an unfortunate nightmare with size-in-bytes units, that
+they may be in powers or two or powers of ten. The approach
+defined by standards bodies appears to differ from common usage,
+such that following the standard leads to people being confused.
+Worse, common usage varies based on whether people are talking
+about RAM or disk sizes, and various existing operating systems
+and apps do all kinds of different things.  See
+http://en.wikipedia.org/wiki/Binary_prefix#Deviation_between_powers_of_1024_and_powers_of_1000
+for examples. It appears impossible to sort this out without
+causing confusion for someone sometime.
+
+For single bytes, exactly these strings are supported:
 
  - `B`, `b`, `byte`, `bytes`
- - `K`, `k`, `kilobyte`, `kilobytes`
- - `M`, `m`, `megabyte`, `megabytes`
- - `G`, `g`, `gigabyte`, `gigabytes`
- - `T`, `t`, `terabyte`, `terabytes`
 
-Values are interpreted as for memory (powers of two scale) not as
-for hard drives (powers of ten scale).
+For powers of ten, exactly these strings are supported:
 
-(A generic `getBytes()`, as opposed to `getMemorySizeInBytes()`,
-might wish to support both the SI power of ten units and the IEC
-power of two units. But until an implementation needs that, no
-such thing is documented here.)
+ - `kB`, `kilobyte`, `kilobytes`
+ - `MB`, `megabyte`, `megabytes`
+ - `GB`, `gigabyte`, `gigabytes`
+ - `TB`, `terabyte`, `terabytes`
+ - `PB`, `petabyte`, `petabytes`
+ - `EB`, `exabyte`, `exabytes`
+ - `ZB`, `zettabyte`, `zettabytes`
+ - `YB`, `yottabyte`, `yottabytes`
+
+For powers of two, exactly these strings are supported:
+
+ - `K`, `k`, `Ki`, `KiB`, `kibibyte`, `kibibytes`
+ - `M`, `m`, `Mi`, `MiB`, `mebibyte`, `mebibytes`
+ - `G`, `g`, `Gi`, `GiB`, `gibibyte`, `gibibytes`
+ - `T`, `t`, `Ti`, `TiB`, `tebibyte`, `tebibytes`
+ - `P`, `p`, `Pi`, `PiB`, `pebibyte`, `pebibytes`
+ - `E`, `e`, `Ei`, `EiB`, `exbibyte`, `exbibytes`
+ - `Z`, `z`, `Zi`, `ZiB`, `zebibyte`, `zebibytes`
+ - `Y`, `y`, `Yi`, `YiB`, `yobibyte`, `yobibytes`
+
+It's very unclear which units the single-character abbreviations
+("128K") should go with; some precedents such as `java -Xmx 2G`
+and the GNU tools such as `ls` map these to powers of two, so this
+spec copies that. You can certainly find examples of mapping these
+to powers of ten, though. If you don't like ambiguity, don't use
+the single-letter abbreviations.
 
 ### Config object merging and file merging
 

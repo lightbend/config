@@ -602,7 +602,7 @@ class ConfigTest extends TestUtils {
         }
 
         intercept[ConfigException.Null] {
-            conf.getMemorySizeInBytes("nulls.null")
+            conf.getBytes("nulls.null")
         }
 
         // should throw WrongType if key is wrong type and not convertible
@@ -631,7 +631,7 @@ class ConfigTest extends TestUtils {
         }
 
         intercept[ConfigException.WrongType] {
-            conf.getMemorySizeInBytes("ints")
+            conf.getBytes("ints")
         }
 
         // should throw BadPath on various bad paths
@@ -658,7 +658,7 @@ class ConfigTest extends TestUtils {
         }
 
         intercept[ConfigException.BadValue] {
-            conf.getMemorySizeInBytes("strings.a")
+            conf.getBytes("strings.a")
         }
     }
 
@@ -718,11 +718,11 @@ class ConfigTest extends TestUtils {
         assertEquals(500L, conf.getMilliseconds("durations.halfSecond"))
 
         // should get size in bytes
-        assertEquals(1024 * 1024L, conf.getMemorySizeInBytes("memsizes.meg"))
-        assertEquals(1024 * 1024L, conf.getMemorySizeInBytes("memsizes.megAsNumber"))
+        assertEquals(1024 * 1024L, conf.getBytes("memsizes.meg"))
+        assertEquals(1024 * 1024L, conf.getBytes("memsizes.megAsNumber"))
         assertEquals(Seq(1024 * 1024L, 1024 * 1024L, 1024L * 1024L),
             conf.getMemorySizeInBytesList("memsizes.megsList").asScala)
-        assertEquals(512 * 1024L, conf.getMemorySizeInBytes("memsizes.halfMeg"))
+        assertEquals(512 * 1024L, conf.getBytes("memsizes.halfMeg"))
     }
 
     @Test
