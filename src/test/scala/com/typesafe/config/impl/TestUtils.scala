@@ -156,6 +156,13 @@ abstract trait TestUtils {
         "[ = ]", // = is not a valid token in unquoted text
         "[ + ]",
         "[ # ]",
+        "[ ` ]",
+        "[ ^ ]",
+        "[ ? ]",
+        "[ ! ]",
+        "[ @ ]",
+        "[ * ]",
+        "[ & ]",
         "[ \\ ]",
         ParseTest(true, "[ \"foo\nbar\" ]"), // unescaped newline in quoted string, lift doesn't care
         "[ # comment ]",

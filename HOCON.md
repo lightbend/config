@@ -188,8 +188,8 @@ A sequence of characters outside of a quoted string is a string
 value if:
 
  - it does not contain "forbidden characters" '$', '"', '{', '}',
-   '[', ']', ':', '=', ',', '+', '#', '\' (backslash), or
-   whitespace.
+   '[', ']', ':', '=', ',', '+', '#', '`', '^', '?', '!', '@',
+   '*', '&', '\' (backslash), or whitespace.
  - it does not contain the two-character string "//" (which
    starts a comment)
  - its initial characters do not parse as `true`, `false`, `null`,
@@ -224,6 +224,10 @@ Note that quoted JSON strings may not contain control characters
 newline). This rule is from the JSON spec. However, unquoted
 strings have no restriction on control characters, other than the
 ones listed as "forbidden characters" above.
+
+Some of the "forbidden characters" are forbidden because they
+already have meaning in JSON or HOCON, others are essentially
+reserved keywords to allow future extensions to this spec.
 
 ### Value concatenation
 
@@ -1018,7 +1022,3 @@ Environment variables are interpreted as follows:
  - environment variables always become a string value, though
    if an app asks for another type automatic type conversion
    would kick in
-
-## Open issues
-
- - should a few more special characters be banned from unquoted strings, to allow future extensions?
