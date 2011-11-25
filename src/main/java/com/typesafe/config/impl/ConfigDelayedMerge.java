@@ -161,17 +161,20 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, String atKey) {
-        render(stack, sb, indent, atKey);
+    protected void render(StringBuilder sb, int indent, String atKey, boolean formatted) {
+        render(stack, sb, indent, atKey, formatted);
     }
 
     // static method also used by ConfigDelayedMergeObject.
-    static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, String atKey) {
-        sb.append("# unresolved merge of " + stack.size() + " values follows (\n");
-        if (atKey == null) {
-            indent(sb, indent);
-            sb.append("# this unresolved merge will not be parseable because it's at the root of the object\n");
-            sb.append("# the HOCON format has no way to list multiple root objects in a single file\n");
+    static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, String atKey,
+            boolean formatted) {
+        if (formatted) {
+            sb.append("# unresolved merge of " + stack.size() + " values follows (\n");
+            if (atKey == null) {
+                indent(sb, indent);
+                sb.append("# this unresolved merge will not be parseable because it's at the root of the object\n");
+                sb.append("# the HOCON format has no way to list multiple root objects in a single file\n");
+            }
         }
 
         List<AbstractConfigValue> reversed = new ArrayList<AbstractConfigValue>();
@@ -180,27 +183,36 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
 
         int i = 0;
         for (AbstractConfigValue v : reversed) {
-            indent(sb, indent);
-            if (atKey != null) {
-                sb.append("#     unmerged value " + i + " for key "
-                        + ConfigUtil.renderJsonString(atKey) + " from ");
-            } else {
-                sb.append("#     unmerged value " + i + " from ");
+            if (formatted) {
+                indent(sb, indent);
+                if (atKey != null) {
+                    sb.append("#     unmerged value " + i + " for key "
+                            + ConfigUtil.renderJsonString(atKey) + " from ");
+                } else {
+                    sb.append("#     unmerged value " + i + " from ");
+                }
+                i += 1;
+                sb.append(v.origin().description());
+                sb.append("\n");
+                indent(sb, indent);
             }
-            i += 1;
-            sb.append(v.origin().description());
-            sb.append("\n");
-            indent(sb, indent);
+
             if (atKey != null) {
                 sb.append(ConfigUtil.renderJsonString(atKey));
                 sb.append(" : ");
             }
-            v.render(sb, indent);
-            sb.append(",\n");
+            v.render(sb, indent, formatted);
+            sb.append(",");
+            if (formatted)
+                sb.append('\n');
         }
-        sb.setLength(sb.length() - 2); // chop comma and newline
-        sb.append("\n");
-        indent(sb, indent);
-        sb.append("# ) end of unresolved merge\n");
+        // chop comma or newline
+        sb.setLength(sb.length() - 1);
+        if (formatted) {
+            sb.setLength(sb.length() - 1); // also chop comma
+            sb.append("\n"); // put a newline back
+            indent(sb, indent);
+            sb.append("# ) end of unresolved merge\n");
+        }
     }
 }

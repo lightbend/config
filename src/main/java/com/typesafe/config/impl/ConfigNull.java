@@ -36,7 +36,7 @@ final class ConfigNull extends AbstractConfigValue {
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent) {
+    protected void render(StringBuilder sb, int indent, boolean formatted) {
         sb.append("null");
     }
 }

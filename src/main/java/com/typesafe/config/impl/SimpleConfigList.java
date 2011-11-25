@@ -135,24 +135,32 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent) {
+    protected void render(StringBuilder sb, int indent, boolean formatted) {
         if (value.isEmpty()) {
             sb.append("[]");
         } else {
-            sb.append("[\n");
+            sb.append("[");
+            if (formatted)
+                sb.append('\n');
             for (AbstractConfigValue v : value) {
-                indent(sb, indent + 1);
-                sb.append("# ");
-                sb.append(v.origin().description());
-                sb.append("\n");
-                indent(sb, indent + 1);
-                v.render(sb, indent + 1);
-                sb.append(",\n");
+                if (formatted) {
+                    indent(sb, indent + 1);
+                    sb.append("# ");
+                    sb.append(v.origin().description());
+                    sb.append("\n");
+                    indent(sb, indent + 1);
+                }
+                v.render(sb, indent + 1, formatted);
+                sb.append(",");
+                if (formatted)
+                    sb.append('\n');
             }
-            sb.setLength(sb.length() - 2); // chop comma and newline
-            sb.append("\n");
-
-            indent(sb, indent);
+            sb.setLength(sb.length() - 1); // chop or newline
+            if (formatted) {
+                sb.setLength(sb.length() - 1); // also chop comma
+                sb.append('\n');
+                indent(sb, indent);
+            }
             sb.append("]");
         }
     }

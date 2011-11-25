@@ -261,22 +261,34 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent) {
+    protected void render(StringBuilder sb, int indent, boolean formatted) {
         if (isEmpty()) {
             sb.append("{}");
         } else {
-            sb.append("{\n");
+            sb.append("{");
+            if (formatted)
+                sb.append('\n');
             for (String k : keySet()) {
                 AbstractConfigValue v = peek(k);
-                indent(sb, indent + 1);
-                sb.append("# ");
-                sb.append(v.origin().description());
-                sb.append("\n");
-                indent(sb, indent + 1);
-                v.render(sb, indent + 1, k);
-                sb.append(",\n");
+                if (formatted) {
+                    indent(sb, indent + 1);
+                    sb.append("# ");
+                    sb.append(v.origin().description());
+                    sb.append("\n");
+                    indent(sb, indent + 1);
+                }
+                v.render(sb, indent + 1, k, formatted);
+                sb.append(",");
+                if (formatted)
+                    sb.append('\n');
             }
-            indent(sb, indent);
+            // chop comma or newline
+            sb.setLength(sb.length() - 1);
+            if (formatted) {
+                sb.setLength(sb.length() - 1); // also chop comma
+                sb.append("\n"); // put a newline back
+                indent(sb, indent);
+            }
             sb.append("}");
         }
     }

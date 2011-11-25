@@ -139,8 +139,8 @@ class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, String atKey) {
-        ConfigDelayedMerge.render(stack, sb, indent, atKey);
+    protected void render(StringBuilder sb, int indent, String atKey, boolean formatted) {
+        ConfigDelayedMerge.render(stack, sb, indent, atKey, formatted);
     }
 
     private static ConfigException notResolved() {

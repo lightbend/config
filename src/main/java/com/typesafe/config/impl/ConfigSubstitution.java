@@ -244,7 +244,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent) {
+    protected void render(StringBuilder sb, int indent, boolean formatted) {
         for (Object p : pieces) {
             if (p instanceof Path) {
                 sb.append("${");

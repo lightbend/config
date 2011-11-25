@@ -11,6 +11,10 @@ object RenderExample extends App {
         println("=== BEGIN RESOLVED " + what)
         println(conf.resolve().root.render())
         println("=== END RESOLVED " + what)
+
+        println("=== BEGIN UNRESOLVED toString() " + what)
+        println(conf.root.toString())
+        println("=== END UNRESOLVED toString() " + what)
     }
 
     render("test01")
