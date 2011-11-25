@@ -88,7 +88,7 @@ class PropertiesTest extends TestUtils {
 
         val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
 
-        assertEquals(2, conf.toObject.size())
+        assertEquals(2, conf.root.size())
         assertEquals("foo", conf.getString("a.b"))
         assertEquals("foo", conf.getString("x.y.z"))
     }

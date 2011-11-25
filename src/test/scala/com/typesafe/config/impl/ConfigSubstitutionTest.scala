@@ -285,13 +285,13 @@ class ConfigSubstitutionTest extends TestUtils {
         val resolved = resolve(substEnvVarObject)
 
         var existed = 0
-        for (k <- resolved.toObject.keySet().asScala) {
+        for (k <- resolved.root.keySet().asScala) {
             val e = System.getenv(k.toUpperCase());
             if (e != null) {
                 existed += 1
                 assertEquals(e, resolved.getString(k))
             } else {
-                assertEquals(nullValue, resolved.toObject.get(k))
+                assertEquals(nullValue, resolved.root.get(k))
             }
         }
         if (existed == 0) {
@@ -315,9 +315,9 @@ class ConfigSubstitutionTest extends TestUtils {
 
         val resolved = resolve(substEnvVarObject.withFallback(nulls))
 
-        for (k <- resolved.toObject.keySet().asScala) {
-            assertNotNull(resolved.toObject.get(k))
-            assertEquals(nullValue, resolved.toObject.get(k))
+        for (k <- resolved.root.keySet().asScala) {
+            assertNotNull(resolved.root.get(k))
+            assertEquals(nullValue, resolved.root.get(k))
         }
     }
 

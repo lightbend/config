@@ -24,7 +24,7 @@ class ConfigTest extends TestUtils {
     }
 
     private def resolveNoSystem(v: SimpleConfig, root: SimpleConfig) = {
-        SubstitutionResolver.resolve(v.toObject, root.toObject,
+        SubstitutionResolver.resolve(v.root, root.root,
             ConfigResolveOptions.noSystem()).asInstanceOf[AbstractConfigObject].toConfig
     }
 
@@ -95,14 +95,14 @@ class ConfigTest extends TestUtils {
 
         assertEquals(1, merged.getInt("a"))
         assertEquals(2, merged.getInt("b"))
-        assertEquals(2, merged.toObject.size)
+        assertEquals(2, merged.root.size)
     }
 
     @Test
     def mergeEmpty() {
         val merged = merge().toConfig
 
-        assertEquals(0, merged.toObject.size)
+        assertEquals(0, merged.root.size)
     }
 
     @Test
@@ -111,7 +111,7 @@ class ConfigTest extends TestUtils {
         val merged = merge(obj1).toConfig
 
         assertEquals(1, merged.getInt("a"))
-        assertEquals(1, merged.toObject.size)
+        assertEquals(1, merged.root.size)
     }
 
     @Test
@@ -121,12 +121,12 @@ class ConfigTest extends TestUtils {
         val merged = merge(obj1, obj2).toConfig
 
         assertEquals(1, merged.getInt("a"))
-        assertEquals(1, merged.toObject.size)
+        assertEquals(1, merged.root.size)
 
         val merged2 = merge(obj2, obj1).toConfig
 
         assertEquals(2, merged2.getInt("a"))
-        assertEquals(1, merged2.toObject.size)
+        assertEquals(1, merged2.root.size)
     }
 
     @Test
@@ -141,7 +141,7 @@ class ConfigTest extends TestUtils {
             assertEquals(2, merged.getInt("b"))
             assertEquals(3, merged.getInt("c"))
             assertEquals(4, merged.getInt("d"))
-            assertEquals(4, merged.toObject.size)
+            assertEquals(4, merged.root.size)
         }
     }
 
@@ -153,12 +153,12 @@ class ConfigTest extends TestUtils {
         val obj4 = parseObject("""{ "a" : 4 }""")
         associativeMerge(Seq(obj1, obj2, obj3, obj4)) { merged =>
             assertEquals(1, merged.getInt("a"))
-            assertEquals(1, merged.toObject.size)
+            assertEquals(1, merged.root.size)
         }
 
         associativeMerge(Seq(obj4, obj3, obj2, obj1)) { merged2 =>
             assertEquals(4, merged2.getInt("a"))
-            assertEquals(1, merged2.toObject.size)
+            assertEquals(1, merged2.root.size)
         }
     }
 
@@ -171,8 +171,8 @@ class ConfigTest extends TestUtils {
         assertEquals(1, merged.getInt("root.a"))
         assertEquals(2, merged.getInt("root.b"))
         assertEquals(101, merged.getInt("root.z"))
-        assertEquals(1, merged.toObject.size)
-        assertEquals(3, merged.getConfig("root").toObject.size)
+        assertEquals(1, merged.root.size)
+        assertEquals(3, merged.getConfig("root").root.size)
     }
 
     @Test
@@ -182,12 +182,12 @@ class ConfigTest extends TestUtils {
         val merged = merge(obj1, obj2).toConfig
 
         assertEquals(1, merged.getInt("a"))
-        assertEquals(1, merged.toObject.size)
+        assertEquals(1, merged.root.size)
 
         val merged2 = merge(obj2, obj1).toConfig
 
         assertEquals(1, merged2.getInt("a"))
-        assertEquals(1, merged2.toObject.size)
+        assertEquals(1, merged2.root.size)
     }
 
     @Test
@@ -197,13 +197,13 @@ class ConfigTest extends TestUtils {
         val merged = merge(obj1, obj2).toConfig
 
         assertEquals(1, merged.getInt("a"))
-        assertEquals(1, merged.toObject.size)
+        assertEquals(1, merged.root.size)
 
         val merged2 = merge(obj2, obj1).toConfig
 
         assertEquals(42, merged2.getConfig("a").getInt("b"))
         assertEquals(42, merged2.getInt("a.b"))
-        assertEquals(1, merged2.toObject.size)
+        assertEquals(1, merged2.root.size)
         assertEquals(1, merged2.getObject("a").size)
     }
 
@@ -214,13 +214,13 @@ class ConfigTest extends TestUtils {
         val merged = merge(obj1, obj2).toConfig
 
         assertEquals(1, merged.getInt("a"))
-        assertEquals(2, merged.toObject.size)
+        assertEquals(2, merged.root.size)
 
         val merged2 = merge(obj2, obj1).toConfig
 
         assertEquals(42, merged2.getConfig("a").getInt("b"))
         assertEquals(42, merged2.getInt("a.b"))
-        assertEquals(2, merged2.toObject.size)
+        assertEquals(2, merged2.root.size)
         assertEquals(1, merged2.getObject("a").size)
     }
 
@@ -235,14 +235,14 @@ class ConfigTest extends TestUtils {
 
         associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
             assertEquals(42, merged.getInt("a.b"))
-            assertEquals(1, merged.toObject.size)
+            assertEquals(1, merged.root.size)
             assertEquals(1, merged.getObject("a").size())
         }
 
         associativeMerge(Seq(obj3, obj2, obj1)) { merged2 =>
             assertEquals(43, merged2.getInt("a.b"))
             assertEquals(44, merged2.getInt("a.c"))
-            assertEquals(1, merged2.toObject.size)
+            assertEquals(1, merged2.root.size)
             assertEquals(2, merged2.getObject("a").size())
         }
     }
@@ -259,7 +259,7 @@ class ConfigTest extends TestUtils {
         associativeMerge(Seq(obj1, obj2, obj3)) { unresolved =>
             val merged = resolveNoSystem(unresolved, unresolved)
             assertEquals(42, merged.getInt("a.b"))
-            assertEquals(4, merged.toObject.size)
+            assertEquals(4, merged.root.size)
             assertEquals(1, merged.getObject("a").size())
         }
 
@@ -267,7 +267,7 @@ class ConfigTest extends TestUtils {
             val merged2 = resolveNoSystem(unresolved, unresolved)
             assertEquals(43, merged2.getInt("a.b"))
             assertEquals(44, merged2.getInt("a.c"))
-            assertEquals(4, merged2.toObject.size)
+            assertEquals(4, merged2.root.size)
             assertEquals(2, merged2.getObject("a").size())
         }
     }
@@ -281,7 +281,7 @@ class ConfigTest extends TestUtils {
 
         associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
             assertEquals(1, merged.getInt("a"))
-            assertEquals(1, merged.toObject.size)
+            assertEquals(1, merged.root.size)
         }
     }
 
@@ -296,7 +296,7 @@ class ConfigTest extends TestUtils {
             val resolved = resolveNoSystem(merged, merged)
 
             assertEquals(1, resolved.getInt("a"))
-            assertEquals(3, resolved.toObject.size)
+            assertEquals(3, resolved.root.size)
         }
     }
 
@@ -401,7 +401,7 @@ class ConfigTest extends TestUtils {
         associativeMerge(Seq(obj1, obj2, obj3)) { merged =>
             val resolved = resolveNoSystem(merged, merged)
 
-            assertEquals(3, resolved.toObject.size())
+            assertEquals(3, resolved.root.size())
             assertEquals(42, resolved.getInt("j"));
             assertEquals(2, resolved.getInt("b.y"))
             assertEquals(3, resolved.getInt("c.z"))
@@ -449,7 +449,7 @@ class ConfigTest extends TestUtils {
             case v: AbstractConfigValue =>
                 v.ignoresFallbacks()
             case c: SimpleConfig =>
-                c.toObject.ignoresFallbacks()
+                c.root.ignoresFallbacks()
         }
     }
 
@@ -534,7 +534,7 @@ class ConfigTest extends TestUtils {
         // to get null we have to use the get() method from Map,
         // which takes a key and not a path
         assertEquals(nullValue(), conf.getObject("nulls").get("null"))
-        assertNull(conf.toObject.get("notinthefile"))
+        assertNull(conf.root.get("notinthefile"))
 
         // get stuff with getValue
         assertEquals(intValue(42), conf.getValue("ints.fortyTwo"))

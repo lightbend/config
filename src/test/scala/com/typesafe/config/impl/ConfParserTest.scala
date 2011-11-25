@@ -162,7 +162,7 @@ class ConfParserTest extends TestUtils {
     def duplicateKeyLastWins() {
         val obj = parseConfig("""{ "a" : 10, "a" : 11 } """)
 
-        assertEquals(1, obj.toObject.size())
+        assertEquals(1, obj.root.size())
         assertEquals(11, obj.getInt("a"))
     }
 
@@ -170,7 +170,7 @@ class ConfParserTest extends TestUtils {
     def duplicateKeyObjectsMerged() {
         val obj = parseConfig("""{ "a" : { "x" : 1, "y" : 2 }, "a" : { "x" : 42, "z" : 100 } }""")
 
-        assertEquals(1, obj.toObject.size())
+        assertEquals(1, obj.root.size())
         assertEquals(3, obj.getObject("a").size())
         assertEquals(42, obj.getInt("a.x"))
         assertEquals(2, obj.getInt("a.y"))
@@ -181,7 +181,7 @@ class ConfParserTest extends TestUtils {
     def duplicateKeyObjectsMergedRecursively() {
         val obj = parseConfig("""{ "a" : { "b" : { "x" : 1, "y" : 2 } }, "a" : { "b" : { "x" : 42, "z" : 100 } } }""")
 
-        assertEquals(1, obj.toObject.size())
+        assertEquals(1, obj.root.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(3, obj.getObject("a.b").size())
         assertEquals(42, obj.getInt("a.b.x"))
@@ -193,7 +193,7 @@ class ConfParserTest extends TestUtils {
     def duplicateKeyObjectsMergedRecursivelyDeeper() {
         val obj = parseConfig("""{ "a" : { "b" : { "c" : { "x" : 1, "y" : 2 } } }, "a" : { "b" : { "c" : { "x" : 42, "z" : 100 } } } }""")
 
-        assertEquals(1, obj.toObject.size())
+        assertEquals(1, obj.root.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(1, obj.getObject("a.b").size())
         assertEquals(3, obj.getObject("a.b.c").size())
@@ -206,7 +206,7 @@ class ConfParserTest extends TestUtils {
     def duplicateKeyObjectNullObject() {
         // null is supposed to "reset" the object at key "a"
         val obj = parseConfig("""{ a : { b : 1 }, a : null, a : { c : 2 } }""")
-        assertEquals(1, obj.toObject.size())
+        assertEquals(1, obj.root.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(2, obj.getInt("a.c"))
     }
@@ -214,7 +214,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def duplicateKeyObjectNumberObject() {
         val obj = parseConfig("""{ a : { b : 1 }, a : 42, a : { c : 2 } }""")
-        assertEquals(1, obj.toObject.size())
+        assertEquals(1, obj.root.size())
         assertEquals(1, obj.getObject("a").size())
         assertEquals(2, obj.getInt("a.c"))
     }
@@ -271,7 +271,7 @@ class ConfParserTest extends TestUtils {
         for (v <- valids; change <- changes) {
             tested += 1;
             val obj = parseConfig(change(v))
-            assertEquals(3, obj.toObject.size())
+            assertEquals(3, obj.root.size())
             assertEquals("y", obj.getString("a"))
             assertEquals("z", obj.getString("b"))
             assertEquals(Seq(1, 2, 3), obj.getIntList("c").asScala)

@@ -171,18 +171,18 @@ class PublicApiTest extends TestUtils {
     @Test
     def roundTripUnwrap() {
         val conf = ConfigFactory.load("test01")
-        assertTrue(conf.toObject.size > 4) // "has a lot of stuff in it"
-        val unwrapped = conf.toObject.unwrapped()
+        assertTrue(conf.root.size > 4) // "has a lot of stuff in it"
+        val unwrapped = conf.root.unwrapped()
         val rewrapped = ConfigValueFactory.fromMap(unwrapped, conf.origin().description())
         val reunwrapped = rewrapped.unwrapped()
-        assertEquals(conf.toObject, rewrapped)
+        assertEquals(conf.root, rewrapped)
         assertEquals(reunwrapped, unwrapped)
     }
 
     private def testFromPathMap(expectedValue: ConfigObject, createFrom: java.util.Map[String, Object]) {
-        assertEquals(expectedValue, ConfigFactory.parseMap(createFrom).toObject)
+        assertEquals(expectedValue, ConfigFactory.parseMap(createFrom).root)
         assertEquals(defaultValueDesc, ConfigFactory.parseMap(createFrom).origin().description())
-        assertEquals(expectedValue, ConfigFactory.parseMap(createFrom, "foo").toObject)
+        assertEquals(expectedValue, ConfigFactory.parseMap(createFrom, "foo").root)
         assertEquals("foo", ConfigFactory.parseMap(createFrom, "foo").origin().description())
     }
 
@@ -205,7 +205,7 @@ class PublicApiTest extends TestUtils {
 
         val conf = ConfigFactory.parseMap(pathMapValue)
 
-        assertEquals(2, conf.toObject.size)
+        assertEquals(2, conf.root.size)
         assertEquals(4, conf.getInt("b.x.y"))
         assertEquals(5, conf.getInt("b.z"))
         assertEquals(1, conf.getInt("a.c"))

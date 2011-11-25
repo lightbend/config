@@ -11,7 +11,7 @@ import java.util.List;
  * <p>
  * Contrast with {@link ConfigObject} which is a map from config <em>keys</em>,
  * rather than paths, to config values. A {@code Config} contains a tree of
- * {@code ConfigObject}, and {@link Config#toObject()} returns the tree's root
+ * {@code ConfigObject}, and {@link Config#root()} returns the tree's root
  * object.
  *
  * <p>
@@ -55,7 +55,7 @@ import java.util.List;
  *
  * <p>
  * If you want to iterate over the contents of a {@code Config}, you have to get
- * its {@code ConfigObject} with {@link #toObject()}, and then iterate over the
+ * its {@code ConfigObject} with {@link #root()}, and then iterate over the
  * {@code ConfigObject}.
  *
  *
@@ -74,7 +74,7 @@ public interface Config extends ConfigMergeable {
      *
      * @return the root object in the configuration
      */
-    ConfigObject toObject();
+    ConfigObject root();
 
     /**
      * Gets the origin of the {@code Config}, which may be a file, or a file

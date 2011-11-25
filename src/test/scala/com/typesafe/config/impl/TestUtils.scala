@@ -336,7 +336,7 @@ abstract trait TestUtils {
     protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d, null)
 
     protected def parseObject(s: String) = {
-        parseConfig(s).toObject
+        parseConfig(s).root
     }
 
     protected def parseConfig(s: String) = {

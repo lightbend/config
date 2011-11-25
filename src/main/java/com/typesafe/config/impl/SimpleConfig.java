@@ -34,7 +34,7 @@ class SimpleConfig implements Config {
     }
 
     @Override
-    public AbstractConfigObject toObject() {
+    public AbstractConfigObject root() {
         return object;
     }
 

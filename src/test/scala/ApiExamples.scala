@@ -26,7 +26,7 @@ class ApiExamples {
 
         // a Config has an associated tree of values, with a ConfigObject
         // at the root. The ConfigObject implements java.util.Map
-        val obj: ConfigObject = conf.toObject
+        val obj: ConfigObject = conf.root
 
         // this is how you do conf.getInt "manually" on the value tree, if you
         // were so inclined. (This is not a good approach vs. conf.getInt() above,

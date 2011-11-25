@@ -398,12 +398,12 @@ class ConfigValueTest extends TestUtils {
         assertTrue(obj.hasPath("b"))
 
         // hasPath() is false for null values but containsKey is true
-        assertEquals(nullValue(), obj.toObject.get("a"))
-        assertTrue(obj.toObject.containsKey("a"))
+        assertEquals(nullValue(), obj.root.get("a"))
+        assertTrue(obj.root.containsKey("a"))
         assertFalse(obj.hasPath("a"))
 
         // false for totally absent values
-        assertFalse(obj.toObject.containsKey("notinhere"))
+        assertFalse(obj.root.containsKey("notinhere"))
         assertFalse(obj.hasPath("notinhere"))
 
         // throws proper exceptions
