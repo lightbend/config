@@ -44,8 +44,7 @@ public class ConfigImpl {
                 obj = p.parse(p.options().setAllowMissing(
                         options.getAllowMissing()));
             } else {
-                obj = SimpleConfigObject.emptyMissing(new SimpleConfigOrigin(
-                        name));
+                obj = SimpleConfigObject.emptyMissing(SimpleConfigOrigin.newSimple(name));
             }
         } else {
             ConfigParseable confHandle = source.nameToParseable(name + ".conf");
@@ -55,13 +54,13 @@ public class ConfigImpl {
 
             if (!options.getAllowMissing() && confHandle == null
                     && jsonHandle == null && propsHandle == null) {
-                throw new ConfigException.IO(new SimpleConfigOrigin(name),
+                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name),
                         "No config files {.conf,.json,.properties} found");
             }
 
             ConfigSyntax syntax = options.getSyntax();
 
-            obj = SimpleConfigObject.empty(new SimpleConfigOrigin(name));
+            obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
             if (confHandle != null
                     && (syntax == null || syntax == ConfigSyntax.CONF)) {
                 obj = confHandle.parse(confHandle.options()
@@ -139,8 +138,8 @@ public class ConfigImpl {
     }
 
     static AbstractConfigObject emptyObject(String originDescription) {
-        ConfigOrigin origin = originDescription != null ? new SimpleConfigOrigin(
-                originDescription) : null;
+        ConfigOrigin origin = originDescription != null ? SimpleConfigOrigin
+                .newSimple(originDescription) : null;
         return emptyObject(origin);
     }
 
@@ -154,8 +153,8 @@ public class ConfigImpl {
     }
 
     // default origin for values created with fromAnyRef and no origin specified
-    final private static ConfigOrigin defaultValueOrigin = new SimpleConfigOrigin(
-            "hardcoded value");
+    final private static ConfigOrigin defaultValueOrigin = SimpleConfigOrigin
+            .newSimple("hardcoded value");
     final private static ConfigBoolean defaultTrueValue = new ConfigBoolean(
             defaultValueOrigin, true);
     final private static ConfigBoolean defaultFalseValue = new ConfigBoolean(
@@ -188,7 +187,7 @@ public class ConfigImpl {
         if (originDescription == null)
             return defaultValueOrigin;
         else
-            return new SimpleConfigOrigin(originDescription);
+            return SimpleConfigOrigin.newSimple(originDescription);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
@@ -386,10 +385,11 @@ public class ConfigImpl {
         Map<String, AbstractConfigValue> m = new HashMap<String, AbstractConfigValue>();
         for (Map.Entry<String, String> entry : env.entrySet()) {
             String key = entry.getKey();
-            m.put(key, new ConfigString(
-                    new SimpleConfigOrigin("env var " + key), entry.getValue()));
+            m.put(key,
+                    new ConfigString(SimpleConfigOrigin.newSimple("env var " + key), entry
+                            .getValue()));
         }
-        return new SimpleConfigObject(new SimpleConfigOrigin("env variables"),
+        return new SimpleConfigObject(SimpleConfigOrigin.newSimple("env variables"),
                 m, ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
     }
 

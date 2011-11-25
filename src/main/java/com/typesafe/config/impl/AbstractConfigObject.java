@@ -164,17 +164,12 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         if (stack.isEmpty())
             throw new ConfigException.BugOrBroken(
                     "can't merge origins on empty list");
-        final String prefix = "merge of ";
-        StringBuilder sb = new StringBuilder();
+        List<ConfigOrigin> origins = new ArrayList<ConfigOrigin>();
         ConfigOrigin firstOrigin = null;
         int numMerged = 0;
         for (AbstractConfigValue v : stack) {
             if (firstOrigin == null)
                 firstOrigin = v.origin();
-
-            String desc = v.origin().description();
-            if (desc.startsWith(prefix))
-                desc = desc.substring(prefix.length());
 
             if (v instanceof AbstractConfigObject
                     && ((AbstractConfigObject) v).resolveStatus() == ResolveStatus.RESOLVED
@@ -183,22 +178,17 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                 // config in the description, since they are
                 // likely to be "implementation details"
             } else {
-                sb.append(desc);
-                sb.append(",");
+                origins.add(v.origin());
                 numMerged += 1;
             }
         }
-        if (numMerged > 0) {
-            sb.setLength(sb.length() - 1); // chop comma
-            if (numMerged > 1) {
-                return new SimpleConfigOrigin(prefix + sb.toString());
-            } else {
-                return new SimpleConfigOrigin(sb.toString());
-            }
-        } else {
-            // the configs were all empty.
-            return firstOrigin;
+
+        if (numMerged == 0) {
+            // the configs were all empty, so just use the first one
+            origins.add(firstOrigin);
         }
+
+        return SimpleConfigOrigin.mergeOrigins(origins);
     }
 
     static ConfigOrigin mergeOrigins(AbstractConfigObject... stack) {

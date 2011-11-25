@@ -82,7 +82,7 @@ abstract trait TestUtils {
     }
 
     def fakeOrigin() = {
-        new SimpleConfigOrigin("fake origin")
+        SimpleConfigOrigin.newSimple("fake origin")
     }
 
     def includer() = {
@@ -391,7 +391,7 @@ abstract trait TestUtils {
     }
 
     def tokenize(input: Reader): java.util.Iterator[Token] = {
-        tokenize(new SimpleConfigOrigin("anonymous Reader"), input)
+        tokenize(SimpleConfigOrigin.newSimple("anonymous Reader"), input)
     }
 
     def tokenize(s: String): java.util.Iterator[Token] = {

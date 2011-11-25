@@ -83,7 +83,7 @@ class JsonTest extends TestUtils {
             block
         } catch {
             case e: lift.JsonParser.ParseException =>
-                throw new ConfigException.Parse(new SimpleConfigOrigin("lift parser"), e.getMessage(), e)
+                throw new ConfigException.Parse(SimpleConfigOrigin.newSimple("lift parser"), e.getMessage(), e)
         }
     }
 

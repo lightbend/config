@@ -54,9 +54,6 @@ public abstract class Parseable implements ConfigParseable {
         }
         ConfigParseOptions modified = baseOptions.setSyntax(syntax);
 
-        if (modified.getOriginDescription() == null)
-            modified = modified.setOriginDescription(originDescription());
-
         modified = modified.appendIncluder(ConfigImpl.defaultIncluder());
 
         return modified;
@@ -109,13 +106,18 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     AbstractConfigValue parseValue(ConfigParseOptions baseOptions) {
-        // note that we are NOT using our "options" and "origin" fields,
+        // note that we are NOT using our "initialOptions",
         // but using the ones from the passed-in options. The idea is that
         // callers can get our original options and then parse with different
         // ones if they want.
         ConfigParseOptions options = fixupOptions(baseOptions);
-        ConfigOrigin origin = new SimpleConfigOrigin(
-                options.getOriginDescription());
+
+        // passed-in options can override origin
+        ConfigOrigin origin;
+        if (options.getOriginDescription() != null)
+            origin = SimpleConfigOrigin.newSimple(options.getOriginDescription());
+        else
+            origin = origin();
         return parseValue(origin, options);
     }
 
@@ -152,7 +154,7 @@ public abstract class Parseable implements ConfigParseable {
         return parseValue(options());
     }
 
-    abstract String originDescription();
+    abstract ConfigOrigin origin();
 
     @Override
     public URL url() {
@@ -242,8 +244,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        String originDescription() {
-            return "Reader";
+        ConfigOrigin origin() {
+            return SimpleConfigOrigin.newSimple("Reader");
         }
     }
 
@@ -269,8 +271,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        String originDescription() {
-            return "String";
+        ConfigOrigin origin() {
+            return SimpleConfigOrigin.newSimple("String");
         }
     }
 
@@ -307,8 +309,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        String originDescription() {
-            return input.toExternalForm();
+        ConfigOrigin origin() {
+            return SimpleConfigOrigin.newURL(input);
         }
 
         @Override
@@ -359,8 +361,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        String originDescription() {
-            return input.getPath();
+        ConfigOrigin origin() {
+            return SimpleConfigOrigin.newFile(input.getPath());
         }
 
         @Override
@@ -430,8 +432,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        String originDescription() {
-            return resource + " on classpath";
+        ConfigOrigin origin() {
+            return SimpleConfigOrigin.newResource(resource);
         }
 
         @Override
@@ -478,8 +480,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        String originDescription() {
-            return "properties";
+        ConfigOrigin origin() {
+            return SimpleConfigOrigin.newSimple("properties");
         }
 
         @Override

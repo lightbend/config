@@ -9,9 +9,12 @@ package com.typesafe.config;
 public class ConfigException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
+    final private ConfigOrigin origin;
+
     protected ConfigException(ConfigOrigin origin, String message,
             Throwable cause) {
         super(origin.description() + ": " + message, cause);
+        this.origin = origin;
     }
 
     protected ConfigException(ConfigOrigin origin, String message) {
@@ -20,10 +23,24 @@ public class ConfigException extends RuntimeException {
 
     protected ConfigException(String message, Throwable cause) {
         super(message, cause);
+        this.origin = null;
     }
 
     protected ConfigException(String message) {
         this(message, null);
+    }
+
+    /**
+     * Returns an "origin" (such as a filename and line number) for the
+     * exception, or null if none is available. If there's no sensible origin
+     * for a given exception, or the kind of exception doesn't meaningfully
+     * relate to a particular origin file, this returns null. Never assume this
+     * will return non-null, it can always return null.
+     * 
+     * @return origin of the problem, or null if unknown/inapplicable
+     */
+    public ConfigOrigin origin() {
+        return origin;
     }
 
     /**

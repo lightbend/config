@@ -7,6 +7,7 @@ import org.junit.Assert._
 import org.junit._
 import com.typesafe.config.ConfigValue
 import java.util.Collections
+import java.net.URL
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigList
@@ -18,9 +19,9 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configOriginEquality() {
-        val a = new SimpleConfigOrigin("foo")
-        val sameAsA = new SimpleConfigOrigin("foo")
-        val b = new SimpleConfigOrigin("bar")
+        val a = SimpleConfigOrigin.newSimple("foo")
+        val sameAsA = SimpleConfigOrigin.newSimple("foo")
+        val b = SimpleConfigOrigin.newSimple("bar")
 
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
@@ -362,7 +363,7 @@ class ConfigValueTest extends TestUtils {
             val values = new java.util.HashMap[String, AbstractConfigValue]()
             if (!empty)
                 values.put("hello", intValue(37))
-            new SimpleConfigObject(new SimpleConfigOrigin(desc), values);
+            new SimpleConfigObject(SimpleConfigOrigin.newSimple(desc), values);
         }
         def m(values: AbstractConfigObject*) = {
             AbstractConfigObject.mergeOrigins(values: _*).description()
@@ -445,5 +446,39 @@ class ConfigValueTest extends TestUtils {
         assertEquals(false, falses.getBoolean("a"))
         assertEquals(false, falses.getBoolean("b"))
         assertEquals(false, falses.getBoolean("c"))
+    }
+
+    @Test
+    def configOriginFileAndLine() {
+        val hasFilename = SimpleConfigOrigin.newFile("foo")
+        val noFilename = SimpleConfigOrigin.newSimple("bar")
+        val filenameWithLine = hasFilename.addLineNumber(3)
+        val noFilenameWithLine = noFilename.addLineNumber(4)
+
+        assertEquals("foo", hasFilename.filename())
+        assertEquals("foo", filenameWithLine.filename())
+        assertNull(noFilename.filename())
+        assertNull(noFilenameWithLine.filename())
+
+        assertEquals("foo", hasFilename.description())
+        assertEquals("bar", noFilename.description())
+
+        assertEquals(-1, hasFilename.lineNumber())
+        assertEquals(-1, noFilename.lineNumber())
+
+        assertEquals("foo: 3", filenameWithLine.description())
+        assertEquals("bar: 4", noFilenameWithLine.description());
+
+        assertEquals(3, filenameWithLine.lineNumber())
+        assertEquals(4, noFilenameWithLine.lineNumber())
+
+        // the filename is made absolute when converting to url
+        assertTrue(hasFilename.url.toExternalForm.contains("foo"))
+        assertNull(noFilename.url)
+        assertEquals("file:/baz", SimpleConfigOrigin.newFile("/baz").url.toExternalForm)
+
+        val urlOrigin = SimpleConfigOrigin.newURL(new URL("file:/foo"))
+        assertEquals("/foo", urlOrigin.filename)
+        assertEquals("file:/foo", urlOrigin.url.toExternalForm)
     }
 }

@@ -219,8 +219,7 @@ final class Parser {
         }
 
         private ConfigOrigin lineOrigin() {
-            return new SimpleConfigOrigin(baseOrigin.description() + ": line "
-                    + lineNumber);
+            return ((SimpleConfigOrigin) baseOrigin).addLineNumber(lineNumber);
         }
 
         private ConfigException parseError(String message) {
@@ -681,7 +680,7 @@ final class Parser {
         return pb.result();
     }
 
-    static ConfigOrigin apiOrigin = new SimpleConfigOrigin("path parameter");
+    static ConfigOrigin apiOrigin = SimpleConfigOrigin.newSimple("path parameter");
 
     static Path parsePath(String path) {
         Path speculated = speculativeFastParsePath(path);

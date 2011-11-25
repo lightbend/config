@@ -762,6 +762,27 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def test01Origins() {
+        val conf = ConfigFactory.load("test01")
+
+        val o1 = conf.getValue("ints.fortyTwo").origin()
+        assertEquals("/test01.conf: 3", o1.description)
+        assertEquals("/test01.conf", o1.resource)
+        assertEquals(3, o1.lineNumber)
+
+        val o2 = conf.getValue("fromJson1").origin()
+        assertEquals("/test01.json: 2", o2.description)
+        assertEquals("/test01.json", o2.resource)
+        assertEquals(2, o2.lineNumber)
+
+        val o3 = conf.getValue("fromProps.bool").origin()
+        assertEquals("/test01.properties", o3.description)
+        assertEquals("/test01.properties", o3.resource)
+        // we don't have line numbers for properties files
+        assertEquals(-1, o3.lineNumber)
+    }
+
+    @Test
     def test02SubstitutionsWithWeirdPaths() {
         val conf = ConfigFactory.load("test02")
 

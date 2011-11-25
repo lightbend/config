@@ -219,8 +219,7 @@ final class Tokenizer {
 
         private static ConfigOrigin lineOrigin(ConfigOrigin baseOrigin,
                 int lineNumber) {
-            return new SimpleConfigOrigin(baseOrigin.description() + ": line "
-                    + lineNumber);
+            return ((SimpleConfigOrigin) baseOrigin).addLineNumber(lineNumber);
         }
 
         // chars JSON allows a number to start with
