@@ -43,34 +43,21 @@ class SimpleConfig implements Config {
         return object.origin();
     }
 
-    /**
-     * Returns a version of this config that implements the ConfigRoot
-     * interface.
-     *
-     * @return a config root
-     */
-    RootConfig asRoot(Path rootPath) {
-        return asRoot(object, rootPath);
+    @Override
+    public SimpleConfig resolve() {
+        return resolve(ConfigResolveOptions.defaults());
     }
 
-    // RootConfig overrides this to avoid a new object on unchanged path.
-    protected RootConfig asRoot(AbstractConfigObject underlying,
-            Path newRootPath) {
-        return new RootConfig(underlying, newRootPath);
-    }
-
-    static protected RootConfig newRootIfObjectChanged(RootConfig self, AbstractConfigObject underlying) {
-        if (underlying == self.object)
-            return self;
-        else
-            return new RootConfig(underlying, self.rootPathObject());
-    }
-
-    protected AbstractConfigObject resolvedObject(ConfigResolveOptions options) {
+    @Override
+    public SimpleConfig resolve(ConfigResolveOptions options) {
         AbstractConfigValue resolved = SubstitutionResolver.resolve(object,
                 object, options);
-        return (AbstractConfigObject) resolved;
+        if (resolved == object)
+            return this;
+        else
+            return new SimpleConfig((AbstractConfigObject) resolved);
     }
+
 
     @Override
     public boolean hasPath(String pathExpression) {

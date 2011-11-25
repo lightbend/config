@@ -53,31 +53,31 @@ public final class ConfigFactory {
      *            the configuration "domain"
      * @return configuration for the requested root path
      */
-    public static ConfigRoot load(String rootPath) {
+    public static Config load(String rootPath) {
         return loadWithoutResolving(rootPath).resolve();
     }
 
-    public static ConfigRoot load(String rootPath,
+    public static Config load(String rootPath,
             ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
         return loadWithoutResolving(rootPath, parseOptions).resolve(
                 resolveOptions);
     }
 
     /**
-     * Like load() but does not resolve the object, so you can go ahead and add
+     * Like load() but does not resolve the config, so you can go ahead and add
      * more fallbacks and stuff and have them seen by substitutions when you do
-     * call {@link ConfigRoot#resolve}.
+     * call {@link Config#resolve()}.
      *
      * @param rootPath
      * @return configuration for the requested root path
      */
-    public static ConfigRoot loadWithoutResolving(String rootPath) {
+    public static Config loadWithoutResolving(String rootPath) {
         return loadWithoutResolving(rootPath, ConfigParseOptions.defaults());
     }
 
-    public static ConfigRoot loadWithoutResolving(String rootPath,
+    public static Config loadWithoutResolving(String rootPath,
             ConfigParseOptions options) {
-        ConfigRoot system = systemPropertiesRoot(rootPath);
+        Config system = ConfigImpl.systemPropertiesWithPrefix(rootPath);
 
         Config mainFiles = parseResourcesForPath(rootPath, options);
         Config referenceFiles = parseResourcesForPath(rootPath + ".reference",
@@ -86,24 +86,12 @@ public final class ConfigFactory {
         return system.withFallback(mainFiles).withFallback(referenceFiles);
     }
 
-    public static ConfigRoot emptyRoot(String rootPath) {
-        return emptyRoot(rootPath, null);
-    }
-
     public static Config empty() {
         return empty(null);
     }
 
-    public static ConfigRoot emptyRoot(String rootPath, String originDescription) {
-        return ConfigImpl.emptyRoot(rootPath, originDescription);
-    }
-
     public static Config empty(String originDescription) {
         return ConfigImpl.emptyConfig(originDescription);
-    }
-
-    public static ConfigRoot systemPropertiesRoot(String rootPath) {
-        return ConfigImpl.systemPropertiesRoot(rootPath);
     }
 
     public static Config systemProperties() {
@@ -177,7 +165,7 @@ public final class ConfigFactory {
     /**
      * Same behavior as {@link #parseFileAnySyntax(File,ConfigParseOptions)} but
      * for classpath resources instead.
-     * 
+     *
      * @param klass
      * @param resourceBasename
      * @param options

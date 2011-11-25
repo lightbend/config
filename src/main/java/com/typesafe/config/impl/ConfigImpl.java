@@ -19,7 +19,6 @@ import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigParseable;
-import com.typesafe.config.ConfigRoot;
 import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValue;
 
@@ -137,13 +136,6 @@ public class ConfigImpl {
             }
         };
         return fromBasename(source, basename.getPath(), baseOptions);
-    }
-
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigRoot emptyRoot(String rootPath, String originDescription) {
-        String desc = originDescription != null ? originDescription : rootPath;
-        return emptyObject(desc).toConfig().asRoot(
-                Path.newPath(rootPath));
     }
 
     static AbstractConfigObject emptyObject(String originDescription) {
@@ -291,13 +283,12 @@ public class ConfigImpl {
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigRoot systemPropertiesRoot(String rootPath) {
-        Path path = Parser.parsePath(rootPath);
+    /* FIXME this is broken and will go away when Config.load() doesn't use it. */
+    public static Config systemPropertiesWithPrefix(String rootPath) {
         try {
-            return systemPropertiesAsConfigObject().toConfig().getConfig(rootPath)
-                    .asRoot(path);
+            return systemPropertiesAsConfigObject().toConfig().getConfig(rootPath);
         } catch (ConfigException.Missing e) {
-            return emptyObject("system properties").toConfig().asRoot(path);
+            return emptyObject("system properties").toConfig();
         }
     }
 

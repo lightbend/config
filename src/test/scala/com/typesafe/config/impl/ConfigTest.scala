@@ -499,10 +499,6 @@ class ConfigTest extends TestUtils {
     def ignoredMergesDoNothing() {
         val conf = parseConfig("{ a : 1 }")
         testIgnoredMergesDoNothing(conf)
-
-        // ConfigRoot mode uses a little different codepath
-        val root = conf.asRoot(path("whatever"))
-        testIgnoredMergesDoNothing(root)
     }
 
     @Test

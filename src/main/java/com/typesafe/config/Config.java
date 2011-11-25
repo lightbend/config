@@ -91,6 +91,58 @@ public interface Config extends ConfigMergeable {
     ConfigObject toValue();
 
     /**
+     * Returns a replacement config with all substitutions (the
+     * <code>${foo.bar}</code> syntax, see <a
+     * href="https://github.com/havocp/config/blob/master/HOCON.md">the
+     * spec</a>) resolved. Substitutions are looked up using this
+     * <code>Config</code> as the root object, that is, a substitution
+     * <code>${foo.bar}</code> will be replaced with the result of
+     * <code>getValue("foo.bar")</code>.
+     *
+     * <p>
+     * This method uses {@link ConfigResolveOptions#defaults()}, there is
+     * another variant {@link Config#resolve(ConfigResolveOptions)} which lets
+     * you specify non-default options.
+     *
+     * <p>
+     * A given {@link Config} must be resolved before using it to retrieve
+     * config values, but ideally should be resolved one time for your entire
+     * stack of fallbacks (see {@link Config#withFallback}). Otherwise, some
+     * substitutions that could have resolved with all fallbacks available may
+     * not resolve, which will be a user-visible oddity.
+     *
+     * <p>
+     * <code>resolve()</code> should be invoked on root config objects, rather
+     * than on a subtree (a subtree is the result of something like
+     * <code>config.getConfig("foo")</code>). The problem with
+     * <code>resolve()</code> on a subtree is that substitutions are relative to
+     * the root of the config and the subtree will have no way to get values
+     * from the root. For example, if you did
+     * <code>config.getConfig("foo").resolve()</code> on the below config file,
+     * it would not work:
+     *
+     * <pre>
+     *   common-value = 10
+     *   foo {
+     *      whatever = ${common-value}
+     *   }
+     * </pre>
+     *
+     * @return an immutable object with substitutions resolved
+     */
+    Config resolve();
+
+    /**
+     * Like {@link Config#resolve()} but allows you to specify non-default
+     * options.
+     *
+     * @param options
+     *            resolve options
+     * @return the resolved <code>Config</code>
+     */
+    Config resolve(ConfigResolveOptions options);
+
+    /**
      * Checks whether a value is present and non-null at the given path. This
      * differs in two ways from {@code Map.containsKey()} as implemented by
      * {@link ConfigObject}: it looks for a path expression, not a key; and it
@@ -213,7 +265,7 @@ public interface Config extends ConfigMergeable {
      * Gets the value at the path as an unwrapped Java boxed value (
      * {@link java.lang.Boolean Boolean}, {@link java.lang.Integer Integer}, and
      * so on - see {@link ConfigValue#unwrapped()}).
-     * 
+     *
      * @param path
      *            path expression
      * @return the unwrapped value at the requested path

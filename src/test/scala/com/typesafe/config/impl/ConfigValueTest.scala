@@ -101,12 +101,6 @@ class ConfigValueTest extends TestUtils {
         // configs are not equal to objects
         checkNotEqualObjects(a, a.toConfig())
         checkNotEqualObjects(b, b.toConfig())
-
-        // configs are equal to the same config as a root
-        val root = config.asRoot(path("foo"))
-        checkEqualObjects(config, root)
-        checkNotEqualObjects(b.toConfig(), root)
-        checkNotEqualObjects(c.toConfig(), root)
     }
 
     @Test

@@ -87,8 +87,6 @@ class PublicApiTest extends TestUtils {
         assertEquals("empty config", ConfigFactory.empty().origin().description())
         assertTrue(ConfigFactory.empty("foo").isEmpty())
         assertEquals("foo", ConfigFactory.empty("foo").origin().description())
-        assertTrue(ConfigFactory.emptyRoot("foo.bar").isEmpty())
-        assertEquals("foo.bar", ConfigFactory.emptyRoot("foo.bar").origin().description())
     }
 
     private val defaultValueDesc = "hardcoded value";
