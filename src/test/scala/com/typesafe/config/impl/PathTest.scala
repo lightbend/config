@@ -46,6 +46,7 @@ class PathTest extends TestUtils {
         assertEquals("foo.\"bar*\"", path("foo", "bar*").render())
         assertEquals("\"foo.bar\"", path("foo.bar").render())
         assertEquals("foo bar", path("foo bar").render())
+        assertEquals("\"\".\"\"", path("", "").render())
     }
 
     @Test
