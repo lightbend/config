@@ -866,4 +866,33 @@ class ConfigTest extends TestUtils {
         assertEquals("prod", conf.getString("%prod.application.mode"))
         assertEquals("Yet another blog", conf.getString("blog.title"))
     }
+
+    @Test
+    def test06Merge() {
+        // test06 mostly exists because its render() round trip is tricky
+        val conf = ConfigFactory.load("test06")
+
+        assertEquals(2, conf.getInt("x"))
+        assertEquals(10, conf.getInt("y.foo"))
+        assertEquals("world", conf.getString("y.hello"))
+    }
+
+    @Test
+    def renderRoundTrip() {
+        for (i <- 1 to 6) {
+            val conf = ConfigFactory.loadWithoutResolving("test0" + i)
+            val unresolvedRender = conf.root.render()
+            val resolved = conf.resolve()
+            val resolvedRender = resolved.root.render()
+            try {
+                assertEquals(conf.root, ConfigFactory.parseString(unresolvedRender, ConfigParseOptions.defaults()).root)
+                assertEquals(resolved.root, ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults()).root)
+            } catch {
+                case e: Throwable =>
+                    System.err.println("unresolvedRender = " + unresolvedRender)
+                    System.err.println("resolvedRender = " + resolvedRender)
+                    throw e
+            }
+        }
+    }
 }

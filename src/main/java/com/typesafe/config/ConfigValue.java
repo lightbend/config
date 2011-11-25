@@ -43,6 +43,18 @@ public interface ConfigValue extends ConfigMergeable {
      */
     Object unwrapped();
 
+    /**
+     * Renders the config value as a HOCON string. This method is primarily
+     * intended for debugging, so it tries to add helpful comments and
+     * whitespace. If the config value has not been resolved (see
+     * {@link Config#resolve}), it's possible that it can't be rendered as valid
+     * HOCON. In that case the rendering should still be useful for debugging
+     * but you might not be able to parse it.
+     * 
+     * @return the rendered value
+     */
+    String render();
+
     @Override
     ConfigValue withFallback(ConfigMergeable other);
 }

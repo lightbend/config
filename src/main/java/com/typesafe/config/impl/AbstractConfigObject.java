@@ -261,20 +261,24 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(valueType().name());
-        sb.append("(");
-        for (String k : keySet()) {
-            sb.append(k);
-            sb.append("->");
-            sb.append(peek(k).toString());
-            sb.append(",");
+    protected void render(StringBuilder sb, int indent) {
+        if (isEmpty()) {
+            sb.append("{}");
+        } else {
+            sb.append("{\n");
+            for (String k : keySet()) {
+                AbstractConfigValue v = peek(k);
+                indent(sb, indent + 1);
+                sb.append("# ");
+                sb.append(v.origin().description());
+                sb.append("\n");
+                indent(sb, indent + 1);
+                v.render(sb, indent + 1, k);
+                sb.append(",\n");
+            }
+            indent(sb, indent);
+            sb.append("}");
         }
-        if (!keySet().isEmpty())
-            sb.setLength(sb.length() - 1); // chop comma
-        sb.append(")");
-        return sb.toString();
     }
 
     private static boolean mapEquals(Map<String, ConfigValue> a,

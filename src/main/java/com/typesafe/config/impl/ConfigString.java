@@ -29,4 +29,9 @@ final class ConfigString extends AbstractConfigValue {
     String transformToString() {
         return value;
     }
+
+    @Override
+    protected void render(StringBuilder sb, int indent) {
+        sb.append(ConfigUtil.renderJsonString(value));
+    }
 }

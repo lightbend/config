@@ -5,6 +5,7 @@ package com.typesafe.config.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
@@ -160,16 +161,46 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("DELAYED_MERGE");
-        sb.append("(");
-        for (Object s : stack) {
-            sb.append(s.toString());
-            sb.append(",");
+    protected void render(StringBuilder sb, int indent, String atKey) {
+        render(stack, sb, indent, atKey);
+    }
+
+    // static method also used by ConfigDelayedMergeObject.
+    static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, String atKey) {
+        sb.append("# unresolved merge of " + stack.size() + " values follows (\n");
+        if (atKey == null) {
+            indent(sb, indent);
+            sb.append("# this unresolved merge will not be parseable because it's at the root of the object\n");
+            sb.append("# the HOCON format has no way to list multiple root objects in a single file\n");
         }
-        sb.setLength(sb.length() - 1); // chop comma
-        sb.append(")");
-        return sb.toString();
+
+        List<AbstractConfigValue> reversed = new ArrayList<AbstractConfigValue>();
+        reversed.addAll(stack);
+        Collections.reverse(reversed);
+
+        int i = 0;
+        for (AbstractConfigValue v : reversed) {
+            indent(sb, indent);
+            if (atKey != null) {
+                sb.append("#     unmerged value " + i + " for key "
+                        + ConfigUtil.renderJsonString(atKey) + " from ");
+            } else {
+                sb.append("#     unmerged value " + i + " from ");
+            }
+            i += 1;
+            sb.append(v.origin().description());
+            sb.append("\n");
+            indent(sb, indent);
+            if (atKey != null) {
+                sb.append(ConfigUtil.renderJsonString(atKey));
+                sb.append(" : ");
+            }
+            v.render(sb, indent);
+            sb.append(",\n");
+        }
+        sb.setLength(sb.length() - 2); // chop comma and newline
+        sb.append("\n");
+        indent(sb, indent);
+        sb.append("# ) end of unresolved merge\n");
     }
 }

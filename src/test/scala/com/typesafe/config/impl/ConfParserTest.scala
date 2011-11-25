@@ -57,6 +57,12 @@ class ConfParserTest extends TestUtils {
             val ourAST = addOffendingJsonToException("config-conf", valid.test) {
                 parse(valid.test)
             }
+            // let's also check round-trip rendering
+            val rendered = ourAST.render()
+            val reparsed = addOffendingJsonToException("config-conf-reparsed", rendered) {
+                parse(rendered)
+            }
+            assertEquals(ourAST, reparsed)
         }
     }
 

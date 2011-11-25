@@ -135,18 +135,26 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append(valueType().name());
-        sb.append("(");
-        for (ConfigValue e : value) {
-            sb.append(e.toString());
-            sb.append(",");
+    protected void render(StringBuilder sb, int indent) {
+        if (value.isEmpty()) {
+            sb.append("[]");
+        } else {
+            sb.append("[\n");
+            for (AbstractConfigValue v : value) {
+                indent(sb, indent + 1);
+                sb.append("# ");
+                sb.append(v.origin().description());
+                sb.append("\n");
+                indent(sb, indent + 1);
+                v.render(sb, indent + 1);
+                sb.append(",\n");
+            }
+            sb.setLength(sb.length() - 2); // chop comma and newline
+            sb.append("\n");
+
+            indent(sb, indent);
+            sb.append("]");
         }
-        if (!value.isEmpty())
-            sb.setLength(sb.length() - 1); // chop comma
-        sb.append(")");
-        return sb.toString();
     }
 
     @Override

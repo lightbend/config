@@ -244,16 +244,15 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("SUBST");
-        sb.append("(");
+    protected void render(StringBuilder sb, int indent) {
         for (Object p : pieces) {
-            sb.append(p.toString());
-            sb.append(",");
+            if (p instanceof Path) {
+                sb.append("${");
+                sb.append(((Path) p).render());
+                sb.append("}");
+            } else {
+                sb.append(ConfigUtil.renderJsonString((String) p));
+            }
         }
-        sb.setLength(sb.length() - 1); // chop comma
-        sb.append(")");
-        return sb.toString();
     }
 }
