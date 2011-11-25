@@ -303,7 +303,9 @@ abstract trait TestUtils {
                     case e =>
                         "tokenizer failed: " + e.getMessage();
                 }
-                throw new AssertionError(parserName + " parser did wrong thing on '" + s + "', " + tokens, t)
+                // don't use AssertionError because it seems to keep Eclipse
+                // from showing the causing exception in JUnit view for some reason
+                throw new Exception(parserName + " parser did wrong thing on '" + s + "', " + tokens, t)
         }
     }
 
