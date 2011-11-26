@@ -4,8 +4,6 @@ import de.johoop.jacoco4sbt._
 import JacocoPlugin._
 import javadoc.JavadocPlugin._
 
-name := "config"
-
 version := "0.1"
 
 fork in test := true
