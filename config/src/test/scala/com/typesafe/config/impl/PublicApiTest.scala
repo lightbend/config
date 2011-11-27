@@ -386,4 +386,20 @@ class PublicApiTest extends TestUtils {
         assertEquals("A", fromResources.getString("fromJsonA"))
         assertEquals("true", fromResources.getString("fromProps.bool"))
     }
+
+    @Test
+    def resourceFromAnotherClasspath() {
+        val conf = ConfigFactory.parseResource(classOf[PublicApiTest], "/test-lib.conf", ConfigParseOptions.defaults())
+
+        assertEquals("This is to test classpath searches.", conf.getString("test-lib.description"))
+    }
+
+    @Test
+    def onlyFirstResourceUsed() {
+        val conf = ConfigFactory.parseResource(classOf[PublicApiTest], "/test01.conf", ConfigParseOptions.defaults())
+
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertFalse(conf.hasPath("test-lib"))
+        assertFalse(conf.hasPath("test-lib.fromTestLib"))
+    }
 }
