@@ -1026,7 +1026,8 @@ environment, for example.
 
 Environment variables are interpreted as follows:
 
- - present and set to empty string: treated as not present
+ - env variables set to the empty string are kept as such (set to
+   empty string, rather than undefined)
  - System.getenv throws SecurityException: treated as not present
  - encoding is handled by Java (System.getenv already returns
    a Unicode string)
