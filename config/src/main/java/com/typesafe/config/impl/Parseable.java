@@ -385,19 +385,19 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     private final static class ParseableResource extends Parseable {
-        final private Class<?> klass;
+        final private ClassLoader loader;
         final private String resource;
 
-        ParseableResource(Class<?> klass, String resource,
+        ParseableResource(ClassLoader loader, String resource,
                 ConfigParseOptions options) {
-            this.klass = klass;
+            this.loader = loader;
             this.resource = resource;
             postConstruct(options);
         }
 
         @Override
         protected Reader reader() throws IOException {
-            InputStream stream = klass.getResourceAsStream(resource);
+            InputStream stream = loader.getResourceAsStream(resource);
             if (stream == null) {
                 throw new IOException("resource not found on classpath: "
                         + resource);
@@ -410,24 +410,28 @@ public abstract class Parseable implements ConfigParseable {
             return syntaxFromExtension(resource);
         }
 
-        @Override
-        ConfigParseable relativeTo(String filename) {
-            // not using File.isAbsolute because resource paths always use '/'
-            // on all platforms
-            if (filename.startsWith("/"))
+        static String parent(String resource) {
+            int i = resource.lastIndexOf('/');
+            if (i < 0) {
                 return null;
+            } else {
+                return resource.substring(0, i);
+            }
+        }
 
+        @Override
+        ConfigParseable relativeTo(String sibling) {
             // here we want to build a new resource name and let
             // the class loader have it, rather than getting the
             // url with getResource() and relativizing to that url.
             // This is needed in case the class loader is going to
             // search a classpath.
-            File parent = new File(resource).getParentFile();
+            String parent = parent(resource);
             if (parent == null)
-                return newResource(klass, filename, options()
+                return newResource(loader, sibling, options()
                         .setOriginDescription(null));
             else
-                return newResource(klass, new File(parent, filename).getPath(),
+                return newResource(loader, parent + "/" + sibling,
                         options().setOriginDescription(null));
         }
 
@@ -438,20 +442,49 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         public URL url() {
-            return klass.getResource(resource);
+            return loader.getResource(resource);
         }
 
         @Override
         public String toString() {
             return getClass().getSimpleName() + "(" + resource + ","
-                    + klass.getName()
-                    + ")";
+                    + loader.getClass().getSimpleName() + ")";
         }
     }
 
     public static Parseable newResource(Class<?> klass, String resource,
             ConfigParseOptions options) {
-        return new ParseableResource(klass, resource, options);
+        return newResource(klass.getClassLoader(), convertResourceName(klass, resource), options);
+    }
+
+    // this function is supposed to emulate the difference
+    // between Class.getResource and ClassLoader.getResource
+    // (unfortunately there doesn't seem to be public API for it).
+    // We're using it because the Class API is more limited,
+    // for example it lacks getResources(). So we want to be able to
+    // use ClassLoader directly.
+    private static String convertResourceName(Class<?> klass, String resource) {
+        if (resource.startsWith("/")) {
+            // "absolute" resource, chop the slash
+            return resource.substring(1);
+        } else {
+            String className = klass.getName();
+            int i = className.lastIndexOf('.');
+            if (i < 0) {
+                // no package
+                return resource;
+            } else {
+                // need to be relative to the package
+                String packageName = className.substring(0, i);
+                String packagePath = packageName.replace('.', '/');
+                return packagePath + "/" + resource;
+            }
+        }
+    }
+
+    public static Parseable newResource(ClassLoader loader, String resource,
+            ConfigParseOptions options) {
+        return new ParseableResource(loader, resource, options);
     }
 
     private final static class ParseableProperties extends Parseable {
