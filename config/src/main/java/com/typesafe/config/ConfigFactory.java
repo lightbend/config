@@ -242,7 +242,7 @@ public final class ConfigFactory {
      */
     public static Config parseResourcesAnySyntax(Class<?> klass, String resourceBasename,
             ConfigParseOptions options) {
-        return ConfigImpl.parseResourceAnySyntax(klass, resourceBasename,
+        return ConfigImpl.parseResourcesAnySyntax(klass, resourceBasename,
                 options).toConfig();
     }
 

@@ -110,11 +110,11 @@ public class ConfigImpl {
             final ConfigParseOptions baseOptions) {
         Path path = Parser.parsePath(expression);
         String basename = makeResourceBasename(path);
-        return parseResourceAnySyntax(ConfigImpl.class, basename, baseOptions);
+        return parseResourcesAnySyntax(ConfigImpl.class, basename, baseOptions);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject parseResourceAnySyntax(final Class<?> klass,
+    public static ConfigObject parseResourcesAnySyntax(final Class<?> klass,
             String resourceBasename, final ConfigParseOptions baseOptions) {
         NameSource source = new NameSource() {
             @Override
