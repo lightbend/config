@@ -119,7 +119,7 @@ public class ConfigImpl {
         NameSource source = new NameSource() {
             @Override
             public ConfigParseable nameToParseable(String name) {
-                return Parseable.newResource(klass, name, baseOptions);
+                return Parseable.newResources(klass, name, baseOptions);
             }
         };
         return fromBasename(source, resourceBasename, baseOptions);

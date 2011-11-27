@@ -355,7 +355,7 @@ class ConfParserTest extends TestUtils {
         // just be sure the toString don't throw, to get test coverage
         val options = ConfigParseOptions.defaults()
         Parseable.newFile(new File("foo"), options).toString
-        Parseable.newResource(classOf[ConfParserTest], "foo", options).toString
+        Parseable.newResources(classOf[ConfParserTest], "foo", options).toString
         Parseable.newURL(new URL("file:///foo"), options).toString
         Parseable.newProperties(new Properties(), options).toString
         Parseable.newReader(new StringReader("{}"), options).toString

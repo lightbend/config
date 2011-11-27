@@ -139,16 +139,36 @@ public final class ConfigFactory {
     }
 
     /**
-     * Parses a file. If the fileBasename already ends in a known extension,
-     * just parses it according to that extension. If the fileBasename does not
-     * end in an extension, then parse all known extensions and merge whatever
-     * is found. If options force a specific syntax, only parse files with an
-     * extension matching that syntax. If options.getAllowMissing() is true,
-     * then no files have to exist; if false, then at least one file has to
-     * exist.
+     * Parses a file with a flexible extension. If the <code>fileBasename</code>
+     * already ends in a known extension, this method parses it according to
+     * that extension (the file's syntax must match its extension). If the
+     * <code>fileBasename</code> does not end in an extension, it parses files
+     * with all known extensions and merges whatever is found.
+     *
+     * <p>
+     * In the current implementation, the extension ".conf" forces
+     * {@link ConfigSyntax#CONF}, ".json" forces {@link ConfigSyntax#JSON}, and
+     * ".properties" forces {@link ConfigSyntax#PROPERTIES}. When merging files,
+     * ".conf" falls back to ".json" falls back to ".properties".
+     *
+     * <p>
+     * Future versions of the implementation may add additional syntaxes or
+     * additional extensions. However, the ordering (fallback priority) of the
+     * three current extensions will remain the same.
+     *
+     * <p>
+     * If <code>options</code> forces a specific syntax, this method only parses
+     * files with an extension matching that syntax.
+     *
+     * <p>
+     * If {@link ConfigParseOptions#getAllowMissing options.getAllowMissing()}
+     * is true, then no files have to exist; if false, then at least one file
+     * has to exist.
      *
      * @param fileBasename
+     *            a filename with or without extension
      * @param options
+     *            parse options
      * @return the parsed configuration
      */
     public static Config parseFileAnySyntax(File fileBasename,
@@ -156,22 +176,71 @@ public final class ConfigFactory {
         return ConfigImpl.parseFileAnySyntax(fileBasename, options).toConfig();
     }
 
-    public static Config parseResource(Class<?> klass, String resource,
+    /**
+     * Parses all resources on the classpath with the given name and merges them
+     * into a single <code>Config</code>.
+     *
+     * <p>
+     * If the resource name does not begin with a "/", it will have the supplied
+     * class's package added to it, in the same way as
+     * {@link java.lang.Class#getResource}.
+     *
+     * <p>
+     * Duplicate resources with the same name are merged such that ones returned
+     * earlier from {@link ClassLoader#getResources} fall back to (have higher
+     * priority than) the ones returned later. This implies that resources
+     * earlier in the classpath override those later in the classpath when they
+     * configure the same setting. However, in practice real applications may
+     * not be consistent about classpath ordering, so be careful. It may be best
+     * to avoid assuming too much.
+     *
+     * @param klass
+     *            <code>klass.getClassLoader()</code> will be used to load
+     *            resources, and non-absolute resource names will have this
+     *            class's package added
+     * @param resource
+     *            resource to look up, relative to <code>klass</code>'s package
+     *            or absolute starting with a "/"
+     * @param options
+     *            parse options
+     * @return the parsed configuration
+     */
+    public static Config parseResources(Class<?> klass, String resource,
             ConfigParseOptions options) {
-        return Parseable.newResource(klass, resource, options).parse()
+        return Parseable.newResources(klass, resource, options).parse()
                 .toConfig();
     }
 
     /**
-     * Same behavior as {@link #parseFileAnySyntax(File,ConfigParseOptions)} but
-     * for classpath resources instead.
+     * Parses classpath resources with a flexible extension. In general, this
+     * method has the same behavior as
+     * {@link #parseFileAnySyntax(File,ConfigParseOptions)} but for classpath
+     * resources instead, as in {@link #parseResources}.
+     *
+     * <p>
+     * There is a thorny problem with this method, which is that
+     * {@link java.lang.ClassLoader#getResources} must be called separately for
+     * each possible extension. The implementation ends up with separate lists
+     * of resources called "basename.conf" and "basename.json" for example. As a
+     * result, the ideal ordering between two files with different extensions is
+     * unknown; there is no way to figure out how to merge the two lists in
+     * classpath order. To keep it simple, the lists are simply concatenated,
+     * with the same syntax priorities as
+     * {@link #parseFileAnySyntax(File,ConfigParseOptions) parseFileAnySyntax()}
+     * - all ".conf" resources are ahead of all ".json" resources which are
+     * ahead of all ".properties" resources.
      *
      * @param klass
+     *            class which determines the <code>ClassLoader</code> and the
+     *            package for relative resource names
      * @param resourceBasename
+     *            a resource name as in {@link java.lang.Class#getResource},
+     *            with or without extension
      * @param options
+     *            parse options
      * @return the parsed configuration
      */
-    public static Config parseResourceAnySyntax(Class<?> klass, String resourceBasename,
+    public static Config parseResourcesAnySyntax(Class<?> klass, String resourceBasename,
             ConfigParseOptions options) {
         return ConfigImpl.parseResourceAnySyntax(klass, resourceBasename,
                 options).toConfig();

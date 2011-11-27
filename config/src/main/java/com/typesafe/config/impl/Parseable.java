@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.Properties;
 
@@ -105,7 +106,7 @@ public abstract class Parseable implements ConfigParseable {
         return forceParsedToObject(parseValue(baseOptions));
     }
 
-    AbstractConfigValue parseValue(ConfigParseOptions baseOptions) {
+    final AbstractConfigValue parseValue(ConfigParseOptions baseOptions) {
         // note that we are NOT using our "initialOptions",
         // but using the ones from the passed-in options. The idea is that
         // callers can get our original options and then parse with different
@@ -121,28 +122,38 @@ public abstract class Parseable implements ConfigParseable {
         return parseValue(origin, options);
     }
 
-    protected AbstractConfigValue parseValue(ConfigOrigin origin,
+    final private AbstractConfigValue parseValue(ConfigOrigin origin,
             ConfigParseOptions finalOptions) {
         try {
-            Reader reader = reader();
-            try {
-                if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
-                    return PropertiesParser.parse(reader, origin);
-                } else {
-                    Iterator<Token> tokens = Tokenizer.tokenize(origin, reader,
-                            finalOptions.getSyntax());
-                    return Parser.parse(tokens, origin, finalOptions,
-                            includeContext());
-                }
-            } finally {
-                reader.close();
-            }
+            return rawParseValue(origin, finalOptions);
         } catch (IOException e) {
             if (finalOptions.getAllowMissing()) {
                 return SimpleConfigObject.emptyMissing(origin);
             } else {
                 throw new ConfigException.IO(origin, e.getMessage(), e);
             }
+        }
+    }
+
+    // this is parseValue without post-processing the IOException or handling
+    // options.getAllowMissing()
+    protected AbstractConfigValue rawParseValue(ConfigOrigin origin, ConfigParseOptions finalOptions)
+            throws IOException {
+        Reader reader = reader();
+        try {
+            return rawParseValue(reader, origin, finalOptions);
+        } finally {
+            reader.close();
+        }
+    }
+
+    protected AbstractConfigValue rawParseValue(Reader reader, ConfigOrigin origin,
+            ConfigParseOptions finalOptions) throws IOException {
+        if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
+            return PropertiesParser.parse(reader, origin);
+        } else {
+            Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
+            return Parser.parse(tokens, origin, finalOptions, includeContext());
         }
     }
 
@@ -384,11 +395,11 @@ public abstract class Parseable implements ConfigParseable {
         return new ParseableFile(input, options);
     }
 
-    private final static class ParseableResource extends Parseable {
+    private final static class ParseableResources extends Parseable {
         final private ClassLoader loader;
         final private String resource;
 
-        ParseableResource(ClassLoader loader, String resource,
+        ParseableResources(ClassLoader loader, String resource,
                 ConfigParseOptions options) {
             this.loader = loader;
             this.resource = resource;
@@ -397,12 +408,48 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         protected Reader reader() throws IOException {
-            InputStream stream = loader.getResourceAsStream(resource);
-            if (stream == null) {
-                throw new IOException("resource not found on classpath: "
-                        + resource);
+            throw new ConfigException.BugOrBroken(
+                    "reader() should not be called on resources");
+        }
+
+        @Override
+        protected AbstractConfigObject rawParseValue(ConfigOrigin origin,
+                ConfigParseOptions finalOptions) throws IOException {
+            Enumeration<URL> e = loader.getResources(resource);
+            if (!e.hasMoreElements()) {
+                throw new IOException("resource not found on classpath: " + resource);
             }
-            return readerFromStream(stream);
+            AbstractConfigObject merged = SimpleConfigObject.empty(origin);
+            while (e.hasMoreElements()) {
+                URL url = e.nextElement();
+
+                ConfigOrigin elementOrigin = ((SimpleConfigOrigin) origin).addURL(url);
+
+                AbstractConfigValue v;
+
+                // it's tempting to use ParseableURL here but it would be wrong
+                // because the wrong relativeTo() would be used for includes.
+                InputStream stream = url.openStream();
+                try {
+                    Reader reader = readerFromStream(stream);
+                    stream = null; // reader now owns it
+                    try {
+                        // parse in "raw" mode which will throw any IOException
+                        // from here.
+                        v = rawParseValue(reader, elementOrigin, finalOptions);
+                    } finally {
+                        reader.close();
+                    }
+                } finally {
+                    // stream is null if the reader owns it
+                    if (stream != null)
+                        stream.close();
+                }
+
+                merged = merged.withFallback(v);
+            }
+
+            return merged;
         }
 
         @Override
@@ -428,10 +475,10 @@ public abstract class Parseable implements ConfigParseable {
             // search a classpath.
             String parent = parent(resource);
             if (parent == null)
-                return newResource(loader, sibling, options()
+                return newResources(loader, sibling, options()
                         .setOriginDescription(null));
             else
-                return newResource(loader, parent + "/" + sibling,
+                return newResources(loader, parent + "/" + sibling,
                         options().setOriginDescription(null));
         }
 
@@ -442,7 +489,9 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         public URL url() {
-            return loader.getResource(resource);
+            // because we may represent multiple resources, there's nothing
+            // good to return here.
+            return null;
         }
 
         @Override
@@ -452,9 +501,9 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    public static Parseable newResource(Class<?> klass, String resource,
+    public static Parseable newResources(Class<?> klass, String resource,
             ConfigParseOptions options) {
-        return newResource(klass.getClassLoader(), convertResourceName(klass, resource), options);
+        return newResources(klass.getClassLoader(), convertResourceName(klass, resource), options);
     }
 
     // this function is supposed to emulate the difference
@@ -482,9 +531,9 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    public static Parseable newResource(ClassLoader loader, String resource,
+    public static Parseable newResources(ClassLoader loader, String resource,
             ConfigParseOptions options) {
-        return new ParseableResource(loader, resource, options);
+        return new ParseableResources(loader, resource, options);
     }
 
     private final static class ParseableProperties extends Parseable {
@@ -502,7 +551,7 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        protected AbstractConfigObject parseValue(ConfigOrigin origin,
+        protected AbstractConfigObject rawParseValue(ConfigOrigin origin,
                 ConfigParseOptions finalOptions) {
             return PropertiesParser.fromProperties(origin, props);
         }

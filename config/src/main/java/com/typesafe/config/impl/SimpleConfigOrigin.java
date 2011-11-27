@@ -11,41 +11,65 @@ import java.util.Collection;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
+// it would be cleaner to have a class hierarchy for various origin types,
+// but was hoping this would be enough simpler to be a little messy. eh.
 final class SimpleConfigOrigin implements ConfigOrigin {
     final private String description;
     final private int lineNumber;
     final private OriginType originType;
+    final private String urlOrNull;
 
-    private SimpleConfigOrigin(String description, int lineNumber, OriginType originType) {
+    protected SimpleConfigOrigin(String description, int lineNumber, OriginType originType,
+            String urlOrNull) {
         this.lineNumber = lineNumber;
         this.originType = originType;
         this.description = description;
+        this.urlOrNull = urlOrNull;
     }
 
     static SimpleConfigOrigin newSimple(String description) {
-        return new SimpleConfigOrigin(description, -1, OriginType.GENERIC);
+        return new SimpleConfigOrigin(description, -1, OriginType.GENERIC, null);
     }
 
     static SimpleConfigOrigin newFile(String filename) {
-        return new SimpleConfigOrigin(filename, -1, OriginType.FILE);
+        String url;
+        try {
+            url = (new File(filename)).toURI().toURL().toExternalForm();
+        } catch (MalformedURLException e) {
+            url = null;
+        }
+        return new SimpleConfigOrigin(filename, -1, OriginType.FILE, url);
     }
 
     static SimpleConfigOrigin newURL(URL url) {
-        return new SimpleConfigOrigin(url.toExternalForm(), -1, OriginType.URL);
+        String u = url.toExternalForm();
+        return new SimpleConfigOrigin(u, -1, OriginType.URL, u);
+    }
+
+    static SimpleConfigOrigin newResource(String resource, URL url) {
+        return new SimpleConfigOrigin(resource, -1, OriginType.RESOURCE,
+                url != null ? url.toExternalForm() : null);
     }
 
     static SimpleConfigOrigin newResource(String resource) {
-        return new SimpleConfigOrigin(resource, -1, OriginType.RESOURCE);
+        return newResource(resource, null);
     }
 
     // important, this should also be able to _change_ an existing line
     // number
     SimpleConfigOrigin addLineNumber(int lineNumber) {
-        return new SimpleConfigOrigin(this.description, lineNumber, this.originType);
+        return new SimpleConfigOrigin(this.description, lineNumber, this.originType, this.urlOrNull);
+    }
+
+    SimpleConfigOrigin addURL(URL url) {
+        return new SimpleConfigOrigin(this.description, this.lineNumber, this.originType,
+                url != null ? url.toExternalForm() : null);
     }
 
     @Override
     public String description() {
+        // not putting the URL in here for files and resources, because people
+        // parsing "file: line" syntax would hit the ":" in the URL.
         if (lineNumber < 0) {
             return description;
         } else {
@@ -56,9 +80,12 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     @Override
     public boolean equals(Object other) {
         if (other instanceof SimpleConfigOrigin) {
-            // two origins are equal if they are described to the user in the
-            // same way, for now at least this seems fine
-            return this.description.equals(((SimpleConfigOrigin) other).description);
+            SimpleConfigOrigin otherOrigin = (SimpleConfigOrigin) other;
+
+            return this.description.equals(otherOrigin.description)
+                    && this.lineNumber == otherOrigin.lineNumber
+                    && this.originType == otherOrigin.originType
+                    && ConfigUtil.equalsHandlingNull(this.urlOrNull, otherOrigin.urlOrNull);
         } else {
             return false;
         }
@@ -66,22 +93,32 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
     @Override
     public int hashCode() {
-        return description.hashCode();
+        int h = 41 * (41 + description.hashCode());
+        h = 41 * (h + lineNumber);
+        h = 41 * (h + originType.hashCode());
+        if (urlOrNull != null)
+            h = 41 * (h + urlOrNull.hashCode());
+        return h;
     }
 
     @Override
     public String toString() {
-        return "ConfigOrigin(" + description + ")";
+        // the url is only really useful on top of description for resources
+        if (originType == OriginType.RESOURCE && urlOrNull != null) {
+            return "ConfigOrigin(" + description + "," + urlOrNull + ")";
+        } else {
+            return "ConfigOrigin(" + description + ")";
+        }
     }
 
     @Override
     public String filename() {
         if (originType == OriginType.FILE) {
             return description;
-        } else if (originType == OriginType.URL) {
+        } else if (urlOrNull != null) {
             URL url;
             try {
-                url = new URL(description);
+                url = new URL(urlOrNull);
             } catch (MalformedURLException e) {
                 return null;
             }
@@ -97,20 +134,14 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
     @Override
     public URL url() {
-        if (originType == OriginType.URL) {
-            try {
-                return new URL(description);
-            } catch (MalformedURLException e) {
-                return null;
-            }
-        } else if (originType == OriginType.FILE) {
-            try {
-                return (new File(description)).toURI().toURL();
-            } catch (MalformedURLException e) {
-                return null;
-            }
-        } else {
+        if (urlOrNull == null) {
             return null;
+        } else {
+            try {
+                return new URL(urlOrNull);
+            } catch (MalformedURLException e) {
+                return null;
+            }
         }
     }
 

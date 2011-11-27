@@ -309,7 +309,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def includersAreUsedWithClasspath() {
-        val included = whatWasIncluded(ConfigFactory.parseResource(classOf[PublicApiTest], "/test03.conf", _))
+        val included = whatWasIncluded(ConfigFactory.parseResources(classOf[PublicApiTest], "/test03.conf", _))
 
         assertEquals(List("test01", "test02.conf", "equiv01/original.json",
             "nothere", "nothere.conf", "nothere.json", "nothere.properties"),
@@ -320,7 +320,7 @@ class PublicApiTest extends TestUtils {
     def includersAreUsedRecursivelyWithClasspath() {
         // includes.conf has recursive includes in it; here we look it up
         // with an "absolute" class path resource.
-        val included = whatWasIncluded(ConfigFactory.parseResource(classOf[PublicApiTest], "/equiv03/includes.conf", _))
+        val included = whatWasIncluded(ConfigFactory.parseResources(classOf[PublicApiTest], "/equiv03/includes.conf", _))
 
         assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
             included.map(_.name))
@@ -330,7 +330,7 @@ class PublicApiTest extends TestUtils {
     def includersAreUsedRecursivelyWithClasspathRelativeResource() {
         // includes.conf has recursive includes in it; here we look it up
         // with a "class-relative" class path resource
-        val included = whatWasIncluded(ConfigFactory.parseResource(classOf[SomethingInEquiv03], "includes.conf", _))
+        val included = whatWasIncluded(ConfigFactory.parseResources(classOf[SomethingInEquiv03], "includes.conf", _))
 
         assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
             included.map(_.name))
@@ -380,7 +380,7 @@ class PublicApiTest extends TestUtils {
         assertEquals("true", onlyPropsViaOptions.getString("fromProps.bool"))
 
         // make sure it works with resources too
-        val fromResources = ConfigFactory.parseResourceAnySyntax(classOf[PublicApiTest], "/test01",
+        val fromResources = ConfigFactory.parseResourcesAnySyntax(classOf[PublicApiTest], "/test01",
             ConfigParseOptions.defaults())
         assertEquals(42, fromResources.getInt("ints.fortyTwo"))
         assertEquals("A", fromResources.getString("fromJsonA"))
@@ -389,17 +389,25 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def resourceFromAnotherClasspath() {
-        val conf = ConfigFactory.parseResource(classOf[PublicApiTest], "/test-lib.conf", ConfigParseOptions.defaults())
+        val conf = ConfigFactory.parseResources(classOf[PublicApiTest], "/test-lib.conf", ConfigParseOptions.defaults())
 
         assertEquals("This is to test classpath searches.", conf.getString("test-lib.description"))
     }
 
     @Test
-    def onlyFirstResourceUsed() {
-        val conf = ConfigFactory.parseResource(classOf[PublicApiTest], "/test01.conf", ConfigParseOptions.defaults())
+    def multipleResourcesUsed() {
+        val conf = ConfigFactory.parseResources(classOf[PublicApiTest], "/test01.conf", ConfigParseOptions.defaults())
 
         assertEquals(42, conf.getInt("ints.fortyTwo"))
-        assertFalse(conf.hasPath("test-lib"))
-        assertFalse(conf.hasPath("test-lib.fromTestLib"))
+        assertEquals(true, conf.getBoolean("test-lib.fromTestLib"))
+
+        // check that each value has its own ConfigOrigin
+        val v1 = conf.getValue("ints.fortyTwo")
+        val v2 = conf.getValue("test-lib.fromTestLib")
+        assertEquals("test01.conf", v1.origin.resource)
+        assertEquals("test01.conf", v2.origin.resource)
+        assertEquals(v1.origin.resource, v2.origin.resource)
+        assertFalse("same urls in " + v1.origin + " " + v2.origin, v1.origin.url == v2.origin.url)
+        assertFalse(v1.origin.filename == v2.origin.filename)
     }
 }
