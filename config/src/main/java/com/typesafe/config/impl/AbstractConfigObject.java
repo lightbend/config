@@ -200,6 +200,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         Map<String, AbstractConfigValue> changes = null;
         for (String k : keySet()) {
             AbstractConfigValue v = peek(k);
+            // "modified" may be null, which means remove the child;
+            // to do that we put null in the "changes" map.
             AbstractConfigValue modified = modifier.modifyChild(v);
             if (modified != v) {
                 if (changes == null)
@@ -213,7 +215,12 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             Map<String, AbstractConfigValue> modified = new HashMap<String, AbstractConfigValue>();
             for (String k : keySet()) {
                 if (changes.containsKey(k)) {
-                    modified.put(k, changes.get(k));
+                    AbstractConfigValue newValue = changes.get(k);
+                    if (newValue != null) {
+                        modified.put(k, newValue);
+                    } else {
+                        // remove this child; don't put it in the new map.
+                    }
                 } else {
                     modified.put(k, peek(k));
                 }

@@ -127,6 +127,11 @@ class ConfigSubstitutionTest extends TestUtils {
         val v = resolveWithoutFallbacks(s, simpleObject)
         // absent object becomes empty string
         assertEquals(stringValue("start<>end"), v)
+
+        intercept[ConfigException.UnresolvedSubstitution] {
+            val s2 = substInString("bar.missing", false /* optional */ )
+            resolveWithoutFallbacks(s2, simpleObject)
+        }
     }
 
     @Test
@@ -148,6 +153,32 @@ class ConfigSubstitutionTest extends TestUtils {
         val s = substInString("bar.double")
         val v = resolveWithoutFallbacks(s, simpleObject)
         assertEquals(stringValue("start<3.14>end"), v)
+    }
+
+    @Test
+    def missingInArray() {
+        import scala.collection.JavaConverters._
+
+        val obj = parseObject("""
+    a : [ ${?missing}, ${?also.missing} ]
+""")
+
+        val resolved = resolve(obj)
+
+        assertEquals(Seq(), resolved.getList("a").asScala)
+    }
+
+    @Test
+    def missingInObject() {
+        import scala.collection.JavaConverters._
+
+        val obj = parseObject("""
+    a : ${?missing}, b : ${?also.missing}, c : ${?b}, d : ${?c}
+""")
+
+        val resolved = resolve(obj)
+
+        assertTrue(resolved.isEmpty())
     }
 
     private val substChainObject = {
@@ -298,7 +329,7 @@ class ConfigSubstitutionTest extends TestUtils {
                 existed += 1
                 assertEquals(e, resolved.getString(k))
             } else {
-                assertEquals(nullValue, resolved.root.get(k))
+                assertNull(resolved.root.get(k))
             }
         }
         if (existed == 0) {
@@ -345,7 +376,7 @@ class ConfigSubstitutionTest extends TestUtils {
                 existed += 1
                 assertEquals(e, resolved.getConfig("a").getString(k))
             } else {
-                assertEquals(nullValue, resolved.getObject("a").get(k))
+                assertNull(resolved.getObject("a").get(k))
             }
         }
         if (existed == 0) {

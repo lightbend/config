@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
@@ -68,8 +67,9 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
             }
 
             // once the new list is created, all elements
-            // have to go in it.
-            if (changed != null) {
+            // have to go in it. if modifyChild returned
+            // null, we drop that element.
+            if (changed != null && modified != null) {
                 changed.add(modified);
             }
 
@@ -77,9 +77,6 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
         }
 
         if (changed != null) {
-            if (changed.size() != value.size())
-                throw new ConfigException.BugOrBroken(
-                        "substituted list's size doesn't match");
             return new SimpleConfigList(origin(), changed, newResolveStatus);
         } else {
             return this;

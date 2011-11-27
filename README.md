@@ -193,6 +193,27 @@ You can take advantage of this for "inheritance":
 Using `include` statements you could split this across multiple
 files, too.
 
+#### Optional system or env variable overrides
+
+In default uses of the library, exact-match system properties
+already override the corresponding config properties.  However,
+you can add your own overrides, or allow environment variables to
+override, using the `${?foo}` substitution syntax.
+
+    basedir = "/whatever/whatever"
+    basedir = ${?FORCED_BASEDIR}
+
+Here, the override field `basedir = ${?FORCED_BASEDIR}` simply
+vanishes if there's no value for `FORCED_BASEDIR`, but if you set
+an environment variable `FORCED_BASEDIR` for example, it would be
+used.
+
+Object fields and array elements with a `${?foo}` substitution
+value just disappear if the substitution is not found.
+
+    // this array could have one or two elements
+    path = [ "a", ${?OPTIONAL_A} ]
+
 ## Future Directions
 
 Here are some features that might be nice to add.

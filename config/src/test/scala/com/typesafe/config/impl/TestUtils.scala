@@ -149,6 +149,8 @@ abstract trait TestUtils {
         "[$]", // '$' by itself
         "[$  ]", // '$' by itself with spaces after
         "[${}]", // empty substitution (no path)
+        "[${?}]", // no path with ? substitution
+        ParseTest(false, true, "[${ ?foo}]"), // space before ? not allowed
         """{ "a" : [1,2], "b" : y${a}z }""", // trying to interpolate an array in a string
         """{ "a" : { "c" : 2 }, "b" : y${a}z }""", // trying to interpolate an object in a string
         """{ "a" : ${a} }""", // simple cycle
@@ -249,6 +251,7 @@ abstract trait TestUtils {
         "{ include \"foo\", \"a\" : \"b\" }", // valid include followed by comma and field
         "{ foo include : 42 }", // valid to have a key not starting with include
         "[ ${foo} ]",
+        "[ ${?foo} ]",
         "[ ${\"foo\"} ]",
         "[ ${foo.bar} ]",
         "[ abc  xyz  ${foo.bar}  qrs tuv ]", // value concatenation

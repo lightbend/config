@@ -37,10 +37,10 @@ class PublicApiTest extends TestUtils {
         val conf = ConfigFactory.load("test01", ConfigParseOptions.defaults(),
             ConfigResolveOptions.noSystem())
 
-        intercept[ConfigException.Null] {
+        intercept[ConfigException.Missing] {
             conf.getString("system.home")
         }
-        intercept[ConfigException.Null] {
+        intercept[ConfigException.Missing] {
             conf.getString("system.javaversion")
         }
     }

@@ -77,10 +77,12 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
         AbstractConfigValue merged = null;
         for (AbstractConfigValue v : stack) {
             AbstractConfigValue resolved = resolver.resolve(v, depth, options);
-            if (merged == null)
-                merged = resolved;
-            else
-                merged = merged.withFallback(resolved);
+            if (resolved != null) {
+                if (merged == null)
+                    merged = resolved;
+                else
+                    merged = merged.withFallback(resolved);
+            }
         }
 
         return merged;

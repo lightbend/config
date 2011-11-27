@@ -191,14 +191,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                         "ConfigSubstitution should never contain a single String piece");
             SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
             ConfigValue v = resolve(resolver, exp, depth, options);
-            if (v == null) {
-                if (exp.optional()) {
-                    // FIXME want to delete the field or array element here
-                    // instead of this
-                    v = new ConfigNull(origin());
-                } else {
-                    throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
-                }
+            if (v == null && !exp.optional()) {
+                throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
             }
             return v;
         }
