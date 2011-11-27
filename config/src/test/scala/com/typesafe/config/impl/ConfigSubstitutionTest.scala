@@ -257,7 +257,7 @@ class ConfigSubstitutionTest extends TestUtils {
     def fallbackToSystemProps() {
         System.setProperty("configtest.a", "1234")
         System.setProperty("configtest.b", "5678")
-        ConfigImpl.dropSystemPropertiesConfig()
+        ConfigImpl.reloadSystemPropertiesConfig()
 
         val resolved = resolve(substSystemPropsObject)
 

@@ -336,29 +336,26 @@ public class ConfigImpl {
         }
     }
 
-    private static ConfigIncluder defaultIncluder = null;
-
-    synchronized static ConfigIncluder defaultIncluder() {
-        if (defaultIncluder == null) {
-            defaultIncluder = new SimpleIncluder(null);
-        }
-        return defaultIncluder;
+    private static class DefaultIncluderHolder {
+        static final ConfigIncluder defaultIncluder = new SimpleIncluder(null);
     }
 
-    private static AbstractConfigObject systemProperties = null;
-
-    synchronized static AbstractConfigObject systemPropertiesAsConfigObject() {
-        if (systemProperties == null) {
-            systemProperties = loadSystemProperties();
-        }
-        return systemProperties;
+    static ConfigIncluder defaultIncluder() {
+        return DefaultIncluderHolder.defaultIncluder;
     }
 
     private static AbstractConfigObject loadSystemProperties() {
-        return (AbstractConfigObject) Parseable.newProperties(
-                System.getProperties(),
-                ConfigParseOptions.defaults().setOriginDescription(
-                        "system properties")).parse();
+        return (AbstractConfigObject) Parseable.newProperties(System.getProperties(),
+                ConfigParseOptions.defaults().setOriginDescription("system properties")).parse();
+    }
+
+    private static class SystemPropertiesHolder {
+        // this isn't final due to the reloadSystemPropertiesConfig() hack below
+        static AbstractConfigObject systemProperties = loadSystemProperties();
+    }
+
+    static AbstractConfigObject systemPropertiesAsConfigObject() {
+        return SystemPropertiesHolder.systemProperties;
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
@@ -366,18 +363,10 @@ public class ConfigImpl {
         return systemPropertiesAsConfigObject().toConfig();
     }
 
-    // this is a hack to let us set system props in the test suite
-    synchronized static void dropSystemPropertiesConfig() {
-        systemProperties = null;
-    }
-
-    private static AbstractConfigObject envVariables = null;
-
-    synchronized static AbstractConfigObject envVariablesAsConfigObject() {
-        if (envVariables == null) {
-            envVariables = loadEnvVariables();
-        }
-        return envVariables;
+    // this is a hack to let us set system props in the test suite.
+    // obviously not thread-safe.
+    static void reloadSystemPropertiesConfig() {
+        SystemPropertiesHolder.systemProperties = loadSystemProperties();
     }
 
     private static AbstractConfigObject loadEnvVariables() {
@@ -391,6 +380,14 @@ public class ConfigImpl {
         }
         return new SimpleConfigObject(SimpleConfigOrigin.newSimple("env variables"),
                 m, ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
+    }
+
+    private static class EnvVariablesHolder {
+        static final AbstractConfigObject envVariables = loadEnvVariables();
+    }
+
+    static AbstractConfigObject envVariablesAsConfigObject() {
+        return EnvVariablesHolder.envVariables;
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
