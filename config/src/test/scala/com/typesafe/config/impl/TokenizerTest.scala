@@ -36,8 +36,9 @@ class TokenizerTest extends TestUtils {
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenTrue, tokenDouble(3.14), tokenFalse,
             tokenLong(42), tokenNull, tokenSubstitution(tokenUnquoted("a.b")),
+            tokenOptionalSubstitution(tokenUnquoted("x.y")),
             tokenKeySubstitution("c.d"), Tokens.newLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""",:=}{]["foo"true3.14false42null${a.b}${"c.d"}""" + "\n"))
+        assertEquals(expected, tokenizeAsList(""",:=}{]["foo"true3.14false42null${a.b}${?x.y}${"c.d"}""" + "\n"))
     }
 
     @Test
@@ -46,9 +47,11 @@ class TokenizerTest extends TestUtils {
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
             tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
             tokenDouble(3.14), tokenUnquoted(" "), tokenFalse, tokenUnquoted(" "), tokenNull,
-            tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "), tokenKeySubstitution("c.d"),
+            tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "),
+            tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted(" "),
+            tokenKeySubstitution("c.d"),
             Tokens.newLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""" , : = } { ] [ "foo" 42 true 3.14 false null ${a.b} ${"c.d"} """ + "\n "))
+        assertEquals(expected, tokenizeAsList(""" , : = } { ] [ "foo" 42 true 3.14 false null ${a.b} ${?x.y} ${"c.d"} """ + "\n "))
     }
 
     @Test
@@ -58,9 +61,10 @@ class TokenizerTest extends TestUtils {
             tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
             tokenDouble(3.14), tokenUnquoted("   "), tokenFalse, tokenUnquoted("   "), tokenNull,
             tokenUnquoted("   "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted("   "),
+            tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted("   "),
             tokenKeySubstitution("c.d"),
             Tokens.newLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${"c.d"}  """ + "\n   "))
+        assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${?x.y}   ${"c.d"}  """ + "\n   "))
     }
 
     @Test

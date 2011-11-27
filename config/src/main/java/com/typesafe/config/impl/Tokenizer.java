@@ -403,6 +403,14 @@ final class Tokenizer {
                 throw parseError("'$' not followed by {");
             }
 
+            boolean optional = false;
+            c = nextCharSkippingComments();
+            if (c == '?') {
+                optional = true;
+            } else {
+                putBack(c);
+            }
+
             WhitespaceSaver saver = new WhitespaceSaver();
             List<Token> expression = new ArrayList<Token>();
 
@@ -427,7 +435,7 @@ final class Tokenizer {
                 }
             } while (true);
 
-            return Tokens.newSubstitution(origin, expression);
+            return Tokens.newSubstitution(origin, optional, expression);
         }
 
         private Token pullNextToken(WhitespaceSaver saver) {

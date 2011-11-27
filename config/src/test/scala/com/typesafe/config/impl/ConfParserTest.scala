@@ -79,7 +79,7 @@ class ConfParserTest extends TestUtils {
                     list.get(0) match {
                         case subst: ConfigSubstitution =>
                             subst.pieces().get(0) match {
-                                case p: Path => p
+                                case exp: SubstitutionExpression => exp.path()
                             }
                     }
             }

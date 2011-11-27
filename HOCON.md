@@ -277,8 +277,7 @@ converted to strings as follows (strings shown as quoted strings):
    For purposes of value concatenation, it should be rendered
    as it was written in the file.
  - a substitution is replaced with its value which is then
-   converted to a string as above, except that a substitution
-   which evaluates to `null` becomes the empty string `""`.
+   converted to a string as above.
  - it is invalid for arrays or objects to appear in a value
    concatenation.
 
@@ -398,9 +397,14 @@ implementations may try to resolve them by looking at system
 environment variables, Java system properties, or other external
 sources of configuration.
 
-The syntax is `${pathexpression}` where the `pathexpression` is a
-path expression as described above. This path expression has the
-same syntax that you could use for an object key.
+The syntax is `${pathexpression}` or `${?pathexpression}` where
+the `pathexpression` is a path expression as described above. This
+path expression has the same syntax that you could use for an
+object key.
+
+The `?` in `${?pathexpression}` must not have whitespace before
+it; the three characters `${?` must be exactly like that, grouped
+together.
 
 Substitutions are not parsed inside quoted strings. To get a
 string containing a substitution, you must use value concatenation
@@ -437,8 +441,21 @@ environment variable. There is no equivalent to JavaScript's
 `delete` operation in other words.
 
 If a substitution does not match any value present in the
-configuration and is not resolved by an external source, it is
-evaluated to `null`.
+configuration and is not resolved by an external source, then it
+is undefined. An undefined substitution with the `${foo}` syntax
+is invalid and should generate an error.
+
+If a substitution with the `${?foo}` syntax is undefined:
+
+ - if it is the value of an object field then the field should not
+   be created.
+ - if it is an array element then the element should not be added.
+ - if it is part of a value concatenation then it should become an
+   empty string.
+ - `foo : ${?bar}` would avoid creating field `foo` if `bar` is
+   undefined, but `foo : ${?bar} ${?baz}` would be a value
+   concatenation so if `bar` or `baz` are not defined, the result
+   is an empty string.
 
 Substitutions are only allowed in object field values and array
 elements (value concatenations), they are not allowed in keys or
@@ -447,13 +464,7 @@ nested inside other substitutions (path expressions).
 A substitution is replaced with any value type (number, object,
 string, array, true, false, null). If the substitution is the only
 part of a value, then the type is preserved. Otherwise, it is
-value-concatenated to form a string. There is one special rule:
-
- - `null` is converted to an empty string, not the string `null`.
-
-Because missing substitutions are evaluated to `null`, either
-missing or explicitly-set-to-null substitutions become an empty
-string when concatenated.
+value-concatenated to form a string.
 
 Circular substitutions are invalid and should generate an error.
 

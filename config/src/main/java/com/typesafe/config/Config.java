@@ -98,19 +98,19 @@ public interface Config extends ConfigMergeable {
      * <code>Config</code> as the root object, that is, a substitution
      * <code>${foo.bar}</code> will be replaced with the result of
      * <code>getValue("foo.bar")</code>.
-     *
+     * 
      * <p>
      * This method uses {@link ConfigResolveOptions#defaults()}, there is
      * another variant {@link Config#resolve(ConfigResolveOptions)} which lets
      * you specify non-default options.
-     *
+     * 
      * <p>
      * A given {@link Config} must be resolved before using it to retrieve
      * config values, but ideally should be resolved one time for your entire
      * stack of fallbacks (see {@link Config#withFallback}). Otherwise, some
      * substitutions that could have resolved with all fallbacks available may
      * not resolve, which will be a user-visible oddity.
-     *
+     * 
      * <p>
      * <code>resolve()</code> should be invoked on root config objects, rather
      * than on a subtree (a subtree is the result of something like
@@ -120,15 +120,19 @@ public interface Config extends ConfigMergeable {
      * from the root. For example, if you did
      * <code>config.getConfig("foo").resolve()</code> on the below config file,
      * it would not work:
-     *
+     * 
      * <pre>
      *   common-value = 10
      *   foo {
      *      whatever = ${common-value}
      *   }
      * </pre>
-     *
+     * 
      * @return an immutable object with substitutions resolved
+     * @throws ConfigException.UnresolvedSubstitution
+     *             if any substitutions refer to nonexistent paths
+     * @throws ConfigException
+     *             some other config exception if there are other problems
      */
     Config resolve();
 

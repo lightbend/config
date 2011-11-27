@@ -36,7 +36,7 @@ public class ConfigException extends RuntimeException {
      * for a given exception, or the kind of exception doesn't meaningfully
      * relate to a particular origin file, this returns null. Never assume this
      * will return non-null, it can always return null.
-     * 
+     *
      * @return origin of the problem, or null if unknown/inapplicable
      */
     public ConfigOrigin origin() {
@@ -230,11 +230,28 @@ public class ConfigException extends RuntimeException {
     }
 
     /**
+     * Exception indicating that a substitution did not resolve to anything.
+     * Thrown by {@link Config#resolve}.
+     */
+    public static class UnresolvedSubstitution extends Parse {
+        private static final long serialVersionUID = 1L;
+
+        public UnresolvedSubstitution(ConfigOrigin origin, String expression, Throwable cause) {
+            super(origin, "Could not resolve substitution to a value: " + expression, cause);
+        }
+
+        public UnresolvedSubstitution(ConfigOrigin origin, String expression) {
+            this(origin, expression, null);
+        }
+    }
+
+    /**
      * Exception indicating that you tried to use a function that requires
-     * substitutions to be resolved, but substitutions have not been resolved.
-     * This is always a bug in either application code or the library; it's
-     * wrong to write a handler for this exception because you should be able to
-     * fix the code to avoid it.
+     * substitutions to be resolved, but substitutions have not been resolved
+     * (that is, {@link Config#resolve} was not called). This is always a bug in
+     * either application code or the library; it's wrong to write a handler for
+     * this exception because you should be able to fix the code to avoid it by
+     * adding calls to {@link Config#resolve}.
      */
     public static class NotResolved extends BugOrBroken {
         private static final long serialVersionUID = 1L;

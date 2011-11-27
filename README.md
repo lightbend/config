@@ -102,6 +102,8 @@ detail.
     environment variables if they don't resolve in the
     config itself, so `${HOME}` or `${user.home}` would
     work as you expect.
+  - substitutions normally cause an error if unresolved, but
+    there is a syntax `${?a.b}` to permit them to be missing.
 
 ### Examples of HOCON
 
@@ -233,6 +235,10 @@ Here are some features that might be nice to add.
    in system properties and the environment, for example).
    This could be done using the same syntax as `include`,
    potentially. It is not a backward-compatible change though.
+ - substitutions with fallbacks; this could be something like
+   `${foo.bar,baz,null}` where it would look up `foo.bar`, then
+   `baz`, then finally fall back to null. One question is whether
+   entire nested objects would be allowed as fallbacks.
 
 ## Rationale
 

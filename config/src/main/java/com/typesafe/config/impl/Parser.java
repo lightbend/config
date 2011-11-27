@@ -155,7 +155,7 @@ final class Parser {
                 return;
             }
 
-            // this will be a list of String and Path
+            // this will be a list of String and SubstitutionExpression
             List<Object> minimized = new ArrayList<Object>();
 
             // we have multiple value tokens or one unquoted text token;
@@ -187,7 +187,9 @@ final class Parser {
                             .getSubstitutionPathExpression(valueToken);
                     Path path = parsePathExpression(expression.iterator(),
                             Tokens.getSubstitutionOrigin(valueToken));
-                    minimized.add(path);
+                    boolean optional = Tokens.getSubstitutionOptional(valueToken);
+
+                    minimized.add(new SubstitutionExpression(path, optional));
                 } else {
                     throw new ConfigException.BugOrBroken(
                             "should not be trying to consolidate token: "

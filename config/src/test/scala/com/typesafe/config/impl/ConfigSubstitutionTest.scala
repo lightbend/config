@@ -96,6 +96,14 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     @Test
+    def resolveMissingThrows() {
+        intercept[ConfigException.UnresolvedSubstitution] {
+            val s = subst("bar.missing")
+            val v = resolveWithoutFallbacks(s, simpleObject)
+        }
+    }
+
+    @Test
     def resolveIntInString() {
         val s = substInString("bar.int")
         val v = resolveWithoutFallbacks(s, simpleObject)
@@ -106,17 +114,16 @@ class ConfigSubstitutionTest extends TestUtils {
     def resolveNullInString() {
         val s = substInString("bar.null")
         val v = resolveWithoutFallbacks(s, simpleObject)
-        // null is supposed to become empty string
-        assertEquals(stringValue("start<>end"), v)
+        assertEquals(stringValue("start<null>end"), v)
 
-        // but when null is NOT a subst, it should not become empty, incidentally
+        // when null is NOT a subst, it should also not become empty
         val o = parseConfig("""{ "a" : null foo bar }""")
         assertEquals("null foo bar", o.getString("a"))
     }
 
     @Test
     def resolveMissingInString() {
-        val s = substInString("bar.missing")
+        val s = substInString("bar.missing", true /* optional */ )
         val v = resolveWithoutFallbacks(s, simpleObject)
         // absent object becomes empty string
         assertEquals(stringValue("start<>end"), v)
@@ -268,12 +275,12 @@ class ConfigSubstitutionTest extends TestUtils {
     private val substEnvVarObject = {
         parseObject("""
 {
-    "home" : ${HOME},
-    "pwd" : ${PWD},
-    "shell" : ${SHELL},
-    "lang" : ${LANG},
-    "path" : ${PATH},
-    "not_here" : ${NOT_HERE}
+    "home" : ${?HOME},
+    "pwd" : ${?PWD},
+    "shell" : ${?SHELL},
+    "lang" : ${?LANG},
+    "path" : ${?PATH},
+    "not_here" : ${?NOT_HERE}
 }
 """)
     }
@@ -343,6 +350,14 @@ class ConfigSubstitutionTest extends TestUtils {
         }
         if (existed == 0) {
             throw new Exception("None of the env vars we tried to use for testing were set")
+        }
+    }
+
+    @Test
+    def throwWhenEnvNotFound() {
+        val obj = parseObject("""{ a : ${NOT_HERE} }""")
+        intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
         }
     }
 }

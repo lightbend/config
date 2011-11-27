@@ -355,15 +355,25 @@ abstract trait TestUtils {
         ConfigFactory.parseString(s, options).asInstanceOf[SimpleConfig]
     }
 
-    protected def subst(ref: String) = {
-        val pieces = java.util.Collections.singletonList[Object](Path.newPath(ref))
+    protected def subst(ref: String, optional: Boolean): ConfigSubstitution = {
+        val path = Path.newPath(ref)
+        val pieces = java.util.Collections.singletonList[Object](new SubstitutionExpression(path, optional))
         new ConfigSubstitution(fakeOrigin(), pieces)
     }
 
-    protected def substInString(ref: String) = {
+    protected def subst(ref: String): ConfigSubstitution = {
+        subst(ref, false)
+    }
+
+    protected def substInString(ref: String, optional: Boolean): ConfigSubstitution = {
         import scala.collection.JavaConverters._
-        val pieces = List("start<", Path.newPath(ref), ">end")
+        val path = Path.newPath(ref)
+        val pieces = List("start<", new SubstitutionExpression(path, optional), ">end")
         new ConfigSubstitution(fakeOrigin(), pieces.asJava)
+    }
+
+    protected def substInString(ref: String): ConfigSubstitution = {
+        substInString(ref, false)
     }
 
     def tokenTrue = Tokens.newBoolean(fakeOrigin(), true)
@@ -375,12 +385,20 @@ abstract trait TestUtils {
     def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, null)
     def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, null)
 
-    def tokenSubstitution(expression: Token*) = {
+    private def tokenMaybeOptionalSubstitution(optional: Boolean, expression: Token*) = {
         val l = new java.util.ArrayList[Token]
         for (t <- expression) {
             l.add(t);
         }
-        Tokens.newSubstitution(fakeOrigin(), l);
+        Tokens.newSubstitution(fakeOrigin(), optional, l);
+    }
+
+    def tokenSubstitution(expression: Token*) = {
+        tokenMaybeOptionalSubstitution(false, expression: _*)
+    }
+
+    def tokenOptionalSubstitution(expression: Token*) = {
+        tokenMaybeOptionalSubstitution(true, expression: _*)
     }
 
     // quoted string substitution (no interpretation of periods)
