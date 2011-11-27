@@ -3,7 +3,6 @@
  */
 package com.typesafe.config;
 
-import java.net.URL;
 
 /**
  * An opaque handle to something that can be parsed, obtained from
@@ -21,7 +20,7 @@ public interface ConfigParseable {
      * Parse whatever it is. The options should come from
      * {@link ConfigParseable#options options()} but you could tweak them if you
      * like.
-     * 
+     *
      * @param options
      *            parse options, should be based on the ones from
      *            {@link ConfigParseable#options options()}
@@ -29,10 +28,10 @@ public interface ConfigParseable {
     ConfigObject parse(ConfigParseOptions options);
 
     /**
-     * Possibly return a URL representing the resource; this may return null if
-     * the resource has no meaningful URL representation.
+     * Returns a {@link ConfigOrigin} describing the origin of the parseable
+     * item.
      */
-    URL url();
+    ConfigOrigin origin();
 
     /**
      * Get the initial options, which can be modified then passed to parse().

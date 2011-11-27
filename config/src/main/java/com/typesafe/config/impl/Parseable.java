@@ -40,6 +40,7 @@ import com.typesafe.config.ConfigValue;
 public abstract class Parseable implements ConfigParseable {
     private ConfigIncludeContext includeContext;
     private ConfigParseOptions initialOptions;
+    private ConfigOrigin initialOrigin;
 
     protected Parseable() {
 
@@ -69,6 +70,11 @@ public abstract class Parseable implements ConfigParseable {
                 return Parseable.this.relativeTo(filename);
             }
         };
+
+        if (initialOptions.getOriginDescription() != null)
+            initialOrigin = SimpleConfigOrigin.newSimple(initialOptions.getOriginDescription());
+        else
+            initialOrigin = createOrigin();
     }
 
     // the general idea is that any work should be in here, not in the
@@ -118,7 +124,7 @@ public abstract class Parseable implements ConfigParseable {
         if (options.getOriginDescription() != null)
             origin = SimpleConfigOrigin.newSimple(options.getOriginDescription());
         else
-            origin = origin();
+            origin = initialOrigin;
         return parseValue(origin, options);
     }
 
@@ -165,12 +171,12 @@ public abstract class Parseable implements ConfigParseable {
         return parseValue(options());
     }
 
-    abstract ConfigOrigin origin();
-
     @Override
-    public URL url() {
-        return null;
+    public final ConfigOrigin origin() {
+        return initialOrigin;
     }
+
+    protected abstract ConfigOrigin createOrigin();
 
     @Override
     public ConfigParseOptions options() {
@@ -255,7 +261,7 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        ConfigOrigin origin() {
+        protected ConfigOrigin createOrigin() {
             return SimpleConfigOrigin.newSimple("Reader");
         }
     }
@@ -282,7 +288,7 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        ConfigOrigin origin() {
+        protected ConfigOrigin createOrigin() {
             return SimpleConfigOrigin.newSimple("String");
         }
     }
@@ -320,13 +326,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        ConfigOrigin origin() {
+        protected ConfigOrigin createOrigin() {
             return SimpleConfigOrigin.newURL(input);
-        }
-
-        @Override
-        public URL url() {
-            return input;
         }
 
         @Override
@@ -372,17 +373,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        ConfigOrigin origin() {
+        protected ConfigOrigin createOrigin() {
             return SimpleConfigOrigin.newFile(input.getPath());
-        }
-
-        @Override
-        public URL url() {
-            try {
-                return input.toURI().toURL();
-            } catch (MalformedURLException e) {
-                return null;
-            }
         }
 
         @Override
@@ -483,15 +475,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        ConfigOrigin origin() {
+        protected ConfigOrigin createOrigin() {
             return SimpleConfigOrigin.newResource(resource);
-        }
-
-        @Override
-        public URL url() {
-            // because we may represent multiple resources, there's nothing
-            // good to return here.
-            return null;
         }
 
         @Override
@@ -562,13 +547,8 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        ConfigOrigin origin() {
+        protected ConfigOrigin createOrigin() {
             return SimpleConfigOrigin.newSimple("properties");
-        }
-
-        @Override
-        public URL url() {
-            return null;
         }
 
         @Override
