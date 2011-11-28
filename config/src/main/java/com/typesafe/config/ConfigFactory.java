@@ -120,15 +120,21 @@ public final class ConfigFactory {
                 .resolve(resolveOptions);
     }
 
+    private static class DefaultConfigHolder {
+        static final Config defaultConfig = load("application");
+    }
+
     /**
      * Loads a default configuration, equivalent to {@link #load(String)
      * load("application")}. This configuration should be used by libraries and
      * frameworks unless an application provides a different one.
+     * <p>
+     * This method may return a cached singleton.
      *
      * @return configuration for an application
      */
     public static Config load() {
-        return load("application");
+        return DefaultConfigHolder.defaultConfig;
     }
 
     /**
@@ -207,11 +213,11 @@ public final class ConfigFactory {
      * {@link java.lang.System#getProperties()}, parsed and converted as with
      * {@link #parseProperties}. This method can return a global immutable
      * singleton, so it's preferred over parsing system properties yourself.
-     * 
+     *
      * <p>
      * {@link #load} will include the system properties as overrides already, as
      * will {@link #defaultReference} and {@link #defaultOverrides}.
-     * 
+     *
      * <p>
      * Because this returns a singleton, it will not notice changes to system
      * properties made after the first time this method is called.
