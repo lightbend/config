@@ -222,7 +222,7 @@ final class Parser {
         }
 
         private ConfigOrigin lineOrigin() {
-            return ((SimpleConfigOrigin) baseOrigin).addLineNumber(lineNumber);
+            return ((SimpleConfigOrigin) baseOrigin).setLineNumber(lineNumber);
         }
 
         private ConfigException parseError(String message) {

@@ -452,8 +452,8 @@ class ConfigValueTest extends TestUtils {
     def configOriginFileAndLine() {
         val hasFilename = SimpleConfigOrigin.newFile("foo")
         val noFilename = SimpleConfigOrigin.newSimple("bar")
-        val filenameWithLine = hasFilename.addLineNumber(3)
-        val noFilenameWithLine = noFilename.addLineNumber(4)
+        val filenameWithLine = hasFilename.setLineNumber(3)
+        val noFilenameWithLine = noFilename.setLineNumber(4)
 
         assertEquals("foo", hasFilename.filename())
         assertEquals("foo", filenameWithLine.filename())

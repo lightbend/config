@@ -6,7 +6,10 @@ package com.typesafe.config.impl;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
@@ -16,19 +19,22 @@ import com.typesafe.config.ConfigOrigin;
 final class SimpleConfigOrigin implements ConfigOrigin {
     final private String description;
     final private int lineNumber;
+    final private int endLineNumber;
     final private OriginType originType;
     final private String urlOrNull;
 
-    protected SimpleConfigOrigin(String description, int lineNumber, OriginType originType,
+    protected SimpleConfigOrigin(String description, int lineNumber, int endLineNumber,
+            OriginType originType,
             String urlOrNull) {
-        this.lineNumber = lineNumber;
-        this.originType = originType;
         this.description = description;
+        this.lineNumber = lineNumber;
+        this.endLineNumber = endLineNumber;
+        this.originType = originType;
         this.urlOrNull = urlOrNull;
     }
 
     static SimpleConfigOrigin newSimple(String description) {
-        return new SimpleConfigOrigin(description, -1, OriginType.GENERIC, null);
+        return new SimpleConfigOrigin(description, -1, -1, OriginType.GENERIC, null);
     }
 
     static SimpleConfigOrigin newFile(String filename) {
@@ -38,16 +44,16 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         } catch (MalformedURLException e) {
             url = null;
         }
-        return new SimpleConfigOrigin(filename, -1, OriginType.FILE, url);
+        return new SimpleConfigOrigin(filename, -1, -1, OriginType.FILE, url);
     }
 
     static SimpleConfigOrigin newURL(URL url) {
         String u = url.toExternalForm();
-        return new SimpleConfigOrigin(u, -1, OriginType.URL, u);
+        return new SimpleConfigOrigin(u, -1, -1, OriginType.URL, u);
     }
 
     static SimpleConfigOrigin newResource(String resource, URL url) {
-        return new SimpleConfigOrigin(resource, -1, OriginType.RESOURCE,
+        return new SimpleConfigOrigin(resource, -1, -1, OriginType.RESOURCE,
                 url != null ? url.toExternalForm() : null);
     }
 
@@ -55,14 +61,17 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         return newResource(resource, null);
     }
 
-    // important, this should also be able to _change_ an existing line
-    // number
-    SimpleConfigOrigin addLineNumber(int lineNumber) {
-        return new SimpleConfigOrigin(this.description, lineNumber, this.originType, this.urlOrNull);
+    SimpleConfigOrigin setLineNumber(int lineNumber) {
+        if (lineNumber == this.lineNumber && lineNumber == this.endLineNumber) {
+            return this;
+        } else {
+            return new SimpleConfigOrigin(this.description, lineNumber, lineNumber,
+                    this.originType, this.urlOrNull);
+        }
     }
 
     SimpleConfigOrigin addURL(URL url) {
-        return new SimpleConfigOrigin(this.description, this.lineNumber, this.originType,
+        return new SimpleConfigOrigin(this.description, this.lineNumber, this.endLineNumber, this.originType,
                 url != null ? url.toExternalForm() : null);
     }
 
@@ -72,8 +81,10 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         // parsing "file: line" syntax would hit the ":" in the URL.
         if (lineNumber < 0) {
             return description;
-        } else {
+        } else if (endLineNumber == lineNumber) {
             return description + ": " + lineNumber;
+        } else {
+            return description + ": " + lineNumber + "-" + endLineNumber;
         }
     }
 
@@ -84,6 +95,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
             return this.description.equals(otherOrigin.description)
                     && this.lineNumber == otherOrigin.lineNumber
+                    && this.endLineNumber == otherOrigin.endLineNumber
                     && this.originType == otherOrigin.originType
                     && ConfigUtil.equalsHandlingNull(this.urlOrNull, otherOrigin.urlOrNull);
         } else {
@@ -95,6 +107,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     public int hashCode() {
         int h = 41 * (41 + description.hashCode());
         h = 41 * (h + lineNumber);
+        h = 41 * (h + endLineNumber);
         h = 41 * (h + originType.hashCode());
         if (urlOrNull != null)
             h = 41 * (h + urlOrNull.hashCode());
@@ -161,24 +174,132 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
     static final String MERGE_OF_PREFIX = "merge of ";
 
+    private static SimpleConfigOrigin mergeTwo(SimpleConfigOrigin a, SimpleConfigOrigin b) {
+        String mergedDesc;
+        int mergedStartLine;
+        int mergedEndLine;
+
+        OriginType mergedType;
+        if (a.originType == b.originType) {
+            mergedType = a.originType;
+        } else {
+            mergedType = OriginType.GENERIC;
+        }
+
+        // first use the "description" field which has no line numbers
+        // cluttering it.
+        String aDesc = a.description;
+        String bDesc = b.description;
+        if (aDesc.startsWith(MERGE_OF_PREFIX))
+            aDesc = aDesc.substring(MERGE_OF_PREFIX.length());
+        if (bDesc.startsWith(MERGE_OF_PREFIX))
+            bDesc = bDesc.substring(MERGE_OF_PREFIX.length());
+
+        if (aDesc.equals(bDesc)) {
+            mergedDesc = aDesc;
+
+            if (a.lineNumber < 0)
+                mergedStartLine = b.lineNumber;
+            else if (b.lineNumber < 0)
+                mergedStartLine = a.lineNumber;
+            else
+                mergedStartLine = Math.min(a.lineNumber, b.lineNumber);
+
+            mergedEndLine = Math.max(a.endLineNumber, b.endLineNumber);
+        } else {
+            // this whole merge song-and-dance was intended to avoid this case
+            // whenever possible, but we've lost. Now we have to lose some
+            // structured information and cram into a string.
+
+            // description() method includes line numbers, so use it instead
+            // of description field.
+            String aFull = a.description();
+            String bFull = b.description();
+            if (aFull.startsWith(MERGE_OF_PREFIX))
+                aFull = aFull.substring(MERGE_OF_PREFIX.length());
+            if (bFull.startsWith(MERGE_OF_PREFIX))
+                bFull = bFull.substring(MERGE_OF_PREFIX.length());
+
+            mergedDesc = MERGE_OF_PREFIX + aFull + "," + bFull;
+
+            mergedStartLine = -1;
+            mergedEndLine = -1;
+        }
+
+        String mergedURL;
+        if (ConfigUtil.equalsHandlingNull(a.urlOrNull, b.urlOrNull)) {
+            mergedURL = a.urlOrNull;
+        } else {
+            mergedURL = null;
+        }
+
+        return new SimpleConfigOrigin(mergedDesc, mergedStartLine, mergedEndLine, mergedType,
+                mergedURL);
+    }
+
+    private static int similarity(SimpleConfigOrigin a, SimpleConfigOrigin b) {
+        int count = 0;
+
+        if (a.originType == b.originType)
+            count += 1;
+
+        if (a.description.equals(b.description)) {
+            count += 1;
+
+            // only count these if the description field (which is the file
+            // or resource name) also matches.
+            if (a.lineNumber == b.lineNumber)
+                count += 1;
+            if (a.endLineNumber == b.endLineNumber)
+                count += 1;
+            if (ConfigUtil.equalsHandlingNull(a.urlOrNull, b.urlOrNull))
+                count += 1;
+        }
+
+        return count;
+    }
+
+    // this picks the best pair to merge, because the pair has the most in
+    // common. we want to merge two lines in the same file rather than something
+    // else with one of the lines; because two lines in the same file can be
+    // better consolidated.
+    private static SimpleConfigOrigin mergeThree(SimpleConfigOrigin a, SimpleConfigOrigin b,
+            SimpleConfigOrigin c) {
+        if (similarity(a, b) >= similarity(b, c)) {
+            return mergeTwo(mergeTwo(a, b), c);
+        } else {
+            return mergeTwo(a, mergeTwo(b, c));
+        }
+    }
+
     static ConfigOrigin mergeOrigins(Collection<? extends ConfigOrigin> stack) {
         if (stack.isEmpty()) {
             throw new ConfigException.BugOrBroken("can't merge empty list of origins");
         } else if (stack.size() == 1) {
             return stack.iterator().next();
+        } else if (stack.size() == 2) {
+            Iterator<? extends ConfigOrigin> i = stack.iterator();
+            return mergeTwo((SimpleConfigOrigin) i.next(), (SimpleConfigOrigin) i.next());
         } else {
-            StringBuilder sb = new StringBuilder();
+            List<SimpleConfigOrigin> remaining = new ArrayList<SimpleConfigOrigin>();
             for (ConfigOrigin o : stack) {
-                String desc = o.description();
-                if (desc.startsWith(MERGE_OF_PREFIX))
-                    desc = desc.substring(MERGE_OF_PREFIX.length());
+                remaining.add((SimpleConfigOrigin) o);
+            }
+            while (remaining.size() > 2) {
+                SimpleConfigOrigin c = remaining.get(remaining.size() - 1);
+                remaining.remove(remaining.size() - 1);
+                SimpleConfigOrigin b = remaining.get(remaining.size() - 1);
+                remaining.remove(remaining.size() - 1);
+                SimpleConfigOrigin a = remaining.get(remaining.size() - 1);
+                remaining.remove(remaining.size() - 1);
 
-                sb.append(desc);
-                sb.append(",");
+                SimpleConfigOrigin merged = mergeThree(a, b, c);
+
+                remaining.add(merged);
             }
 
-            sb.setLength(sb.length() - 1); // chop comma
-            return newSimple(MERGE_OF_PREFIX + sb.toString());
+            // should be down to either 1 or 2
+            return mergeOrigins(remaining);
         }
     }
 }
