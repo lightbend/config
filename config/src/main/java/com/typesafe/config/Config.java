@@ -98,19 +98,19 @@ public interface Config extends ConfigMergeable {
      * <code>Config</code> as the root object, that is, a substitution
      * <code>${foo.bar}</code> will be replaced with the result of
      * <code>getValue("foo.bar")</code>.
-     * 
+     *
      * <p>
      * This method uses {@link ConfigResolveOptions#defaults()}, there is
      * another variant {@link Config#resolve(ConfigResolveOptions)} which lets
      * you specify non-default options.
-     * 
+     *
      * <p>
      * A given {@link Config} must be resolved before using it to retrieve
      * config values, but ideally should be resolved one time for your entire
      * stack of fallbacks (see {@link Config#withFallback}). Otherwise, some
      * substitutions that could have resolved with all fallbacks available may
      * not resolve, which will be a user-visible oddity.
-     * 
+     *
      * <p>
      * <code>resolve()</code> should be invoked on root config objects, rather
      * than on a subtree (a subtree is the result of something like
@@ -120,14 +120,14 @@ public interface Config extends ConfigMergeable {
      * from the root. For example, if you did
      * <code>config.getConfig("foo").resolve()</code> on the below config file,
      * it would not work:
-     * 
+     *
      * <pre>
      *   common-value = 10
      *   foo {
      *      whatever = ${common-value}
      *   }
      * </pre>
-     * 
+     *
      * @return an immutable object with substitutions resolved
      * @throws ConfigException.UnresolvedSubstitution
      *             if any substitutions refer to nonexistent paths
@@ -145,6 +145,90 @@ public interface Config extends ConfigMergeable {
      * @return the resolved <code>Config</code>
      */
     Config resolve(ConfigResolveOptions options);
+
+    /**
+     * Validates this config against a reference config, throwing an exception
+     * if it is invalid. The purpose of this method is to "fail early" with a
+     * comprehensive list of problems; in general, anything this method can find
+     * would be detected later when trying to use the config, but it's often
+     * more user-friendly to fail right away when loading the config.
+     *
+     * <p>
+     * Using this method is always optional, since you can "fail late" instead.
+     *
+     * <p>
+     * You must restrict validation to paths you "own" (those whose meaning are
+     * defined by your code module). If you validate globally, you may trigger
+     * errors about paths that happen to be in the config but have nothing to do
+     * with your module. It's best to allow the modules owning those paths to
+     * validate them. Also, if every module validates only its own stuff, there
+     * isn't as much redundant work being done.
+     * 
+     * <p>
+     * If no paths are specified in <code>checkValid()</code>'s parameter list,
+     * validation is for the entire config.
+     * 
+     * <p>
+     * If you specify paths that are not in the reference config, those paths
+     * are ignored. (There's nothing to validate.)
+     *
+     * <p>
+     * Here's what validation involves:
+     *
+     * <ul>
+     * <li>All paths found in the reference config must be present in this
+     * config or an exception will be thrown.
+     * <li>
+     * Some changes in type from the reference config to this config will cause
+     * an exception to be thrown. Not all potential type problems are detected,
+     * in particular it's assumed that strings are compatible with everything
+     * except objects and lists. This is because string types are often "really"
+     * some other type (system properties always start out as strings, or a
+     * string like "5ms" could be used with {@link #getMilliseconds}). Also,
+     * it's allowed to set any type to null or override null with any type.
+     * <li>
+     * Any unresolved substitutions in this config will cause a validation
+     * failure; both the reference config and this config should be resolved
+     * before validation. If the reference config is unresolved, it's a bug in
+     * the caller of this method.
+     * </ul>
+     *
+     * <p>
+     * If you want to allow a certain setting to have a flexible type (or
+     * otherwise want validation to be looser for some settings), you could
+     * either remove the problematic setting from the reference config provided
+     * to this method, or you could intercept the validation exception and
+     * screen out certain problems. Of course, this will only work if all other
+     * callers of this method are careful to restrict validation to their own
+     * paths, as they should be.
+     *
+     * <p>
+     * If validation fails, the thrown exception contains a list of all problems
+     * found. See {@link ConfigException.ValidationFailed#problems}. The
+     * exception's <code>getMessage()</code> will have all the problems
+     * concatenated into one huge string, as well.
+     *
+     * <p>
+     * Again, <code>checkValid()</code> can't guess every domain-specific way a
+     * setting can be invalid, so some problems may arise later when attempting
+     * to use the config. <code>checkValid()</code> is limited to reporting
+     * generic, but common, problems such as missing settings and blatant type
+     * incompatibilities.
+     *
+     * @param reference
+     *            a reference configuration
+     * @param restrictToPaths
+     *            only validate values underneath these paths that your code
+     *            module owns and understands
+     * @throws ConfigException.ValidationFailed
+     *             if there are any validation issues
+     * @throws ConfigException.NotResolved
+     *             if this config is not resolved
+     * @throws ConfigException.BugOrBroken
+     *             if the reference config is unresolved or caller otherwise
+     *             misuses the API
+     */
+    void checkValid(Config reference, String... restrictToPaths);
 
     /**
      * Checks whether a value is present and non-null at the given path. This

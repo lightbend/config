@@ -218,12 +218,6 @@ value just disappear if the substitution is not found.
 
 Here are some features that might be nice to add.
 
- - "Type consistency": if a later config file changes the type of a
-   value from its type in `myapp-reference.conf` then complain
-   at parse time.
-   Right now if you set the wrong type, it will only complain
-   when the app tries to use the setting, not when the config
-   file is loaded.
  - "myapp.d directory": allow parsing a directory. All `.json`,
    `.properties` and `.conf` files should be loaded in a
    deterministic order based on their filename.

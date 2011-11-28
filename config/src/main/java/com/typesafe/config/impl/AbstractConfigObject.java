@@ -61,19 +61,23 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      * (just returns null if path not found). Does however resolve the path, if
      * resolver != null.
      */
-    protected ConfigValue peekPath(Path path, SubstitutionResolver resolver,
+    protected AbstractConfigValue peekPath(Path path, SubstitutionResolver resolver,
             int depth, ConfigResolveOptions options) {
         return peekPath(this, path, resolver, depth, options);
     }
 
-    private static ConfigValue peekPath(AbstractConfigObject self, Path path,
+    AbstractConfigValue peekPath(Path path) {
+        return peekPath(this, path, null, 0, null);
+    }
+
+    private static AbstractConfigValue peekPath(AbstractConfigObject self, Path path,
             SubstitutionResolver resolver, int depth,
             ConfigResolveOptions options) {
         String key = path.first();
         Path next = path.remainder();
 
         if (next == null) {
-            ConfigValue v = self.peek(key, resolver, depth, options);
+            AbstractConfigValue v = self.peek(key, resolver, depth, options);
             return v;
         } else {
             // it's important to ONLY resolve substitutions here, not

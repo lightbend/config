@@ -3,6 +3,7 @@
  */
 package com.typesafe.config;
 
+
 /**
  * All exceptions thrown by the library are subclasses of ConfigException.
  */
@@ -180,10 +181,11 @@ public class ConfigException extends RuntimeException {
     }
 
     /**
-     * Exception indicating that there's a bug in something or the runtime
-     * environment is broken. This exception should never be handled; instead,
-     * something should be fixed to keep the exception from occurring.
-     *
+     * Exception indicating that there's a bug in something (possibly the
+     * library itself) or the runtime environment is broken. This exception
+     * should never be handled; instead, something should be fixed to keep the
+     * exception from occurring. This exception can be thrown by any method in
+     * the library.
      */
     public static class BugOrBroken extends ConfigException {
         private static final long serialVersionUID = 1L;
@@ -262,6 +264,61 @@ public class ConfigException extends RuntimeException {
 
         public NotResolved(String message) {
             this(message, null);
+        }
+    }
+
+    public static class ValidationProblem {
+
+        final private String path;
+        final private ConfigOrigin origin;
+        final private String problem;
+
+        public ValidationProblem(String path, ConfigOrigin origin, String problem) {
+            this.path = path;
+            this.origin = origin;
+            this.problem = problem;
+        }
+
+        public String path() {
+            return path;
+        }
+
+        public ConfigOrigin origin() {
+            return origin;
+        }
+
+        public String problem() {
+            return problem;
+        }
+    }
+
+    public static class ValidationFailed extends ConfigException {
+        private static final long serialVersionUID = 1L;
+
+        final private Iterable<ValidationProblem> problems;
+
+        public ValidationFailed(Iterable<ValidationProblem> problems) {
+            super(makeMessage(problems), null);
+            this.problems = problems;
+        }
+
+        public Iterable<ValidationProblem> problems() {
+            return problems;
+        }
+
+        private static String makeMessage(Iterable<ValidationProblem> problems) {
+            StringBuilder sb = new StringBuilder();
+            for (ValidationProblem p : problems) {
+                sb.append(p.origin().description());
+                sb.append(": ");
+                sb.append(p.path());
+                sb.append(": ");
+                sb.append(p.problem());
+                sb.append(", ");
+            }
+            sb.setLength(sb.length() - 2); // chop comma and space
+
+            return sb.toString();
         }
     }
 }

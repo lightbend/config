@@ -625,4 +625,176 @@ class SimpleConfig implements Config {
                     "Could not parse size-in-bytes number '" + numberString + "'");
         }
     }
+
+    private AbstractConfigValue peekPath(Path path) {
+        return root().peekPath(path);
+    }
+
+    private static void addProblem(List<ConfigException.ValidationProblem> accumulator, Path path,
+            ConfigOrigin origin, String problem) {
+        accumulator.add(new ConfigException.ValidationProblem(path.render(), origin, problem));
+    }
+
+    private static String getDesc(ConfigValue refValue) {
+        if (refValue instanceof AbstractConfigObject) {
+            AbstractConfigObject obj = (AbstractConfigObject) refValue;
+            if (obj.isEmpty())
+                return "object";
+            else
+                return "object with keys " + obj.keySet();
+        } else if (refValue instanceof SimpleConfigList) {
+            return "list";
+        } else {
+            return refValue.valueType().name().toLowerCase();
+        }
+    }
+
+    private static void addMissing(List<ConfigException.ValidationProblem> accumulator,
+            ConfigValue refValue, Path path, ConfigOrigin origin) {
+        addProblem(accumulator, path, origin, "No setting at '" + path.render() + "', expecting: "
+                + getDesc(refValue));
+    }
+
+    private static void addWrongType(List<ConfigException.ValidationProblem> accumulator,
+            ConfigValue refValue, AbstractConfigValue actual, Path path) {
+        addProblem(accumulator, path, actual.origin(), "Wrong value type at '" + path.render()
+                + "', expecting: " + getDesc(refValue) + " but got: "
+                        + getDesc(actual));
+    }
+
+    private static boolean couldBeNull(AbstractConfigValue v) {
+        return DefaultTransformer.transform(v, ConfigValueType.NULL)
+                .valueType() == ConfigValueType.NULL;
+    }
+
+    private static boolean haveCompatibleTypes(ConfigValue reference, AbstractConfigValue value) {
+        if (couldBeNull((AbstractConfigValue) reference) || couldBeNull(value)) {
+            // we allow any setting to be null
+            return true;
+        } else if (reference instanceof AbstractConfigObject) {
+            if (value instanceof AbstractConfigObject) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (reference instanceof SimpleConfigList) {
+            if (value instanceof SimpleConfigList) {
+                return true;
+            } else {
+                return false;
+            }
+        } else if (reference instanceof ConfigString) {
+            // assume a string could be gotten as any non-collection type;
+            // allows things like getMilliseconds including domain-specific
+            // interpretations of strings
+            return true;
+        } else if (value instanceof ConfigString) {
+            // assume a string could be gotten as any non-collection type
+            return true;
+        } else {
+            if (reference.valueType() == value.valueType()) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+    }
+
+    // path is null if we're at the root
+    private static void checkValidObject(Path path, AbstractConfigObject reference,
+            AbstractConfigObject value,
+            List<ConfigException.ValidationProblem> accumulator) {
+        for (Map.Entry<String, ConfigValue> entry : reference.entrySet()) {
+            String key = entry.getKey();
+
+            Path childPath;
+            if (path != null)
+                childPath = Path.newKey(key).prepend(path);
+            else
+                childPath = Path.newKey(key);
+
+            AbstractConfigValue v = value.get(key);
+            if (v == null) {
+                addMissing(accumulator, entry.getValue(), childPath, value.origin());
+            } else {
+                checkValid(childPath, entry.getValue(), v, accumulator);
+            }
+        }
+    }
+
+    private static void checkValid(Path path, ConfigValue reference, AbstractConfigValue value,
+            List<ConfigException.ValidationProblem> accumulator) {
+        // Unmergeable is supposed to be impossible to encounter in here
+        // because we check for resolve status up front.
+
+        if (haveCompatibleTypes(reference, value)) {
+            if (reference instanceof AbstractConfigObject && value instanceof AbstractConfigObject) {
+                checkValidObject(path, (AbstractConfigObject) reference,
+                        (AbstractConfigObject) value, accumulator);
+            } else if (reference instanceof SimpleConfigList && value instanceof SimpleConfigList) {
+                SimpleConfigList listRef = (SimpleConfigList) reference;
+                SimpleConfigList listValue = (SimpleConfigList) value;
+                if (listRef.isEmpty() || listValue.isEmpty()) {
+                    // can't verify type, leave alone
+                } else {
+                    AbstractConfigValue refElement = listRef.get(0);
+                    for (ConfigValue elem : listValue) {
+                        AbstractConfigValue e = (AbstractConfigValue) elem;
+                        if (!haveCompatibleTypes(refElement, e)) {
+                            addProblem(accumulator, path, e.origin(), "List at '" + path.render()
+                                    + "' contains wrong value type, expecting list of "
+                                    + getDesc(refElement) + " but got element of type "
+                                    + getDesc(e));
+                            // don't add a problem for every last array element
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            addWrongType(accumulator, reference, value, path);
+        }
+    }
+
+    @Override
+    public void checkValid(Config reference, String... restrictToPaths) {
+        SimpleConfig ref = (SimpleConfig) reference;
+
+        // unresolved reference config is a bug in the caller of checkValid
+        if (ref.root().resolveStatus() != ResolveStatus.RESOLVED)
+            throw new ConfigException.BugOrBroken(
+                    "do not call checkValid() with an unresolved reference config, call Config.resolve()");
+
+        // unresolved config under validation is probably a bug in something,
+        // but our whole goal here is to check for bugs in this config, so
+        // BugOrBroken is not the appropriate exception.
+        if (root().resolveStatus() != ResolveStatus.RESOLVED)
+            throw new ConfigException.NotResolved(
+                    "config has unresolved substitutions; must call Config.resolve()");
+
+        // Now we know that both reference and this config are resolved
+
+        List<ConfigException.ValidationProblem> problems = new ArrayList<ConfigException.ValidationProblem>();
+
+        if (restrictToPaths.length == 0) {
+            checkValidObject(null, ref.root(), root(), problems);
+        } else {
+            for (String p : restrictToPaths) {
+                Path path = Path.newPath(p);
+                AbstractConfigValue refValue = ref.peekPath(path);
+                if (refValue != null) {
+                    AbstractConfigValue child = peekPath(path);
+                    if (child != null) {
+                        checkValid(path, refValue, child, problems);
+                    } else {
+                        addMissing(problems, refValue, path, origin());
+                    }
+                }
+            }
+        }
+
+        if (!problems.isEmpty()) {
+            throw new ConfigException.ValidationFailed(problems);
+        }
+    }
 }
