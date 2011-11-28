@@ -220,13 +220,6 @@ class PublicApiTest extends TestUtils {
         }
     }
 
-    private def resourceFile(filename: String) = {
-        val resourceDir = new File("config/src/test/resources")
-        if (!resourceDir.exists())
-            throw new RuntimeException("This test can only be run from the project's root directory")
-        new File(resourceDir, filename)
-    }
-
     @Test
     def defaultParseOptions() {
         val d = ConfigParseOptions.defaults()

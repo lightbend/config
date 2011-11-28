@@ -17,9 +17,6 @@ import org.junit.runners.AllTests
 class EquivalentsTest extends TestUtils {
 
     private def equivDirs() = {
-        val resourceDir = new File("config/src/test/resources")
-        if (!resourceDir.exists())
-            throw new RuntimeException("This test can only be run from the project's root directory")
         val rawEquivs = resourceDir.listFiles()
         val equivs = rawEquivs.filter({ f => f.getName().startsWith("equiv") })
         equivs

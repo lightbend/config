@@ -12,6 +12,7 @@ import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigSyntax
 import com.typesafe.config.ConfigFactory
+import java.io.File
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -431,4 +432,15 @@ abstract trait TestUtils {
     // the parser; in the test suite we are often testing the parser,
     // so we don't want to use the parser to build the expected result.
     def path(elements: String*) = new Path(elements: _*)
+
+    val resourceDir = {
+        val f = new File("config/src/test/resources")
+        if (!f.exists())
+            throw new Exception("Tests must be run from the root project directory containing " + f.getPath())
+        f
+    }
+
+    protected def resourceFile(filename: String) = {
+        new File(resourceDir, filename)
+    }
 }
