@@ -208,8 +208,12 @@ vanishes if there's no value for `FORCED_BASEDIR`, but if you set
 an environment variable `FORCED_BASEDIR` for example, it would be
 used.
 
+A natural extension of this idea is to support several different
+environment variable names or system property names, if you aren't
+sure which one will exist in the target environment.
+
 Object fields and array elements with a `${?foo}` substitution
-value just disappear if the substitution is not found.
+value just disappear if the substitution is not found:
 
     // this array could have one or two elements
     path = [ "a", ${?OPTIONAL_A} ]
