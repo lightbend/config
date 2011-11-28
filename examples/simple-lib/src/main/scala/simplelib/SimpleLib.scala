@@ -6,8 +6,11 @@ import com.typesafe.config._
 class SimpleLibContext(config: Config) {
 
     // This verifies that the Config is sane and has our
-    // reference config.
-    config.checkValid(ConfigFactory.defaultReference())
+    // reference config. Importantly, we specify the "simple-lib"
+    // path so we only validate settings that belong to our this
+    // library. Otherwise, we might throw mistaken errors about
+    // settings we know nothing about.
+    config.checkValid(ConfigFactory.defaultReference(), "simple-lib")
 
     // This uses the standard default Config, if none is provided,
     // which simplifies apps willing to use the defaults
