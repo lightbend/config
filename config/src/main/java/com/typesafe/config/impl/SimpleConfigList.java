@@ -173,7 +173,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
     }
 
     @Override
-    public ConfigValue get(int index) {
+    public AbstractConfigValue get(int index) {
         return value.get(index);
     }
 
