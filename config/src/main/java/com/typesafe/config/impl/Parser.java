@@ -110,7 +110,8 @@ final class Parser {
                 Token t = nextToken();
                 while (true) {
                     if (Tokens.isNewline(t)) {
-                        lineNumber = Tokens.getLineNumber(t);
+                        // newline number is the line just ended, so add one
+                        lineNumber = Tokens.getLineNumber(t) + 1;
                         sawSeparatorOrNewline = true;
                         // we want to continue to also eat
                         // a comma if there is one.
