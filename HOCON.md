@@ -14,7 +14,7 @@ The following features are desirable, to support human usage:
  - ability to refer to another part of the configuration (set a value to
    another value)
  - import/include another configuration file into the current file
- - a mapping to a flat properties list such as Java's System properties
+ - a mapping to a flat properties list such as Java's system properties
  - ability to get values from environment variables
  - ability to write comments
 
@@ -948,7 +948,7 @@ its substitutions.
 
 ### Conventional override by system properties
 
-For an application's config, Java System properties _override_
+For an application's config, Java system properties _override_
 settings found in the configuration file. This supports specifying
 config options on the command line.
 
@@ -961,9 +961,16 @@ properties.
 
 If you merge system properties in to an application's
 configuration as overrides, then falling back to them for
-substitutions won't add anything - they would already be found in
-the configuration. But if you don't merge them in as overrides
-then you could fall back to them.
+substitutions isn't important when parsing a toplevel config file
+- they would already be found in the configuration.
+
+However, there are some cases when system properties fallbacks are
+used. For example, when a config file is parsed as an include, its
+substitutions are relative to the key the file is included
+underneath. In that case, `${user.home}` might become
+`${something.user.home}` and would not match a system property
+override applied to the root of the config tree. However,
+`${user.home}` always falls back to the system property.
 
 ### Substitution fallback to environment variables
 
