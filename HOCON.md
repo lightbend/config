@@ -918,60 +918,39 @@ to access these strings that conflict with objects.
 The usual rule in HOCON would be that the later assignment in the
 file wins, rather than "object wins"; but implementing that for
 Java properties would require implementing a custom Java
-properties parser, which is surely not worth it.
+properties parser, which is surely not worth it and wouldn't help
+with system properties anyway.
 
-### Root paths
+### Conventional configuration files for JVM apps
 
-By convention, a given application or library has a "root path."
-Most commonly the root path has a single path element - "akka" for
-example. But it could have multiple.
+By convention, JVM apps have two parts to their configuration:
 
-Conventional config file names and property names are derived from
-the root path.
+ - the _reference_ config is made up of all resources named
+   `reference.conf` on the classpath, merged in the order they
+   are returned by `ClassLoader.getResources()`; also, system
+   property overrides are applied.
+ - the _application_ config can be loaded from anywhere an
+   application likes, but by default if the application doesn't
+   provide a config it would be loaded from files
+   `application.{conf,json,properties}` on the classpath and
+   then system property overrides are applied.
+ - a single JVM may have multiple application configs.
 
-If an API looks like `load(rootPath)` then it would return an
-object conceptually "at" the root path, not an object containing
-the root path.
+The reference config should be merged and resolved first, and
+shared among all application configs. Substitutions in the
+reference config are not affected by any application configs,
+because the reference config should be resolved by itself.
 
-### Conventional configuration file names for JVM apps
-
-To get config file names, join the elements of the root path with
-a hyphen, then add appropriate filename extensions.
-
-If the root path is `foo.bar` (two elements, `foo` and `bar`),
-then the configuration files should be searched for under the
-following resource names on the classpath:
-
- - /foo-bar.conf
- - /foo-bar.json
- - /foo-bar.properties
- - /foo-bar-reference.conf
- - /foo-bar-reference.json
- - /foo-bar-reference.properties
-
-The .json and .properties files are examples, different
-implementations may support different file types. The "reference"
-files are intended to contain defaults and be shipped with the
-library or application being configured.
-
-Note that the configuration files are absolute resource paths, not
-relative to the package. So you would call
-`klass.getResource("/foo-bar.conf")` not
-`klass.getResource("foo-bar.conf")`.
+The application config should then be loaded, have the reference
+config added as a fallback, and have substitutions resolved. This
+means the application config can refer to the reference config in
+its substitutions.
 
 ### Conventional override by system properties
 
 For an application's config, Java System properties _override_
-HOCON found in the configuration file. This supports specifying
+settings found in the configuration file. This supports specifying
 config options on the command line.
-
-Those system properties which begin with an application's root
-path should override the configuration for that application.
-
-For example, say your config is for root path "akka" then your
-config key "foo" would go with `-Dakka.foo=10`. When loading your
-config, any system properties starting with `akka.` would be
-merged into the config.
 
 ### Substitution fallback to system properties
 
@@ -980,30 +959,11 @@ Recall that if a substitution is not present (not even set to
 for it from external sources. One such source could be Java system
 properties.
 
-To find a value for substitution, Java applications should look at
-system properties directly, without the root path namespace.
-Remember that namespaced system properties were already used as
-overrides.
-
-`${user.home}` would first look for a `user.home` in the
-configuration tree (which has a scoped system property like
-`akka.user.home` merged in!).
-
-If no value for `${user.home}` exists in the configuration, the
-implementation would look at system property `user.home` without
-the `akka.` prefix.
-
-The unprefixed system properties are _not_ merged in to the
-configuration tree; if you iterate over your configuration, they
-should not be in there. They are only used as a fallback when
-evaluating substitutions.
-
-The effect is to allow using generic system properties like
-`user.home` and also to allow overriding those per-app.
-So if someone wants to set their home directory for _all_ apps,
-they set the `user.home` system property. If they then want to
-force a particular home directory only for Akka, they could set
-`akka.user.home` instead.
+If you merge system properties in to an application's
+configuration as overrides, then falling back to them for
+substitutions won't add anything - they would already be found in
+the configuration. But if you don't merge them in as overrides
+then you could fall back to them.
 
 ### Substitution fallback to environment variables
 

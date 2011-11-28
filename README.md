@@ -49,24 +49,42 @@ and warrant that you have the legal authority to do so.
 
 ## API Example
 
-    ConfigRoot root = Config.load("myapp")
-    int bar1 = conf.getInt("foo.bar")
-    Config foo = conf.getConfig("foo")
-    int bar2 = obj.getInt("bar")
+    Config conf = ConfigFactory.load();
+    int bar1 = conf.getInt("foo.bar");
+    Config foo = conf.getConfig("foo");
+    int bar2 = obj.getInt("bar");
+
+## Longer Examples
+
+See the examples in the `examples/` directory.
+
+You can run these from the sbt console with the commands `project
+simple-app` and then `run`.
 
 ## Standard behavior
 
-You can load any files and merge them in any order, but the
-convenience method `Config.load()` loads the following
+The convenience method `ConfigFactory.load()` loads the following
 (first-listed are higher priority):
 
-  - `myapp.*` system properties
-  - `myapp.conf` (these files are all from classpath)
-  - `myapp.json`
-  - `myapp.properties`
-  - `myapp-reference.conf`
-  - `myapp-reference.json`
-  - `myapp-reference.properties`
+  - system properties
+  - `application.conf` (all resources on classpath with this name)
+  - `application.json` (all resources on classpath with this name)
+  - `application.properties` (all resources on classpath with this
+    name)
+  - `reference.conf` (all resources on classpath with this name)
+
+The idea is that libraries and frameworks should ship with a
+`reference.conf` in their jar. Applications should provide an
+`application.conf`, or if they want to create multiple
+configurations in a single JVM, they could use
+`ConfigFactory.load("myapp")` to load their own `myapp.conf`.
+
+Libraries and frameworks should default to `ConfigFactory.load()`
+if the application does not provide a custom `Config`
+object. Libraries and frameworks should also allow the application
+to provide a custom `Config` object to be used instead of the
+default, in case the application needs multiple configurations in
+one JVM or wants to load extra config files from somewhere.
 
 ## JSON Superset
 
@@ -238,17 +256,6 @@ Here are some features that might be nice to add.
    (Note that regular `=` already merges object values, to avoid
    object merge you have to first set the object to a non-object
    such as null, then set a new object.)
- - "application.conf": normally there is no "global"
-   configuration, each application does its own
-   `Config.load("myapp")`. However, it might be nice if you could
-   put all your config for your app and libraries you use in a
-   single file. This could be called "application.conf" for
-   example. `Config.load("myapp")` would load "application.conf"
-   and merge in the `"myapp"` object from "application.conf",
-   so if "application.conf" contained: `myapp { foo=3 }` then
-   the key `foo` would be set in the result of
-   `Config.load("myapp")`. Apps could then put all their config
-   in "application.conf", if desired.
  - "delete": allow deleting a field, which is slightly different
    from setting it to null (deletion allows fallback to values
    in system properties and the environment, for example).

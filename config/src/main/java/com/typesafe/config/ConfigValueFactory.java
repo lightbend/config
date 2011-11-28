@@ -13,6 +13,9 @@ import com.typesafe.config.impl.ConfigImpl;
  * data structures.
  */
 public final class ConfigValueFactory {
+    private ConfigValueFactory() {
+    }
+
     /**
      * Creates a ConfigValue from a plain Java boxed value, which may be a
      * Boolean, Number, String, Map, Iterable, or null. A Map must be a Map from
@@ -117,7 +120,7 @@ public final class ConfigValueFactory {
      * <p>
      * See also {@link ConfigFactory#parseMap(Map)} which interprets the keys in
      * the map as path expressions.
-     * 
+     *
      * @param values
      * @return a new {@link ConfigObject}
      */

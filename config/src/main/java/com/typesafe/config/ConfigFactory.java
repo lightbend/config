@@ -27,94 +27,233 @@ import com.typesafe.config.impl.Parseable;
  * from a resource and nothing else.
  */
 public final class ConfigFactory {
+    private ConfigFactory() {
+    }
+
     /**
-     * Loads a configuration for the given root path in a "standard" way.
-     * Oversimplified, if your root path is foo.bar then this will load files
-     * from the classpath: foo-bar.conf, foo-bar.json, foo-bar.properties,
-     * foo-bar-reference.conf, foo-bar-reference.json,
-     * foo-bar-reference.properties. It will override all those files with any
-     * system properties that begin with "foo.bar.", as well.
+     * Loads an application's configuration from the given classpath resource or
+     * classpath resource basename, sandwiches it between default reference
+     * config and default overrides, and then resolves it. The classpath
+     * resource is "raw" (it should have no "/" prefix, and is not made relative
+     * to any package, so it's like {@link ClassLoader#getResource} not
+     * {@link Class#getResource}).
      *
-     * The root path should be a path expression, usually just a single short
-     * word, that scopes the package being configured; typically it's the
-     * package name or something similar. System properties overriding values in
-     * the configuration will have to be prefixed with the root path. The root
-     * path may have periods in it if you like but other punctuation or
-     * whitespace will probably cause you headaches. Example root paths: "akka",
-     * "sbt", "jsoup", "heroku", "mongo", etc.
-     *
+     * <p>
      * The loaded object will already be resolved (substitutions have already
      * been processed). As a result, if you add more fallbacks then they won't
      * be seen by substitutions. Substitutions are the "${foo.bar}" syntax. If
      * you want to parse additional files or something then you need to use
-     * loadWithoutResolving().
+     * {@link #load(Config)}.
      *
-     * @param rootPath
-     *            the configuration "domain"
-     * @return configuration for the requested root path
+     * @param resourceBasename
+     *            name (optionally without extension) of a resource on classpath
+     * @return configuration for an application
      */
-    public static Config load(String rootPath) {
-        return loadWithoutResolving(rootPath).resolve();
-    }
-
-    public static Config load(String rootPath,
-            ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
-        return loadWithoutResolving(rootPath, parseOptions).resolve(
-                resolveOptions);
+    public static Config load(String resourceBasename) {
+        return load(resourceBasename, ConfigParseOptions.defaults(),
+                ConfigResolveOptions.defaults());
     }
 
     /**
-     * Like load() but does not resolve the config, so you can go ahead and add
-     * more fallbacks and stuff and have them seen by substitutions when you do
-     * call {@link Config#resolve()}.
+     * Like {@link #load(String)} but allows you to specify parse and resolve
+     * options.
      *
-     * @param rootPath
-     * @return configuration for the requested root path
+     * <p>
+     * To be aware of: using
+     * {@link ConfigResolveOptions#setUseSystemProperties(boolean)
+     * setUseSystemProperties(false)} with this method has no meaningful effect,
+     * because the system properties are merged into the config as overrides
+     * anyway. <code>setUseSystemProperties</code> affects whether to fall back
+     * to system properties when they are not found in the config, but with
+     * <code>load()</code>, they will be in the config.
+     *
+     * @param resourceBasename
+     *            the classpath resource name with optional extension
+     * @param parseOptions
+     *            options to use when parsing the resource
+     * @param resolveOptions
+     *            options to use when resolving the stack
+     * @return configuration for an application
      */
-    public static Config loadWithoutResolving(String rootPath) {
-        return loadWithoutResolving(rootPath, ConfigParseOptions.defaults());
+    public static Config load(String resourceBasename, ConfigParseOptions parseOptions,
+            ConfigResolveOptions resolveOptions) {
+        Config appConfig = ConfigFactory.parseResourcesAnySyntax(ConfigFactory.class, "/"
+                + resourceBasename, parseOptions);
+        return load(appConfig, resolveOptions);
     }
 
-    public static Config loadWithoutResolving(String rootPath,
-            ConfigParseOptions options) {
-        Config system = ConfigImpl.systemPropertiesWithPrefix(rootPath);
-
-        Config mainFiles = parseResourcesForPath(rootPath, options);
-        Config referenceFiles = parseResourcesForPath(rootPath + ".reference",
-                options);
-
-        return system.withFallback(mainFiles).withFallback(referenceFiles);
+    /**
+     * Assembles a standard configuration using a custom <code>Config</code>
+     * object rather than loading "application.conf". The <code>Config</code>
+     * object will be sandwiched between the default reference config and
+     * default overrides and then resolved.
+     *
+     * @param config
+     *            the application's portion of the configuration
+     * @return resolved configuration with overrides and fallbacks added
+     */
+    public static Config load(Config config) {
+        return load(config, ConfigResolveOptions.defaults());
     }
 
+    /**
+     * Like {@link #load(Config)} but allows you to specify
+     * {@link ConfigResolveOptions}.
+     *
+     * <p>
+     * To be aware of: using
+     * {@link ConfigResolveOptions#setUseSystemProperties(boolean)
+     * setUseSystemProperties(false)} with this method has no meaningful effect,
+     * because the system properties are merged into the config as overrides
+     * anyway. <code>setUseSystemProperties</code> affects whether to fall back
+     * to system properties when they are not found in the config, but with
+     * <code>load()</code>, they will be in the config.
+     *
+     * @param config
+     *            the application's portion of the configuration
+     * @param resolveOptions
+     *            options for resolving the assembled config stack
+     * @return resolved configuration with overrides and fallbacks added
+     */
+    public static Config load(Config config, ConfigResolveOptions resolveOptions) {
+        return defaultOverrides().withFallback(config).withFallback(defaultReference())
+                .resolve(resolveOptions);
+    }
+
+    /**
+     * Loads a default configuration, equivalent to {@link #load(String)
+     * load("application")}. This configuration should be used by libraries and
+     * frameworks unless an application provides a different one.
+     *
+     * @return configuration for an application
+     */
+    public static Config load() {
+        return load("application");
+    }
+
+    /**
+     * Obtains the default reference configuration, which is currently created
+     * by merging all resources "reference.conf" found on the classpath and
+     * overriding the result with system properties. The returned reference
+     * configuration will already have substitutions resolved.
+     *
+     * <p>
+     * Libraries and frameworks should ship with a "reference.conf" in their
+     * jar.
+     *
+     * <p>
+     * The {@link #load()} methods merge this configuration for you
+     * automatically.
+     *
+     * <p>
+     * Future versions may look for reference configuration in more places. It
+     * is not guaranteed that this method <em>only</em> looks at
+     * "reference.conf".
+     *
+     * @return the default reference config
+     */
+    public static Config defaultReference() {
+        return ConfigImpl.defaultReference();
+    }
+
+    /**
+     * Obtains the default override configuration, which currently consists of
+     * system properties. The returned override configuration will already have
+     * substitutions resolved.
+     *
+     * <p>
+     * The {@link #load()} methods merge this configuration for you
+     * automatically.
+     *
+     * <p>
+     * Future versions may get overrides in more places. It is not guaranteed
+     * that this method <em>only</em> uses system properties.
+     *
+     * @return the default override configuration
+     */
+    public static Config defaultOverrides() {
+        return systemProperties();
+    }
+
+    /**
+     * Gets an empty configuration. See also {@link #empty(String)} to create an
+     * empty configuration with a description, which may improve user-visible
+     * error messages.
+     *
+     * @return an empty configuration
+     */
     public static Config empty() {
         return empty(null);
     }
 
+    /**
+     * Gets an empty configuration with a description to be used to create a
+     * {@link ConfigOrigin} for this <code>Config</code>. The description should
+     * be very short and say what the configuration is, like "default settings"
+     * or "foo settings" or something. (Presumably you will merge some actual
+     * settings into this empty config using {@link Config#withFallback}, making
+     * the description more useful.)
+     *
+     * @param originDescription
+     *            description of the config
+     * @return an empty configuration
+     */
     public static Config empty(String originDescription) {
         return ConfigImpl.emptyConfig(originDescription);
     }
 
+    /**
+     * Gets a <code>Config</code> containing the system properties from
+     * {@link java.lang.System#getProperties()}, parsed and converted as with
+     * {@link #parseProperties}. This method can return a global immutable
+     * singleton, so it's preferred over parsing system properties yourself.
+     * 
+     * <p>
+     * {@link #load} will include the system properties as overrides already, as
+     * will {@link #defaultReference} and {@link #defaultOverrides}.
+     * 
+     * <p>
+     * Because this returns a singleton, it will not notice changes to system
+     * properties made after the first time this method is called.
+     *
+     * @return system properties parsed into a <code>Config</code>
+     */
     public static Config systemProperties() {
         return ConfigImpl.systemPropertiesAsConfig();
     }
 
+    /**
+     * Gets a <code>Config</code> containing the system's environment variables.
+     * This method can return a global immutable singleton.
+     *
+     * <p>
+     * Environment variables are used as fallbacks when resolving substitutions
+     * whether or not this object is included in the config being resolved, so
+     * you probably don't need to use this method for most purposes. It can be a
+     * nicer API for accessing environment variables than raw
+     * {@link java.lang.System#getenv(String)} though, since you can use methods
+     * such as {@link Config#getInt}.
+     *
+     * @return system environment variables parsed into a <code>Config</code>
+     */
     public static Config systemEnvironment() {
         return ConfigImpl.envVariablesAsConfig();
     }
 
     /**
-     * Converts a Java Properties object to a ConfigObject using the rules
-     * documented in https://github.com/havocp/config/blob/master/HOCON.md The
-     * keys in the Properties object are split on the period character '.' and
-     * treated as paths. The values will all end up as string values. If you
-     * have both "a=foo" and "a.b=bar" in your properties file, so "a" is both
-     * the object containing "b" and the string "foo", then the string value is
-     * dropped.
+     * Converts a Java {@link java.util.Properties} object to a
+     * {@link ConfigObject} using the rules documented in the <a
+     * href="https://github.com/havocp/config/blob/master/HOCON.md">HOCON
+     * spec</a>. The keys in the <code>Properties</code> object are split on the
+     * period character '.' and treated as paths. The values will all end up as
+     * string values. If you have both "a=foo" and "a.b=bar" in your properties
+     * file, so "a" is both the object containing "b" and the string "foo", then
+     * the string value is dropped.
      *
-     * If you want to get System.getProperties() as a ConfigObject, it's better
-     * to use the systemProperties() or systemPropertiesRoot() methods. Those
-     * methods are able to use a cached global singleton ConfigObject for the
-     * system properties.
+     * <p>
+     * If you want to have <code>System.getProperties()</code> as a
+     * ConfigObject, it's better to use the {@link #systemProperties()} method
+     * which returns a cached global singleton.
      *
      * @param properties
      *            a Java Properties object
@@ -126,16 +265,32 @@ public final class ConfigFactory {
         return Parseable.newProperties(properties, options).parse().toConfig();
     }
 
+    public static Config parseProperties(Properties properties) {
+        return parseProperties(properties, ConfigParseOptions.defaults());
+    }
+
     public static Config parseReader(Reader reader, ConfigParseOptions options) {
         return Parseable.newReader(reader, options).parse().toConfig();
+    }
+
+    public static Config parseReader(Reader reader) {
+        return parseReader(reader, ConfigParseOptions.defaults());
     }
 
     public static Config parseURL(URL url, ConfigParseOptions options) {
         return Parseable.newURL(url, options).parse().toConfig();
     }
 
+    public static Config parseURL(URL url) {
+        return parseURL(url, ConfigParseOptions.defaults());
+    }
+
     public static Config parseFile(File file, ConfigParseOptions options) {
         return Parseable.newFile(file, options).parse().toConfig();
+    }
+
+    public static Config parseFile(File file) {
+        return parseFile(file, ConfigParseOptions.defaults());
     }
 
     /**
@@ -176,6 +331,10 @@ public final class ConfigFactory {
         return ConfigImpl.parseFileAnySyntax(fileBasename, options).toConfig();
     }
 
+    public static Config parseFileAnySyntax(File fileBasename) {
+        return parseFileAnySyntax(fileBasename, ConfigParseOptions.defaults());
+    }
+
     /**
      * Parses all resources on the classpath with the given name and merges them
      * into a single <code>Config</code>.
@@ -209,6 +368,10 @@ public final class ConfigFactory {
             ConfigParseOptions options) {
         return Parseable.newResources(klass, resource, options).parse()
                 .toConfig();
+    }
+
+    public static Config parseResources(Class<?> klass, String resource) {
+        return parseResources(klass, resource, ConfigParseOptions.defaults());
     }
 
     /**
@@ -246,24 +409,16 @@ public final class ConfigFactory {
                 options).toConfig();
     }
 
+    public static Config parseResourcesAnySyntax(Class<?> klass, String resourceBasename) {
+        return parseResourcesAnySyntax(klass, resourceBasename, ConfigParseOptions.defaults());
+    }
+
     public static Config parseString(String s, ConfigParseOptions options) {
         return Parseable.newString(s, options).parse().toConfig();
     }
 
-    /**
-     * Parses classpath resources corresponding to this path expression.
-     * Essentially if the path is "foo.bar" then the resources are
-     * "/foo-bar.conf", "/foo-bar.json", and "/foo-bar.properties". If more than
-     * one of those exists, they are merged.
-     *
-     * @param rootPath
-     * @param options
-     * @return the parsed configuration
-     */
-    public static Config parseResourcesForPath(String rootPath,
-            ConfigParseOptions options) {
-        // null originDescription is allowed in parseResourcesForPath
-        return ConfigImpl.parseResourcesForPath(rootPath, options).toConfig();
+    public static Config parseString(String s) {
+        return parseString(s, ConfigParseOptions.defaults());
     }
 
     /**

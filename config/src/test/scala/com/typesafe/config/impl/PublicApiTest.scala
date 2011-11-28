@@ -34,8 +34,8 @@ class PublicApiTest extends TestUtils {
     @Test
     def noSystemVariables() {
         // should not have used system variables
-        val conf = ConfigFactory.load("test01", ConfigParseOptions.defaults(),
-            ConfigResolveOptions.noSystem())
+        val conf = ConfigFactory.parseResourcesAnySyntax(classOf[PublicApiTest], "/test01")
+            .resolve(ConfigResolveOptions.noSystem())
 
         intercept[ConfigException.Missing] {
             conf.getString("system.home")
@@ -389,7 +389,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def multipleResourcesUsed() {
-        val conf = ConfigFactory.parseResources(classOf[PublicApiTest], "/test01.conf", ConfigParseOptions.defaults())
+        val conf = ConfigFactory.parseResources(classOf[PublicApiTest], "/test01.conf")
 
         assertEquals(42, conf.getInt("ints.fortyTwo"))
         assertEquals(true, conf.getBoolean("test-lib.fromTestLib"))

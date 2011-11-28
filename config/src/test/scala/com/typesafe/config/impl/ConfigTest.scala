@@ -880,7 +880,7 @@ class ConfigTest extends TestUtils {
     @Test
     def renderRoundTrip() {
         for (i <- 1 to 6) {
-            val conf = ConfigFactory.loadWithoutResolving("test0" + i)
+            val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], "test0" + i)
             val unresolvedRender = conf.root.render()
             val resolved = conf.resolve()
             val resolvedRender = resolved.root.render()

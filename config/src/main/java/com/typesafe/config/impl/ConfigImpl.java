@@ -87,32 +87,6 @@ public class ConfigImpl {
         return obj;
     }
 
-    private static String makeResourceBasename(Path path) {
-        StringBuilder sb = new StringBuilder("/");
-        String next = path.first();
-        Path remaining = path.remainder();
-        while (next != null) {
-            sb.append(next);
-            sb.append('-');
-
-            if (remaining == null)
-                break;
-
-            next = remaining.first();
-            remaining = remaining.remainder();
-        }
-        sb.setLength(sb.length() - 1); // chop extra hyphen
-        return sb.toString();
-    }
-
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject parseResourcesForPath(String expression,
-            final ConfigParseOptions baseOptions) {
-        Path path = Parser.parsePath(expression);
-        String basename = makeResourceBasename(path);
-        return parseResourcesAnySyntax(ConfigImpl.class, basename, baseOptions);
-    }
-
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject parseResourcesAnySyntax(final Class<?> klass,
             String resourceBasename, final ConfigParseOptions baseOptions) {
@@ -281,16 +255,6 @@ public class ConfigImpl {
         }
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    /* FIXME this is broken and will go away when Config.load() doesn't use it. */
-    public static Config systemPropertiesWithPrefix(String rootPath) {
-        try {
-            return systemPropertiesAsConfigObject().toConfig().getConfig(rootPath);
-        } catch (ConfigException.Missing e) {
-            return emptyObject("system properties").toConfig();
-        }
-    }
-
     private static class SimpleIncluder implements ConfigIncluder {
 
         private ConfigIncluder fallback;
@@ -393,5 +357,18 @@ public class ConfigImpl {
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static Config envVariablesAsConfig() {
         return envVariablesAsConfigObject().toConfig();
+    }
+
+    private static class ReferenceHolder {
+        private static final Config unresolvedResources = Parseable
+                .newResources(ConfigImpl.class, "/reference.conf", ConfigParseOptions.defaults())
+                .parse().toConfig();
+        static final Config referenceConfig = systemPropertiesAsConfig().withFallback(
+                unresolvedResources).resolve();
+    }
+
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static Config defaultReference() {
+        return ReferenceHolder.referenceConfig;
     }
 }

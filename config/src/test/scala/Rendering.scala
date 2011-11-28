@@ -2,7 +2,9 @@ import com.typesafe.config.ConfigFactory
 
 object RenderExample extends App {
     def render(what: String) {
-        val conf = ConfigFactory.loadWithoutResolving(what)
+        val conf = ConfigFactory.defaultOverrides()
+            .withFallback(ConfigFactory.parseResourcesAnySyntax(classOf[ConfigFactory], "/" + what))
+            .withFallback(ConfigFactory.defaultReference())
 
         println("=== BEGIN UNRESOLVED " + what)
         println(conf.root.render())
