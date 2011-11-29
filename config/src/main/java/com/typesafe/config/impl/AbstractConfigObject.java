@@ -135,6 +135,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         if (ignoresFallbacks())
             throw new ConfigException.BugOrBroken("should not be reached");
 
+        boolean changed = false;
         boolean allResolved = true;
         Map<String, AbstractConfigValue> merged = new HashMap<String, AbstractConfigValue>();
         Set<String> allKeys = new HashSet<String>();
@@ -150,12 +151,26 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                 kept = first;
             else
                 kept = first.withFallback(second);
+
             merged.put(key, kept);
+
+            if (first != kept)
+                changed = true;
+
             if (kept.resolveStatus() == ResolveStatus.UNRESOLVED)
                 allResolved = false;
         }
-        return new SimpleConfigObject(mergeOrigins(this, fallback), merged,
-                ResolveStatus.fromBoolean(allResolved), fallback.ignoresFallbacks());
+
+        ResolveStatus newResolveStatus = ResolveStatus.fromBoolean(allResolved);
+        boolean newIgnoresFallbacks = fallback.ignoresFallbacks();
+
+        if (changed)
+            return new SimpleConfigObject(mergeOrigins(this, fallback), merged, newResolveStatus,
+                    newIgnoresFallbacks);
+        else if (newResolveStatus != resolveStatus() || newIgnoresFallbacks != ignoresFallbacks())
+            return newCopy(newResolveStatus, newIgnoresFallbacks);
+        else
+            return this;
     }
 
     @Override
