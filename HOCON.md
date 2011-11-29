@@ -561,6 +561,10 @@ include statement in the including file.
 
 #### Include semantics: substitution
 
+Substitutions in included files are looked up at two different
+paths; first, relative to the root of the included file; second,
+relative to the root of the including configuration.
+
 Recall that substitution happens as a final step, _after_
 parsing. It should be done for the entire app's configuration, not
 for single files in isolation.
@@ -591,6 +595,12 @@ Say that the root configuration redefines `a.x`, like this:
 Then the `${x}` in "foo.conf", which has been fixed up to
 `${a.x}`, would evaluate to `42` rather than to `10`.
 Substitution happens _after_ parsing the whole configuration.
+
+However, there are plenty of cases where the included file might
+intend to refer to the application's root config. For example, to
+get a value from a system property or from the reference
+configuration. So it's not enough to only look up the "fixed up"
+path, it's necessary to look up the original path as well.
 
 #### Include semantics: missing files
 

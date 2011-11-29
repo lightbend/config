@@ -267,21 +267,6 @@ Here are some features that might be nice to add.
    entire nested objects would be allowed as fallbacks.  This
    feature may not really be needed because you can just list the
    key multiple times instead: `a=null,a=${?baz},a=${?foo.bar}`
- - improve handling of substitutions in includes. Right now if you
-   have a parent file `a : { include "child.conf" }` and
-   `child.conf` contains a substitution written `${b}`, then
-   `${b}` ends up referring to `${a.b}` (that is, its parent key
-   is prepended to it). The downside of this is that there's no
-   way to refer to toplevel settings from inside `child.conf`, and
-   system properties must be special-case fallbacks for
-   substitutions to allow them to be used from `child.conf`.  If
-   `${b}` in an include always referred to the root `${b}` then
-   substitutions would not need any special system property
-   awareness, but there would be no way to write a file to be
-   included in another file without knowing the parent key the
-   file would be included into. The solution probably involves
-   special syntax for one of "root-relative" or "file-relative",
-   with the regular syntax meaning one or the other.
 
 ## Rationale
 

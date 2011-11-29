@@ -249,6 +249,37 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(42, resolved.getInt("a.cycle"))
     }
 
+    @Test
+    def useRelativeToSameFileWhenRelativized() {
+        val child = parseObject("""foo=in child,bar=${foo}""")
+
+        val values = new java.util.HashMap[String, AbstractConfigValue]()
+
+        values.put("a", child.relativized(new Path("a")))
+        // this "foo" should NOT be used.
+        values.put("foo", stringValue("in parent"));
+
+        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values));
+
+        assertEquals("in child", resolved.getString("a.bar"))
+    }
+
+    @Test
+    def useRelativeToRootWhenRelativized() {
+        // here, "foo" is not defined in the child
+        val child = parseObject("""bar=${foo}""")
+
+        val values = new java.util.HashMap[String, AbstractConfigValue]()
+
+        values.put("a", child.relativized(new Path("a")))
+        // so this "foo" SHOULD be used
+        values.put("foo", stringValue("in parent"));
+
+        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values));
+
+        assertEquals("in parent", resolved.getString("a.bar"))
+    }
+
     private val substComplexObject = {
         parseObject("""
 {
