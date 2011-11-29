@@ -721,7 +721,7 @@ class ConfigTest extends TestUtils {
         assertEquals(1024 * 1024L, conf.getBytes("memsizes.meg"))
         assertEquals(1024 * 1024L, conf.getBytes("memsizes.megAsNumber"))
         assertEquals(Seq(1024 * 1024L, 1024 * 1024L, 1024L * 1024L),
-            conf.getMemorySizeInBytesList("memsizes.megsList").asScala)
+            conf.getBytesList("memsizes.megsList").asScala)
         assertEquals(512 * 1024L, conf.getBytes("memsizes.halfMeg"))
     }
 

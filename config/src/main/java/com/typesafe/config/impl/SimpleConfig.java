@@ -327,7 +327,7 @@ class SimpleConfig implements Config {
     }
 
     @Override
-    public List<Long> getMemorySizeInBytesList(String path) {
+    public List<Long> getBytesList(String path) {
         List<Long> l = new ArrayList<Long>();
         List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
