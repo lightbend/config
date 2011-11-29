@@ -287,7 +287,8 @@ class PublicApiTest extends TestUtils {
         val included = whatWasIncluded(ConfigFactory.parseFile(resourceFile("test03.conf"), _))
 
         assertEquals(List("test01", "test02.conf", "equiv01/original.json",
-            "nothere", "nothere.conf", "nothere.json", "nothere.properties"),
+            "nothere", "nothere.conf", "nothere.json", "nothere.properties",
+            "test03-included.conf", "test03-included.conf"),
             included.map(_.name))
     }
 
@@ -296,7 +297,7 @@ class PublicApiTest extends TestUtils {
         // includes.conf has recursive includes in it
         val included = whatWasIncluded(ConfigFactory.parseFile(resourceFile("equiv03/includes.conf"), _))
 
-        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
+        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
             included.map(_.name))
     }
 
@@ -305,7 +306,8 @@ class PublicApiTest extends TestUtils {
         val included = whatWasIncluded(ConfigFactory.parseResources(classOf[PublicApiTest], "/test03.conf", _))
 
         assertEquals(List("test01", "test02.conf", "equiv01/original.json",
-            "nothere", "nothere.conf", "nothere.json", "nothere.properties"),
+            "nothere", "nothere.conf", "nothere.json", "nothere.properties",
+            "test03-included.conf", "test03-included.conf"),
             included.map(_.name))
     }
 
@@ -315,7 +317,7 @@ class PublicApiTest extends TestUtils {
         // with an "absolute" class path resource.
         val included = whatWasIncluded(ConfigFactory.parseResources(classOf[PublicApiTest], "/equiv03/includes.conf", _))
 
-        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
+        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
             included.map(_.name))
     }
 
@@ -325,7 +327,7 @@ class PublicApiTest extends TestUtils {
         // with a "class-relative" class path resource
         val included = whatWasIncluded(ConfigFactory.parseResources(classOf[SomethingInEquiv03], "includes.conf", _))
 
-        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
+        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
             included.map(_.name))
     }
 
@@ -335,7 +337,7 @@ class PublicApiTest extends TestUtils {
         // with a URL
         val included = whatWasIncluded(ConfigFactory.parseURL(resourceFile("/equiv03/includes.conf").toURI.toURL, _))
 
-        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c"),
+        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
             included.map(_.name))
     }
 

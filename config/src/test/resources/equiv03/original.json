@@ -10,5 +10,6 @@
            "fromConf" : 89,
            "fromProp" : "true"
        }
-   }
+   },
+   "root" : "this gets included at the root"
 }

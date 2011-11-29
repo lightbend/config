@@ -842,6 +842,13 @@ class ConfigTest extends TestUtils {
         assertTrue(concatenated.contains("Your Java version"))
         assertTrue(concatenated.contains(jv))
         assertTrue(concatenated.contains(conf.getString("test01.system.userhome")))
+
+        // check that includes into the root object work and that
+        // "substitutions look relative-to-included-file first then at root second" works
+        assertEquals("This is in the included file", conf.getString("a"));
+        assertEquals("This is in the including file", conf.getString("b"));
+        assertEquals("This is in the included file", conf.getString("subtree.a"));
+        assertEquals("This is in the including file", conf.getString("subtree.b"));
     }
 
     @Test
