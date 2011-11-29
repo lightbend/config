@@ -146,11 +146,6 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                 result = findInObject(resolver.root(), resolver, unprefixed, depth, options);
             }
 
-            if (result == null && options.getUseSystemProperties()) {
-                result = findInObject(ConfigImpl.systemPropertiesAsConfigObject(), null,
-                        unprefixed, depth, options);
-            }
-
             if (result == null && options.getUseSystemEnvironment()) {
                 result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null, unprefixed,
                         depth, options);

@@ -22,7 +22,7 @@ Configuration library for JVM languages.
     - substitutions (`"foo" : ${bar}`, `"foo" : Hello ${who}`)
     - properties-like notation (`a.b=c`)
     - less noisy, more lenient syntax
-    - substitute environment variables and system properties
+    - substitute environment variables
 
 This library limits itself to config files. If you want to load
 config from a database or something, you would need to build a
@@ -116,10 +116,10 @@ detail.
     as the `b` field in the `a` object
   - substitutions concatenate into unquoted strings, `foo : the
     quick ${colors.fox} jumped`
-  - substitutions fall back to system properties and then
-    environment variables if they don't resolve in the
-    config itself, so `${HOME}` or `${user.home}` would
-    work as you expect.
+  - substitutions fall back to environment variables if they don't
+    resolve in the config itself, so `${HOME}` would work as you
+    expect. Also, most configs have system properties merged in so
+    you could use `${user.home}`.
   - substitutions normally cause an error if unresolved, but
     there is a syntax `${?a.b}` to permit them to be missing.
 
@@ -257,10 +257,10 @@ Here are some features that might be nice to add.
    object merge you have to first set the object to a non-object
    such as null, then set a new object.)
  - "delete": allow deleting a field, which is slightly different
-   from setting it to null (deletion allows fallback to values
-   in system properties and the environment, for example).
-   This could be done using the same syntax as `include`,
-   potentially. It is not a backward-compatible change though.
+   from setting it to null (deletion allows fallback to values in
+   the environment, for example).  This could be done using the
+   same syntax as `include`, potentially. It is not a
+   backward-compatible change though.
  - substitutions with fallbacks; this could be something like
    `${foo.bar,baz,null}` where it would look up `foo.bar`, then
    `baz`, then finally fall back to null. One question is whether

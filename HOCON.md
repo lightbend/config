@@ -392,11 +392,6 @@ path expression in a key, because it has a special interpretation
 Substitutions are a way of referring to other parts of the
 configuration tree.
 
-For substitutions which are not found in the configuration tree,
-implementations may try to resolve them by looking at system
-environment variables, Java system properties, or other external
-sources of configuration.
-
 The syntax is `${pathexpression}` or `${?pathexpression}` where
 the `pathexpression` is a path expression as described above. This
 path expression has the same syntax that you could use for an
@@ -405,6 +400,11 @@ object key.
 The `?` in `${?pathexpression}` must not have whitespace before
 it; the three characters `${?` must be exactly like that, grouped
 together.
+
+For substitutions which are not found in the configuration tree,
+implementations may try to resolve them by looking at system
+environment variables or other external sources of configuration.
+(More detail on environment variables in a later section.)
 
 Substitutions are not parsed inside quoted strings. To get a
 string containing a substitution, you must use value concatenation
@@ -427,11 +427,6 @@ retrieving a value from another file. If a key has been specified
 more than once, the substitution will always evaluate to its
 latest-assigned value (the merged object or the last non-object
 value that was set).
-
-If a substitutions does not match any value present in the
-configuration, implementations may look up that substitution in
-one or more external sources, such as a Java system property or an
-environment variable. (More detail on this in a later section.)
 
 If a configuration sets a value to `null` then it should not be
 looked up in the external source. Unfortunately there is no way to
@@ -962,31 +957,12 @@ For an application's config, Java system properties _override_
 settings found in the configuration file. This supports specifying
 config options on the command line.
 
-### Substitution fallback to system properties
+### Substitution fallback to environment variables
 
 Recall that if a substitution is not present (not even set to
 `null`) within a configuration tree, implementations may search
-for it from external sources. One such source could be Java system
-properties.
-
-If you merge system properties in to an application's
-configuration as overrides, then falling back to them for
-substitutions isn't important when parsing a toplevel config file
-- they would already be found in the configuration.
-
-However, there are some cases when system properties fallbacks are
-used. For example, when a config file is parsed as an include, its
-substitutions are relative to the key the file is included
-underneath. In that case, `${user.home}` might become
-`${something.user.home}` and would not match a system property
-override applied to the root of the config tree. However,
-`${user.home}` always falls back to the system property.
-
-### Substitution fallback to environment variables
-
-Substitutions not found in the configuration may also fall back to
-environment variables. In Java, fallback should be to system
-properties first and environment variables second.
+for it from external sources. One such source could be environment
+variables.
 
 It's recommended that HOCON keys always use lowercase, because
 environment variables generally are capitalized. This avoids

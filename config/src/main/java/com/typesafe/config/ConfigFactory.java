@@ -57,17 +57,6 @@ public final class ConfigFactory {
     /**
      * Like {@link #load(String)} but allows you to specify parse and resolve
      * options.
-     * <p>
-     * To be aware of: using
-     * {@link ConfigResolveOptions#setUseSystemProperties(boolean)
-     * setUseSystemProperties(false)} with this method has little effect,
-     * because the system properties are merged into the config as overrides
-     * anyway. <code>setUseSystemProperties</code> affects whether to fall back
-     * to system properties when they are not found in the config, but with
-     * <code>load()</code>, they will be in the config. There is one situation
-     * where <code>setUseSystemProperties(false)</code> comes into play, which
-     * is that files included into another file may find the system property
-     * fallbacks but not the overrides.
      * @param resourceBasename
      *            the classpath resource name with optional extension
      * @param parseOptions
@@ -100,17 +89,6 @@ public final class ConfigFactory {
     /**
      * Like {@link #load(Config)} but allows you to specify
      * {@link ConfigResolveOptions}.
-     * <p>
-     * To be aware of: using
-     * {@link ConfigResolveOptions#setUseSystemProperties(boolean)
-     * setUseSystemProperties(false)} with this method has little effect,
-     * because the system properties are merged into the config as overrides
-     * anyway. <code>setUseSystemProperties</code> affects whether to fall back
-     * to system properties when they are not found in the config, but with
-     * <code>load()</code>, they will be in the config. There is one situation
-     * where <code>setUseSystemProperties(false)</code> comes into play, which
-     * is that files included into another file may find the system property
-     * fallbacks but not the overrides.
      * 
      * @param config
      *            the application's portion of the configuration

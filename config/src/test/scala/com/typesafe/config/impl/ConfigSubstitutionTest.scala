@@ -322,13 +322,16 @@ class ConfigSubstitutionTest extends TestUtils {
 """)
     }
 
+    // this is a weird test, it used to test fallback to system props which made more sense.
+    // Now it just tests that if you override with system props, you can use system props
+    // in substitutions.
     @Test
-    def fallbackToSystemProps() {
+    def overrideWithSystemProps() {
         System.setProperty("configtest.a", "1234")
         System.setProperty("configtest.b", "5678")
         ConfigImpl.reloadSystemPropertiesConfig()
 
-        val resolved = resolve(substSystemPropsObject)
+        val resolved = resolve(ConfigFactory.systemProperties().withFallback(substSystemPropsObject).root.asInstanceOf[AbstractConfigObject])
 
         assertEquals("1234", resolved.getString("a"))
         assertEquals("5678", resolved.getString("b"))
