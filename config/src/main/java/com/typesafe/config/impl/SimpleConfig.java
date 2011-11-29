@@ -27,9 +27,9 @@ import com.typesafe.config.ConfigValueType;
  * key-value pairs would be all the tree's leaf values, in a big flat list with
  * their full paths.
  */
-class SimpleConfig implements Config {
+final class SimpleConfig implements Config {
 
-    AbstractConfigObject object;
+    final private AbstractConfigObject object;
 
     SimpleConfig(AbstractConfigObject object) {
         this.object = object;
