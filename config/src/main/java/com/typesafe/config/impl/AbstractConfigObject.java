@@ -35,6 +35,11 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
         return config;
     }
 
+    @Override
+    public AbstractConfigObject toFallbackValue() {
+        return this;
+    }
+
     /**
      * This looks up the key with no transformation or type conversion of any
      * kind, and returns null if the key is not present.

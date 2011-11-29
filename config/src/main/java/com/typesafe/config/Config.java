@@ -87,9 +87,6 @@ public interface Config extends ConfigMergeable {
     @Override
     Config withFallback(ConfigMergeable other);
 
-    @Override
-    ConfigObject toValue();
-
     /**
      * Returns a replacement config with all substitutions (the
      * <code>${foo.bar}</code> syntax, see <a

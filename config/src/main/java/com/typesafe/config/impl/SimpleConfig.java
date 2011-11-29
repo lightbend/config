@@ -27,7 +27,7 @@ import com.typesafe.config.ConfigValueType;
  * key-value pairs would be all the tree's leaf values, in a big flat list with
  * their full paths.
  */
-final class SimpleConfig implements Config {
+final class SimpleConfig implements Config, MergeableValue {
 
     final private AbstractConfigObject object;
 
@@ -378,7 +378,7 @@ final class SimpleConfig implements Config {
     }
 
     @Override
-    public AbstractConfigObject toValue() {
+    public AbstractConfigObject toFallbackValue() {
         return object;
     }
 
