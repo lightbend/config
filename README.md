@@ -3,7 +3,7 @@ Configuration library for JVM languages.
 ## Overview
 
  - implemented in plain Java with no dependencies
- - _extensive_ test coverage
+ - extensive test coverage
  - supports files in three formats: Java properties, JSON, and a
    human-friendly JSON superset
  - merges multiple files across all formats
@@ -12,6 +12,8 @@ Configuration library for JVM languages.
    same as the whole config)
  - users can override the config with Java system properties,
     `java -Dmyapp.foo.bar=10`
+ - supports configuring an app, with its framework and libraries,
+   all from a single file such as `application.conf`
  - parses duration and size settings, "512k" or "10 seconds"
  - converts types, so if you ask for a boolean and the value
    is the string "yes", or you ask for a float and the value is
@@ -25,8 +27,10 @@ Configuration library for JVM languages.
     - substitute environment variables
 
 This library limits itself to config files. If you want to load
-config from a database or something, you would need to build a
-config object yourself and then merge it in.
+config from a database or something, you would need to write some
+custom code. The library has nice support for merging
+configurations so if you build one from a custom source it's easy
+to merge it in.
 
 ## License
 
