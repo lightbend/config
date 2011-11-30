@@ -279,18 +279,6 @@ Here are some features that might be nice to add.
    object. For consistency, if there's "array concatenation"
    within one value, maybe objects should also be able to merge
    within one value.)
- - "delete": allow deleting a field, which is slightly different
-   from setting it to null (deletion allows fallback to values in
-   the environment, for example).  This could be done using the
-   same syntax as `include`, potentially. It is not a
-   backward-compatible change though. Also, not sure it's useful.
- - substitutions with fallbacks; this could be something like
-   `${foo.bar,baz,null}` where it would look up `foo.bar`, then
-   `baz`, then finally fall back to null. One question is whether
-   entire nested objects would be allowed as fallbacks.  This
-   feature may not really be needed because you can just list the
-   key multiple times instead: `a=null,a=${?baz},a=${?foo.bar}`
-   So this may not be useful enough.
 
 ## Rationale
 
