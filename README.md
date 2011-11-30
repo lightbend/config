@@ -86,6 +86,25 @@ to provide a custom `Config` object to be used instead of the
 default, in case the application needs multiple configurations in
 one JVM or wants to load extra config files from somewhere.
 
+For applications using `application.{conf,json,properties}`,
+system properties can be used to force a different config source:
+
+ - `config.resource` specifies a resource name - not a
+   basename, i.e. `application.conf` not `application`
+ - `config.file` specifies a filesystem path, again
+   it should include the extension, not be a basename
+ - `config.url` specifies a URL
+
+These system properties specify a _replacement_ for
+`application.{conf,json,properties}`, not an addition. They only
+affect apps using the default `ConfigFactory.load()`
+configuration. In the replacement config file, you can use
+`include "application"` to include the original default config
+file; after the include statement you could go on to override
+certain settings. (Caveat: right now includes are relative to the
+including entity, so `include "application"` would only work from
+another classpath resource, not from a file or URL.)
+
 ## JSON Superset
 
 Tentatively called "Human-Optimized Config Object Notation" or

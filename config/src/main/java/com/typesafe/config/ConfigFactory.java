@@ -5,6 +5,7 @@ package com.typesafe.config;
 
 import java.io.File;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
@@ -89,7 +90,7 @@ public final class ConfigFactory {
     /**
      * Like {@link #load(Config)} but allows you to specify
      * {@link ConfigResolveOptions}.
-     * 
+     *
      * @param config
      *            the application's portion of the configuration
      * @param resolveOptions
@@ -102,15 +103,72 @@ public final class ConfigFactory {
     }
 
     private static class DefaultConfigHolder {
-        static final Config defaultConfig = load("application");
+
+        private static Config loadDefaultConfig() {
+            int specified = 0;
+
+            // override application.conf with config.file, config.resource,
+            // config.url if requested.
+            String resource = System.getProperty("config.resource");
+            if (resource != null)
+                specified += 1;
+            String file = System.getProperty("config.file");
+            if (file != null)
+                specified += 1;
+            String url = System.getProperty("config.url");
+            if (url != null)
+                specified += 1;
+
+            if (specified == 0) {
+                return load("application");
+            } else if (specified > 1) {
+                throw new ConfigException(
+                        "You set more than one system property from config.file, config.url, config.resource; don't know which one to use!");
+            } else {
+                if (resource != null) {
+                    // this deliberately does not parseResourcesAnySyntax; if
+                    // people want that they can use an include statement.
+                    return load(parseResources(ConfigFactory.class, resource));
+                } else if (file != null) {
+                    return load(parseFile(new File(file)));
+                } else {
+                    try {
+                        return load(parseURL(new URL(url)));
+                    } catch (MalformedURLException e) {
+                        throw new ConfigException("Bad URL in config.url system property: '" + url
+                                + "'", e);
+                    }
+                }
+            }
+        }
+
+        static final Config defaultConfig = loadDefaultConfig();
     }
 
     /**
      * Loads a default configuration, equivalent to {@link #load(String)
-     * load("application")}. This configuration should be used by libraries and
-     * frameworks unless an application provides a different one.
+     * load("application")} in most cases. This configuration should be used by
+     * libraries and frameworks unless an application provides a different one.
      * <p>
      * This method may return a cached singleton.
+     * <p>
+     * If the system properties <code>config.resource</code>,
+     * <code>config.file</code>, or <code>config.url</code> are set, then the
+     * classpath resource, file, or URL specified in those properties will be
+     * used rather than the default
+     * <code>application.{conf,json,properties}</code> classpath resources.
+     * These system properties should not be set in code (after all, you can
+     * just parse whatever you want manually and then use {@link #load(Config)
+     * if you don't want to use <code>application.conf</code>}). The properties
+     * are intended for use by the person or script launching the application.
+     * For example someone might have a <code>production.conf</code> that
+     * include <code>application.conf</code> but then change a couple of values.
+     * When launching the app they could specify
+     * <code>-Dconfig.resource=production.conf</code> to get production mode.
+     * <p>
+     * If no system properties are set to change the location of the default
+     * configuration, <code>ConfigFactory.load()</code> is equivalent to
+     * <code>ConfigFactory.load("application")</code>.
      *
      * @return configuration for an application
      */
