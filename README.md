@@ -213,7 +213,7 @@ If you duplicate a field with an object value, then the objects
 are merged with last-one-wins. So:
 
     foo = { a : 42, c : 5 }
-    foo = { b : 43, c : 6}
+    foo = { b : 43, c : 6 }
 
 means the same as:
 
@@ -262,30 +262,35 @@ Here are some features that might be nice to add.
  - "myapp.d directory": allow parsing a directory. All `.json`,
    `.properties` and `.conf` files should be loaded in a
    deterministic order based on their filename.
- - some way to merge array and object types. One approach could
-   be: `searchPath=${searchPath} ["/usr/local/foo"]`, which
-   involves two features: 1) substitutions referring to the key
-   being assigned would have to look at that key's value later in
-   the merge stack (rather than complaining about circularity); 2)
-   objects and arrays would have to be merged if a series of them
-   appear after a key, similar to how strings are concatenated
-   already. A simpler but much more limited approach would add
-   `+=` as an alternative to `:`/`=`, where `+=` would append an
-   array value to the array's previous value.
-   (Note that regular `=` already merges object values, to avoid
-   object merge you have to first set the object to a non-object
-   such as null, then set a new object.)
+   If you include a file and it turns out to be a directory then
+   it would be processed in this way.
+ - some way to merge array types. One approach could be:
+   `searchPath=${searchPath} ["/usr/local/foo"]`, which involves
+   two features: 1) substitutions referring to the key being
+   assigned would have to look at that key's value later in the
+   merge stack (rather than complaining about circularity); 2)
+   arrays would have to be merged if a series of them appear after
+   a key, similar to how strings are concatenated already. A
+   simpler but much more limited approach would add `+=` as an
+   alternative to `:`/`=`, where `+=` would append an array value
+   to the array's previous value.  (Note that regular `=` already
+   merges object values, to avoid object merge you have to first
+   set the object to a non-object such as null, then set a new
+   object. For consistency, if there's "array concatenation"
+   within one value, maybe objects should also be able to merge
+   within one value.)
  - "delete": allow deleting a field, which is slightly different
    from setting it to null (deletion allows fallback to values in
    the environment, for example).  This could be done using the
    same syntax as `include`, potentially. It is not a
-   backward-compatible change though.
+   backward-compatible change though. Also, not sure it's useful.
  - substitutions with fallbacks; this could be something like
    `${foo.bar,baz,null}` where it would look up `foo.bar`, then
    `baz`, then finally fall back to null. One question is whether
    entire nested objects would be allowed as fallbacks.  This
    feature may not really be needed because you can just list the
    key multiple times instead: `a=null,a=${?baz},a=${?foo.bar}`
+   So this may not be useful enough.
 
 ## Rationale
 
