@@ -3,6 +3,8 @@
  */
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigException;
+
 
 /** This is public just for the "config" package to use, don't touch it */
 final public class ConfigUtil {
@@ -117,5 +119,15 @@ final public class ConfigUtil {
             }
         }
         return s.substring(start, end);
+    }
+
+    /** This is public just for the "config" package to use, don't touch it! */
+    public static ConfigException extractInitializerError(ExceptionInInitializerError e) {
+        Throwable cause = e.getCause();
+        if (cause != null && cause instanceof ConfigException) {
+            return (ConfigException) cause;
+        } else {
+            throw e;
+        }
     }
 }

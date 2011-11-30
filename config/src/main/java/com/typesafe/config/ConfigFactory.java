@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.typesafe.config.impl.ConfigImpl;
+import com.typesafe.config.impl.ConfigUtil;
 import com.typesafe.config.impl.Parseable;
 
 /**
@@ -173,7 +174,11 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load() {
-        return DefaultConfigHolder.defaultConfig;
+        try {
+            return DefaultConfigHolder.defaultConfig;
+        } catch (ExceptionInInitializerError e) {
+            throw ConfigUtil.extractInitializerError(e);
+        }
     }
 
     /**
