@@ -123,8 +123,9 @@ public final class ConfigFactory {
             if (specified == 0) {
                 return load("application");
             } else if (specified > 1) {
-                throw new ConfigException(
-                        "You set more than one system property from config.file, config.url, config.resource; don't know which one to use!");
+                throw new ConfigException.Generic("You set more than one of config.file='" + file
+                        + "', config.url='" + url + "', config.resource='" + resource
+                        + "'; don't know which one to use!");
             } else {
                 if (resource != null) {
                     // this deliberately does not parseResourcesAnySyntax; if
@@ -136,8 +137,9 @@ public final class ConfigFactory {
                     try {
                         return load(parseURL(new URL(url)));
                     } catch (MalformedURLException e) {
-                        throw new ConfigException("Bad URL in config.url system property: '" + url
-                                + "'", e);
+                        throw new ConfigException.Generic(
+                                "Bad URL in config.url system property: '" + url + "': "
+                                        + e.getMessage(), e);
                     }
                 }
             }

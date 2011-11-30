@@ -7,7 +7,7 @@ package com.typesafe.config;
 /**
  * All exceptions thrown by the library are subclasses of ConfigException.
  */
-public class ConfigException extends RuntimeException {
+public abstract class ConfigException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
     final private ConfigOrigin origin;
@@ -343,4 +343,20 @@ public class ConfigException extends RuntimeException {
             return sb.toString();
         }
     }
+
+    /**
+     * Exception that doesn't fall into any other category.
+     */
+    public static class Generic extends ConfigException {
+        private static final long serialVersionUID = 1L;
+
+        public Generic(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public Generic(String message) {
+            this(message, null);
+        }
+    }
+
 }
