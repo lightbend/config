@@ -338,7 +338,13 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     public static Parseable newURL(URL input, ConfigParseOptions options) {
-        return new ParseableURL(input, options);
+        // we want file: URLs and files to always behave the same, so switch
+        // to a file if it's a file: URL
+        if (input.getProtocol().equals("file")) {
+            return newFile(ConfigUtil.urlToFile(input), options);
+        } else {
+            return new ParseableURL(input, options);
+        }
     }
 
     private final static class ParseableFile extends Parseable {
@@ -362,13 +368,18 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigParseable relativeTo(String filename) {
-            try {
-                URL url = relativeTo(input.toURI().toURL(), filename);
-                if (url == null)
+            File f = new File(filename);
+            if (f.isAbsolute()) {
+                return newFile(f, options().setOriginDescription(null));
+            } else {
+                try {
+                    URL url = relativeTo(input.toURI().toURL(), filename);
+                    if (url == null)
+                        return null;
+                    return newURL(url, options().setOriginDescription(null));
+                } catch (MalformedURLException e) {
                     return null;
-                return newURL(url, options().setOriginDescription(null));
-            } catch (MalformedURLException e) {
-                return null;
+                }
             }
         }
 

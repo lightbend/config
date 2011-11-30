@@ -3,6 +3,10 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.File;
+import java.net.URISyntaxException;
+import java.net.URL;
+
 import com.typesafe.config.ConfigException;
 
 
@@ -128,6 +132,18 @@ final public class ConfigUtil {
             return (ConfigException) cause;
         } else {
             throw e;
+        }
+    }
+
+    static File urlToFile(URL url) {
+        // this isn't really right, clearly, but not sure what to do.
+        try {
+            // this will properly handle hex escapes, etc.
+            return new File(url.toURI());
+        } catch (URISyntaxException e) {
+            // this handles some stuff like file:///c:/Whatever/
+            // apparently but mangles handling of hex escapes
+            return new File(url.getPath());
         }
     }
 }
