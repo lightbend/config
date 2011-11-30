@@ -56,7 +56,7 @@ and warrant that you have the legal authority to do so.
     Config conf = ConfigFactory.load();
     int bar1 = conf.getInt("foo.bar");
     Config foo = conf.getConfig("foo");
-    int bar2 = obj.getInt("bar");
+    int bar2 = foo.getInt("bar");
 
 ## Longer Examples
 
