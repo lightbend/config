@@ -41,12 +41,38 @@ class PathTest extends TestUtils {
 
     @Test
     def pathRender() {
-        assertEquals("foo", path("foo").render())
-        assertEquals("foo.bar", path("foo", "bar").render())
-        assertEquals("foo.\"bar*\"", path("foo", "bar*").render())
-        assertEquals("\"foo.bar\"", path("foo.bar").render())
-        assertEquals("foo bar", path("foo bar").render())
-        assertEquals("\"\".\"\"", path("", "").render())
+        case class RenderTest(expected: String, path: Path)
+
+        val tests = Seq(
+            // simple one-element case
+            RenderTest("foo", path("foo")),
+            // simple two-element case
+            RenderTest("foo.bar", path("foo", "bar")),
+            // non-safe-char in an element
+            RenderTest("foo.\"bar*\"", path("foo", "bar*")),
+            // period in an element
+            RenderTest("\"foo.bar\"", path("foo.bar")),
+            // hyphen and underscore
+            RenderTest("foo-bar", path("foo-bar")),
+            RenderTest("foo_bar", path("foo_bar")),
+            // starts with hyphen
+            RenderTest("\"-foo\"", path("-foo")),
+            // starts with number
+            RenderTest("\"10foo\"", path("10foo")),
+            // empty elements
+            RenderTest("\"\".\"\"", path("", "")),
+            // internal space
+            RenderTest("\"foo bar\"", path("foo bar")),
+            // leading and trailing spaces
+            RenderTest("\" foo \"", path(" foo ")),
+            // trailing space only
+            RenderTest("\"foo \"", path("foo ")))
+
+        for (t <- tests) {
+            assertEquals(t.expected, t.path.render())
+            assertEquals(t.path, Parser.parsePath(t.expected))
+            assertEquals(t.path, Parser.parsePath(t.path.render()))
+        }
     }
 
     @Test
