@@ -1,11 +1,27 @@
 
-version in GlobalScope := "0.1"
+// to release, bump major/minor/micro as appropriate,
+// drop SNAPSHOT, tag and publish.
+// add snapshot back so git master is previous release
+// with -SNAPSHOT.
+// when releasing a SNAPSHOT to the repo, bump the micro
+// version at least.
+// Also, change the version number in the README.md
+// Versions and git tags should follow: http://semver.org/
+// except using -SNAPSHOT instead of without hyphen.
 
-// no binary for the root project
-publishArtifact in (Compile, packageBin) := false
+version in GlobalScope := "0.1.0-SNAPSHOT"
 
-// no javadoc for the root project
-publishArtifact in (Compile, packageDoc) := false
+organization in GlobalScope := "com.typesafe.config"
 
-// no source for the root project
-publishArtifact in (Compile, packageSrc) := false
+scalacOptions in GlobalScope in Compile := Seq("-unchecked", "-deprecation")
+
+scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation")
+
+publishTo in GlobalScope <<= (isSnapshot) { snapshot =>
+    import Classpaths._
+    Some(if (snapshot) typesafeSnapshots else typesafeResolver)
+}
+
+publishMavenStyle in GlobalScope := true
+
+credentials in GlobalScope += Credentials(Path.userHome / ".ivy2" / ".typesafe-credentials")

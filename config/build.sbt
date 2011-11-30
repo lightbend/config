@@ -10,6 +10,8 @@ fork in run := true
 
 fork in run in Test := true
 
+autoScalaLibrary := false
+
 libraryDependencies += "net.liftweb" %% "lift-json" % "2.4-SNAPSHOT" % "test"
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.7" % "test"
@@ -28,4 +30,4 @@ seq(javadocSettings: _*)
 
 JavadocKeys.javadocOptions += "-exclude com.typesafe.config.impl"
 
-doc := error("use the 'javadoc' task instead of 'doc'")
+doc in Compile <<= JavadocKeys.javadoc
