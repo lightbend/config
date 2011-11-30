@@ -31,3 +31,12 @@ seq(javadocSettings: _*)
 JavadocKeys.javadocOptions += "-exclude com.typesafe.config.impl"
 
 doc in Compile <<= JavadocKeys.javadoc
+
+publishTo <<= (isSnapshot) { snapshot =>
+    import Classpaths._
+    Some(if (snapshot) typesafeSnapshots else typesafeResolver)
+}
+
+publishMavenStyle := true
+
+credentials += Credentials(Path.userHome / ".ivy2" / ".typesafe-credentials")

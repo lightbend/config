@@ -16,12 +16,3 @@ organization in GlobalScope := "com.typesafe.config"
 scalacOptions in GlobalScope in Compile := Seq("-unchecked", "-deprecation")
 
 scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation")
-
-publishTo in GlobalScope <<= (isSnapshot) { snapshot =>
-    import Classpaths._
-    Some(if (snapshot) typesafeSnapshots else typesafeResolver)
-}
-
-publishMavenStyle in GlobalScope := true
-
-credentials in GlobalScope += Credentials(Path.userHome / ".ivy2" / ".typesafe-credentials")
