@@ -247,6 +247,20 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
+    static File relativeTo(File file, String filename) {
+        File child = new File(filename);
+
+        if (child.isAbsolute())
+            return null;
+
+        File parent = file.getParentFile();
+
+        if (parent == null)
+            return null;
+        else
+            return new File(parent, filename);
+    }
+
     private final static class ParseableReader extends Parseable {
         final private Reader reader;
 
@@ -368,18 +382,27 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigParseable relativeTo(String filename) {
-            File f = new File(filename);
-            if (f.isAbsolute()) {
-                return newFile(f, options().setOriginDescription(null));
+            File sibling;
+            if ((new File(filename)).isAbsolute()) {
+                sibling = new File(filename);
             } else {
-                try {
-                    URL url = relativeTo(input.toURI().toURL(), filename);
-                    if (url == null)
-                        return null;
-                    return newURL(url, options().setOriginDescription(null));
-                } catch (MalformedURLException e) {
-                    return null;
-                }
+                // this may return null
+                sibling = relativeTo(input, filename);
+            }
+            if (sibling == null)
+                return null;
+            if (sibling.exists()) {
+                return newFile(sibling, options().setOriginDescription(null));
+            } else {
+                // fall back to classpath; we treat the "filename" as absolute
+                // (don't add a package name in front),
+                // if it starts with "/" then remove the "/", for consistency
+                // with ParseableResources.relativeTo
+                String resource = filename;
+                if (filename.startsWith("/"))
+                    resource = filename.substring(1);
+                return newResources(this.getClass().getClassLoader(), resource, options()
+                        .setOriginDescription(null));
             }
         }
 
@@ -461,6 +484,10 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         static String parent(String resource) {
+            // the "resource" is not supposed to begin with a "/"
+            // because it's supposed to be the raw resource
+            // (ClassLoader#getResource), not the
+            // resource "syntax" (Class#getResource)
             int i = resource.lastIndexOf('/');
             if (i < 0) {
                 return null;
@@ -471,18 +498,24 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigParseable relativeTo(String sibling) {
-            // here we want to build a new resource name and let
-            // the class loader have it, rather than getting the
-            // url with getResource() and relativizing to that url.
-            // This is needed in case the class loader is going to
-            // search a classpath.
-            String parent = parent(resource);
-            if (parent == null)
-                return newResources(loader, sibling, options()
-                        .setOriginDescription(null));
-            else
-                return newResources(loader, parent + "/" + sibling,
+            if (sibling.startsWith("/")) {
+                // if it starts with "/" then don't make it relative to
+                // the including resource
+                return newResources(loader, sibling.substring(1),
                         options().setOriginDescription(null));
+            } else {
+                // here we want to build a new resource name and let
+                // the class loader have it, rather than getting the
+                // url with getResource() and relativizing to that url.
+                // This is needed in case the class loader is going to
+                // search a classpath.
+                String parent = parent(resource);
+                if (parent == null)
+                    return newResources(loader, sibling, options().setOriginDescription(null));
+                else
+                    return newResources(loader, parent + "/" + sibling, options()
+                            .setOriginDescription(null));
+            }
         }
 
         @Override

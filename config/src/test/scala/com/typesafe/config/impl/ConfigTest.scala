@@ -885,6 +885,42 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def test07IncludingResourcesFromFiles() {
+        // first, check that when loading from classpath we include another classpath resource
+        val fromClasspath = ConfigFactory.parseResources(classOf[ConfigTest], "/test07.conf")
+
+        assertEquals("This is to test classpath searches.", fromClasspath.getString("test-lib.description"))
+
+        // second, check that when loading from a file it falls back to classpath
+        val fromFile = ConfigFactory.parseFile(resourceFile("test07.conf"))
+
+        assertEquals("This is to test classpath searches.", fromFile.getString("test-lib.description"))
+
+        // third, check that a file: URL is the same
+        val fromURL = ConfigFactory.parseURL(resourceFile("test07.conf").toURI.toURL)
+
+        assertEquals("This is to test classpath searches.", fromURL.getString("test-lib.description"))
+    }
+
+    @Test
+    def test08IncludingSlashPrefixedResources() {
+        // first, check that when loading from classpath we include another classpath resource
+        val fromClasspath = ConfigFactory.parseResources(classOf[ConfigTest], "/test08.conf")
+
+        assertEquals("This is to test classpath searches.", fromClasspath.getString("test-lib.description"))
+
+        // second, check that when loading from a file it falls back to classpath
+        val fromFile = ConfigFactory.parseFile(resourceFile("test08.conf"))
+
+        assertEquals("This is to test classpath searches.", fromFile.getString("test-lib.description"))
+
+        // third, check that a file: URL is the same
+        val fromURL = ConfigFactory.parseURL(resourceFile("test08.conf").toURI.toURL)
+
+        assertEquals("This is to test classpath searches.", fromURL.getString("test-lib.description"))
+    }
+
+    @Test
     def renderRoundTrip() {
         for (i <- 1 to 6) {
             val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], "test0" + i)

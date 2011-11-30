@@ -640,22 +640,19 @@ separately for each kind of resource.
 Implementations may vary in the kinds of resources they support
 including.
 
-For plain files on the filesystem:
-
- - if the included file is an absolute path then it should be kept
-   absolute and loaded as such.
- - if the included file is a relative path, then it should be
-   located relative to the directory containing the including
-   file.  The current working directory of the process parsing a
-   file must NOT be used when interpreting included paths.
+On the Java Virtual Machine, if an include statement does not
+identify anything "adjacent to" the including resource,
+implementations may wish to fall back to a classpath resource.
+This allows configurations found in files or URLs to access
+classpath resources.
 
 For resources located on the Java classpath:
 
  - included resources are looked up by calling `getResource()` on
-   the same class or class loader used to look up the including
-   resource.
+   the same class loader used to look up the including resource.
  - if the included resource name is absolute (starts with '/')
-   then it should be passed to `getResource()` as-is.
+   then it should be passed to `getResource()` with the '/'
+   removed.
  - if the included resource name does not start with '/' then it
    should have the "directory" of the including resource.
    prepended to it, before passing it to `getResource()`.  If the
@@ -668,6 +665,23 @@ For resources located on the Java classpath:
    paths in its URLs and the paths it handles in `getResource()`.
    In other words, the "adjacent to" computation should be done
    on the resource name not on the resource's URL.
+
+For plain files on the filesystem:
+
+ - if the included file is an absolute path then it should be kept
+   absolute and loaded as such.
+ - if the included file is a relative path, then it should be
+   located relative to the directory containing the including
+   file.  The current working directory of the process parsing a
+   file must NOT be used when interpreting included paths.
+ - if the file is not found, fall back to the classpath resource.
+   The classpath resource should not have any package name added
+   in front, it should be relative to the "root"; which means any
+   leading "/" should just be removed (absolute is the same as
+   relative since it's root-relative). The "/" is handled for
+   consistency with including resources from inside other
+   classpath resources, where the resource name may not be
+   root-relative and "/" allows specifying relative to root.
 
 URLs:
 
