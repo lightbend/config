@@ -34,7 +34,9 @@ doc in Compile <<= JavadocKeys.javadoc
 
 publishTo <<= (isSnapshot) { snapshot =>
     import Classpaths._
-    Some(if (snapshot) typesafeSnapshots else typesafeResolver)
+    val releases = "Maven releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
+    val snapshots = "Maven snapshots" at "http://repo.typesafe.com/typesafe/maven-snapshots/"
+    Some(if (snapshot) snapshots else releases)
 }
 
 publishMavenStyle := true
