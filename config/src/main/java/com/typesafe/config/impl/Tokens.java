@@ -119,6 +119,45 @@ final class Tokens {
         }
     }
 
+    static private class ReservedChar extends Token {
+        final private ConfigOrigin origin;
+        final private int value;
+
+        ReservedChar(ConfigOrigin origin, int c) {
+            super(TokenType.RESERVED_CHAR);
+            this.origin = origin;
+            this.value = c;
+        }
+
+        ConfigOrigin origin() {
+            return origin;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            sb.append('\'');
+            sb.appendCodePoint(value);
+            sb.append('\'');
+            return sb.toString();
+        }
+
+        @Override
+        protected boolean canEqual(Object other) {
+            return other instanceof ReservedChar;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return super.equals(other) && ((ReservedChar) other).value == value;
+        }
+
+        @Override
+        public int hashCode() {
+            return 41 * (41 + super.hashCode()) + value;
+        }
+    }
+
     // This is not a Value, because it requires special processing
     static private class Substitution extends Token {
         final private ConfigOrigin origin;
@@ -200,6 +239,18 @@ final class Tokens {
         }
     }
 
+    static boolean isReservedChar(Token token) {
+        return token instanceof ReservedChar;
+    }
+
+    static ConfigOrigin getReservedCharOrigin(Token token) {
+        if (token instanceof ReservedChar) {
+            return ((ReservedChar) token).origin();
+        } else {
+            throw new ConfigException.BugOrBroken("tried to get reserved char origin from " + token);
+        }
+    }
+
     static boolean isUnquotedText(Token token) {
         return token instanceof UnquotedText;
     }
@@ -265,6 +316,10 @@ final class Tokens {
 
     static Token newLine(int lineNumberJustEnded) {
         return new Line(lineNumberJustEnded);
+    }
+
+    static Token newReservedChar(ConfigOrigin origin, int codepoint) {
+        return new ReservedChar(origin, codepoint);
     }
 
     static Token newUnquotedText(ConfigOrigin origin, String s) {

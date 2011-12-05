@@ -214,4 +214,13 @@ class TokenizerTest extends TestUtils {
         tokenizerTest(List(tokenDouble(3.14)), "3.14//comment")
         tokenizerTest(List(tokenDouble(3.14)), "3.14#comment")
     }
+
+    @Test
+    def tokenizeReservedChars() {
+        val tokenized = tokenizeAsList("+`^?!@*&\\")
+        assertEquals(Seq(Tokens.START, tokenReserved('+'), tokenReserved('`'),
+            tokenReserved('^'), tokenReserved('?'), tokenReserved('!'), tokenReserved('@'),
+            tokenReserved('*'), tokenReserved('&'), tokenReserved('\\'),
+            Tokens.END), tokenized)
+    }
 }

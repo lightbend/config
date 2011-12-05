@@ -482,9 +482,7 @@ final class Tokenizer {
                     if (firstNumberChars.indexOf(c) >= 0) {
                         t = pullNumber(c);
                     } else if (notInUnquotedText.indexOf(c) >= 0) {
-                        throw parseError(String
-                                .format("Character '%c' is not the start of any valid token",
-                                        c));
+                        t = Tokens.newReservedChar(lineOrigin(), c);
                     } else {
                         putBack(c);
                         t = pullUnquotedText();
