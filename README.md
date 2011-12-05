@@ -118,9 +118,7 @@ affect apps using the default `ConfigFactory.load()`
 configuration. In the replacement config file, you can use
 `include "application"` to include the original default config
 file; after the include statement you could go on to override
-certain settings. (Caveat: right now includes are relative to the
-including entity, so `include "application"` would only work from
-another classpath resource, not from a file or URL.)
+certain settings.
 
 ## JSON Superset
 
