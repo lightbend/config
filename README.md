@@ -65,6 +65,19 @@ See the examples in the `examples/` directory.
 You can run these from the sbt console with the commands `project
 simple-app` and then `run`.
 
+In brief, as shown in the examples:
+
+ - libraries should use a `Config` instance provided by the app,
+   if any, and use `ConfigFactory.load()` if no special `Config`
+   is provided. Libraries should put their defaults in a
+   `reference.conf` on the classpath.
+ - apps can create a `Config` however they want
+   (`ConfigFactory.load()` is easiest and least-surprising), then
+   provide it to their libraries. A `Config` can be created with
+   the parser methods in `ConfigFactory` or built up from any file
+   format or data source you like with the methods in
+   `ConfigValueFactory`.
+
 ## Standard behavior
 
 The convenience method `ConfigFactory.load()` loads the following
