@@ -41,6 +41,10 @@ final class Parser {
         final private ConfigSyntax flavor;
         final private ConfigOrigin baseOrigin;
         final private LinkedList<Path> pathStack;
+        // this is the number of "equals" we are inside,
+        // used to modify the error message to reflect that
+        // someone may think this is .properties format.
+        int equalsCount;
 
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin,
                 Iterator<Token> tokens, ConfigIncluder includer,
@@ -53,6 +57,7 @@ final class Parser {
             this.includer = includer;
             this.includeContext = includeContext;
             this.pathStack = new LinkedList<Path>();
+            this.equalsCount = 0;
         }
 
         private Token nextToken() {
@@ -233,6 +238,49 @@ final class Parser {
             return new ConfigException.Parse(lineOrigin(), message, cause);
         }
 
+
+        private String addQuoteSuggestion(String badToken, String message) {
+            return addQuoteSuggestion(null, equalsCount > 0, badToken, message);
+        }
+
+        private String addQuoteSuggestion(Path lastPath, boolean insideEquals, String badToken,
+                String message) {
+            String previousFieldName;
+            if (lastPath != null) {
+                previousFieldName = lastPath.render();
+            } else if (pathStack.isEmpty())
+                previousFieldName = null;
+            else
+                previousFieldName = pathStack.peek().render();
+
+            String part;
+            if (badToken.equals(Tokens.END.toString())) {
+                // EOF requires special handling for the error to make sense.
+                if (previousFieldName != null)
+                    part = message + " (if you intended '" + previousFieldName
+                            + "' to be part of a value, instead of a key, "
+                            + "try adding double quotes around the whole value";
+                else
+                    return message;
+            } else {
+                if (previousFieldName != null) {
+                    part = message + " (if you intended " + badToken
+                            + " to be part of the value for '" + previousFieldName + "', "
+                            + "try enclosing the value in double quotes";
+                } else {
+                    part = message + " (if you intended " + badToken
+                            + " to be part of the value for "
+                            + "a setting, try enclosing the value in double quotes";
+                }
+            }
+
+            if (insideEquals)
+                return part
+                        + ", or you may be able to rename the file .properties rather than .conf)";
+            else
+                return part + ")";
+        }
+
         private AbstractConfigValue parseValue(Token token) {
             if (Tokens.isValue(token)) {
                 return Tokens.getValue(token);
@@ -241,8 +289,8 @@ final class Parser {
             } else if (token == Tokens.OPEN_SQUARE) {
                 return parseArray();
             } else {
-                throw parseError("Expecting a value but got wrong token: "
-                        + token);
+                throw parseError(addQuoteSuggestion(token.toString(),
+                        "Expecting a value but got wrong token: " + token));
             }
         }
 
@@ -283,7 +331,7 @@ final class Parser {
                     String key = (String) Tokens.getValue(token).unwrapped();
                     return Path.newKey(key);
                 } else {
-                    throw parseError("Expecting close brace } or a field name, got "
+                    throw parseError("Expecting close brace } or a field name here, got "
                             + token);
                 }
             } else {
@@ -293,6 +341,11 @@ final class Parser {
                     expression.add(t);
                     t = nextToken(); // note: don't cross a newline
                 }
+
+                if (expression.isEmpty()) {
+                    throw parseError("expecting a close brace or a field name here, got " + t);
+                }
+
                 putBack(t); // put back the token we ended with
                 return parsePathExpression(expression.iterator(), lineOrigin());
             }
@@ -362,13 +415,18 @@ final class Parser {
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
             ConfigOrigin objectOrigin = lineOrigin();
             boolean afterComma = false;
+            Path lastPath = null;
+            boolean lastInsideEquals = false;
+
             while (true) {
                 Token t = nextTokenIgnoringNewline();
                 if (t == Tokens.CLOSE_CURLY) {
                     if (flavor == ConfigSyntax.JSON && afterComma) {
-                        throw parseError("expecting a field name after comma, got a close brace }");
+                        throw parseError(addQuoteSuggestion(t.toString(),
+                                "expecting a field name after a comma, got a close brace } instead"));
                     } else if (!hadOpenCurly) {
-                        throw parseError("unbalanced close brace '}' with no open brace");
+                        throw parseError(addQuoteSuggestion(t.toString(),
+                                "unbalanced close brace '}' with no open brace"));
                     }
                     break;
                 } else if (t == Tokens.END && !hadOpenCurly) {
@@ -381,6 +439,7 @@ final class Parser {
                 } else {
                     Path path = parseKey(t);
                     Token afterKey = nextTokenIgnoringNewline();
+                    boolean insideEquals = false;
 
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
@@ -394,8 +453,14 @@ final class Parser {
                         newValue = parseObject(true);
                     } else {
                         if (!isKeyValueSeparatorToken(afterKey)) {
-                            throw parseError("Key may not be followed by token: "
-                                    + afterKey);
+                            throw parseError(addQuoteSuggestion(afterKey.toString(),
+                                    "Key '" + path.render() + "' may not be followed by token: "
+                                            + afterKey));
+                        }
+
+                        if (afterKey == Tokens.EQUALS) {
+                            insideEquals = true;
+                            equalsCount += 1;
                         }
 
                         consolidateValueTokens();
@@ -403,7 +468,11 @@ final class Parser {
                         newValue = parseValue(valueToken);
                     }
 
-                    pathStack.pop();
+                    lastPath = pathStack.pop();
+                    if (insideEquals) {
+                        equalsCount -= 1;
+                    }
+                    lastInsideEquals = insideEquals;
 
                     String key = path.first();
                     Path remaining = path.remainder();
@@ -451,25 +520,25 @@ final class Parser {
                     t = nextTokenIgnoringNewline();
                     if (t == Tokens.CLOSE_CURLY) {
                         if (!hadOpenCurly) {
-                            throw parseError("unbalanced close brace '}' with no open brace");
+                            throw parseError(addQuoteSuggestion(lastPath, lastInsideEquals,
+                                    t.toString(), "unbalanced close brace '}' with no open brace"));
                         }
                         break;
                     } else if (hadOpenCurly) {
-                        throw parseError("Expecting close brace } or a comma, got "
-                                + t);
+                        throw parseError(addQuoteSuggestion(lastPath, lastInsideEquals,
+                                t.toString(), "Expecting close brace } or a comma, got " + t));
                     } else {
                         if (t == Tokens.END) {
                             putBack(t);
                             break;
                         } else {
-                            throw parseError("Expecting end of input or a comma, got "
-                                    + t);
+                            throw parseError(addQuoteSuggestion(lastPath, lastInsideEquals,
+                                    t.toString(), "Expecting end of input or a comma, got " + t));
                         }
                     }
                 }
             }
-            return new SimpleConfigObject(objectOrigin,
-                    values);
+            return new SimpleConfigObject(objectOrigin, values);
         }
 
         private SimpleConfigList parseArray() {
@@ -493,7 +562,10 @@ final class Parser {
                 values.add(parseArray());
             } else {
                 throw parseError("List should have ] or a first element after the open [, instead had token: "
-                        + t);
+                        + t
+                        + " (if you want "
+                        + t
+                        + " to be part of a string value, then double-quote it)");
             }
 
             // now remaining elements
@@ -507,7 +579,10 @@ final class Parser {
                         return new SimpleConfigList(arrayOrigin, values);
                     } else {
                         throw parseError("List should have ended with ] or had a comma, instead had token: "
-                                + t);
+                                + t
+                                + " (if you want "
+                                + t
+                                + " to be part of a string value, then double-quote it)");
                     }
                 }
 
@@ -527,7 +602,10 @@ final class Parser {
                     putBack(t);
                 } else {
                     throw parseError("List should have had new element after a comma, instead had token: "
-                            + t);
+                            + t
+                            + " (if you want the comma or "
+                            + t
+                            + " to be part of a string value, then double-quote it)");
                 }
             }
         }
@@ -659,9 +737,12 @@ final class Parser {
                 } else if (Tokens.isUnquotedText(t)) {
                     text = Tokens.getUnquotedText(t);
                 } else {
-                    throw new ConfigException.BadPath(origin, originalText,
+                    throw new ConfigException.BadPath(
+                            origin,
+                            originalText,
                             "Token not allowed in path expression: "
-                            + t);
+                                    + t
+                                    + " (you can double-quote this token if you really want it here)");
                 }
 
                 addPathText(buf, false, text);

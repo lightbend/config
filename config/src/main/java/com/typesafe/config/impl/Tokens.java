@@ -25,10 +25,7 @@ final class Tokens {
 
         @Override
         public String toString() {
-            String s = tokenType().name() + "(" + value.valueType().name()
-                    + ")";
-
-            return s + "='" + value().unwrapped() + "'";
+            return "'" + value().unwrapped() + "' (" + value.valueType().name() + ")";
         }
 
         @Override
@@ -61,7 +58,7 @@ final class Tokens {
 
         @Override
         public String toString() {
-            return "NEWLINE@" + lineNumber;
+            return "'\n'@" + lineNumber;
         }
 
         @Override
@@ -102,7 +99,7 @@ final class Tokens {
 
         @Override
         public String toString() {
-            return tokenType().name() + "(" + value + ")";
+            return "'" + value + "'";
         }
 
         @Override
@@ -149,7 +146,11 @@ final class Tokens {
 
         @Override
         public String toString() {
-            return tokenType().name() + "(" + value.toString() + ")";
+            StringBuilder sb = new StringBuilder();
+            for (Token t : value) {
+                sb.append(t.toString());
+            }
+            return "'${" + sb.toString() + "}'";
         }
 
         @Override
@@ -252,15 +253,15 @@ final class Tokens {
         }
     }
 
-    final static Token START = new Token(TokenType.START);
-    final static Token END = new Token(TokenType.END);
-    final static Token COMMA = new Token(TokenType.COMMA);
-    final static Token EQUALS = new Token(TokenType.EQUALS);
-    final static Token COLON = new Token(TokenType.COLON);
-    final static Token OPEN_CURLY = new Token(TokenType.OPEN_CURLY);
-    final static Token CLOSE_CURLY = new Token(TokenType.CLOSE_CURLY);
-    final static Token OPEN_SQUARE = new Token(TokenType.OPEN_SQUARE);
-    final static Token CLOSE_SQUARE = new Token(TokenType.CLOSE_SQUARE);
+    final static Token START = new Token(TokenType.START, "start of file");
+    final static Token END = new Token(TokenType.END, "end of file");
+    final static Token COMMA = new Token(TokenType.COMMA, "','");
+    final static Token EQUALS = new Token(TokenType.EQUALS, "'='");
+    final static Token COLON = new Token(TokenType.COLON, "':'");
+    final static Token OPEN_CURLY = new Token(TokenType.OPEN_CURLY, "'{'");
+    final static Token CLOSE_CURLY = new Token(TokenType.CLOSE_CURLY, "'}'");
+    final static Token OPEN_SQUARE = new Token(TokenType.OPEN_SQUARE, "'['");
+    final static Token CLOSE_SQUARE = new Token(TokenType.CLOSE_SQUARE, "']'");
 
     static Token newLine(int lineNumberJustEnded) {
         return new Line(lineNumberJustEnded);

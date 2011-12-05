@@ -5,10 +5,17 @@ package com.typesafe.config.impl;
 
 class Token {
     final private TokenType tokenType;
+    final private String debugString;
 
     Token(TokenType tokenType) {
-        this.tokenType = tokenType;
+        this(tokenType, null);
     }
+
+    Token(TokenType tokenType, String debugString) {
+        this.tokenType = tokenType;
+        this.debugString = debugString;
+    }
+
 
     public TokenType tokenType() {
         return tokenType;
@@ -16,7 +23,10 @@ class Token {
 
     @Override
     public String toString() {
-        return tokenType.name();
+        if (debugString != null)
+            return debugString;
+        else
+            return tokenType.name();
     }
 
     protected boolean canEqual(Object other) {
