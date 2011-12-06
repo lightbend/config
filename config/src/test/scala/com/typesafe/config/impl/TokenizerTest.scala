@@ -3,7 +3,7 @@
  */
 package com.typesafe.config.impl
 
-import org.junit.Assert.assertEquals
+import org.junit.Assert._
 import org.junit.Test
 import com.typesafe.config.ConfigException
 
@@ -158,7 +158,7 @@ class TokenizerTest extends TestUtils {
     }
 
     @Test
-    def tokenizerThrowsOnInvalidStrings(): Unit = {
+    def tokenizerReturnsProblemOnInvalidStrings(): Unit = {
         val invalidTests = List(""" "\" """, // nothing after a backslash
             """ "\q" """, // there is no \q escape sequence
             "\"\\u123\"", // too short
@@ -166,15 +166,14 @@ class TokenizerTest extends TestUtils {
             "\"\\u1\"", // too short
             "\"\\u\"", // too short
             "\"", // just a single quote
-            """ "abcdefg""" // no end quote
+            """ "abcdefg""", // no end quote
+            """\"\""" // file ends with a backslash
             )
 
         for (t <- invalidTests) {
-            describeFailure(t) {
-                intercept[ConfigException] {
-                    tokenizeAsList(t)
-                }
-            }
+            val tokenized = tokenizeAsList(t)
+            val maybeProblem = tokenized.find(Tokens.isProblem(_))
+            assertTrue(maybeProblem.isDefined)
         }
     }
 
@@ -217,10 +216,14 @@ class TokenizerTest extends TestUtils {
 
     @Test
     def tokenizeReservedChars() {
-        val tokenized = tokenizeAsList("+`^?!@*&\\")
-        assertEquals(Seq(Tokens.START, tokenReserved('+'), tokenReserved('`'),
-            tokenReserved('^'), tokenReserved('?'), tokenReserved('!'), tokenReserved('@'),
-            tokenReserved('*'), tokenReserved('&'), tokenReserved('\\'),
-            Tokens.END), tokenized)
+        for (invalid <- "+`^?!@*&\\") {
+            val tokenized = tokenizeAsList(invalid.toString)
+            assertEquals(3, tokenized.size)
+            assertEquals(Tokens.START, tokenized(0))
+            assertEquals(Tokens.END, tokenized(2))
+            val problem = tokenized(1)
+            assertTrue("reserved char is a problem", Tokens.isProblem(problem))
+            assertEquals("'" + invalid + "'", problem.toString())
+        }
     }
 }

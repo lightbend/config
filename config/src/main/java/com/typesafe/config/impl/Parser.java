@@ -68,12 +68,25 @@ final class Parser {
                 t = buffer.pop();
             }
 
+            if (Tokens.isProblem(t)) {
+                ConfigOrigin origin = Tokens.getProblemOrigin(t);
+                String message = Tokens.getProblemMessage(t);
+                Throwable cause = Tokens.getProblemCause(t);
+                boolean suggestQuotes = Tokens.getProblemSuggestQuotes(t);
+                if (suggestQuotes) {
+                    message = addQuoteSuggestion(t.toString(), message);
+                } else {
+                    message = addKeyName(message);
+                }
+                throw new ConfigException.Parse(origin, message, cause);
+            }
+
             if (flavor == ConfigSyntax.JSON) {
                 if (Tokens.isUnquotedText(t)) {
-                    throw parseError("Token not allowed in valid JSON: '"
-                        + Tokens.getUnquotedText(t) + "'");
+                    throw parseError(addKeyName("Token not allowed in valid JSON: '"
+                            + Tokens.getUnquotedText(t) + "'"));
                 } else if (Tokens.isSubstitution(t)) {
-                    throw parseError("Substitutions (${} syntax) not allowed in JSON");
+                    throw parseError(addKeyName("Substitutions (${} syntax) not allowed in JSON"));
                 }
             }
 
@@ -239,19 +252,35 @@ final class Parser {
         }
 
 
+        private String previousFieldName(Path lastPath) {
+            if (lastPath != null) {
+                return lastPath.render();
+            } else if (pathStack.isEmpty())
+                return null;
+            else
+                return pathStack.peek().render();
+        }
+
+        private String previousFieldName() {
+            return previousFieldName(null);
+        }
+
+        private String addKeyName(String message) {
+            String previousFieldName = previousFieldName();
+            if (previousFieldName != null) {
+                return "in value for key '" + previousFieldName + "': " + message;
+            } else {
+                return message;
+            }
+        }
+
         private String addQuoteSuggestion(String badToken, String message) {
             return addQuoteSuggestion(null, equalsCount > 0, badToken, message);
         }
 
         private String addQuoteSuggestion(Path lastPath, boolean insideEquals, String badToken,
                 String message) {
-            String previousFieldName;
-            if (lastPath != null) {
-                previousFieldName = lastPath.render();
-            } else if (pathStack.isEmpty())
-                previousFieldName = null;
-            else
-                previousFieldName = pathStack.peek().render();
+            String previousFieldName = previousFieldName(lastPath);
 
             String part;
             if (badToken.equals(Tokens.END.toString())) {
@@ -269,8 +298,8 @@ final class Parser {
                             + "try enclosing the value in double quotes";
                 } else {
                     part = message + " (if you intended " + badToken
-                            + " to be part of the value for "
-                            + "a setting, try enclosing the value in double quotes";
+                            + " to be part of a key or string value, "
+                            + "try enclosing the key or value in double quotes";
                 }
             }
 
@@ -331,8 +360,8 @@ final class Parser {
                     String key = (String) Tokens.getValue(token).unwrapped();
                     return Path.newKey(key);
                 } else {
-                    throw parseError("Expecting close brace } or a field name here, got "
-                            + token);
+                    throw parseError(addKeyName("Expecting close brace } or a field name here, got "
+                            + token));
                 }
             } else {
                 List<Token> expression = new ArrayList<Token>();
@@ -343,7 +372,8 @@ final class Parser {
                 }
 
                 if (expression.isEmpty()) {
-                    throw parseError("expecting a close brace or a field name here, got " + t);
+                    throw parseError(addKeyName("expecting a close brace or a field name here, got "
+                            + t));
                 }
 
                 putBack(t); // put back the token we ended with
@@ -561,11 +591,11 @@ final class Parser {
             } else if (t == Tokens.OPEN_SQUARE) {
                 values.add(parseArray());
             } else {
-                throw parseError("List should have ] or a first element after the open [, instead had token: "
+                throw parseError(addKeyName("List should have ] or a first element after the open [, instead had token: "
                         + t
                         + " (if you want "
                         + t
-                        + " to be part of a string value, then double-quote it)");
+                        + " to be part of a string value, then double-quote it)"));
             }
 
             // now remaining elements
@@ -578,11 +608,11 @@ final class Parser {
                     if (t == Tokens.CLOSE_SQUARE) {
                         return new SimpleConfigList(arrayOrigin, values);
                     } else {
-                        throw parseError("List should have ended with ] or had a comma, instead had token: "
+                        throw parseError(addKeyName("List should have ended with ] or had a comma, instead had token: "
                                 + t
                                 + " (if you want "
                                 + t
-                                + " to be part of a string value, then double-quote it)");
+                                + " to be part of a string value, then double-quote it)"));
                     }
                 }
 
@@ -601,11 +631,11 @@ final class Parser {
                     // we allow one trailing comma
                     putBack(t);
                 } else {
-                    throw parseError("List should have had new element after a comma, instead had token: "
+                    throw parseError(addKeyName("List should have had new element after a comma, instead had token: "
                             + t
                             + " (if you want the comma or "
                             + t
-                            + " to be part of a string value, then double-quote it)");
+                            + " to be part of a string value, then double-quote it)"));
                 }
             }
         }

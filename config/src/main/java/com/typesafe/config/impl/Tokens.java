@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
+/* FIXME the way the subclasses of Token are private with static isFoo and accessors is kind of ridiculous. */
 final class Tokens {
     static private class Value extends Token {
 
@@ -119,42 +120,70 @@ final class Tokens {
         }
     }
 
-    static private class ReservedChar extends Token {
+    static private class Problem extends Token {
         final private ConfigOrigin origin;
-        final private int value;
+        final private String what;
+        final private String message;
+        final private boolean suggestQuotes;
+        final private Throwable cause;
 
-        ReservedChar(ConfigOrigin origin, int c) {
-            super(TokenType.RESERVED_CHAR);
+        Problem(ConfigOrigin origin, String what, String message, boolean suggestQuotes,
+                Throwable cause) {
+            super(TokenType.PROBLEM);
             this.origin = origin;
-            this.value = c;
+            this.what = what;
+            this.message = message;
+            this.suggestQuotes = suggestQuotes;
+            this.cause = cause;
         }
 
         ConfigOrigin origin() {
             return origin;
         }
 
+        String message() {
+            return message;
+        }
+
+        boolean suggestQuotes() {
+            return suggestQuotes;
+        }
+
+        Throwable cause() {
+            return cause;
+        }
+
         @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
             sb.append('\'');
-            sb.appendCodePoint(value);
+            sb.append(what);
             sb.append('\'');
             return sb.toString();
         }
 
         @Override
         protected boolean canEqual(Object other) {
-            return other instanceof ReservedChar;
+            return other instanceof Problem;
         }
 
         @Override
         public boolean equals(Object other) {
-            return super.equals(other) && ((ReservedChar) other).value == value;
+            return super.equals(other) && ((Problem) other).what.equals(what)
+                    && ((Problem) other).message.equals(message)
+                    && ((Problem) other).suggestQuotes == suggestQuotes
+                    && ConfigUtil.equalsHandlingNull(((Problem) other).cause, cause);
         }
 
         @Override
         public int hashCode() {
-            return 41 * (41 + super.hashCode()) + value;
+            int h = 41 * (41 + super.hashCode());
+            h = 41 * (h + what.hashCode());
+            h = 41 * (h + message.hashCode());
+            h = 41 * (h + Boolean.valueOf(suggestQuotes).hashCode());
+            if (cause != null)
+                h = 41 * (h + cause.hashCode());
+            return h;
         }
     }
 
@@ -239,15 +268,40 @@ final class Tokens {
         }
     }
 
-    static boolean isReservedChar(Token token) {
-        return token instanceof ReservedChar;
+    static boolean isProblem(Token token) {
+        return token instanceof Problem;
     }
 
-    static ConfigOrigin getReservedCharOrigin(Token token) {
-        if (token instanceof ReservedChar) {
-            return ((ReservedChar) token).origin();
+    static ConfigOrigin getProblemOrigin(Token token) {
+        if (token instanceof Problem) {
+            return ((Problem) token).origin();
         } else {
-            throw new ConfigException.BugOrBroken("tried to get reserved char origin from " + token);
+            throw new ConfigException.BugOrBroken("tried to get problem origin from " + token);
+        }
+    }
+
+    static String getProblemMessage(Token token) {
+        if (token instanceof Problem) {
+            return ((Problem) token).message();
+        } else {
+            throw new ConfigException.BugOrBroken("tried to get problem message from " + token);
+        }
+    }
+
+    static boolean getProblemSuggestQuotes(Token token) {
+        if (token instanceof Problem) {
+            return ((Problem) token).suggestQuotes();
+        } else {
+            throw new ConfigException.BugOrBroken("tried to get problem suggestQuotes from "
+                    + token);
+        }
+    }
+
+    static Throwable getProblemCause(Token token) {
+        if (token instanceof Problem) {
+            return ((Problem) token).cause();
+        } else {
+            throw new ConfigException.BugOrBroken("tried to get problem cause from " + token);
         }
     }
 
@@ -318,8 +372,9 @@ final class Tokens {
         return new Line(lineNumberJustEnded);
     }
 
-    static Token newReservedChar(ConfigOrigin origin, int codepoint) {
-        return new ReservedChar(origin, codepoint);
+    static Token newProblem(ConfigOrigin origin, String what, String message,
+            boolean suggestQuotes, Throwable cause) {
+        return new Problem(origin, what, message, suggestQuotes, cause);
     }
 
     static Token newUnquotedText(ConfigOrigin origin, String s) {
