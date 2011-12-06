@@ -383,7 +383,6 @@ abstract trait TestUtils {
     def tokenTrue = Tokens.newBoolean(fakeOrigin(), true)
     def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
     def tokenNull = Tokens.newNull(fakeOrigin())
-    def tokenReserved(c: Int) = Tokens.newReservedChar(fakeOrigin(), c)
     def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
     def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
     def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d, null)
