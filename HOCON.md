@@ -692,6 +692,8 @@ URLs:
  - for files loaded from a URL, "adjacent to" should be based
    on parsing the URL's path component, replacing the last
    path element with the included name.
+ - file: URLs should behave in exactly the same way as a plain
+   filename
 
 Implementations need not support files, Java resources, or URLs;
 and they need not support particular URL protocols. However, if
