@@ -51,6 +51,12 @@ copyrighted material via pull request, email, or other means you
 agree to license your the material under the Apache 2.0 license
 and warrant that you have the legal authority to do so.
 
+## Build
+
+The build uses sbt and the tests are written in Scala; however,
+the library itself is plain Java and the published jar has no
+Scala dependency.
+
 ## API Example
 
     Config conf = ConfigFactory.load();
@@ -159,6 +165,8 @@ detail.
 
 ### Examples of HOCON
 
+All of these are valid HOCON.
+
 Start with valid JSON:
 
     {
@@ -208,6 +216,12 @@ Put the dotted-notation fields on a single line:
 The syntax is well-defined (including handling of whitespace and
 escaping). But it handles many reasonable ways you might want to
 format the file.
+
+Note that while you can write HOCON that looks a lot like a Java
+properties file (and many properties files will parse as HOCON),
+the details of escaping, whitespace handling, comments, and so
+forth are more like JSON. The spec (see HOCON.md in this
+directory) has some more detailed notes on this topic.
 
 ### Uses of Substitutions
 
