@@ -111,20 +111,22 @@ final class Tokenizer {
             }
         }
 
-        final private ConfigOrigin origin;
+        final private SimpleConfigOrigin origin;
         final private Reader input;
         final private LinkedList<Integer> buffer;
         private int lineNumber;
+        private ConfigOrigin lineOrigin;
         final private Queue<Token> tokens;
         final private WhitespaceSaver whitespaceSaver;
         final private boolean allowComments;
 
         TokenIterator(ConfigOrigin origin, Reader input, boolean allowComments) {
-            this.origin = origin;
+            this.origin = (SimpleConfigOrigin) origin;
             this.input = input;
             this.allowComments = allowComments;
             this.buffer = new LinkedList<Integer>();
             lineNumber = 1;
+            lineOrigin = this.origin.setLineNumber(lineNumber);
             tokens = new LinkedList<Token>();
             tokens.add(Tokens.START);
             whitespaceSaver = new WhitespaceSaver();
@@ -233,12 +235,12 @@ final class Tokenizer {
         }
 
         private ProblemException problem(String what, String message, Throwable cause) {
-            return problem(lineOrigin(), what, message, cause);
+            return problem(lineOrigin, what, message, cause);
         }
 
         private ProblemException problem(String what, String message, boolean suggestQuotes,
                 Throwable cause) {
-            return problem(lineOrigin(), what, message, suggestQuotes, cause);
+            return problem(lineOrigin, what, message, suggestQuotes, cause);
         }
 
         private static ProblemException problem(ConfigOrigin origin, String what,
@@ -260,10 +262,6 @@ final class Tokenizer {
             return problem(origin, "", message, null);
         }
 
-        private ConfigOrigin lineOrigin() {
-            return lineOrigin(origin, lineNumber);
-        }
-
         private static ConfigOrigin lineOrigin(ConfigOrigin baseOrigin,
                 int lineNumber) {
             return ((SimpleConfigOrigin) baseOrigin).setLineNumber(lineNumber);
@@ -281,7 +279,7 @@ final class Tokenizer {
         // that parses as JSON is treated the JSON way and otherwise
         // we assume it's a string and let the parser sort it out.
         private Token pullUnquotedText() {
-            ConfigOrigin origin = lineOrigin();
+            ConfigOrigin origin = lineOrigin;
             StringBuilder sb = new StringBuilder();
             int c = nextCharSkippingComments();
             while (true) {
@@ -338,11 +336,10 @@ final class Tokenizer {
             try {
                 if (containedDecimalOrE) {
                     // force floating point representation
-                    return Tokens.newDouble(lineOrigin(),
-                            Double.parseDouble(s), s);
+                    return Tokens.newDouble(lineOrigin, Double.parseDouble(s), s);
                 } else {
                     // this should throw if the integer is too large for Long
-                    return Tokens.newLong(lineOrigin(), Long.parseLong(s), s);
+                    return Tokens.newLong(lineOrigin, Long.parseLong(s), s);
                 }
             } catch (NumberFormatException e) {
                 throw problem(s, "Invalid number: '" + s + "'", true /* suggestQuotes */, e);
@@ -426,12 +423,12 @@ final class Tokenizer {
                     sb.appendCodePoint(c);
                 }
             } while (c != '"');
-            return Tokens.newString(lineOrigin(), sb.toString());
+            return Tokens.newString(lineOrigin, sb.toString());
         }
 
         private Token pullSubstitution() throws ProblemException {
             // the initial '$' has already been consumed
-            ConfigOrigin origin = lineOrigin();
+            ConfigOrigin origin = lineOrigin;
             int c = nextCharSkippingComments();
             if (c != '{') {
                 throw problem(asString(c), "'$' not followed by {, '" + asString(c)
@@ -479,8 +476,9 @@ final class Tokenizer {
                 return Tokens.END;
             } else if (c == '\n') {
                 // newline tokens have the just-ended line number
-                Token line = Tokens.newLine(lineOrigin()); // uses lineNumber
+                Token line = Tokens.newLine(lineOrigin);
                 lineNumber += 1;
+                lineOrigin = origin.setLineNumber(lineNumber);
                 return line;
             } else {
                 Token t = null;
