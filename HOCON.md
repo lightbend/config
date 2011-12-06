@@ -752,9 +752,9 @@ follows:
 
  - if the value is a number, it is taken to be a number in
    the default unit.
- - if the value is a string, it is taken to be:
+ - if the value is a string, it is taken to be this sequence:
 
-   - optional whitespace
+     - optional whitespace
      - a number
      - optional whitespace
      - an optional unit name consisting only of letters (letters
