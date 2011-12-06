@@ -1003,3 +1003,28 @@ Environment variables are interpreted as follows:
  - environment variables always become a string value, though
    if an app asks for another type automatic type conversion
    would kick in
+
+## Note on Java properties similarity
+
+You can write a HOCON file that looks much like a Java properties
+file, and many valid Java properties files will also parse as
+HOCON.
+
+However, HOCON is not a Java properties superset and the corner
+cases work like JSON, not like properties.
+
+Differences include but are probably not limited to:
+
+ - certain characters that can be unquoted in properties files
+   have to be placed in JSON-style double-quoted strings in HOCON
+ - unquoted strings in HOCON do not support escape sequences
+ - unquoted strings in HOCON do not preserve trailing whitespace
+ - multi-line unquoted strings using backslash to continue the
+   line are not allowed in HOCON
+ - in properties files you can omit the value for a key and it's
+   interpreted as an empty string, in HOCON you cannot omit the
+   value
+ - properties files support '!' as a comment character
+ - HOCON allows comments on the same line as a key or value, while
+   properties files only recognize comment characters if they
+   occur as the first character on the line
