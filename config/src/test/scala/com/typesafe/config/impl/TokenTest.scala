@@ -50,8 +50,8 @@ class TokenTest extends TestUtils {
         checkEqualObjects(tokenNull, tokenNull)
 
         // newline
-        checkEqualObjects(Tokens.newLine(10), Tokens.newLine(10))
-        checkNotEqualObjects(Tokens.newLine(10), Tokens.newLine(11))
+        checkEqualObjects(tokenLine(10), tokenLine(10))
+        checkNotEqualObjects(tokenLine(10), tokenLine(11))
 
         // different types are not equal
         checkNotEqualObjects(tokenTrue, tokenInt(1))
@@ -71,7 +71,7 @@ class TokenTest extends TestUtils {
         tokenUnquoted("foo").toString()
         tokenString("bar").toString()
         tokenKeySubstitution("a").toString()
-        Tokens.newLine(10).toString()
+        tokenLine(10).toString()
         Tokens.START.toString()
         Tokens.END.toString()
         Tokens.COLON.toString()

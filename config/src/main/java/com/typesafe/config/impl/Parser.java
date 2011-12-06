@@ -69,7 +69,7 @@ final class Parser {
             }
 
             if (Tokens.isProblem(t)) {
-                ConfigOrigin origin = Tokens.getProblemOrigin(t);
+                ConfigOrigin origin = t.origin();
                 String message = Tokens.getProblemMessage(t);
                 Throwable cause = Tokens.getProblemCause(t);
                 boolean suggestQuotes = Tokens.getProblemSuggestQuotes(t);
@@ -102,7 +102,7 @@ final class Parser {
             while (Tokens.isNewline(t)) {
                 // line number tokens have the line that was _ended_ by the
                 // newline, so we have to add one.
-                lineNumber = Tokens.getLineNumber(t) + 1;
+                lineNumber = t.lineNumber() + 1;
                 t = nextToken();
             }
             return t;
@@ -129,7 +129,7 @@ final class Parser {
                 while (true) {
                     if (Tokens.isNewline(t)) {
                         // newline number is the line just ended, so add one
-                        lineNumber = Tokens.getLineNumber(t) + 1;
+                        lineNumber = t.lineNumber() + 1;
                         sawSeparatorOrNewline = true;
                         // we want to continue to also eat
                         // a comma if there is one.
@@ -190,11 +190,11 @@ final class Parser {
                 } else if (Tokens.isUnquotedText(valueToken)) {
                     String text = Tokens.getUnquotedText(valueToken);
                     if (firstOrigin == null)
-                        firstOrigin = Tokens.getUnquotedTextOrigin(valueToken);
+                        firstOrigin = valueToken.origin();
                     sb.append(text);
                 } else if (Tokens.isSubstitution(valueToken)) {
                     if (firstOrigin == null)
-                        firstOrigin = Tokens.getSubstitutionOrigin(valueToken);
+                        firstOrigin = valueToken.origin();
 
                     if (sb.length() > 0) {
                         // save string so far
@@ -204,8 +204,7 @@ final class Parser {
                     // now save substitution
                     List<Token> expression = Tokens
                             .getSubstitutionPathExpression(valueToken);
-                    Path path = parsePathExpression(expression.iterator(),
-                            Tokens.getSubstitutionOrigin(valueToken));
+                    Path path = parsePathExpression(expression.iterator(), valueToken.origin());
                     boolean optional = Tokens.getSubstitutionOptional(valueToken);
 
                     minimized.add(new SubstitutionExpression(path, optional));

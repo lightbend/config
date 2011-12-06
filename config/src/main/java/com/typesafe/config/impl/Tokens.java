@@ -16,7 +16,7 @@ final class Tokens {
         final private AbstractConfigValue value;
 
         Value(AbstractConfigValue value) {
-            super(TokenType.VALUE);
+            super(TokenType.VALUE, value.origin());
             this.value = value;
         }
 
@@ -46,20 +46,13 @@ final class Tokens {
     }
 
     static private class Line extends Token {
-        final private int lineNumber;
-
-        Line(int lineNumber) {
-            super(TokenType.NEWLINE);
-            this.lineNumber = lineNumber;
-        }
-
-        int lineNumber() {
-            return lineNumber;
+        Line(ConfigOrigin origin) {
+            super(TokenType.NEWLINE, origin);
         }
 
         @Override
         public String toString() {
-            return "'\n'@" + lineNumber;
+            return "'\n'@" + lineNumber();
         }
 
         @Override
@@ -69,29 +62,22 @@ final class Tokens {
 
         @Override
         public boolean equals(Object other) {
-            return super.equals(other)
-                    && ((Line) other).lineNumber == lineNumber;
+            return super.equals(other) && ((Line) other).lineNumber() == lineNumber();
         }
 
         @Override
         public int hashCode() {
-            return 41 * (41 + super.hashCode()) + lineNumber;
+            return 41 * (41 + super.hashCode()) + lineNumber();
         }
     }
 
     // This is not a Value, because it requires special processing
     static private class UnquotedText extends Token {
-        final private ConfigOrigin origin;
         final private String value;
 
         UnquotedText(ConfigOrigin origin, String s) {
-            super(TokenType.UNQUOTED_TEXT);
-            this.origin = origin;
+            super(TokenType.UNQUOTED_TEXT, origin);
             this.value = s;
-        }
-
-        ConfigOrigin origin() {
-            return origin;
         }
 
         String value() {
@@ -121,7 +107,6 @@ final class Tokens {
     }
 
     static private class Problem extends Token {
-        final private ConfigOrigin origin;
         final private String what;
         final private String message;
         final private boolean suggestQuotes;
@@ -129,16 +114,11 @@ final class Tokens {
 
         Problem(ConfigOrigin origin, String what, String message, boolean suggestQuotes,
                 Throwable cause) {
-            super(TokenType.PROBLEM);
-            this.origin = origin;
+            super(TokenType.PROBLEM, origin);
             this.what = what;
             this.message = message;
             this.suggestQuotes = suggestQuotes;
             this.cause = cause;
-        }
-
-        ConfigOrigin origin() {
-            return origin;
         }
 
         String message() {
@@ -189,19 +169,13 @@ final class Tokens {
 
     // This is not a Value, because it requires special processing
     static private class Substitution extends Token {
-        final private ConfigOrigin origin;
         final private boolean optional;
         final private List<Token> value;
 
         Substitution(ConfigOrigin origin, boolean optional, List<Token> expression) {
-            super(TokenType.SUBSTITUTION);
-            this.origin = origin;
+            super(TokenType.SUBSTITUTION, origin);
             this.optional = optional;
             this.value = expression;
-        }
-
-        ConfigOrigin origin() {
-            return origin;
         }
 
         boolean optional() {
@@ -259,25 +233,8 @@ final class Tokens {
         return token instanceof Line;
     }
 
-    static int getLineNumber(Token token) {
-        if (token instanceof Line) {
-            return ((Line) token).lineNumber();
-        } else {
-            throw new ConfigException.BugOrBroken(
-                    "tried to get line number from non-newline " + token);
-        }
-    }
-
     static boolean isProblem(Token token) {
         return token instanceof Problem;
-    }
-
-    static ConfigOrigin getProblemOrigin(Token token) {
-        if (token instanceof Problem) {
-            return ((Problem) token).origin();
-        } else {
-            throw new ConfigException.BugOrBroken("tried to get problem origin from " + token);
-        }
     }
 
     static String getProblemMessage(Token token) {
@@ -318,15 +275,6 @@ final class Tokens {
         }
     }
 
-    static ConfigOrigin getUnquotedTextOrigin(Token token) {
-        if (token instanceof UnquotedText) {
-            return ((UnquotedText) token).origin();
-        } else {
-            throw new ConfigException.BugOrBroken(
-                    "tried to get unquoted text from " + token);
-        }
-    }
-
     static boolean isSubstitution(Token token) {
         return token instanceof Substitution;
     }
@@ -340,15 +288,6 @@ final class Tokens {
         }
     }
 
-    static ConfigOrigin getSubstitutionOrigin(Token token) {
-        if (token instanceof Substitution) {
-            return ((Substitution) token).origin();
-        } else {
-            throw new ConfigException.BugOrBroken(
-                    "tried to get substitution origin from " + token);
-        }
-    }
-
     static boolean getSubstitutionOptional(Token token) {
         if (token instanceof Substitution) {
             return ((Substitution) token).optional();
@@ -358,18 +297,18 @@ final class Tokens {
         }
     }
 
-    final static Token START = new Token(TokenType.START, "start of file");
-    final static Token END = new Token(TokenType.END, "end of file");
-    final static Token COMMA = new Token(TokenType.COMMA, "','");
-    final static Token EQUALS = new Token(TokenType.EQUALS, "'='");
-    final static Token COLON = new Token(TokenType.COLON, "':'");
-    final static Token OPEN_CURLY = new Token(TokenType.OPEN_CURLY, "'{'");
-    final static Token CLOSE_CURLY = new Token(TokenType.CLOSE_CURLY, "'}'");
-    final static Token OPEN_SQUARE = new Token(TokenType.OPEN_SQUARE, "'['");
-    final static Token CLOSE_SQUARE = new Token(TokenType.CLOSE_SQUARE, "']'");
+    final static Token START = Token.newWithoutOrigin(TokenType.START, "start of file");
+    final static Token END = Token.newWithoutOrigin(TokenType.END, "end of file");
+    final static Token COMMA = Token.newWithoutOrigin(TokenType.COMMA, "','");
+    final static Token EQUALS = Token.newWithoutOrigin(TokenType.EQUALS, "'='");
+    final static Token COLON = Token.newWithoutOrigin(TokenType.COLON, "':'");
+    final static Token OPEN_CURLY = Token.newWithoutOrigin(TokenType.OPEN_CURLY, "'{'");
+    final static Token CLOSE_CURLY = Token.newWithoutOrigin(TokenType.CLOSE_CURLY, "'}'");
+    final static Token OPEN_SQUARE = Token.newWithoutOrigin(TokenType.OPEN_SQUARE, "'['");
+    final static Token CLOSE_SQUARE = Token.newWithoutOrigin(TokenType.CLOSE_SQUARE, "']'");
 
-    static Token newLine(int lineNumberJustEnded) {
-        return new Line(lineNumberJustEnded);
+    static Token newLine(ConfigOrigin origin) {
+        return new Line(origin);
     }
 
     static Token newProblem(ConfigOrigin origin, String what, String message,

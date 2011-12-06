@@ -388,6 +388,7 @@ abstract trait TestUtils {
     def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d, null)
     def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, null)
     def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, null)
+    def tokenLine(line: Int) = Tokens.newLine(fakeOrigin.setLineNumber(line))
 
     private def tokenMaybeOptionalSubstitution(optional: Boolean, expression: Token*) = {
         val l = new java.util.ArrayList[Token]

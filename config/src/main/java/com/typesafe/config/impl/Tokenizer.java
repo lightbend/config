@@ -479,8 +479,9 @@ final class Tokenizer {
                 return Tokens.END;
             } else if (c == '\n') {
                 // newline tokens have the just-ended line number
+                Token line = Tokens.newLine(lineOrigin()); // uses lineNumber
                 lineNumber += 1;
-                return Tokens.newLine(lineNumber - 1);
+                return line;
             } else {
                 Token t = null;
                 switch (c) {
