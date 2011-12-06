@@ -1028,3 +1028,4 @@ Differences include but are probably not limited to:
  - HOCON allows comments on the same line as a key or value, while
    properties files only recognize comment characters if they
    occur as the first character on the line
+ - HOCON interprets `${}` as a substitution
