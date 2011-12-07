@@ -40,12 +40,7 @@ public class ConfigImpl {
                 || name.endsWith(".properties")) {
             ConfigParseable p = source.nameToParseable(name);
 
-            if (p != null) {
-                obj = p.parse(p.options().setAllowMissing(
-                        options.getAllowMissing()));
-            } else {
-                obj = SimpleConfigObject.emptyMissing(SimpleConfigOrigin.newSimple(name));
-            }
+            obj = p.parse(p.options().setAllowMissing(options.getAllowMissing()));
         } else {
             ConfigParseable confHandle = source.nameToParseable(name + ".conf");
             ConfigParseable jsonHandle = source.nameToParseable(name + ".json");
