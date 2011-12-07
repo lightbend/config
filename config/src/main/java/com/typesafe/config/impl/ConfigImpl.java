@@ -52,6 +52,7 @@ public class ConfigImpl {
             ConfigParseable propsHandle = source.nameToParseable(name
                     + ".properties");
             boolean gotSomething = false;
+            List<String> failMessages = new ArrayList<String>();
 
             ConfigSyntax syntax = options.getSyntax();
 
@@ -62,7 +63,7 @@ public class ConfigImpl {
                             .setSyntax(ConfigSyntax.CONF));
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
-
+                    failMessages.add(e.getMessage());
                 }
             }
 
@@ -73,7 +74,7 @@ public class ConfigImpl {
                     obj = obj.withFallback(parsed);
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
-
+                    failMessages.add(e.getMessage());
                 }
             }
 
@@ -84,13 +85,26 @@ public class ConfigImpl {
                     obj = obj.withFallback(parsed);
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
-
+                    failMessages.add(e.getMessage());
                 }
             }
 
             if (!options.getAllowMissing() && !gotSomething) {
-                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name), String.format(
-                        "None of %s.conf, %s.json, %s.properties were found", name, name, name));
+                String failMessage;
+                if (failMessages.isEmpty()) {
+                    // this should not happen
+                    throw new ConfigException.BugOrBroken(
+                            "should not be reached: nothing found but no exceptions thrown");
+                } else {
+                    StringBuilder sb = new StringBuilder();
+                    for (String msg : failMessages) {
+                        sb.append(msg);
+                        sb.append(", ");
+                    }
+                    sb.setLength(sb.length() - 2);
+                    failMessage = sb.toString();
+                }
+                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name), failMessage);
             }
         }
 
