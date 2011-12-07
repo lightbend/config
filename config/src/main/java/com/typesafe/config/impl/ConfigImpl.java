@@ -51,36 +51,46 @@ public class ConfigImpl {
             ConfigParseable jsonHandle = source.nameToParseable(name + ".json");
             ConfigParseable propsHandle = source.nameToParseable(name
                     + ".properties");
-
-            if (!options.getAllowMissing() && confHandle == null
-                    && jsonHandle == null && propsHandle == null) {
-                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name),
-                        "No config files {.conf,.json,.properties} found");
-            }
+            boolean gotSomething = false;
 
             ConfigSyntax syntax = options.getSyntax();
 
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
-            if (confHandle != null
-                    && (syntax == null || syntax == ConfigSyntax.CONF)) {
-                obj = confHandle.parse(confHandle.options()
-                        .setAllowMissing(true).setSyntax(ConfigSyntax.CONF));
+            if (syntax == null || syntax == ConfigSyntax.CONF) {
+                try {
+                    obj = confHandle.parse(confHandle.options().setAllowMissing(false)
+                            .setSyntax(ConfigSyntax.CONF));
+                    gotSomething = true;
+                } catch (ConfigException.IO e) {
+
+                }
             }
 
-            if (jsonHandle != null
-                    && (syntax == null || syntax == ConfigSyntax.JSON)) {
-                ConfigObject parsed = jsonHandle.parse(jsonHandle
-                        .options().setAllowMissing(true)
-                        .setSyntax(ConfigSyntax.JSON));
-                obj = obj.withFallback(parsed);
+            if (syntax == null || syntax == ConfigSyntax.JSON) {
+                try {
+                    ConfigObject parsed = jsonHandle.parse(jsonHandle.options()
+                            .setAllowMissing(false).setSyntax(ConfigSyntax.JSON));
+                    obj = obj.withFallback(parsed);
+                    gotSomething = true;
+                } catch (ConfigException.IO e) {
+
+                }
             }
 
-            if (propsHandle != null
-                    && (syntax == null || syntax == ConfigSyntax.PROPERTIES)) {
-                ConfigObject parsed = propsHandle.parse(propsHandle.options()
-                        .setAllowMissing(true)
-                        .setSyntax(ConfigSyntax.PROPERTIES));
-                obj = obj.withFallback(parsed);
+            if (syntax == null || syntax == ConfigSyntax.PROPERTIES) {
+                try {
+                    ConfigObject parsed = propsHandle.parse(propsHandle.options()
+                            .setAllowMissing(false).setSyntax(ConfigSyntax.PROPERTIES));
+                    obj = obj.withFallback(parsed);
+                    gotSomething = true;
+                } catch (ConfigException.IO e) {
+
+                }
+            }
+
+            if (!options.getAllowMissing() && !gotSomething) {
+                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name), String.format(
+                        "None of %s.conf, %s.json, %s.properties were found", name, name, name));
             }
         }
 
@@ -269,7 +279,14 @@ public class ConfigImpl {
             NameSource source = new NameSource() {
                 @Override
                 public ConfigParseable nameToParseable(String name) {
-                    return context.relativeTo(name);
+                    ConfigParseable p = context.relativeTo(name);
+                    if (p == null) {
+                        // avoid returning null
+                        return Parseable.newNotFound(name, "include was not found: '" + name + "'",
+                                ConfigParseOptions.defaults());
+                    } else {
+                        return p;
+                    }
                 }
             };
 

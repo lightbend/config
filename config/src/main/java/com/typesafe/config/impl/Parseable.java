@@ -6,6 +6,7 @@ package com.typesafe.config.impl;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FilterReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -259,6 +260,34 @@ public abstract class Parseable implements ConfigParseable {
             return null;
         else
             return new File(parent, filename);
+    }
+
+    // this is a parseable that doesn't exist and just throws when you try to
+    // parse it
+    private final static class ParseableNotFound extends Parseable {
+        final private String what;
+        final private String message;
+
+        ParseableNotFound(String what, String message, ConfigParseOptions options) {
+            this.what = what;
+            this.message = message;
+            postConstruct(options);
+        }
+
+        @Override
+        protected Reader reader() throws IOException {
+            throw new FileNotFoundException(message);
+        }
+
+        @Override
+        protected ConfigOrigin createOrigin() {
+            return SimpleConfigOrigin.newSimple(what);
+        }
+    }
+
+    public static Parseable newNotFound(String whatNotFound, String message,
+            ConfigParseOptions options) {
+        return new ParseableNotFound(whatNotFound, message, options);
     }
 
     private final static class ParseableReader extends Parseable {

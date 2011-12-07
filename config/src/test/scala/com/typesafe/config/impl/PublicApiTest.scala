@@ -229,15 +229,43 @@ class PublicApiTest extends TestUtils {
         assertNull(d.getSyntax())
     }
 
+    private def assertNotFound(e: ConfigException) {
+        assertTrue("Message text: " + e.getMessage, e.getMessage.contains("No such") ||
+            e.getMessage.contains("not found") ||
+            e.getMessage.contains("were found"))
+    }
+
     @Test
     def allowMissing() {
         val e = intercept[ConfigException.IO] {
             ConfigFactory.parseFile(resourceFile("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
         }
-        assertTrue(e.getMessage.contains("No such"))
+        assertNotFound(e)
 
         val conf = ConfigFactory.parseFile(resourceFile("nonexistent.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
-        assertTrue(conf.isEmpty())
+        assertTrue("is empty", conf.isEmpty())
+    }
+
+    @Test
+    def allowMissingFileAnySyntax() {
+        val e = intercept[ConfigException.IO] {
+            ConfigFactory.parseFileAnySyntax(resourceFile("nonexistent"), ConfigParseOptions.defaults().setAllowMissing(false))
+        }
+        assertNotFound(e)
+
+        val conf = ConfigFactory.parseFileAnySyntax(resourceFile("nonexistent"), ConfigParseOptions.defaults().setAllowMissing(true))
+        assertTrue("is empty", conf.isEmpty())
+    }
+
+    @Test
+    def allowMissingResourcesAnySyntax() {
+        val e = intercept[ConfigException.IO] {
+            ConfigFactory.parseResourcesAnySyntax(classOf[PublicApiTest], "nonexistent", ConfigParseOptions.defaults().setAllowMissing(false))
+        }
+        assertNotFound(e)
+
+        val conf = ConfigFactory.parseResourcesAnySyntax(classOf[PublicApiTest], "nonexistent", ConfigParseOptions.defaults().setAllowMissing(true))
+        assertTrue("is empty", conf.isEmpty())
     }
 
     @Test
