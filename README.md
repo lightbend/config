@@ -40,7 +40,7 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 
 You can find published releases here:
 
- - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/
+ - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
 
 ## Bugs and Patches
 
