@@ -5,7 +5,8 @@ package com.typesafe.config;
 
 
 /**
- * All exceptions thrown by the library are subclasses of ConfigException.
+ * All exceptions thrown by the library are subclasses of
+ * <code>ConfigException</code>.
  */
 public abstract class ConfigException extends RuntimeException {
     private static final long serialVersionUID = 1L;
