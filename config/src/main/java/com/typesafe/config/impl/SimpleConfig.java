@@ -466,10 +466,10 @@ final class SimpleConfig implements Config, MergeableValue {
      */
     public static long parseDuration(String input,
             ConfigOrigin originForException, String pathForException) {
-        String s = ConfigUtil.unicodeTrim(input);
+        String s = ConfigImplUtil.unicodeTrim(input);
         String originalUnitString = getUnits(s);
         String unitString = originalUnitString;
-        String numberString = ConfigUtil.unicodeTrim(s.substring(0, s.length()
+        String numberString = ConfigImplUtil.unicodeTrim(s.substring(0, s.length()
                 - unitString.length()));
         TimeUnit units = null;
 
@@ -618,9 +618,9 @@ final class SimpleConfig implements Config, MergeableValue {
      */
     public static long parseBytes(String input, ConfigOrigin originForException,
             String pathForException) {
-        String s = ConfigUtil.unicodeTrim(input);
+        String s = ConfigImplUtil.unicodeTrim(input);
         String unitString = getUnits(s);
-        String numberString = ConfigUtil.unicodeTrim(s.substring(0,
+        String numberString = ConfigImplUtil.unicodeTrim(s.substring(0,
                 s.length() - unitString.length()));
 
         // this would be caught later anyway, but the error message

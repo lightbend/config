@@ -334,7 +334,7 @@ public class ConfigImpl {
         try {
             return DefaultIncluderHolder.defaultIncluder;
         } catch (ExceptionInInitializerError e) {
-            throw ConfigUtil.extractInitializerError(e);
+            throw ConfigImplUtil.extractInitializerError(e);
         }
     }
 
@@ -352,7 +352,7 @@ public class ConfigImpl {
         try {
             return SystemPropertiesHolder.systemProperties;
         } catch (ExceptionInInitializerError e) {
-            throw ConfigUtil.extractInitializerError(e);
+            throw ConfigImplUtil.extractInitializerError(e);
         }
     }
 
@@ -388,7 +388,7 @@ public class ConfigImpl {
         try {
             return EnvVariablesHolder.envVariables;
         } catch (ExceptionInInitializerError e) {
-            throw ConfigUtil.extractInitializerError(e);
+            throw ConfigImplUtil.extractInitializerError(e);
         }
     }
 
@@ -410,7 +410,7 @@ public class ConfigImpl {
         try {
             return ReferenceHolder.referenceConfig;
         } catch (ExceptionInInitializerError e) {
-            throw ConfigUtil.extractInitializerError(e);
+            throw ConfigImplUtil.extractInitializerError(e);
         }
     }
 }

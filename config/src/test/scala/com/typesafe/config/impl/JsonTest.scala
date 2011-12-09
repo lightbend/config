@@ -183,7 +183,7 @@ class JsonTest extends TestUtils {
 
     @Test
     def renderingJsonStrings() {
-        def r(s: String) = ConfigUtil.renderJsonString(s)
+        def r(s: String) = ConfigImplUtil.renderJsonString(s)
         assertEquals(""""abcdefg"""", r("""abcdefg"""))
         assertEquals(""""\" \\ \n \b \f \r \t"""", r("\" \\ \n \b \f \r \t"))
         // control characters are escaped. Remember that unicode escapes

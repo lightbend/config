@@ -21,15 +21,15 @@ class UtilTest extends TestUtils {
 
     @Test
     def unicodeTrimSupplementaryChars() {
-        assertEquals("", ConfigUtil.unicodeTrim(""))
-        assertEquals("a", ConfigUtil.unicodeTrim("a"))
-        assertEquals("abc", ConfigUtil.unicodeTrim("abc"))
-        assertEquals("", ConfigUtil.unicodeTrim("   \n   \n  \u00A0 "))
-        assertEquals(supplementaryChars, ConfigUtil.unicodeTrim(supplementaryChars))
+        assertEquals("", ConfigImplUtil.unicodeTrim(""))
+        assertEquals("a", ConfigImplUtil.unicodeTrim("a"))
+        assertEquals("abc", ConfigImplUtil.unicodeTrim("abc"))
+        assertEquals("", ConfigImplUtil.unicodeTrim("   \n   \n  \u00A0 "))
+        assertEquals(supplementaryChars, ConfigImplUtil.unicodeTrim(supplementaryChars))
 
         val s = " \u00A0 \n  " + supplementaryChars + "  \n  \u00A0 "
         val asciiTrimmed = s.trim()
-        val unitrimmed = ConfigUtil.unicodeTrim(s)
+        val unitrimmed = ConfigImplUtil.unicodeTrim(s)
 
         assertFalse(asciiTrimmed.equals(unitrimmed))
         assertEquals(supplementaryChars, unitrimmed)
@@ -37,23 +37,23 @@ class UtilTest extends TestUtils {
 
     @Test
     def definitionOfWhitespace() {
-        assertTrue(ConfigUtil.isWhitespace(' '))
-        assertTrue(ConfigUtil.isWhitespace('\n'))
+        assertTrue(ConfigImplUtil.isWhitespace(' '))
+        assertTrue(ConfigImplUtil.isWhitespace('\n'))
         // these three are nonbreaking spaces
-        assertTrue(ConfigUtil.isWhitespace('\u00A0'))
-        assertTrue(ConfigUtil.isWhitespace('\u2007'))
-        assertTrue(ConfigUtil.isWhitespace('\u202F'))
+        assertTrue(ConfigImplUtil.isWhitespace('\u00A0'))
+        assertTrue(ConfigImplUtil.isWhitespace('\u2007'))
+        assertTrue(ConfigImplUtil.isWhitespace('\u202F'))
         // vertical tab, a weird one
-        assertTrue(ConfigUtil.isWhitespace('\u000B'))
+        assertTrue(ConfigImplUtil.isWhitespace('\u000B'))
         // file separator, another weird one
-        assertTrue(ConfigUtil.isWhitespace('\u001C'))
+        assertTrue(ConfigImplUtil.isWhitespace('\u001C'))
     }
 
     @Test
     def equalsThatHandlesNull() {
-        assertTrue(ConfigUtil.equalsHandlingNull(null, null))
-        assertFalse(ConfigUtil.equalsHandlingNull(new Object(), null))
-        assertFalse(ConfigUtil.equalsHandlingNull(null, new Object()))
-        assertTrue(ConfigUtil.equalsHandlingNull("", ""))
+        assertTrue(ConfigImplUtil.equalsHandlingNull(null, null))
+        assertFalse(ConfigImplUtil.equalsHandlingNull(new Object(), null))
+        assertFalse(ConfigImplUtil.equalsHandlingNull(null, new Object()))
+        assertTrue(ConfigImplUtil.equalsHandlingNull("", ""))
     }
 }

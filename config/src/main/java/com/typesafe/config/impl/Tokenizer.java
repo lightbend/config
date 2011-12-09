@@ -159,11 +159,11 @@ final class Tokenizer {
         }
 
         static boolean isWhitespace(int c) {
-            return ConfigUtil.isWhitespace(c);
+            return ConfigImplUtil.isWhitespace(c);
         }
 
         static boolean isWhitespaceNotNewline(int c) {
-            return c != '\n' && ConfigUtil.isWhitespace(c);
+            return c != '\n' && ConfigImplUtil.isWhitespace(c);
         }
 
         private int slurpComment() {

@@ -152,7 +152,7 @@ final class Tokens {
             return super.equals(other) && ((Problem) other).what.equals(what)
                     && ((Problem) other).message.equals(message)
                     && ((Problem) other).suggestQuotes == suggestQuotes
-                    && ConfigUtil.equalsHandlingNull(((Problem) other).cause, cause);
+                    && ConfigImplUtil.equalsHandlingNull(((Problem) other).cause, cause);
         }
 
         @Override

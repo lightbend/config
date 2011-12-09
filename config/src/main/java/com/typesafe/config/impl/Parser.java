@@ -393,7 +393,7 @@ final class Parser {
 
             for (int i = 0; i < s.length(); ++i) {
                 char c = s.charAt(i);
-                if (!ConfigUtil.isWhitespace(c))
+                if (!ConfigImplUtil.isWhitespace(c))
                     return false;
             }
             return true;
@@ -838,7 +838,7 @@ final class Parser {
     // do something much faster than the full parser if
     // we just have something like "foo" or "foo.bar"
     private static Path speculativeFastParsePath(String path) {
-        String s = ConfigUtil.unicodeTrim(path);
+        String s = ConfigImplUtil.unicodeTrim(path);
         if (s.isEmpty())
             return null;
         if (hasUnsafeChars(s))

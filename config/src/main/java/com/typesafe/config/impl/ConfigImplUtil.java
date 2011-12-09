@@ -11,7 +11,7 @@ import com.typesafe.config.ConfigException;
 
 
 /** This is public just for the "config" package to use, don't touch it */
-final public class ConfigUtil {
+final public class ConfigImplUtil {
     static boolean equalsHandlingNull(Object a, Object b) {
         if (a == null && b != null)
             return false;
