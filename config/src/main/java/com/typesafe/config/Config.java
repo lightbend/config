@@ -34,6 +34,10 @@ import java.util.Set;
  * {@code ConfigObject} is a tree of nested maps from <em>keys</em> to values.
  *
  * <p>
+ * Use {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath} to convert
+ * between path expressions and individual path elements (keys).
+ *
+ * <p>
  * Another difference between {@code Config} and {@code ConfigObject} is that
  * conceptually, {@code ConfigValue}s with a {@link ConfigValue#valueType()
  * valueType()} of {@link ConfigValueType#NULL NULL} exist in a
@@ -264,7 +268,7 @@ public interface Config extends ConfigMergeable {
      * recursing {@link #root() the root object}. Note that this is very
      * different from <code>root().entrySet()</code> which returns the set of
      * immediate-child keys in the root object and includes null values.
-     * 
+     *
      * @return set of paths with non-null values, built up by recursing the
      *         entire tree of {@link ConfigObject}
      */

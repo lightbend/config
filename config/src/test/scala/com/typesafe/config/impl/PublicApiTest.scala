@@ -433,4 +433,35 @@ class PublicApiTest extends TestUtils {
         assertFalse("same urls in " + v1.origin + " " + v2.origin, v1.origin.url == v2.origin.url)
         assertFalse(v1.origin.filename == v2.origin.filename)
     }
+
+    @Test
+    def splitAndJoinPath() {
+        // the actual join-path logic should be tested OK in the non-public-API tests,
+        // this is just to test the public wrappers.
+
+        assertEquals("\"\".a.b.\"$\"", ConfigUtil.joinPath("", "a", "b", "$"))
+        assertEquals("\"\".a.b.\"$\"", ConfigUtil.joinPath(Seq("", "a", "b", "$").asJava))
+        assertEquals(Seq("", "a", "b", "$"), ConfigUtil.splitPath("\"\".a.b.\"$\"").asScala)
+
+        // invalid stuff throws
+        intercept[ConfigException] {
+            ConfigUtil.splitPath("$")
+        }
+        intercept[ConfigException] {
+            ConfigUtil.joinPath()
+        }
+        intercept[ConfigException] {
+            ConfigUtil.joinPath(Collections.emptyList[String]())
+        }
+    }
+
+    @Test
+    def quoteString() {
+        // the actual quote logic shoudl be tested OK in the non-public-API tests,
+        // this is just to test the public wrapper.
+
+        assertEquals("\"\"", ConfigUtil.quoteString(""))
+        assertEquals("\"a\"", ConfigUtil.quoteString("a"))
+        assertEquals("\"\\n\"", ConfigUtil.quoteString("\n"))
+    }
 }
