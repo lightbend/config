@@ -42,6 +42,17 @@ You can find published releases here:
 
  - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
 
+## API docs
+
+API docs at:
+
+ - http://typesafehub.github.com/config/latest/api/
+ - also published in jar form
+   http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
+ - consider reading this README first for an intro
+ - for questions about the `.conf` file format, read HOCON.md in
+   this directory
+
 ## Bugs and Patches
 
 Report bugs to the GitHub issue tracker. Send patches as pull
