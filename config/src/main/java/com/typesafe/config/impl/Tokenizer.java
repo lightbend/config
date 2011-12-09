@@ -36,6 +36,8 @@ final class Tokenizer {
             return "newline";
         else if (codepoint == '\t')
             return "tab";
+        else if (codepoint == -1)
+            return "end of file";
         else if (Character.isISOControl(codepoint))
             return String.format("control character 0x%x", codepoint);
         else

@@ -167,7 +167,9 @@ class TokenizerTest extends TestUtils {
             "\"\\u\"", // too short
             "\"", // just a single quote
             """ "abcdefg""", // no end quote
-            """\"\""" // file ends with a backslash
+            """\"\""", // file ends with a backslash
+            "$", // file ends with a $
+            "${" // file ends with a ${
             )
 
         for (t <- invalidTests) {
