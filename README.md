@@ -143,6 +143,32 @@ configuration. In the replacement config file, you can use
 file; after the include statement you could go on to override
 certain settings.
 
+## Merging config trees
+
+Any two Config objects can be merged with an associative operation
+called `withFallback`, like `merged = firstConfig.withFallback(secondConfig)`.
+
+The `withFallback` operation is used inside the library to merge
+duplicate keys in the same file and to merge multiple files.
+`ConfigFactory.load()` uses it to stack system properties over
+`application.conf` over `reference.conf`.
+
+You can also use `withFallback` to merge in some hardcoded values,
+or to "lift" a subtree up to the root of the configuration; say
+you have something like:
+
+    foo=42
+    dev.foo=57
+    prod.foo=10
+
+Then you could code something like:
+
+    Config devConfig = originalConfig
+                         .getConfig("dev")
+                         .withFallback(originalConfig)
+
+There are lots of ways to use `withFallback`.
+
 ## JSON Superset
 
 Tentatively called "Human-Optimized Config Object Notation" or
