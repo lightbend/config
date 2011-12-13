@@ -339,6 +339,9 @@ public abstract class ConfigException extends RuntimeException {
                 sb.append(p.problem());
                 sb.append(", ");
             }
+            if (sb.length() == 0)
+                throw new ConfigException.BugOrBroken(
+                        "ValidationFailed must have a non-empty list of problems");
             sb.setLength(sb.length() - 2); // chop comma and space
 
             return sb.toString();
