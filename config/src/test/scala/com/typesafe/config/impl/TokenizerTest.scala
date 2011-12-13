@@ -108,7 +108,7 @@ class TokenizerTest extends TestUtils {
         tokenizerTest(List(tokenUnquoted("a/b/c/")), "a/b/c/")
         tokenizerTest(List(tokenUnquoted("/")), "/")
         tokenizerTest(List(tokenUnquoted("/"), tokenUnquoted(" "), tokenUnquoted("/")), "/ /")
-        tokenizerTest(Nil, "//")
+        tokenizerTest(List(tokenComment("")), "//")
     }
 
     @Test
@@ -205,15 +205,18 @@ class TokenizerTest extends TestUtils {
     }
 
     @Test
-    def commentsIgnoredInVariousContext() {
+    def commentsHandledInVariousContexts() {
         tokenizerTest(List(tokenString("//bar")), "\"//bar\"")
         tokenizerTest(List(tokenString("#bar")), "\"#bar\"")
-        tokenizerTest(List(tokenUnquoted("bar")), "bar//comment")
-        tokenizerTest(List(tokenUnquoted("bar")), "bar#comment")
-        tokenizerTest(List(tokenInt(10)), "10//comment")
-        tokenizerTest(List(tokenInt(10)), "10#comment")
-        tokenizerTest(List(tokenDouble(3.14)), "3.14//comment")
-        tokenizerTest(List(tokenDouble(3.14)), "3.14#comment")
+        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment")), "bar//comment")
+        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment")), "bar#comment")
+        tokenizerTest(List(tokenInt(10), tokenComment("comment")), "10//comment")
+        tokenizerTest(List(tokenInt(10), tokenComment("comment")), "10#comment")
+        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment")), "3.14//comment")
+        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment")), "3.14#comment")
+        // be sure we keep the newline
+        tokenizerTest(List(tokenInt(10), tokenComment("comment"), tokenLine(1), tokenInt(12)), "10//comment\n12")
+        tokenizerTest(List(tokenInt(10), tokenComment("comment"), tokenLine(1), tokenInt(12)), "10#comment\n12")
     }
 
     @Test

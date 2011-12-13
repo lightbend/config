@@ -21,4 +21,5 @@ object RenderExample extends App {
 
     render("test01")
     render("test06")
+    render("test05")
 }

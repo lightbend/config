@@ -360,4 +360,135 @@ class ConfParserTest extends TestUtils {
         Parseable.newProperties(new Properties(), options).toString
         Parseable.newReader(new StringReader("{}"), options).toString
     }
+
+    private def assertComments(comments: Seq[String], conf: Config, path: String) {
+        assertEquals(comments, conf.getValue(path).origin().comments().asScala.toSeq)
+    }
+
+    private def assertComments(comments: Seq[String], conf: Config, path: String, index: Int) {
+        val v = conf.getList(path).get(index)
+        assertEquals(comments, v.origin().comments().asScala.toSeq)
+    }
+
+    @Test
+    def trackCommentsForFields() {
+        // comment in front of a field is used
+        val conf1 = parseConfig("""
+                { # Hello
+                foo=10 }
+                """)
+        assertComments(Seq(" Hello"), conf1, "foo")
+
+        // comment with a blank line after is dropped
+        val conf2 = parseConfig("""
+                { # Hello
+
+                foo=10 }
+                """)
+        assertComments(Seq(), conf2, "foo")
+
+        // comment in front of a field is used with no root {}
+        val conf3 = parseConfig("""
+                # Hello
+                foo=10
+                """)
+        assertComments(Seq(" Hello"), conf3, "foo")
+
+        // comment with a blank line after is dropped with no root {}
+        val conf4 = parseConfig("""
+                # Hello
+
+                foo=10
+                """)
+        assertComments(Seq(), conf4, "foo")
+
+        // nested objects
+        val conf5 = parseConfig("""
+             # Outside
+             bar {
+                # Ignore me
+
+                # Middle
+                # two lines
+                baz {
+                    # Inner
+                    foo=10 # should be ignored
+                    # This should be ignored too
+                } ## not used
+                # ignored
+             }
+             # ignored!
+             """)
+        assertComments(Seq(" Inner"), conf5, "bar.baz.foo")
+        assertComments(Seq(" Middle", " two lines"), conf5, "bar.baz")
+        assertComments(Seq(" Outside"), conf5, "bar")
+
+        // multiple fields
+        val conf6 = parseConfig("""{
+                # this is not with a field
+                
+                # this is field A
+                a : 10
+                # this is field B
+                b : 12 # goes with field C
+                # this is field C
+                c : 14,
+                
+                # this is not used
+                # nor is this
+                # multi-line block
+                
+                # this is with field D
+                # this is with field D also
+                d : 16
+                
+                # this is after the fields
+    }""")
+        assertComments(Seq(" this is field A"), conf6, "a")
+        assertComments(Seq(" this is field B"), conf6, "b")
+        assertComments(Seq(" goes with field C", " this is field C"), conf6, "c")
+        assertComments(Seq(" this is with field D", " this is with field D also"), conf6, "d")
+
+        // array
+        val conf7 = parseConfig("""
+                array = [
+                # goes with 0
+                0,
+                # goes with 1
+                1, # with 2
+                # goes with 2
+                2
+                # not with anything
+                ]
+                """)
+        assertComments(Seq(" goes with 0"), conf7, "array", 0)
+        assertComments(Seq(" goes with 1"), conf7, "array", 1)
+        assertComments(Seq(" with 2", " goes with 2"), conf7, "array", 2)
+
+        // properties-like syntax
+        val conf8 = parseConfig("""
+                # ignored comment
+                
+                # x.y comment
+                x.y = 10
+                # x.z comment
+                x.z = 11
+                # x.a comment
+                x.a = 12
+                # a.b comment
+                a.b = 14
+                a.c = 15
+                # ignored comment
+                """)
+
+        assertComments(Seq(" x.y comment"), conf8, "x.y")
+        assertComments(Seq(" x.z comment"), conf8, "x.z")
+        assertComments(Seq(" x.a comment"), conf8, "x.a")
+        assertComments(Seq(" a.b comment"), conf8, "a.b")
+        assertComments(Seq(), conf8, "a.c")
+        // here we're concerned that comments apply only to leaf
+        // nodes, not to parent objects.
+        assertComments(Seq(), conf8, "x")
+        assertComments(Seq(), conf8, "a")
+    }
 }
