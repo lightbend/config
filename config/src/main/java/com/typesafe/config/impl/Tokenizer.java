@@ -475,8 +475,6 @@ final class Tokenizer {
                     Token whitespace = saver.check(t, origin, lineNumber);
                     if (whitespace != null)
                         expression.add(whitespace);
-                    // we don't add comments here though; they can't happen in
-                    // valid syntax anyway.
                     expression.add(t);
                 }
             } while (true);
