@@ -425,4 +425,49 @@ class ConfigSubstitutionTest extends TestUtils {
             resolve(obj)
         }
     }
+
+    @Test
+    def optionalOverrideNotProvided() {
+        val obj = parseObject("""{ a: 42, a : ${?NOT_HERE} }""")
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("a"))
+    }
+
+    @Test
+    def optionalOverrideProvided() {
+        val obj = parseObject("""{ HERE : 43, a: 42, a : ${?HERE} }""")
+        val resolved = resolve(obj)
+        assertEquals(43, resolved.getInt("a"))
+    }
+
+    @Test
+    def optionalOverrideOfObjectNotProvided() {
+        val obj = parseObject("""{ a: { b : 42 }, a : ${?NOT_HERE} }""")
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("a.b"))
+    }
+
+    @Test
+    def optionalOverrideOfObjectProvided() {
+        val obj = parseObject("""{ HERE : 43, a: { b : 42 }, a : ${?HERE} }""")
+        val resolved = resolve(obj)
+        assertEquals(43, resolved.getInt("a"))
+        assertFalse(resolved.hasPath("a.b"))
+    }
+
+    @Test
+    def optionalVanishesFromArray() {
+        import scala.collection.JavaConverters._
+        val obj = parseObject("""{ a : [ 1, 2, 3, ${?NOT_HERE} ] }""")
+        val resolved = resolve(obj)
+        assertEquals(Seq(1, 2, 3), resolved.getIntList("a").asScala)
+    }
+
+    @Test
+    def optionalUsedInArray() {
+        import scala.collection.JavaConverters._
+        val obj = parseObject("""{ HERE: 4, a : [ 1, 2, 3, ${?HERE} ] }""")
+        val resolved = resolve(obj)
+        assertEquals(Seq(1, 2, 3, 4), resolved.getIntList("a").asScala)
+    }
 }

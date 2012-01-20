@@ -443,7 +443,8 @@ is invalid and should generate an error.
 If a substitution with the `${?foo}` syntax is undefined:
 
  - if it is the value of an object field then the field should not
-   be created.
+   be created. If the field would have overridden a previously-set
+   value for the same field, then the previous value remains.
  - if it is an array element then the element should not be added.
  - if it is part of a value concatenation then it should become an
    empty string.
