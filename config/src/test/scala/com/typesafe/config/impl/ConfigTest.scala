@@ -793,6 +793,12 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def test01Serializable() {
+        val conf = ConfigFactory.load("test01")
+        val confCopy = checkSerializable(conf)
+    }
+
+    @Test
     def test02SubstitutionsWithWeirdPaths() {
         val conf = ConfigFactory.load("test02")
 

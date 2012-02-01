@@ -21,7 +21,8 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
     final private boolean resolved;
 
     SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value) {
-        this(origin, value, ResolveStatus.fromValues(value));
+        this(origin, value, ResolveStatus
+                .fromValues(value));
     }
 
     SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value,

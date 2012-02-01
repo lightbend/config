@@ -29,6 +29,12 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def configOriginSerializable() {
+        val a = SimpleConfigOrigin.newSimple("foo")
+        checkSerializable(a)
+    }
+
+    @Test
     def configIntEquality() {
         val a = intValue(42)
         val sameAsA = intValue(42)
@@ -37,6 +43,13 @@ class ConfigValueTest extends TestUtils {
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
         checkNotEqualObjects(a, b)
+    }
+
+    @Test
+    def configIntSerializable() {
+        val a = intValue(42)
+        val b = checkSerializable(a)
+        assertEquals(42, b.unwrapped)
     }
 
     @Test
@@ -105,6 +118,16 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def configObjectSerializable() {
+        val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
+        val a = new SimpleConfigObject(fakeOrigin(), aMap)
+        val b = checkSerializable(a)
+        assertEquals(1, b.toConfig.getInt("a"))
+        // check that deserialized Config and ConfigObject refer to each other
+        assertTrue(b.toConfig.root eq b)
+    }
+
+    @Test
     def configListEquality() {
         val aScalaSeq = Seq(1, 2, 3) map { intValue(_): AbstractConfigValue }
         val aList = new SimpleConfigList(fakeOrigin(), aScalaSeq.asJava)
@@ -118,6 +141,14 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def configListSerializable() {
+        val aScalaSeq = Seq(1, 2, 3) map { intValue(_): AbstractConfigValue }
+        val aList = new SimpleConfigList(fakeOrigin(), aScalaSeq.asJava)
+        val bList = checkSerializable(aList)
+        assertEquals(1, bList.get(0).unwrapped())
+    }
+
+    @Test
     def configSubstitutionEquality() {
         val a = subst("foo")
         val sameAsA = subst("foo")
@@ -126,6 +157,12 @@ class ConfigValueTest extends TestUtils {
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
         checkNotEqualObjects(a, b)
+    }
+
+    @Test
+    def configSubstitutionSerializable() {
+        val a = subst("foo")
+        val b = checkSerializable(a)
     }
 
     @Test
@@ -142,6 +179,14 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def configDelayedMergeSerializable() {
+        val s1 = subst("foo")
+        val s2 = subst("bar")
+        val a = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](s1, s2).asJava)
+        val b = checkSerializable(a)
+    }
+
+    @Test
     def configDelayedMergeObjectEquality() {
         val empty = SimpleConfigObject.empty()
         val s1 = subst("foo")
@@ -153,6 +198,15 @@ class ConfigValueTest extends TestUtils {
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
         checkNotEqualObjects(a, b)
+    }
+
+    @Test
+    def configDelayedMergeObjectSerializable() {
+        val empty = SimpleConfigObject.empty()
+        val s1 = subst("foo")
+        val s2 = subst("bar")
+        val a = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](empty, s1, s2).asJava)
+        val b = checkSerializable(a)
     }
 
     @Test

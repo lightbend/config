@@ -13,6 +13,10 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigSyntax
 import com.typesafe.config.ConfigFactory
 import java.io.File
+import java.io.ByteArrayOutputStream
+import java.io.ObjectOutputStream
+import java.io.ByteArrayInputStream
+import java.io.ObjectInputStream
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -80,6 +84,44 @@ abstract trait TestUtils {
         assertTrue(a.hashCode() == b.hashCode())
         checkNotEqualToRandomOtherThing(a)
         checkNotEqualToRandomOtherThing(b)
+    }
+
+    private def copyViaSerialize(o: java.io.Serializable): AnyRef = {
+        val byteStream = new ByteArrayOutputStream()
+        val objectStream = new ObjectOutputStream(byteStream)
+        objectStream.writeObject(o)
+        objectStream.close()
+        val inStream = new ByteArrayInputStream(byteStream.toByteArray())
+        val inObjectStream = new ObjectInputStream(inStream)
+        val copy = inObjectStream.readObject()
+        inObjectStream.close()
+        copy
+    }
+
+    protected def checkSerializable[T: Manifest](o: T): T = {
+        checkEqualObjects(o, o)
+
+        assertTrue(o.getClass.getSimpleName + " not an instance of Serializable", o.isInstanceOf[java.io.Serializable])
+
+        val a = o.asInstanceOf[java.io.Serializable]
+
+        val b = try {
+            copyViaSerialize(a)
+        } catch {
+            case nf: ClassNotFoundException =>
+                throw new AssertionError("failed to make a copy via serialization, " +
+                    "possibly caused by http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6446627",
+                    nf)
+            case e: Exception =>
+                throw new AssertionError("failed to make a copy via serialization", e)
+        }
+
+        assertTrue("deserialized type " + b.getClass.getSimpleName + " doesn't match serialized type " + a.getClass.getSimpleName,
+            manifest[T].erasure.isAssignableFrom(b.getClass))
+
+        checkEqualObjects(a, b)
+
+        b.asInstanceOf[T]
     }
 
     def fakeOrigin() = {
@@ -372,7 +414,7 @@ abstract trait TestUtils {
     protected def substInString(ref: String, optional: Boolean): ConfigSubstitution = {
         import scala.collection.JavaConverters._
         val path = Path.newPath(ref)
-        val pieces = List("start<", new SubstitutionExpression(path, optional), ">end")
+        val pieces = List[AnyRef]("start<", new SubstitutionExpression(path, optional), ">end")
         new ConfigSubstitution(fakeOrigin(), pieces.asJava)
     }
 

@@ -322,6 +322,11 @@ class ConfigSubstitutionTest extends TestUtils {
 """)
     }
 
+    @Test
+    def serializeUnresolvedObject() {
+        checkSerializable(substComplexObject)
+    }
+
     // this is a weird test, it used to test fallback to system props which made more sense.
     // Now it just tests that if you override with system props, you can use system props
     // in substitutions.
