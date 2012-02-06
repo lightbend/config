@@ -17,6 +17,8 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.ByteArrayInputStream
 import java.io.ObjectInputStream
+import org.apache.commons.codec.binary.Hex
+import scala.annotation.tailrec
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -96,6 +98,54 @@ abstract trait TestUtils {
         val copy = inObjectStream.readObject()
         inObjectStream.close()
         copy
+    }
+
+    protected def checkSerializationCompat[T: Manifest](expectedHex: String, o: T): Unit = {
+        // be sure we can still deserialize the old one
+        val inStream = new ByteArrayInputStream(Hex.decodeHex(expectedHex.toCharArray()))
+        val inObjectStream = new ObjectInputStream(inStream)
+        var failure: Option[Exception] = None
+        val deserialized = try {
+            inObjectStream.readObject()
+        } catch {
+            case e: Exception =>
+                failure = Some(e)
+                null
+        }
+        inObjectStream.close()
+
+        val why = failure.map({ e => ": " + e.getClass.getSimpleName + ": " + e.getMessage }).getOrElse("")
+
+        assertEquals("Can no longer deserialize the old format of " + o.getClass.getSimpleName + why,
+            o, deserialized)
+        assertFalse(failure.isDefined) // should have thrown if we had a failure
+
+        val byteStream = new ByteArrayOutputStream()
+        val objectStream = new ObjectOutputStream(byteStream)
+        objectStream.writeObject(o)
+        objectStream.close()
+        val hex = Hex.encodeHexString(byteStream.toByteArray())
+        if (expectedHex != hex) {
+            @tailrec
+            def outputStringLiteral(s: String): Unit = {
+                if (s.nonEmpty) {
+                    val (head, tail) = s.splitAt(80)
+                    val plus = if (tail.isEmpty) "" else " +"
+                    System.err.println("\"" + head + "\"" + plus)
+                    outputStringLiteral(tail)
+                }
+            }
+            System.err.println("Correct result literal for " + o.getClass.getSimpleName + " serialization:")
+            System.err.println("\"\" + ") // line up all the lines by using empty string on first line
+            outputStringLiteral(hex)
+        }
+        assertEquals(o.getClass.getSimpleName + " serialization has changed (though we still deserialized the old serialization)", expectedHex, hex)
+    }
+
+    protected def checkSerializable[T: Manifest](expectedHex: String, o: T): T = {
+        val t = checkSerializable(o)
+        checkSerializationCompat(expectedHex, o)
+        t
     }
 
     protected def checkSerializable[T: Manifest](o: T): T = {
