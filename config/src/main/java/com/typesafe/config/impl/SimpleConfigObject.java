@@ -1,5 +1,5 @@
 /**
- *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
+ *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
 package com.typesafe.config.impl;
 
@@ -16,6 +16,8 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
 
 final class SimpleConfigObject extends AbstractConfigObject {
+
+    private static final long serialVersionUID = 1L;
 
     // this map should never be modified - assume immutable
     final private Map<String, AbstractConfigValue> value;

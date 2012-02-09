@@ -1,5 +1,5 @@
 /**
- *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
+ *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
 package com.typesafe.config.impl;
 
@@ -15,6 +15,8 @@ import com.typesafe.config.ConfigValueType;
  *
  */
 final class ConfigNull extends AbstractConfigValue {
+
+    private static final long serialVersionUID = 1L;
 
     ConfigNull(ConfigOrigin origin) {
         super(origin);

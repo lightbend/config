@@ -1,7 +1,9 @@
 /**
- *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
+ *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
 package com.typesafe.config.impl;
+
+import java.io.Serializable;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
@@ -16,7 +18,9 @@ import com.typesafe.config.ConfigValue;
  * improperly-factored and non-modular code. Please don't add parent().
  *
  */
-abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
+abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     final private SimpleConfigOrigin origin;
 

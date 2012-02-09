@@ -1,6 +1,10 @@
 package com.typesafe.config.impl;
 
-final class SubstitutionExpression {
+import java.io.Serializable;
+
+final class SubstitutionExpression implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     final private Path path;
     final private boolean optional;

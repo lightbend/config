@@ -1,5 +1,5 @@
 /**
- *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
+ *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
 package com.typesafe.config.impl;
 
@@ -23,6 +23,9 @@ import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements
         ConfigObject {
+
+    private static final long serialVersionUID = 1L;
+
     final private SimpleConfig config;
 
     protected AbstractConfigObject(ConfigOrigin origin) {
