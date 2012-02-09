@@ -42,6 +42,15 @@ You can find published releases here:
 
  - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
 
+Alternately, unofficial binary releases are also in [maven central](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22typesafe-config%22) as:
+
+    <dependency>
+        <groupId>org.skife.com.typesafe.config</groupId>
+        <artifactId>typesafe-config</artifactId>
+        <version>0.2.1</version>
+    </dependency>
+
+
 ## API docs
 
  - Online: http://typesafehub.github.com/config/latest/api/
