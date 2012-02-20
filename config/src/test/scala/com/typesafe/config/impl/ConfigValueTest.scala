@@ -708,4 +708,29 @@ class ConfigValueTest extends TestUtils {
         assertEquals("/foo", urlOrigin.filename)
         assertEquals("file:/foo", urlOrigin.url.toExternalForm)
     }
+
+    @Test
+    def withOnly() {
+        val obj = parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }")
+        assertEquals("keep only a", parseObject("{ a=1 }"), obj.withOnlyKey("a"))
+        assertEquals("keep only e", parseObject("{ e.f.g=4 }"), obj.withOnlyKey("e"))
+        assertEquals("keep only c.d", parseObject("{ c.d.y=3, c.d.z=5 }"), obj.toConfig.withOnlyPath("c.d").root)
+        assertEquals("keep only c.d.z", parseObject("{ c.d.z=5 }"), obj.toConfig.withOnlyPath("c.d.z").root)
+        assertEquals("keep nonexistent key", parseObject("{ }"), obj.withOnlyKey("nope"))
+        assertEquals("keep nonexistent path", parseObject("{ }"), obj.toConfig.withOnlyPath("q.w.e.r.t.y").root)
+        assertEquals("keep only nonexistent underneath non-object", parseObject("{ }"), obj.toConfig.withOnlyPath("a.nonexistent").root)
+        assertEquals("keep only nonexistent underneath nested non-object", parseObject("{ }"), obj.toConfig.withOnlyPath("c.d.z.nonexistent").root)
+    }
+
+    @Test
+    def without() {
+        val obj = parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }")
+        assertEquals("without a", parseObject("{ b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.withoutKey("a"))
+        assertEquals("without c", parseObject("{ a=1, b=2, e.f.g=4 }"), obj.withoutKey("c"))
+        assertEquals("without c.d", parseObject("{ a=1, b=2, e.f.g=4, c={} }"), obj.toConfig.withoutPath("c.d").root)
+        assertEquals("without c.d.z", parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4 }"), obj.toConfig.withoutPath("c.d.z").root)
+        assertEquals("without nonexistent key", parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.withoutKey("nonexistent"))
+        assertEquals("without nonexistent path", parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.toConfig.withoutPath("q.w.e.r.t.y").root)
+        assertEquals("without nonexistent path with existing prefix", parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.toConfig.withoutPath("a.foo").root)
+    }
 }

@@ -114,6 +114,31 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
+    public ConfigDelayedMergeObject withOnlyKey(String key) {
+        throw notResolved();
+    }
+
+    @Override
+    public ConfigDelayedMergeObject withoutKey(String key) {
+        throw notResolved();
+    }
+
+    @Override
+    protected AbstractConfigObject withOnlyPathOrNull(Path path) {
+        throw notResolved();
+    }
+
+    @Override
+    AbstractConfigObject withOnlyPath(Path path) {
+        throw notResolved();
+    }
+
+    @Override
+    AbstractConfigObject withoutPath(Path path) {
+        throw notResolved();
+    }
+
+    @Override
     public Collection<AbstractConfigValue> unmergedValues() {
         return stack;
     }
