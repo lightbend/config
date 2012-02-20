@@ -116,30 +116,40 @@ abstract trait TestUtils {
 
         val why = failure.map({ e => ": " + e.getClass.getSimpleName + ": " + e.getMessage }).getOrElse("")
 
-        assertEquals("Can no longer deserialize the old format of " + o.getClass.getSimpleName + why,
-            o, deserialized)
-        assertFalse(failure.isDefined) // should have thrown if we had a failure
-
         val byteStream = new ByteArrayOutputStream()
         val objectStream = new ObjectOutputStream(byteStream)
         objectStream.writeObject(o)
         objectStream.close()
         val hex = Hex.encodeHexString(byteStream.toByteArray())
-        if (expectedHex != hex) {
-            @tailrec
-            def outputStringLiteral(s: String): Unit = {
-                if (s.nonEmpty) {
-                    val (head, tail) = s.splitAt(80)
-                    val plus = if (tail.isEmpty) "" else " +"
-                    System.err.println("\"" + head + "\"" + plus)
-                    outputStringLiteral(tail)
+        def showCorrectResult(): Unit = {
+            if (expectedHex != hex) {
+                @tailrec
+                def outputStringLiteral(s: String): Unit = {
+                    if (s.nonEmpty) {
+                        val (head, tail) = s.splitAt(80)
+                        val plus = if (tail.isEmpty) "" else " +"
+                        System.err.println("\"" + head + "\"" + plus)
+                        outputStringLiteral(tail)
+                    }
                 }
+                System.err.println("Correct result literal for " + o.getClass.getSimpleName + " serialization:")
+                System.err.println("\"\" + ") // line up all the lines by using empty string on first line
+                outputStringLiteral(hex)
             }
-            System.err.println("Correct result literal for " + o.getClass.getSimpleName + " serialization:")
-            System.err.println("\"\" + ") // line up all the lines by using empty string on first line
-            outputStringLiteral(hex)
         }
-        assertEquals(o.getClass.getSimpleName + " serialization has changed (though we still deserialized the old serialization)", expectedHex, hex)
+
+        try {
+            assertEquals("Can no longer deserialize the old format of " + o.getClass.getSimpleName + why,
+                o, deserialized)
+            assertFalse(failure.isDefined) // should have thrown if we had a failure
+
+            assertEquals(o.getClass.getSimpleName + " serialization has changed (though we still deserialized the old serialization)",
+                expectedHex, hex)
+        } catch {
+            case e: Throwable =>
+                showCorrectResult()
+                throw e
+        }
     }
 
     protected def checkSerializable[T: Manifest](expectedHex: String, o: T): T = {

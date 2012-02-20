@@ -18,8 +18,10 @@ import com.typesafe.config.ConfigValue;
 
 // This is just like ConfigDelayedMerge except we know statically
 // that it will turn out to be an object.
-class ConfigDelayedMergeObject extends AbstractConfigObject implements
+final class ConfigDelayedMergeObject extends AbstractConfigObject implements
         Unmergeable {
+
+    private static final long serialVersionUID = 1L;
 
     final private List<AbstractConfigValue> stack;
     final private boolean ignoresFallbacks;
