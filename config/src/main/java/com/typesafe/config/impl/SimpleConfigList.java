@@ -34,6 +34,11 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
         super(origin);
         this.value = value;
         this.resolved = status == ResolveStatus.RESOLVED;
+
+        // kind of an expensive debug check (makes this constructor pointless)
+        if (status != ResolveStatus.fromValues(value))
+            throw new ConfigException.BugOrBroken(
+                    "SimpleConfigList created with wrong resolve status: " + this);
     }
 
     @Override
