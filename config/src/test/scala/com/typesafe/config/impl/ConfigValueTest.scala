@@ -724,6 +724,23 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def withOnlyInvolvingUnresolved() {
+        val obj = parseObject("{ a = {}, a=${x}, b=${y}, b=${z}, x={asf:1}, y=2, z=3 }")
+        assertEquals("keep only a.asf", parseObject("{ a={asf:1} }"), obj.toConfig.resolve.withOnlyPath("a.asf").root)
+
+        intercept[ConfigException.UnresolvedSubstitution] {
+            obj.withOnlyKey("a").toConfig.resolve
+        }
+
+        intercept[ConfigException.UnresolvedSubstitution] {
+            obj.withOnlyKey("b").toConfig.resolve
+        }
+
+        assertEquals(ResolveStatus.UNRESOLVED, obj.resolveStatus())
+        assertEquals(ResolveStatus.RESOLVED, obj.withOnlyKey("z").resolveStatus())
+    }
+
+    @Test
     def without() {
         val obj = parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }")
         assertEquals("without a", parseObject("{ b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.withoutKey("a"))
@@ -733,5 +750,23 @@ class ConfigValueTest extends TestUtils {
         assertEquals("without nonexistent key", parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.withoutKey("nonexistent"))
         assertEquals("without nonexistent path", parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.toConfig.withoutPath("q.w.e.r.t.y").root)
         assertEquals("without nonexistent path with existing prefix", parseObject("{ a=1, b=2, c.d.y=3, e.f.g=4, c.d.z=5 }"), obj.toConfig.withoutPath("a.foo").root)
+    }
+
+    @Test
+    def withoutInvolvingUnresolved() {
+        val obj = parseObject("{ a = {}, a=${x}, b=${y}, b=${z}, x={asf:1}, y=2, z=3 }")
+        assertEquals("without a.asf", parseObject("{ a={}, b=3, x={asf:1}, y=2, z=3 }"), obj.toConfig.resolve.withoutPath("a.asf").root)
+
+        intercept[ConfigException.UnresolvedSubstitution] {
+            obj.withoutKey("x").toConfig.resolve
+        }
+
+        intercept[ConfigException.UnresolvedSubstitution] {
+            obj.withoutKey("z").toConfig.resolve
+        }
+
+        assertEquals(ResolveStatus.UNRESOLVED, obj.resolveStatus())
+        assertEquals(ResolveStatus.UNRESOLVED, obj.withoutKey("a").resolveStatus())
+        assertEquals(ResolveStatus.RESOLVED, obj.withoutKey("a").withoutKey("b").resolveStatus())
     }
 }

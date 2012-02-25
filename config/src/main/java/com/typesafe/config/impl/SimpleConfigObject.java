@@ -40,12 +40,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
         this.ignoresFallbacks = ignoresFallbacks;
 
         // Kind of an expensive debug check. Comment out?
-        boolean allResolved = true;
-        for (AbstractConfigValue v : value.values()) {
-            if (v.resolveStatus() != ResolveStatus.RESOLVED)
-                allResolved = false;
-        }
-        if (this.resolved != allResolved)
+        if (status != ResolveStatus.fromValues(value.values()))
             throw new ConfigException.BugOrBroken("Wrong resolved status on " + this);
     }
 
@@ -89,7 +84,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
             return null;
         } else {
             return new SimpleConfigObject(origin(), Collections.singletonMap(key, v),
-                    resolveStatus(), ignoresFallbacks);
+                    v.resolveStatus(), ignoresFallbacks);
         }
     }
 
@@ -98,7 +93,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
         SimpleConfigObject o = withOnlyPathOrNull(path);
         if (o == null) {
             return new SimpleConfigObject(origin(),
-                    Collections.<String, AbstractConfigValue> emptyMap(), resolveStatus(),
+                    Collections.<String, AbstractConfigValue> emptyMap(), ResolveStatus.RESOLVED,
                     ignoresFallbacks);
         } else {
             return o;
@@ -116,7 +111,8 @@ final class SimpleConfigObject extends AbstractConfigObject {
             Map<String, AbstractConfigValue> updated = new HashMap<String, AbstractConfigValue>(
                     value);
             updated.put(key, v);
-            return new SimpleConfigObject(origin(), updated, resolveStatus(), ignoresFallbacks);
+            return new SimpleConfigObject(origin(), updated, ResolveStatus.fromValues(updated
+                    .values()), ignoresFallbacks);
         } else if (next != null || v == null) {
             // can't descend, nothing to remove
             return this;
@@ -127,7 +123,8 @@ final class SimpleConfigObject extends AbstractConfigObject {
                 if (!old.getKey().equals(key))
                     smaller.put(old.getKey(), old.getValue());
             }
-            return new SimpleConfigObject(origin(), smaller, resolveStatus(), ignoresFallbacks);
+            return new SimpleConfigObject(origin(), smaller, ResolveStatus.fromValues(smaller
+                    .values()), ignoresFallbacks);
         }
     }
 
