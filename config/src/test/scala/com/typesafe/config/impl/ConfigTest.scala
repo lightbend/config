@@ -937,9 +937,43 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def test09DelayedMerge() {
+        val conf = ConfigFactory.parseResources(classOf[ConfigTest], "/test09.conf")
+        assertEquals(classOf[ConfigDelayedMergeObject].getSimpleName,
+            conf.root.get("a").getClass.getSimpleName)
+        assertEquals(classOf[ConfigDelayedMerge].getSimpleName,
+            conf.root.get("b").getClass.getSimpleName)
+
+        // a.c should work without resolving because no more merging is needed to compute it
+        assertEquals(3, conf.getInt("a.c"))
+
+        intercept[ConfigException.NotResolved] {
+            conf.getInt("a.q")
+        }
+
+        // be sure resolving doesn't throw
+        val resolved = conf.resolve()
+        assertEquals(3, resolved.getInt("a.c"))
+        assertEquals(5, resolved.getInt("b"))
+        assertEquals(10, resolved.getInt("a.q"))
+    }
+
+    @Test
+    def test10DelayedMergeRelativizing() {
+        val conf = ConfigFactory.parseResources(classOf[ConfigTest], "/test10.conf")
+        val resolved = conf.resolve()
+        assertEquals(3, resolved.getInt("foo.a.c"))
+        assertEquals(5, resolved.getInt("foo.b"))
+        assertEquals(10, resolved.getInt("foo.a.q"))
+    }
+
+    @Test
     def renderRoundTrip() {
-        for (i <- 1 to 6) {
-            val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], "test0" + i)
+        for (i <- 1 to 10) {
+            val numString = i.toString
+            val name = "/test" + { if (numString.size == 1) "0" else "" } + numString
+            val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], name,
+                ConfigParseOptions.defaults().setAllowMissing(false))
             val unresolvedRender = conf.root.render()
             val resolved = conf.resolve()
             val resolvedRender = resolved.root.render()
