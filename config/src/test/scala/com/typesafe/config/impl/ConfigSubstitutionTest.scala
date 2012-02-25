@@ -485,6 +485,63 @@ class ConfigSubstitutionTest extends TestUtils {
         assertTrue(e.getMessage.contains("item1.b"))
     }
 
+    // objects that mutually refer to each other
+    private val delayedMergeObjectEmbrace = {
+        parseObject("""
+  defaults {
+    a = 1
+    b = 2
+  }
+
+  item1 = ${defaults}
+  // item1.c refers to a field in item2 that refers to item1
+  item1.c = ${item2.d}
+  // item1.x refers to a field in item2 that doesn't go back to item1
+  item1.x = ${item2.y}
+
+  item2 = ${defaults}
+  // item2.d refers to a field in item1
+  item2.d = ${item1.a}
+  item2.y = 15
+""")
+    }
+
+    @Test
+    def resolveDelayedMergeObjectEmbrace() {
+        assertTrue(delayedMergeObjectEmbrace.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
+        assertTrue(delayedMergeObjectEmbrace.attemptPeekWithPartialResolve("item2").isInstanceOf[ConfigDelayedMergeObject])
+
+        val resolved = delayedMergeObjectEmbrace.toConfig.resolve()
+        assertEquals(1, resolved.getInt("item1.c"))
+        assertEquals(1, resolved.getInt("item2.d"))
+        assertEquals(15, resolved.getInt("item1.x"))
+    }
+
+    // objects that mutually refer to each other
+    private val plainObjectEmbrace = {
+        parseObject("""
+  item1.a = 10
+  item1.b = ${item2.d}
+  item2.c = 12
+  item2.d = 14
+  item2.e = ${item1.a}
+  item2.f = ${item1.b}   // item1.b goes back to item2
+  item2.g = ${item2.f}   // goes back to ourselves
+""")
+    }
+
+    @Test
+    def resolvePlainObjectEmbrace() {
+        assertTrue(plainObjectEmbrace.attemptPeekWithPartialResolve("item1").isInstanceOf[SimpleConfigObject])
+        assertTrue(plainObjectEmbrace.attemptPeekWithPartialResolve("item2").isInstanceOf[SimpleConfigObject])
+
+        val resolved = plainObjectEmbrace.toConfig.resolve()
+        assertEquals(14, resolved.getInt("item1.b"))
+        assertEquals(10, resolved.getInt("item2.e"))
+        assertEquals(14, resolved.getInt("item2.f"))
+        assertEquals(14, resolved.getInt("item2.g"))
+    }
+
     @Test
     def useRelativeToSameFileWhenRelativized() {
         val child = parseObject("""foo=in child,bar=${foo}""")
