@@ -20,11 +20,11 @@ import com.typesafe.config.ConfigMergeable
 class ConfigTest extends TestUtils {
 
     private def resolveNoSystem(v: AbstractConfigValue, root: AbstractConfigObject) = {
-        SubstitutionResolver.resolve(v, root, ConfigResolveOptions.noSystem())
+        SubstitutionResolver.resolveWithExternalExceptions(v, root, ConfigResolveOptions.noSystem())
     }
 
     private def resolveNoSystem(v: SimpleConfig, root: SimpleConfig) = {
-        SubstitutionResolver.resolve(v.root, root.root,
+        SubstitutionResolver.resolveWithExternalExceptions(v.root, root.root,
             ConfigResolveOptions.noSystem()).asInstanceOf[AbstractConfigObject].toConfig
     }
 

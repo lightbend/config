@@ -15,20 +15,20 @@ class ConfigSubstitutionTest extends TestUtils {
 
     private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
-        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
+        SubstitutionResolver.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolveWithoutFallbacks(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
-        SubstitutionResolver.resolve(s, root, options)
+        SubstitutionResolver.resolveWithExternalExceptions(s, root, options)
     }
 
     private def resolve(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
-        SubstitutionResolver.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
+        SubstitutionResolver.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolve(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
-        SubstitutionResolver.resolve(s, root, options)
+        SubstitutionResolver.resolveWithExternalExceptions(s, root, options)
     }
 
     private val simpleObject = {
@@ -269,7 +269,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def avoidDelayedMergeObjectResolveProblem1() {
-        assertTrue(delayedMergeObjectResolveProblem1.peek("item1").isInstanceOf[ConfigDelayedMergeObject])
+        assertTrue(delayedMergeObjectResolveProblem1.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
 
         val resolved = resolveWithoutFallbacks(delayedMergeObjectResolveProblem1)
 
@@ -296,7 +296,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def avoidDelayedMergeObjectResolveProblem2() {
-        assertTrue(delayedMergeObjectResolveProblem2.peek("item1").isInstanceOf[ConfigDelayedMergeObject])
+        assertTrue(delayedMergeObjectResolveProblem2.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
 
         val resolved = resolveWithoutFallbacks(delayedMergeObjectResolveProblem2)
 
@@ -325,7 +325,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def avoidDelayedMergeObjectResolveProblem3() {
-        assertTrue(delayedMergeObjectResolveProblem3.peek("item1").isInstanceOf[ConfigDelayedMergeObject])
+        assertTrue(delayedMergeObjectResolveProblem3.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
 
         val resolved = resolveWithoutFallbacks(delayedMergeObjectResolveProblem3)
 
@@ -354,7 +354,7 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def avoidDelayedMergeObjectResolveProblem4() {
         // in this case we have a ConfigDelayedMerge not a ConfigDelayedMergeObject
-        assertTrue(delayedMergeObjectResolveProblem4.peek("item1").isInstanceOf[ConfigDelayedMerge])
+        assertTrue(delayedMergeObjectResolveProblem4.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMerge])
 
         val resolved = resolveWithoutFallbacks(delayedMergeObjectResolveProblem4)
 
@@ -381,13 +381,108 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def avoidDelayedMergeObjectResolveProblem5() {
         // in this case we have a ConfigDelayedMerge not a ConfigDelayedMergeObject
-        assertTrue(delayedMergeObjectResolveProblem5.peek("item1").isInstanceOf[ConfigDelayedMerge])
+        assertTrue(delayedMergeObjectResolveProblem5.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMerge])
 
         val resolved = resolveWithoutFallbacks(delayedMergeObjectResolveProblem5)
 
         assertEquals(2, resolved.getInt("item1.b"))
         assertEquals(2, resolved.getInt("item2.b"))
         assertEquals(2, resolved.getInt("defaults.a"))
+    }
+
+    private val delayedMergeObjectResolveProblem6 = {
+        parseObject("""
+  z = 15
+  defaults-defaults-defaults {
+    m = ${z}
+    n.o.p = ${z}
+  }
+  defaults-defaults {
+    x = 10
+    y = 11
+    asdf = ${z}
+  }
+  defaults {
+    a = 1
+    b = 2
+  }
+  defaults-alias = ${defaults}
+  // make item1 into a ConfigDelayedMergeObject several layers deep
+  // that will NOT become resolved just because we resolve one path
+  // through it.
+  item1 = 345
+  item1 = ${?NONEXISTENT}
+  item1 = ${defaults-defaults-defaults}
+  item1 = {}
+  item1 = ${defaults-defaults}
+  item1 = ${defaults-alias}
+  item1 = ${defaults}
+  item1.b = { c : 43 }
+  item1.xyz = 101
+  // be sure we can resolve a substitution to a value in
+  // a delayed-merge object.
+  item2.b = ${item1.b}
+""")
+    }
+
+    @Test
+    def avoidDelayedMergeObjectResolveProblem6() {
+        assertTrue(delayedMergeObjectResolveProblem6.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
+
+        // should be able to attemptPeekWithPartialResolve() a known non-object without resolving
+        assertEquals(101, delayedMergeObjectResolveProblem6.toConfig().getObject("item1").attemptPeekWithPartialResolve("xyz").unwrapped())
+
+        val resolved = resolveWithoutFallbacks(delayedMergeObjectResolveProblem6)
+
+        assertEquals(parseObject("{ c : 43 }"), resolved.getObject("item1.b"))
+        assertEquals(43, resolved.getInt("item1.b.c"))
+        assertEquals(43, resolved.getInt("item2.b.c"))
+        assertEquals(15, resolved.getInt("item1.n.o.p"))
+    }
+
+    private val delayedMergeObjectWithKnownValue = {
+        parseObject("""
+  defaults {
+    a = 1
+    b = 2
+  }
+  // make item1 into a ConfigDelayedMergeObject
+  item1 = ${defaults}
+  // note that we'll resolve to a non-object value
+  // so item1.b will ignoreFallbacks and not depend on
+  // ${defaults}
+  item1.b = 3
+""")
+    }
+
+    @Test
+    def fetchKnownValueFromDelayedMergeObject() {
+        assertTrue(delayedMergeObjectWithKnownValue.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
+
+        assertEquals(3, delayedMergeObjectWithKnownValue.toConfig.getConfig("item1").getInt("b"))
+    }
+
+    private val delayedMergeObjectNeedsFullResolve = {
+        parseObject("""
+  defaults {
+    a = 1
+    b = { c : 31 }
+  }
+  item1 = ${defaults}
+  // because b is an object, fetching it requires resolving ${defaults} above
+  // to see if there are more keys to merge with b.
+  item1.b = { c : 41 }
+""")
+    }
+
+    @Test
+    def failToFetchFromDelayedMergeObjectNeedsFullResolve() {
+        assertTrue(delayedMergeObjectWithKnownValue.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
+
+        val e = intercept[ConfigException.NotResolved] {
+            delayedMergeObjectNeedsFullResolve.toConfig().getObject("item1.b")
+        }
+        assertTrue(e.getMessage.contains("item1.b"))
     }
 
     @Test

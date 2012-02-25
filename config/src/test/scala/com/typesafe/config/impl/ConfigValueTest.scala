@@ -553,6 +553,7 @@ class ConfigValueTest extends TestUtils {
             List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
         assertEquals(ConfigValueType.OBJECT, dmo.valueType())
         unresolved { dmo.unwrapped() }
+        unresolved { dmo.get("foo") }
         unresolved { dmo.containsKey(null) }
         unresolved { dmo.containsValue(null) }
         unresolved { dmo.entrySet() }
