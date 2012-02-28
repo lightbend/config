@@ -109,8 +109,8 @@ public abstract class Parseable implements ConfigParseable {
         if (value instanceof AbstractConfigObject) {
             return (AbstractConfigObject) value;
         } else {
-            throw new ConfigException.WrongType(value.origin(), "",
-                    "object at file root", value.valueType().name());
+            throw new ConfigException.WrongType(value.origin(), "", "object at file root", value
+                    .valueType().name());
         }
     }
 
@@ -215,8 +215,7 @@ public abstract class Parseable implements ConfigParseable {
             Reader reader = new InputStreamReader(input, "UTF-8");
             return new BufferedReader(reader);
         } catch (UnsupportedEncodingException e) {
-            throw new ConfigException.BugOrBroken(
-                    "Java runtime does not support UTF-8", e);
+            throw new ConfigException.BugOrBroken("Java runtime does not support UTF-8", e);
         }
     }
 
@@ -377,8 +376,7 @@ public abstract class Parseable implements ConfigParseable {
             URL url = relativeTo(input, filename);
             if (url == null)
                 return null;
-            return newURL(url, options()
-                    .setOriginDescription(null));
+            return newURL(url, options().setOriginDescription(null));
         }
 
         @Override
@@ -388,8 +386,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         public String toString() {
-            return getClass().getSimpleName() + "(" + input.toExternalForm()
-                    + ")";
+            return getClass().getSimpleName() + "(" + input.toExternalForm() + ")";
         }
     }
 
@@ -469,8 +466,7 @@ public abstract class Parseable implements ConfigParseable {
         final private ClassLoader loader;
         final private String resource;
 
-        ParseableResources(ClassLoader loader, String resource,
-                ConfigParseOptions options) {
+        ParseableResources(ClassLoader loader, String resource, ConfigParseOptions options) {
             this.loader = loader;
             this.resource = resource;
             postConstruct(options);
@@ -478,8 +474,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         protected Reader reader() throws IOException {
-            throw new ConfigException.BugOrBroken(
-                    "reader() should not be called on resources");
+            throw new ConfigException.BugOrBroken("reader() should not be called on resources");
         }
 
         @Override
@@ -581,8 +576,7 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    public static Parseable newResources(Class<?> klass, String resource,
-            ConfigParseOptions options) {
+    public static Parseable newResources(Class<?> klass, String resource, ConfigParseOptions options) {
         return newResources(klass.getClassLoader(), convertResourceName(klass, resource), options);
     }
 
@@ -626,8 +620,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         protected Reader reader() throws IOException {
-            throw new ConfigException.BugOrBroken(
-                    "reader() should not be called on props");
+            throw new ConfigException.BugOrBroken("reader() should not be called on props");
         }
 
         @Override
@@ -654,8 +647,7 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    public static Parseable newProperties(Properties properties,
-            ConfigParseOptions options) {
+    public static Parseable newProperties(Properties properties, ConfigParseOptions options) {
         return new ParseableProperties(properties, options);
     }
 }
