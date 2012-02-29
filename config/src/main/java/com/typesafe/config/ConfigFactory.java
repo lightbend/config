@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import com.typesafe.config.impl.ConfigImpl;
-import com.typesafe.config.impl.ConfigImplUtil;
 import com.typesafe.config.impl.Parseable;
 
 /**
@@ -103,49 +102,43 @@ public final class ConfigFactory {
                 .resolve(resolveOptions);
     }
 
-    private static class DefaultConfigHolder {
+    private static Config loadDefaultConfig() {
+        int specified = 0;
 
-        private static Config loadDefaultConfig() {
-            int specified = 0;
+        // override application.conf with config.file, config.resource,
+        // config.url if requested.
+        String resource = System.getProperty("config.resource");
+        if (resource != null)
+            specified += 1;
+        String file = System.getProperty("config.file");
+        if (file != null)
+            specified += 1;
+        String url = System.getProperty("config.url");
+        if (url != null)
+            specified += 1;
 
-            // override application.conf with config.file, config.resource,
-            // config.url if requested.
-            String resource = System.getProperty("config.resource");
-            if (resource != null)
-                specified += 1;
-            String file = System.getProperty("config.file");
-            if (file != null)
-                specified += 1;
-            String url = System.getProperty("config.url");
-            if (url != null)
-                specified += 1;
-
-            if (specified == 0) {
-                return load("application");
-            } else if (specified > 1) {
-                throw new ConfigException.Generic("You set more than one of config.file='" + file
-                        + "', config.url='" + url + "', config.resource='" + resource
-                        + "'; don't know which one to use!");
+        if (specified == 0) {
+            return load("application");
+        } else if (specified > 1) {
+            throw new ConfigException.Generic("You set more than one of config.file='" + file
+                    + "', config.url='" + url + "', config.resource='" + resource
+                    + "'; don't know which one to use!");
+        } else {
+            if (resource != null) {
+                // this deliberately does not parseResourcesAnySyntax; if
+                // people want that they can use an include statement.
+                return load(parseResources(ConfigFactory.class, resource));
+            } else if (file != null) {
+                return load(parseFile(new File(file)));
             } else {
-                if (resource != null) {
-                    // this deliberately does not parseResourcesAnySyntax; if
-                    // people want that they can use an include statement.
-                    return load(parseResources(ConfigFactory.class, resource));
-                } else if (file != null) {
-                    return load(parseFile(new File(file)));
-                } else {
-                    try {
-                        return load(parseURL(new URL(url)));
-                    } catch (MalformedURLException e) {
-                        throw new ConfigException.Generic(
-                                "Bad URL in config.url system property: '" + url + "': "
-                                        + e.getMessage(), e);
-                    }
+                try {
+                    return load(parseURL(new URL(url)));
+                } catch (MalformedURLException e) {
+                    throw new ConfigException.Generic("Bad URL in config.url system property: '"
+                            + url + "': " + e.getMessage(), e);
                 }
             }
         }
-
-        static final Config defaultConfig = loadDefaultConfig();
     }
 
     /**
@@ -176,11 +169,7 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load() {
-        try {
-            return DefaultConfigHolder.defaultConfig;
-        } catch (ExceptionInInitializerError e) {
-            throw ConfigImplUtil.extractInitializerError(e);
-        }
+        return loadDefaultConfig();
     }
 
     /**
@@ -301,12 +290,12 @@ public final class ConfigFactory {
      * string values. If you have both "a=foo" and "a.b=bar" in your properties
      * file, so "a" is both the object containing "b" and the string "foo", then
      * the string value is dropped.
-     * 
+     *
      * <p>
      * If you want to have <code>System.getProperties()</code> as a
      * ConfigObject, it's better to use the {@link #systemProperties()} method
      * which returns a cached global singleton.
-     * 
+     *
      * @param properties
      *            a Java Properties object
      * @param options

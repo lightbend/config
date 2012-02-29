@@ -397,21 +397,12 @@ public class ConfigImpl {
         return envVariablesAsConfigObject().toConfig();
     }
 
-    private static class ReferenceHolder {
-        private static final Config unresolvedResources = Parseable
-                .newResources(ConfigImpl.class, "/reference.conf", ConfigParseOptions.defaults())
-                .parse().toConfig();
-        static final Config referenceConfig = systemPropertiesAsConfig().withFallback(
-                unresolvedResources).resolve();
-    }
-
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static Config defaultReference() {
-        try {
-            return ReferenceHolder.referenceConfig;
-        } catch (ExceptionInInitializerError e) {
-            throw ConfigImplUtil.extractInitializerError(e);
-        }
+        Config unresolvedResources = Parseable
+                .newResources(Thread.currentThread().getContextClassLoader(), "reference.conf",
+                        ConfigParseOptions.defaults()).parse().toConfig();
+        return systemPropertiesAsConfig().withFallback(unresolvedResources).resolve();
     }
 
     private static class DebugHolder {

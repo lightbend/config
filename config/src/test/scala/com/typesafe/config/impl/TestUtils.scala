@@ -19,6 +19,9 @@ import java.io.ByteArrayInputStream
 import java.io.ObjectInputStream
 import org.apache.commons.codec.binary.Hex
 import scala.annotation.tailrec
+import java.net.URL
+import java.util.concurrent.Executors
+import java.util.concurrent.Callable
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -546,5 +549,31 @@ abstract trait TestUtils {
 
     protected def resourceFile(filename: String) = {
         new File(resourceDir, filename)
+    }
+
+    protected class TestClassLoader(parent: ClassLoader, val additions: Map[String, URL]) extends ClassLoader(parent) {
+        override def findResources(name: String) = {
+            import scala.collection.JavaConverters._
+            val other = super.findResources(name).asScala
+            additions.get(name).map({ url => Iterator(url) ++ other }).getOrElse(other).asJavaEnumeration
+        }
+        override def findResource(name: String) = {
+            additions.get(name).getOrElse(null)
+        }
+    }
+
+    protected def withContextClassLoader[T](loader: ClassLoader)(body: => T): T = {
+        val executor = Executors.newSingleThreadExecutor()
+        val f = executor.submit(new Callable[T] {
+            override def call(): T = {
+                val t = Thread.currentThread()
+                val old = t.getContextClassLoader()
+                t.setContextClassLoader(loader)
+                val result = body
+                t.setContextClassLoader(old)
+                result
+            }
+        })
+        f.get
     }
 }

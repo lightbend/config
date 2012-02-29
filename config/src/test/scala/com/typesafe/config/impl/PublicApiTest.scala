@@ -464,4 +464,28 @@ class PublicApiTest extends TestUtils {
         assertEquals("\"a\"", ConfigUtil.quoteString("a"))
         assertEquals("\"\\n\"", ConfigUtil.quoteString("\n"))
     }
+
+    @Test
+    def usesContextClassLoader() {
+        val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+        val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("reference.conf" -> resourceFile("b_2.conf").toURI.toURL()))
+
+        val configA1 = withContextClassLoader(loaderA1) {
+            ConfigFactory.load()
+        }
+        assertEquals(1, configA1.getInt("a"))
+        assertFalse("no b", configA1.hasPath("b"))
+
+        val configB2 = withContextClassLoader(loaderB2) {
+            ConfigFactory.load()
+        }
+        assertEquals(2, configB2.getInt("b"))
+        assertFalse("no a", configB2.hasPath("a"))
+
+        val configPlain = ConfigFactory.load()
+        assertFalse("no a", configPlain.hasPath("a"))
+        assertFalse("no b", configPlain.hasPath("b"))
+    }
 }
