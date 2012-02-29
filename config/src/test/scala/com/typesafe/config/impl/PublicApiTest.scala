@@ -541,4 +541,60 @@ class PublicApiTest extends TestUtils {
             assertFalse("no b", c.hasPath("b"))
         }
     }
+
+    @Test
+    def cachedDefaultConfig() {
+        val load1 = ConfigFactory.load()
+        val load2 = ConfigFactory.load()
+        assertTrue("load() was cached", load1 eq load2)
+        assertEquals(load1, load2)
+
+        // the other loader has to have some reference.conf or else we just get
+        // back the system properties singleton which is not per-class-loader
+        val otherLoader = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+        val load3 = ConfigFactory.load(otherLoader)
+        val load4 = ConfigFactory.load(otherLoader)
+        assertTrue("different config for different classloaders", load1 ne load3)
+        assertTrue("load(loader) was cached", load3 eq load4)
+        assertEquals(load3, load4)
+
+        val load5 = ConfigFactory.load()
+        val load6 = ConfigFactory.load()
+        assertTrue("load() was cached again", load5 eq load6)
+        assertEquals(load5, load5)
+        assertEquals(load1, load5)
+
+        val load7 = ConfigFactory.load(otherLoader)
+        assertTrue("cache was dropped when switching loaders", load3 ne load7)
+        assertEquals(load3, load7)
+    }
+
+    @Test
+    def cachedReferenceConfig() {
+        val load1 = ConfigFactory.defaultReference()
+        val load2 = ConfigFactory.defaultReference()
+        assertTrue("defaultReference() was cached", load1 eq load2)
+        assertEquals(load1, load2)
+
+        // the other loader has to have some reference.conf or else we just get
+        // back the system properties singleton which is not per-class-loader
+        val otherLoader = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+        val load3 = ConfigFactory.defaultReference(otherLoader)
+        val load4 = ConfigFactory.defaultReference(otherLoader)
+        assertTrue("different config for different classloaders", load1 ne load3)
+        assertTrue("defaultReference(loader) was cached", load3 eq load4)
+        assertEquals(load3, load4)
+
+        val load5 = ConfigFactory.defaultReference()
+        val load6 = ConfigFactory.defaultReference()
+        assertTrue("defaultReference() was cached again", load5 eq load6)
+        assertEquals(load5, load5)
+        assertEquals(load1, load5)
+
+        val load7 = ConfigFactory.defaultReference(otherLoader)
+        assertTrue("cache was dropped when switching loaders", load3 ne load7)
+        assertEquals(load3, load7)
+    }
 }
