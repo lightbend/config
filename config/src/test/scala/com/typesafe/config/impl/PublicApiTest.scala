@@ -488,4 +488,57 @@ class PublicApiTest extends TestUtils {
         assertFalse("no a", configPlain.hasPath("a"))
         assertFalse("no b", configPlain.hasPath("b"))
     }
+
+    @Test
+    def usesSuppliedClassLoader() {
+        val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+        val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("reference.conf" -> resourceFile("b_2.conf").toURI.toURL()))
+
+        val configA1 = ConfigFactory.load(loaderA1)
+
+        assertEquals(1, configA1.getInt("a"))
+        assertFalse("no b", configA1.hasPath("b"))
+
+        val configB2 = ConfigFactory.load(loaderB2)
+
+        assertEquals(2, configB2.getInt("b"))
+        assertFalse("no a", configB2.hasPath("a"))
+
+        val configPlain = ConfigFactory.load()
+        assertFalse("no a", configPlain.hasPath("a"))
+        assertFalse("no b", configPlain.hasPath("b"))
+
+        // check the various overloads that take a loader parameter
+        for (
+            c <- Seq(ConfigFactory.parseResources(loaderA1, "reference.conf"),
+                ConfigFactory.parseResourcesAnySyntax(loaderA1, "reference"),
+                ConfigFactory.parseResources(loaderA1, "reference.conf", ConfigParseOptions.defaults()),
+                ConfigFactory.parseResourcesAnySyntax(loaderA1, "reference", ConfigParseOptions.defaults()),
+                ConfigFactory.load(loaderA1, "application"),
+                ConfigFactory.load(loaderA1, "application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()),
+                ConfigFactory.load(loaderA1, ConfigFactory.parseString("")),
+                ConfigFactory.load(loaderA1, ConfigFactory.parseString(""), ConfigResolveOptions.defaults()),
+                ConfigFactory.defaultReference(loaderA1))
+        ) {
+            assertEquals(1, c.getInt("a"))
+            assertFalse("no b", c.hasPath("b"))
+        }
+
+        for (
+            c <- Seq(ConfigFactory.parseResources("reference.conf"),
+                ConfigFactory.parseResourcesAnySyntax("reference"),
+                ConfigFactory.parseResources("reference.conf", ConfigParseOptions.defaults()),
+                ConfigFactory.parseResourcesAnySyntax("reference", ConfigParseOptions.defaults()),
+                ConfigFactory.load("application"),
+                ConfigFactory.load("application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()),
+                ConfigFactory.load(ConfigFactory.parseString("")),
+                ConfigFactory.load(ConfigFactory.parseString(""), ConfigResolveOptions.defaults()),
+                ConfigFactory.defaultReference())
+        ) {
+            assertFalse("no a", c.hasPath("a"))
+            assertFalse("no b", c.hasPath("b"))
+        }
+    }
 }
