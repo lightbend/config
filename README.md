@@ -47,7 +47,7 @@ Alternately, unofficial binary releases are also in [maven central](http://searc
     <dependency>
         <groupId>org.skife.com.typesafe.config</groupId>
         <artifactId>typesafe-config</artifactId>
-        <version>0.2.1</version>
+        <version>0.3.0</version>
     </dependency>
 
 
