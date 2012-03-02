@@ -186,6 +186,8 @@ public final class ConfigFactory {
                     + "'; don't know which one to use!");
         } else {
             if (resource != null) {
+                if (resource.startsWith("/"))
+                    resource = resource.substring(1);
                 // this deliberately does not parseResourcesAnySyntax; if
                 // people want that they can use an include statement.
                 return load(loader, parseResources(loader, resource));
