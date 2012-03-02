@@ -90,7 +90,7 @@ The `=` character can be used anywhere JSON allows `:`, i.e. to
 separate keys from values.
 
 If a key is followed by `{`, the `:` or `=` may be omitted. So
-`"foo" {}` means `"foo" : {}"`
+`"foo" {}` means `"foo" : {}`
 
 ### Commas
 
@@ -449,7 +449,7 @@ If a substitution with the `${?foo}` syntax is undefined:
  - if it is part of a value concatenation then it should become an
    empty string.
  - `foo : ${?bar}` would avoid creating field `foo` if `bar` is
-   undefined, but `foo : ${?bar} ${?baz}` would be a value
+   undefined, but `foo : ${?bar}${?baz}` would be a value
    concatenation so if `bar` or `baz` are not defined, the result
    is an empty string.
 
@@ -475,6 +475,25 @@ Here, if an implementation resolved all substitutions in `bar` as
 part of resolving the substitution `${bar.foo}`, there would be a
 cycle. The implementation must only resolve the `foo` field in
 `bar`, rather than recursing the entire `bar` object.
+
+Mutually-referring objects should also work:
+
+    bar : { a : ${foo.d}, b : 1 }
+    foo : { c : ${bar.b}, d : 2 }
+
+In general, in resolving a substitution the implementation must
+lazy-evaluate the substitution target so there's no "circularity
+by side effect"; only truly unresolveable circular references
+should be an error. For example, this is not possible to resolve:
+
+    bar : ${foo}
+    foo : ${bar}
+
+A multi-step loop like this should also be detected as invalid:
+
+    a : ${b}
+    b : ${c}
+    c : ${a}
 
 ### Includes
 
@@ -655,7 +674,7 @@ For resources located on the Java classpath:
    then it should be passed to `getResource()` with the '/'
    removed.
  - if the included resource name does not start with '/' then it
-   should have the "directory" of the including resource.
+   should have the "directory" of the including resource
    prepended to it, before passing it to `getResource()`.  If the
    including resource is not absolute (no '/') and has no "parent
    directory" (is just a single path element), then the included
@@ -956,12 +975,17 @@ By convention, JVM apps have two parts to their configuration:
    provide a config it would be loaded from files
    `application.{conf,json,properties}` on the classpath and
    then system property overrides are applied.
- - a single JVM may have multiple application configs.
+ - the reference config may be different for different class
+   loaders, since each jar may provide a `reference.conf`
+   to go with the code in that jar.
+ - a single JVM may have multiple application configs if
+   it has multiple modules or contexts of some kind.
 
-The reference config should be merged and resolved first, and
-shared among all application configs. Substitutions in the
-reference config are not affected by any application configs,
-because the reference config should be resolved by itself.
+The reference config for a given class loader should be merged and
+resolved first, and may be shared among all application configs in
+that class loader. Substitutions in the reference config are not
+affected by any application configs, because the reference config
+should be resolved by itself.
 
 The application config should then be loaded, have the reference
 config added as a fallback, and have substitutions resolved. This
@@ -1004,6 +1028,11 @@ Environment variables are interpreted as follows:
  - environment variables always become a string value, though
    if an app asks for another type automatic type conversion
    would kick in
+
+### hyphen-separated vs. camelCase
+
+Config keys are encouraged to be `hyphen-separated` rather than
+`camelCase`.
 
 ## Note on Java properties similarity
 
