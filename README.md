@@ -64,15 +64,10 @@ Alternately, unofficial binary releases are also in [maven central](http://searc
 Report bugs to the GitHub issue tracker. Send patches as pull
 requests on GitHub.
 
-Along with any pull requests (or other means of contributing),
-please state that the contribution is your original work (or that
-you have the authority to license it) and that you license the
-work under the Apache 2.0 license.
-
-Whether or not you state this explicitly, by submitting any
-copyrighted material via pull request, email, or other means you
-agree to license your the material under the Apache 2.0 license
-and warrant that you have the legal authority to do so.
+Before we can accept pull requests, you will need to agree to the
+Typesafe Contributor License Agreement online, using your GitHub
+account - it takes 30 seconds.  You can do this at
+http://www.typesafe.com/contribute/cla
 
 ## Build
 
