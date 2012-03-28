@@ -352,6 +352,8 @@ Here are some features that might be nice to add.
    object. For consistency, if there's "array concatenation"
    within one value, maybe objects should also be able to merge
    within one value.)
+ - including URLs (which would allow forcing file: when inside
+   a classpath resource, among other things)
 
 ## Rationale
 
