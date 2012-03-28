@@ -6,8 +6,10 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
@@ -89,9 +91,10 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      *
      * @throws NotPossibleToResolve
      */
-    protected AbstractConfigValue peekPath(Path path, SubstitutionResolver resolver, int depth,
-            ConfigResolveOptions options) throws NotPossibleToResolve, NeedsFullResolve {
-        return peekPath(this, path, resolver, depth, options);
+    protected AbstractConfigValue peekPath(Path path, SubstitutionResolver resolver,
+            Set<ConfigSubstitution> traversed, ConfigResolveOptions options)
+            throws NotPossibleToResolve, NeedsFullResolve {
+        return peekPath(this, path, resolver, traversed, options);
     }
 
     /**
@@ -100,7 +103,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      */
     AbstractConfigValue peekPathWithExternalExceptions(Path path) {
         try {
-            return peekPath(this, path, null, 0, null);
+            return peekPath(this, path, null, Collections.<ConfigSubstitution> emptySet(), null);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(origin(), path.render());
         } catch (NeedsFullResolve e) {
@@ -113,14 +116,17 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     // child being peeked, but NOT the child itself. Caller has to resolve
     // the child itself if needed.
     private static AbstractConfigValue peekPath(AbstractConfigObject self, Path path,
-            SubstitutionResolver resolver, int depth, ConfigResolveOptions options)
+            SubstitutionResolver resolver, Set<ConfigSubstitution> traversed,
+            ConfigResolveOptions options)
             throws NotPossibleToResolve, NeedsFullResolve {
         if (resolver != null) {
             // walk down through the path resolving only things along that path,
             // and then recursively call ourselves with no resolver.
-            AbstractConfigValue partiallyResolved = resolver.resolve(self, depth, options, path);
+            AbstractConfigValue partiallyResolved = resolver
+                    .resolve(self, traversed, options, path);
             if (partiallyResolved instanceof AbstractConfigObject) {
-                return peekPath((AbstractConfigObject) partiallyResolved, path, null, 0, null);
+                return peekPath((AbstractConfigObject) partiallyResolved, path, null,
+                        traversed, null);
             } else {
                 throw new ConfigException.BugOrBroken("resolved object to non-object " + self
                         + " to " + partiallyResolved);
@@ -135,7 +141,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
                 return v;
             } else {
                 if (v instanceof AbstractConfigObject) {
-                    return peekPath((AbstractConfigObject) v, next, null, 0, null);
+                    return peekPath((AbstractConfigObject) v, next, null,
+                            Collections.<ConfigSubstitution> emptySet(), null);
                 } else {
                     return null;
                 }
@@ -218,7 +225,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     abstract AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
-            int depth, ConfigResolveOptions options, Path restrictToChildOrNull)
+            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
+            Path restrictToChildOrNull)
             throws NotPossibleToResolve, NeedsFullResolve;
 
     @Override

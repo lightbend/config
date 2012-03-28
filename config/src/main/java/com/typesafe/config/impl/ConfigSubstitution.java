@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
@@ -124,55 +125,61 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         return pieces;
     }
 
-    // larger than anyone would ever want
-    private static final int MAX_DEPTH = 100;
-
-    private AbstractConfigValue findInObject(AbstractConfigObject root,
+    private static AbstractConfigValue findInObject(AbstractConfigObject root,
             SubstitutionResolver resolver, /* null if we should not have refs */
-            Path subst, int depth, ConfigResolveOptions options) throws NotPossibleToResolve,
-            NeedsFullResolve {
-        if (depth > MAX_DEPTH) {
-            throw new NotPossibleToResolve(origin(), subst.render(), "Substitution ${"
-                    + subst.render() + "} is part of a cycle of substitutions");
-        }
+            Path subst, Set<ConfigSubstitution> traversed, ConfigResolveOptions options)
+            throws NotPossibleToResolve, NeedsFullResolve {
 
-        AbstractConfigValue result = root.peekPath(subst, resolver, depth, options);
+        AbstractConfigValue result = root.peekPath(subst, resolver, traversed, options);
 
         return result;
     }
 
     private AbstractConfigValue resolve(SubstitutionResolver resolver,
-            SubstitutionExpression subst, int depth, ConfigResolveOptions options,
-            Path restrictToChildOrNull) throws NotPossibleToResolve, NeedsFullResolve {
-        // First we look up the full path, which means relative to the
-        // included file if we were not a root file
-        AbstractConfigValue result = findInObject(resolver.root(), resolver, subst.path(), depth,
-                options);
+            SubstitutionExpression subst, Set<ConfigSubstitution> traversed,
+            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
+            NeedsFullResolve {
+        if (traversed.contains(this))
+            throw new SelfReferential(origin(), subst.path().render());
 
-        if (result == null) {
-            // Then we want to check relative to the root file. We don't
-            // want the prefix we were included at to be used when looking up
-            // env variables either.
-            Path unprefixed = subst.path().subPath(prefixLength);
+        traversed.add(this);
 
-            if (result == null && prefixLength > 0) {
-                result = findInObject(resolver.root(), resolver, unprefixed, depth, options);
+        try {
+
+            // First we look up the full path, which means relative to the
+            // included file if we were not a root file
+            AbstractConfigValue result = findInObject(resolver.root(), resolver, subst.path(),
+                    traversed, options);
+
+            if (result == null) {
+                // Then we want to check relative to the root file. We don't
+                // want the prefix we were included at to be used when looking
+                // up
+                // env variables either.
+                Path unprefixed = subst.path().subPath(prefixLength);
+
+                if (result == null && prefixLength > 0) {
+                    result = findInObject(resolver.root(), resolver, unprefixed, traversed, options);
+                }
+
+                if (result == null && options.getUseSystemEnvironment()) {
+                    result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null,
+                            unprefixed, traversed, options);
+                }
             }
 
-            if (result == null && options.getUseSystemEnvironment()) {
-                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null, unprefixed,
-                        depth, options);
+            if (result != null) {
+                result = resolver.resolve(result, traversed, options, restrictToChildOrNull);
             }
-        }
 
-        if (result != null) {
-            result = resolver.resolve(result, depth, options, restrictToChildOrNull);
-        }
+            return result;
 
-        return result;
+        } finally {
+            traversed.remove(this);
+        }
     }
 
-    private ConfigValue resolve(SubstitutionResolver resolver, int depth,
+    private ConfigValue resolve(SubstitutionResolver resolver, Set<ConfigSubstitution> traversed,
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
         if (pieces.size() > 1) {
             // need to concat everything into a string
@@ -186,7 +193,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                     try {
                         // to concat into a string we have to do a full resolve,
                         // so don't pass along restrictToChildOrNull
-                        v = resolve(resolver, exp, depth, options, null);
+                        v = resolve(resolver, exp, traversed, options, null);
                     } catch (NeedsFullResolve e) {
                         throw new NotPossibleToResolve(null, exp.path().render(),
                                 "Some kind of loop or interdependency prevents resolving " + exp, e);
@@ -220,7 +227,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
             ConfigValue v;
             try {
-                v = resolve(resolver, exp, depth, options, restrictToChildOrNull);
+                v = resolve(resolver, exp, traversed, options, restrictToChildOrNull);
             } catch (NeedsFullResolve e) {
                 throw new NotPossibleToResolve(null, exp.path().render(),
                         "Some kind of loop or interdependency prevents resolving " + exp, e);
@@ -233,11 +240,10 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, int depth,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
-        // only ConfigSubstitution adds to depth here, because the depth
-        // is the substitution depth not the recursion depth.
-        AbstractConfigValue resolved = (AbstractConfigValue) resolve(resolver, depth + 1, options,
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
+            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
+            Path restrictToChildOrNull) throws NotPossibleToResolve {
+        AbstractConfigValue resolved = (AbstractConfigValue) resolve(resolver, traversed, options,
                 restrictToChildOrNull);
         return resolved;
     }

@@ -9,6 +9,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
@@ -104,8 +105,9 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
     }
 
     @Override
-    SimpleConfigList resolveSubstitutions(final SubstitutionResolver resolver, final int depth,
-            final ConfigResolveOptions options, Path restrictToChildOrNull)
+    SimpleConfigList resolveSubstitutions(final SubstitutionResolver resolver,
+            final Set<ConfigSubstitution> traversed, final ConfigResolveOptions options,
+            Path restrictToChildOrNull)
             throws NotPossibleToResolve, NeedsFullResolve {
         if (resolved)
             return this;
@@ -120,7 +122,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
                     @Override
                     public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
                             throws NotPossibleToResolve, NeedsFullResolve {
-                        return resolver.resolve(v, depth, options, null /* restrictToChild */);
+                        return resolver.resolve(v, traversed, options, null /* restrictToChild */);
                     }
 
                 }, ResolveStatus.RESOLVED);

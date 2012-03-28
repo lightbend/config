@@ -4,6 +4,7 @@
 package com.typesafe.config.impl;
 
 import java.io.Serializable;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
@@ -40,7 +41,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
      * resolved. This is a checked exception since it's internal to the library
      * and we want to be sure we handle it before passing it out to public API.
      */
-    static final class NotPossibleToResolve extends Exception {
+    static class NotPossibleToResolve extends Exception {
         private static final long serialVersionUID = 1L;
 
         ConfigOrigin origin;
@@ -76,6 +77,14 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
         }
     }
 
+    static final class SelfReferential extends NotPossibleToResolve {
+        private static final long serialVersionUID = 1L;
+
+        SelfReferential(ConfigOrigin origin, String path) {
+            super(origin, path, "Substitution ${" + path + "} is part of a cycle of substitutions");
+        }
+    }
+
     // thrown if a full rather than partial resolve is needed
     static final class NeedsFullResolve extends Exception {
         private static final long serialVersionUID = 1L;
@@ -93,17 +102,17 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
      *
      * @param resolver
      *            the resolver doing the resolving
-     * @param depth
-     *            the number of substitutions followed in resolving the current
-     *            one
+     * @param traversed
+     *            objects which have already been visited, will include this one
      * @param options
      *            whether to look at system props and env vars
      * @param restrictToChildOrNull
      *            if non-null, only recurse into this child path
      * @return a new value if there were changes, or this if no changes
      */
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, int depth,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
+            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
+            Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
         return this;
     }

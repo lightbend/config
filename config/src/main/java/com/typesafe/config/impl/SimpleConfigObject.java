@@ -260,8 +260,9 @@ final class SimpleConfigObject extends AbstractConfigObject {
     }
 
     @Override
-    AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver, final int depth,
-            final ConfigResolveOptions options, final Path restrictToChildOrNull)
+    AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
+            final Set<ConfigSubstitution> traversed, final ConfigResolveOptions options,
+            final Path restrictToChildOrNull)
             throws NotPossibleToResolve, NeedsFullResolve {
         if (resolveStatus() == ResolveStatus.RESOLVED)
             return this;
@@ -276,7 +277,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
                         if (key.equals(restrictToChildOrNull.first())) {
                             Path remainder = restrictToChildOrNull.remainder();
                             if (remainder != null) {
-                                return resolver.resolve(v, depth, options, remainder);
+                                return resolver.resolve(v, traversed, options, remainder);
                             } else {
                                 // we don't want to resolve the leaf child.
                                 return v;
@@ -287,7 +288,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
                         }
                     } else {
                         // no restrictToChild, resolve everything
-                        return resolver.resolve(v, depth, options, null);
+                        return resolver.resolve(v, traversed, options, null);
                     }
                 }
 

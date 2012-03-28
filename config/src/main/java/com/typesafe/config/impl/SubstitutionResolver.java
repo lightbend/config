@@ -3,8 +3,11 @@
  */
 package com.typesafe.config.impl;
 
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
@@ -64,12 +67,12 @@ final class SubstitutionResolver {
         this.memos = new HashMap<MemoKey, AbstractConfigValue>();
     }
 
-    AbstractConfigValue resolve(AbstractConfigValue original, int depth,
+    AbstractConfigValue resolve(AbstractConfigValue original, Set<ConfigSubstitution> traversed,
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
 
-        // a fully-resolved (no restrictToChild) object can satisfy a request
-        // for a restricted object, so always check that first.
+        // a fully-resolved (no restrictToChild) object can satisfy a
+        // request for a restricted object, so always check that first.
         final MemoKey fullKey = new MemoKey(original, null);
         MemoKey restrictedKey = null;
 
@@ -86,18 +89,19 @@ final class SubstitutionResolver {
         if (cached != null) {
             return cached;
         } else {
-            AbstractConfigValue resolved = original.resolveSubstitutions(this, depth, options,
-                        restrictToChildOrNull);
+            AbstractConfigValue resolved = original.resolveSubstitutions(this, traversed, options,
+                    restrictToChildOrNull);
 
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
-                // if the resolved object is fully resolved by resolving only
-                // the restrictToChildOrNull, then it can be cached under
-                // fullKey since the child we were restricted to turned out to
-                // be the only unresolved thing.
+                // if the resolved object is fully resolved by resolving
+                // only the restrictToChildOrNull, then it can be cached
+                // under fullKey since the child we were restricted to
+                // turned out to be the only unresolved thing.
                 memos.put(fullKey, resolved);
             } else {
-                // if we have an unresolved object then either we did a partial
-                // resolve restricted to a certain child, or it's a bug.
+                // if we have an unresolved object then either we did a
+                // partial resolve restricted to a certain child, or it's
+                // a bug.
                 if (restrictToChildOrNull == null) {
                     throw new ConfigException.BugOrBroken(
                             "resolveSubstitutions() did not give us a resolved object");
@@ -118,18 +122,23 @@ final class SubstitutionResolver {
         return this.root;
     }
 
+    private static Set<ConfigSubstitution> newTraversedSet() {
+        return Collections.newSetFromMap(new IdentityHashMap<ConfigSubstitution, Boolean>());
+    }
+
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
         SubstitutionResolver resolver = new SubstitutionResolver(root);
-        return resolver.resolve(value, 0, options, restrictToChildOrNull);
+
+        return resolver.resolve(value, newTraversedSet(), options, restrictToChildOrNull);
     }
 
     static AbstractConfigValue resolveWithExternalExceptions(AbstractConfigValue value,
             AbstractConfigObject root, ConfigResolveOptions options) {
         SubstitutionResolver resolver = new SubstitutionResolver(root);
         try {
-            return resolver.resolve(value, 0, options, null /* restrictToChild */);
+            return resolver.resolve(value, newTraversedSet(), options, null /* restrictToChild */);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(value.origin(), null);
         } catch (NeedsFullResolve e) {

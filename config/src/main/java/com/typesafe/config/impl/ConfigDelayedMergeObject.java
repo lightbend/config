@@ -61,11 +61,12 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver, int depth,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
+    AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
+            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
+            Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
         AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(stack, resolver,
-                depth, options, restrictToChildOrNull);
+                traversed, options, restrictToChildOrNull);
         if (merged instanceof AbstractConfigObject) {
             return (AbstractConfigObject) merged;
         } else {

@@ -6,6 +6,7 @@ package com.typesafe.config.impl;
 import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,7 +74,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         Path path = Path.newPath(pathExpression);
         ConfigValue peeked;
         try {
-            peeked = object.peekPath(path, null, 0, null);
+            peeked = object.peekPath(path, null, Collections.<ConfigSubstitution> emptySet(), null);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(origin(), pathExpression);
         } catch (NeedsFullResolve e) {
