@@ -32,7 +32,10 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     final private List<Object> pieces;
     // the length of any prefixes added with relativized()
     final private int prefixLength;
-    final private boolean ignoresFallbacks;
+
+    // this is just here to avoid breaking serialization;
+    // it is always false at the moment.
+    final private boolean ignoresFallbacks = false;
 
     ConfigSubstitution(ConfigOrigin origin, List<Object> pieces) {
         this(origin, pieces, 0, false);
@@ -43,11 +46,14 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         super(origin);
         this.pieces = pieces;
         this.prefixLength = prefixLength;
-        this.ignoresFallbacks = ignoresFallbacks;
+
         for (Object p : pieces) {
             if (p instanceof Path)
                 throw new RuntimeException("broken here");
         }
+
+        if (ignoresFallbacks)
+            throw new ConfigException.BugOrBroken("ConfigSubstitution may never ignore fallbacks");
     }
 
     @Override
@@ -108,12 +114,15 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
     @Override
     protected AbstractConfigValue mergedWithNonObject(AbstractConfigValue fallback) {
-        // if the optional substitution ends up getting deleted (because it is
-        // not present), we'll have to use the fallback. So delay the merge.
-        if (pieces.size() == 1 && ((SubstitutionExpression) pieces.get(0)).optional())
-            return mergedLater(fallback);
-        else
-            return super.mergedWithNonObject(fallback);
+        // We may need the fallback for two reasons:
+        // 1. if an optional substitution ends up getting deleted
+        // because it is not defined
+        // 2. if the substitution is self-referential
+        //
+        // we can't easily detect the self-referential case since the cycle
+        // may involve more than one step, so we have to wait and
+        // merge later when resolving.
+        return mergedLater(fallback);
     }
 
     @Override
