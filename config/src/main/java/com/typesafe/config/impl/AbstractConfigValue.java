@@ -4,12 +4,10 @@
 package com.typesafe.config.impl;
 
 import java.io.Serializable;
-import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 /**
@@ -102,17 +100,12 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
      *
      * @param resolver
      *            the resolver doing the resolving
-     * @param traversed
-     *            objects which have already been visited, will include this one
-     * @param options
-     *            whether to look at system props and env vars
-     * @param restrictToChildOrNull
-     *            if non-null, only recurse into this child path
+     * @param context
+     *            state of the current resolve
      * @return a new value if there were changes, or this if no changes
      */
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, Set<MemoKey> traversed,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
-            NeedsFullResolve {
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
+            throws NotPossibleToResolve, NeedsFullResolve {
         return this;
     }
 

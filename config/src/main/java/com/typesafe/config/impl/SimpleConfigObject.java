@@ -16,7 +16,6 @@ import java.util.Set;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 final class SimpleConfigObject extends AbstractConfigObject {
@@ -261,9 +260,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
 
     @Override
     AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
-            final Set<MemoKey> traversed, final ConfigResolveOptions options,
-            final Path restrictToChildOrNull)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            final ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve {
         if (resolveStatus() == ResolveStatus.RESOLVED)
             return this;
 
@@ -273,11 +270,11 @@ final class SimpleConfigObject extends AbstractConfigObject {
                 @Override
                 public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
                         throws NotPossibleToResolve, NeedsFullResolve {
-                    if (restrictToChildOrNull != null) {
-                        if (key.equals(restrictToChildOrNull.first())) {
-                            Path remainder = restrictToChildOrNull.remainder();
+                    if (context.isRestrictedToChild()) {
+                        if (key.equals(context.restrictToChild().first())) {
+                            Path remainder = context.restrictToChild().remainder();
                             if (remainder != null) {
-                                return resolver.resolve(v, traversed, options, remainder);
+                                return resolver.resolve(v, context.restrict(remainder));
                             } else {
                                 // we don't want to resolve the leaf child.
                                 return v;
@@ -288,7 +285,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
                         }
                     } else {
                         // no restrictToChild, resolve everything
-                        return resolver.resolve(v, traversed, options, null);
+                        return resolver.resolve(v, context.unrestricted());
                     }
                 }
 

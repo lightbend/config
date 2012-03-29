@@ -8,11 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -136,30 +134,25 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
     private static AbstractConfigValue findInObject(AbstractConfigObject root,
             SubstitutionResolver resolver, /* null if we should not have refs */
-            Path subst, Set<MemoKey> traversed, ConfigResolveOptions options)
+            Path subst, ResolveContext context)
             throws NotPossibleToResolve, NeedsFullResolve {
 
-        AbstractConfigValue result = root.peekPath(subst, resolver, traversed, options);
+        AbstractConfigValue result = root.peekPath(subst, resolver, context);
 
         return result;
     }
 
     private AbstractConfigValue resolve(SubstitutionResolver resolver,
-            SubstitutionExpression subst, Set<MemoKey> traversed, ConfigResolveOptions options,
-            Path restrictToChildOrNull) throws NotPossibleToResolve,
+            SubstitutionExpression subst, ResolveContext context) throws NotPossibleToResolve,
             NeedsFullResolve {
-        MemoKey key = new MemoKey(this, restrictToChildOrNull);
-        if (traversed.contains(key))
-            throw new SelfReferential(origin(), subst.path().render());
-
-        traversed.add(key);
+        context.traverse(this, subst.path());
 
         try {
 
             // First we look up the full path, which means relative to the
             // included file if we were not a root file
             AbstractConfigValue result = findInObject(resolver.root(), resolver, subst.path(),
-                    traversed, options);
+                    context);
 
             if (result == null) {
                 // Then we want to check relative to the root file. We don't
@@ -169,28 +162,28 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                 Path unprefixed = subst.path().subPath(prefixLength);
 
                 if (result == null && prefixLength > 0) {
-                    result = findInObject(resolver.root(), resolver, unprefixed, traversed, options);
+                    result = findInObject(resolver.root(), resolver, unprefixed, context);
                 }
 
-                if (result == null && options.getUseSystemEnvironment()) {
+                if (result == null && context.options().getUseSystemEnvironment()) {
                     result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null,
-                            unprefixed, traversed, options);
+                            unprefixed, context);
                 }
             }
 
             if (result != null) {
-                result = resolver.resolve(result, traversed, options, restrictToChildOrNull);
+                result = resolver.resolve(result, context);
             }
 
             return result;
 
         } finally {
-            traversed.remove(key);
+            context.untraverse(this);
         }
     }
 
-    private ConfigValue resolve(SubstitutionResolver resolver, Set<MemoKey> traversed,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
+    private ConfigValue resolve(SubstitutionResolver resolver, ResolveContext context)
+            throws NotPossibleToResolve {
         if (pieces.size() > 1) {
             // need to concat everything into a string
             StringBuilder sb = new StringBuilder();
@@ -202,8 +195,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                     ConfigValue v;
                     try {
                         // to concat into a string we have to do a full resolve,
-                        // so don't pass along restrictToChildOrNull
-                        v = resolve(resolver, exp, traversed, options, null);
+                        // so unrestrict the context
+                        v = resolve(resolver, exp, context.unrestricted());
                     } catch (NeedsFullResolve e) {
                         throw new NotPossibleToResolve(null, exp.path().render(),
                                 "Some kind of loop or interdependency prevents resolving " + exp, e);
@@ -237,7 +230,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
             ConfigValue v;
             try {
-                v = resolve(resolver, exp, traversed, options, restrictToChildOrNull);
+                v = resolve(resolver, exp, context);
             } catch (NeedsFullResolve e) {
                 throw new NotPossibleToResolve(null, exp.path().render(),
                         "Some kind of loop or interdependency prevents resolving " + exp, e);
@@ -250,10 +243,9 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, Set<MemoKey> traversed,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
-        AbstractConfigValue resolved = (AbstractConfigValue) resolve(resolver, traversed, options,
-                restrictToChildOrNull);
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
+            throws NotPossibleToResolve {
+        AbstractConfigValue resolved = (AbstractConfigValue) resolve(resolver, context);
         return resolved;
     }
 

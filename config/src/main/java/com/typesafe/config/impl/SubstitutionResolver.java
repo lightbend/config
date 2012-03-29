@@ -4,9 +4,7 @@
 package com.typesafe.config.impl;
 
 import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
@@ -29,9 +27,8 @@ final class SubstitutionResolver {
         this.memos = new HashMap<MemoKey, AbstractConfigValue>();
     }
 
-    AbstractConfigValue resolve(AbstractConfigValue original, Set<MemoKey> traversed,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
-            NeedsFullResolve {
+    AbstractConfigValue resolve(AbstractConfigValue original, ResolveContext context)
+            throws NotPossibleToResolve, NeedsFullResolve {
 
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
@@ -43,16 +40,15 @@ final class SubstitutionResolver {
         // but if there was no fully-resolved object cached, we'll only
         // compute the restrictToChild object so use a more limited
         // memo key
-        if (cached == null && restrictToChildOrNull != null) {
-            restrictedKey = new MemoKey(original, restrictToChildOrNull);
+        if (cached == null && context.isRestrictedToChild()) {
+            restrictedKey = new MemoKey(original, context.restrictToChild());
             cached = memos.get(restrictedKey);
         }
 
         if (cached != null) {
             return cached;
         } else {
-            AbstractConfigValue resolved = original.resolveSubstitutions(this, traversed, options,
-                    restrictToChildOrNull);
+            AbstractConfigValue resolved = original.resolveSubstitutions(this, context);
 
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
                 // if the resolved object is fully resolved by resolving
@@ -64,15 +60,15 @@ final class SubstitutionResolver {
                 // if we have an unresolved object then either we did a
                 // partial resolve restricted to a certain child, or it's
                 // a bug.
-                if (restrictToChildOrNull == null) {
-                    throw new ConfigException.BugOrBroken(
-                            "resolveSubstitutions() did not give us a resolved object");
-                } else {
+                if (context.isRestrictedToChild()) {
                     if (restrictedKey == null) {
                         throw new ConfigException.BugOrBroken(
                                 "restrictedKey should not be null here");
                     }
                     memos.put(restrictedKey, resolved);
+                } else {
+                    throw new ConfigException.BugOrBroken(
+                            "resolveSubstitutions() did not give us a resolved object");
                 }
             }
 
@@ -84,25 +80,19 @@ final class SubstitutionResolver {
         return this.root;
     }
 
-    private static Set<MemoKey> newTraversedSet() {
-        // using LinkedHashSet just to show the order of traversal
-        // in error messages.
-        return new LinkedHashSet<MemoKey>();
-    }
-
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
         SubstitutionResolver resolver = new SubstitutionResolver(root);
 
-        return resolver.resolve(value, newTraversedSet(), options, restrictToChildOrNull);
+        return resolver.resolve(value, new ResolveContext(options, restrictToChildOrNull));
     }
 
     static AbstractConfigValue resolveWithExternalExceptions(AbstractConfigValue value,
             AbstractConfigObject root, ConfigResolveOptions options) {
         SubstitutionResolver resolver = new SubstitutionResolver(root);
         try {
-            return resolver.resolve(value, newTraversedSet(), options, null /* restrictToChild */);
+            return resolver.resolve(value, new ResolveContext(options, null /* restrictToChild */));
         } catch (NotPossibleToResolve e) {
             throw e.exportException(value.origin(), null);
         } catch (NeedsFullResolve e) {

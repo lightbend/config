@@ -8,11 +8,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -65,16 +63,15 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, Set<MemoKey> traversed,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
-            NeedsFullResolve {
-        return resolveSubstitutions(stack, resolver, traversed, options, restrictToChildOrNull);
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
+            throws NotPossibleToResolve, NeedsFullResolve {
+        return resolveSubstitutions(stack, resolver, context);
     }
 
     // static method also used by ConfigDelayedMergeObject
     static AbstractConfigValue resolveSubstitutions(List<AbstractConfigValue> stack,
-            SubstitutionResolver resolver, Set<MemoKey> traversed, ConfigResolveOptions options,
-            Path restrictToChildOrNull) throws NotPossibleToResolve, NeedsFullResolve {
+            SubstitutionResolver resolver, ResolveContext context) throws NotPossibleToResolve,
+            NeedsFullResolve {
         // to resolve substitutions, we need to recursively resolve
         // the stack of stuff to merge, and merge the stack so
         // we won't be a delayed merge anymore. If restrictToChildOrNull
@@ -82,8 +79,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
 
         AbstractConfigValue merged = null;
         for (AbstractConfigValue v : stack) {
-            AbstractConfigValue resolved = resolver.resolve(v, traversed, options,
-                    restrictToChildOrNull);
+            AbstractConfigValue resolved = resolver.resolve(v, context);
             if (resolved != null) {
                 if (merged == null)
                     merged = resolved;

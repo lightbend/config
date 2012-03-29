@@ -13,7 +13,6 @@ import java.util.Set;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 
 // This is just like ConfigDelayedMerge except we know statically
@@ -61,11 +60,10 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
     }
 
     @Override
-    AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
-            Set<MemoKey> traversed, ConfigResolveOptions options, Path restrictToChildOrNull)
+    AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
             throws NotPossibleToResolve, NeedsFullResolve {
         AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(stack, resolver,
-                traversed, options, restrictToChildOrNull);
+                context);
         if (merged instanceof AbstractConfigObject) {
             return (AbstractConfigObject) merged;
         } else {

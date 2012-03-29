@@ -9,12 +9,10 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -106,13 +104,11 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
 
     @Override
     SimpleConfigList resolveSubstitutions(final SubstitutionResolver resolver,
-            final Set<MemoKey> traversed, final ConfigResolveOptions options,
-            Path restrictToChildOrNull)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            final ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve {
         if (resolved)
             return this;
 
-        if (restrictToChildOrNull != null) {
+        if (context.isRestrictedToChild()) {
             // if a list restricts to a child path, then it has no child paths,
             // so nothing to do.
             return this;
@@ -122,7 +118,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
                     @Override
                     public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
                             throws NotPossibleToResolve, NeedsFullResolve {
-                        return resolver.resolve(v, traversed, options, null /* restrictToChild */);
+                        return resolver.resolve(v, context);
                     }
 
                 }, ResolveStatus.RESOLVED);
