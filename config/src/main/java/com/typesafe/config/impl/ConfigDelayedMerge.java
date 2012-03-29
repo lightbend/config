@@ -12,6 +12,7 @@ import java.util.List;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 /**
  * The issue here is that we want to first merge our stack of config files, and
@@ -21,8 +22,8 @@ import com.typesafe.config.ConfigValueType;
  * stack of values that should be merged, and resolve the merge when we evaluate
  * substitutions.
  */
-final class ConfigDelayedMerge extends AbstractConfigValue implements
-        Unmergeable {
+final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeable,
+        ReplaceableMergeStack {
 
     private static final long serialVersionUID = 1L;
 
@@ -65,30 +66,86 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     @Override
     AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
             throws NotPossibleToResolve, NeedsFullResolve {
-        return resolveSubstitutions(stack, resolver, context);
+        return resolveSubstitutions(this, stack, resolver, context);
     }
 
     // static method also used by ConfigDelayedMergeObject
-    static AbstractConfigValue resolveSubstitutions(List<AbstractConfigValue> stack,
-            SubstitutionResolver resolver, ResolveContext context) throws NotPossibleToResolve,
-            NeedsFullResolve {
+    static AbstractConfigValue resolveSubstitutions(ReplaceableMergeStack replaceable,
+            List<AbstractConfigValue> stack, SubstitutionResolver resolver, ResolveContext context)
+            throws NotPossibleToResolve, NeedsFullResolve {
         // to resolve substitutions, we need to recursively resolve
         // the stack of stuff to merge, and merge the stack so
         // we won't be a delayed merge anymore. If restrictToChildOrNull
         // is non-null, we may remain a delayed merge though.
 
+        int count = 0;
         AbstractConfigValue merged = null;
         for (AbstractConfigValue v : stack) {
-            AbstractConfigValue resolved = resolver.resolve(v, context);
+            boolean replaced = false;
+            // checking for RESOLVED already is just an optimization
+            // to avoid creating the replacer when it can't possibly
+            // be needed.
+            if (v.resolveStatus() != ResolveStatus.RESOLVED) {
+                // If, while resolving 'v' we come back to the same
+                // merge stack, we only want to look _below_ 'v'
+                // in the stack. So we arrange to replace the
+                // ConfigDelayedMerge with a value that is only
+                // the remainder of the stack below this one.
+
+                context.replace((AbstractConfigValue) replaceable,
+                        replaceable.makeReplacer(count + 1));
+                replaced = true;
+            }
+
+            AbstractConfigValue resolved;
+            try {
+                resolved = resolver.resolve(v, context);
+            } finally {
+                if (replaced)
+                    context.unreplace((AbstractConfigValue) replaceable);
+            }
+
             if (resolved != null) {
                 if (merged == null)
                     merged = resolved;
                 else
                     merged = merged.withFallback(resolved);
             }
+            count += 1;
         }
 
         return merged;
+    }
+
+    @Override
+    public ResolveReplacer makeReplacer(final int skipping) {
+        return new ResolveReplacer() {
+            @Override
+            protected AbstractConfigValue makeReplacement() throws Undefined {
+                return ConfigDelayedMerge.makeReplacement(stack, skipping);
+            }
+        };
+    }
+
+    // static method also used by ConfigDelayedMergeObject
+    static AbstractConfigValue makeReplacement(List<AbstractConfigValue> stack, int skipping)
+            throws Undefined {
+
+        List<AbstractConfigValue> subStack = stack.subList(skipping, stack.size());
+
+        if (subStack.isEmpty()) {
+            throw new ResolveReplacer.Undefined();
+        } else {
+            // generate a new merge stack from only the remaining items
+            AbstractConfigValue merged = null;
+            for (AbstractConfigValue v : subStack) {
+                if (merged == null)
+                    merged = v;
+                else
+                    merged = merged.withFallback(v);
+            }
+            return merged;
+        }
     }
 
     @Override
@@ -131,6 +188,11 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
 
     @Override
     protected final ConfigDelayedMerge mergedWithObject(AbstractConfigObject fallback) {
+        return mergedWithNonObject(fallback);
+    }
+
+    @Override
+    protected ConfigDelayedMerge mergedWithNonObject(AbstractConfigValue fallback) {
         if (ignoresFallbacks)
             throw new ConfigException.BugOrBroken("should not be reached");
 

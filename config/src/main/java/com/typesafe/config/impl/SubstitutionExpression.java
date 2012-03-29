@@ -23,7 +23,10 @@ final class SubstitutionExpression implements Serializable {
     }
 
     SubstitutionExpression changePath(Path newPath) {
-        return new SubstitutionExpression(newPath, optional);
+        if (newPath == path)
+            return this;
+        else
+            return new SubstitutionExpression(newPath, optional);
     }
 
     @Override

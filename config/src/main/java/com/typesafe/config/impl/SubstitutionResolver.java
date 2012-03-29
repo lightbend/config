@@ -10,6 +10,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.impl.AbstractConfigValue.NeedsFullResolve;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
+import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 /**
  * This exists because we have to memoize resolved substitutions as we go
@@ -48,31 +49,52 @@ final class SubstitutionResolver {
         if (cached != null) {
             return cached;
         } else {
-            AbstractConfigValue resolved = original.resolveSubstitutions(this, context);
+            MemoKey key = restrictedKey != null ? restrictedKey : fullKey;
 
-            if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
-                // if the resolved object is fully resolved by resolving
-                // only the restrictToChildOrNull, then it can be cached
-                // under fullKey since the child we were restricted to
-                // turned out to be the only unresolved thing.
-                memos.put(fullKey, resolved);
-            } else {
-                // if we have an unresolved object then either we did a
-                // partial resolve restricted to a certain child, or it's
-                // a bug.
-                if (context.isRestrictedToChild()) {
-                    if (restrictedKey == null) {
-                        throw new ConfigException.BugOrBroken(
-                                "restrictedKey should not be null here");
-                    }
-                    memos.put(restrictedKey, resolved);
-                } else {
-                    throw new ConfigException.BugOrBroken(
-                            "resolveSubstitutions() did not give us a resolved object");
-                }
+            AbstractConfigValue replacement;
+            boolean forceUndefined = false;
+            try {
+                replacement = context.replacement(key);
+            } catch (Undefined e) {
+                replacement = original;
+                forceUndefined = true;
             }
 
-            return resolved;
+            if (replacement != original) {
+                // start over, checking if replacement was memoized
+                return resolve(replacement, context);
+            } else {
+                AbstractConfigValue resolved;
+
+                if (forceUndefined)
+                    resolved = null;
+                else
+                    resolved = original.resolveSubstitutions(this, context);
+
+                if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
+                    // if the resolved object is fully resolved by resolving
+                    // only the restrictToChildOrNull, then it can be cached
+                    // under fullKey since the child we were restricted to
+                    // turned out to be the only unresolved thing.
+                    memos.put(fullKey, resolved);
+                } else {
+                    // if we have an unresolved object then either we did a
+                    // partial resolve restricted to a certain child, or it's
+                    // a bug.
+                    if (context.isRestrictedToChild()) {
+                        if (restrictedKey == null) {
+                            throw new ConfigException.BugOrBroken(
+                                    "restrictedKey should not be null here");
+                        }
+                        memos.put(restrictedKey, resolved);
+                    } else {
+                        throw new ConfigException.BugOrBroken(
+                                "resolveSubstitutions() did not give us a resolved object");
+                    }
+                }
+
+                return resolved;
+            }
         }
     }
 
@@ -84,15 +106,18 @@ final class SubstitutionResolver {
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
         SubstitutionResolver resolver = new SubstitutionResolver(root);
+        ResolveContext context = new ResolveContext(options, restrictToChildOrNull);
 
-        return resolver.resolve(value, new ResolveContext(options, restrictToChildOrNull));
+        return resolver.resolve(value, context);
     }
 
     static AbstractConfigValue resolveWithExternalExceptions(AbstractConfigValue value,
             AbstractConfigObject root, ConfigResolveOptions options) {
         SubstitutionResolver resolver = new SubstitutionResolver(root);
+        ResolveContext context = new ResolveContext(options, null /* restrictToChild */);
+
         try {
-            return resolver.resolve(value, new ResolveContext(options, null /* restrictToChild */));
+            return resolver.resolve(value, context);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(value.origin(), null);
         } catch (NeedsFullResolve e) {

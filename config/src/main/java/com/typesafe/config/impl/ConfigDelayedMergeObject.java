@@ -17,8 +17,8 @@ import com.typesafe.config.ConfigValue;
 
 // This is just like ConfigDelayedMerge except we know statically
 // that it will turn out to be an object.
-final class ConfigDelayedMergeObject extends AbstractConfigObject implements
-        Unmergeable {
+final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unmergeable,
+        ReplaceableMergeStack {
 
     private static final long serialVersionUID = 1L;
 
@@ -62,7 +62,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
     @Override
     AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
             throws NotPossibleToResolve, NeedsFullResolve {
-        AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(stack, resolver,
+        AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(this, stack, resolver,
                 context);
         if (merged instanceof AbstractConfigObject) {
             return (AbstractConfigObject) merged;
@@ -70,6 +70,16 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
             throw new ConfigException.BugOrBroken(
                     "somehow brokenly merged an object and didn't get an object, got " + merged);
         }
+    }
+
+    @Override
+    public ResolveReplacer makeReplacer(final int skipping) {
+        return new ResolveReplacer() {
+            @Override
+            protected AbstractConfigValue makeReplacement() throws Undefined {
+                return ConfigDelayedMerge.makeReplacement(stack, skipping);
+            }
+        };
     }
 
     @Override
@@ -94,11 +104,14 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
 
     @Override
     protected ConfigDelayedMergeObject mergedWithObject(AbstractConfigObject fallback) {
+        return mergedWithNonObject(fallback);
+    }
+
+    @Override
+    protected ConfigDelayedMergeObject mergedWithNonObject(AbstractConfigValue fallback) {
         if (ignoresFallbacks)
             throw new ConfigException.BugOrBroken("should not be reached");
 
-        // since we are an object, and the fallback is, we'll need to
-        // merge the fallback once we resolve.
         List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
         newStack.addAll(stack);
         newStack.add(fallback);

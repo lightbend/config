@@ -132,120 +132,143 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         return pieces;
     }
 
-    private static AbstractConfigValue findInObject(AbstractConfigObject root,
-            SubstitutionResolver resolver, /* null if we should not have refs */
-            Path subst, ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
+    /** resolver is null if we should not have refs */
+    private AbstractConfigValue findInObject(final AbstractConfigObject root,
+            final SubstitutionResolver resolver, final SubstitutionExpression subst,
+            final ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve {
+        return context.traversing(this, subst, new ResolveContext.Resolver() {
+            @Override
+            public AbstractConfigValue call() throws NotPossibleToResolve, NeedsFullResolve {
+                return root.peekPath(subst.path(), resolver, context);
+            }
+        });
+    }
 
-        AbstractConfigValue result = root.peekPath(subst, resolver, context);
+    private AbstractConfigValue resolve(final SubstitutionResolver resolver,
+            final SubstitutionExpression subst, final ResolveContext context)
+            throws NotPossibleToResolve,
+            NeedsFullResolve {
+        // First we look up the full path, which means relative to the
+        // included file if we were not a root file
+        AbstractConfigValue result = findInObject(resolver.root(), resolver, subst, context);
+
+        if (result == null) {
+            // Then we want to check relative to the root file. We don't
+            // want the prefix we were included at to be used when looking
+            // up env variables either.
+            SubstitutionExpression unprefixed = subst
+                    .changePath(subst.path().subPath(prefixLength));
+
+            if (result == null && prefixLength > 0) {
+                result = findInObject(resolver.root(), resolver, unprefixed, context);
+            }
+
+            if (result == null && context.options().getUseSystemEnvironment()) {
+                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null, unprefixed,
+                        context);
+            }
+        }
+
+        if (result != null) {
+            final AbstractConfigValue unresolved = result;
+            result = context.traversing(this, subst, new ResolveContext.Resolver() {
+                @Override
+                public AbstractConfigValue call() throws NotPossibleToResolve, NeedsFullResolve {
+                    return resolver.resolve(unresolved, context);
+                }
+            });
+        }
 
         return result;
     }
 
-    private AbstractConfigValue resolve(SubstitutionResolver resolver,
-            SubstitutionExpression subst, ResolveContext context) throws NotPossibleToResolve,
-            NeedsFullResolve {
-        context.traverse(this, subst.path());
-
-        try {
-
-            // First we look up the full path, which means relative to the
-            // included file if we were not a root file
-            AbstractConfigValue result = findInObject(resolver.root(), resolver, subst.path(),
-                    context);
-
-            if (result == null) {
-                // Then we want to check relative to the root file. We don't
-                // want the prefix we were included at to be used when looking
-                // up
-                // env variables either.
-                Path unprefixed = subst.path().subPath(prefixLength);
-
-                if (result == null && prefixLength > 0) {
-                    result = findInObject(resolver.root(), resolver, unprefixed, context);
-                }
-
-                if (result == null && context.options().getUseSystemEnvironment()) {
-                    result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null,
-                            unprefixed, context);
-                }
-            }
-
-            if (result != null) {
-                result = resolver.resolve(result, context);
-            }
-
-            return result;
-
-        } finally {
-            context.untraverse(this);
+    private static ResolveReplacer undefinedReplacer = new ResolveReplacer() {
+        @Override
+        protected AbstractConfigValue makeReplacement() throws Undefined {
+            throw new Undefined();
         }
+    };
+
+    private AbstractConfigValue resolveValueConcat(SubstitutionResolver resolver,
+            ResolveContext context) throws NotPossibleToResolve {
+        // need to concat everything into a string
+        StringBuilder sb = new StringBuilder();
+        for (Object p : pieces) {
+            if (p instanceof String) {
+                sb.append((String) p);
+            } else {
+                SubstitutionExpression exp = (SubstitutionExpression) p;
+                ConfigValue v;
+                try {
+                    // to concat into a string we have to do a full resolve,
+                    // so unrestrict the context
+                    v = resolve(resolver, exp, context.unrestricted());
+                } catch (NeedsFullResolve e) {
+                    throw new NotPossibleToResolve(null, exp.path().render(),
+                            "Some kind of loop or interdependency prevents resolving " + exp, e);
+                }
+
+                if (v == null) {
+                    if (exp.optional()) {
+                        // append nothing to StringBuilder
+                    } else {
+                        throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
+                    }
+                } else {
+                    switch (v.valueType()) {
+                    case LIST:
+                    case OBJECT:
+                        // cannot substitute lists and objects into strings
+                        throw new ConfigException.WrongType(v.origin(), exp.path().render(),
+                                "not a list or object", v.valueType().name());
+                    default:
+                        sb.append(((AbstractConfigValue) v).transformToString());
+                    }
+                }
+            }
+        }
+        return new ConfigString(origin(), sb.toString());
     }
 
-    private ConfigValue resolve(SubstitutionResolver resolver, ResolveContext context)
+    private AbstractConfigValue resolveSingleSubst(SubstitutionResolver resolver,
+            ResolveContext context)
             throws NotPossibleToResolve {
-        if (pieces.size() > 1) {
-            // need to concat everything into a string
-            StringBuilder sb = new StringBuilder();
-            for (Object p : pieces) {
-                if (p instanceof String) {
-                    sb.append((String) p);
-                } else {
-                    SubstitutionExpression exp = (SubstitutionExpression) p;
-                    ConfigValue v;
-                    try {
-                        // to concat into a string we have to do a full resolve,
-                        // so unrestrict the context
-                        v = resolve(resolver, exp, context.unrestricted());
-                    } catch (NeedsFullResolve e) {
-                        throw new NotPossibleToResolve(null, exp.path().render(),
-                                "Some kind of loop or interdependency prevents resolving " + exp, e);
-                    }
 
-                    if (v == null) {
-                        if (exp.optional()) {
-                            // append nothing to StringBuilder
-                        } else {
-                            throw new ConfigException.UnresolvedSubstitution(origin(),
-                                    exp.toString());
-                        }
-                    } else {
-                        switch (v.valueType()) {
-                        case LIST:
-                        case OBJECT:
-                            // cannot substitute lists and objects into strings
-                            throw new ConfigException.WrongType(v.origin(), exp.path().render(),
-                                    "not a list or object", v.valueType().name());
-                        default:
-                            sb.append(((AbstractConfigValue) v).transformToString());
-                        }
-                    }
-                }
-            }
-            return new ConfigString(origin(), sb.toString());
-        } else {
-            if (!(pieces.get(0) instanceof SubstitutionExpression))
-                throw new ConfigException.BugOrBroken(
-                        "ConfigSubstitution should never contain a single String piece");
-            SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
-            ConfigValue v;
-            try {
-                v = resolve(resolver, exp, context);
-            } catch (NeedsFullResolve e) {
-                throw new NotPossibleToResolve(null, exp.path().render(),
-                        "Some kind of loop or interdependency prevents resolving " + exp, e);
-            }
-            if (v == null && !exp.optional()) {
-                throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
-            }
-            return v;
+        if (!(pieces.get(0) instanceof SubstitutionExpression))
+            throw new ConfigException.BugOrBroken(
+                    "ConfigSubstitution should never contain a single String piece");
+
+        SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
+        AbstractConfigValue v;
+        try {
+            v = resolve(resolver, exp, context);
+        } catch (NeedsFullResolve e) {
+            throw new NotPossibleToResolve(null, exp.path().render(),
+                    "Some kind of loop or interdependency prevents resolving " + exp, e);
         }
+        if (v == null && !exp.optional()) {
+            throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
+        }
+        return v;
     }
 
     @Override
     AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
             throws NotPossibleToResolve {
-        AbstractConfigValue resolved = (AbstractConfigValue) resolve(resolver, context);
+        AbstractConfigValue resolved;
+        if (pieces.size() > 1) {
+            // if you have "foo = ${?foo}bar" then we will
+            // self-referentially look up foo and we need to
+            // get undefined, rather than "bar"
+            context.replace(this, undefinedReplacer);
+            try {
+                resolved = resolveValueConcat(resolver, context);
+            } finally {
+                context.unreplace(this);
+            }
+        } else {
+            resolved = resolveSingleSubst(resolver, context);
+        }
         return resolved;
     }
 

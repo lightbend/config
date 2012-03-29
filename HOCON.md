@@ -423,10 +423,13 @@ i.e. it is "absolute" rather than "relative."
 Substitution processing is performed as the last parsing step, so
 a substitution can look forward in the configuration. If a
 configuration consists of multiple files, it may even end up
-retrieving a value from another file. If a key has been specified
-more than once, the substitution will always evaluate to its
-latest-assigned value (the merged object or the last non-object
-value that was set).
+retrieving a value from another file.
+
+If a key has been specified more than once, the substitution will
+always evaluate to its latest-assigned value (that is, it will
+evaluate to the merged object, or the last non-object value that
+was set, in the entire document being parsed including all
+included files).
 
 If a configuration sets a value to `null` then it should not be
 looked up in the external source. Unfortunately there is no way to
@@ -462,10 +465,98 @@ string, array, true, false, null). If the substitution is the only
 part of a value, then the type is preserved. Otherwise, it is
 value-concatenated to form a string.
 
-Circular substitutions are invalid and should generate an error.
+#### Self-Referential Substitutions
 
-Implementations must take care, however, to allow objects to refer
-to paths within themselves. For example, this must work:
+The big picture:
+
+ - substitutions normally "look forward" and use the final value
+   for their path expression
+ - when this would create a cycle, when possible the cycle must be
+   broken by looking backward only (thus removing one of the
+   substitutions that's a link in the cycle)
+
+The idea is to allow a new value for a field to be based on the
+older value:
+
+    path : "a:b:c"
+    path : ${path}":d"
+
+A _self-referential field_ is one which:
+
+ - has a substitution, or value concatenation containing a
+   substitution, as its value
+ - where the substitution refers to the field being defined,
+   either directly or by referring to one or more other
+   substitutions which eventually point back to the field being
+   defined
+
+In isolation (with no merges involved), a self-referential field
+is an error because the substitution cannot be resolved:
+
+    foo : ${foo} // an error
+
+When `foo : ${foo}` is merged with an earlier value for `foo`,
+however, the substitution can be resolved to that earlier value.
+When merging two objects, the self-reference in the overriding
+field refers to the overridden field. Say you have:
+
+    foo : { a : 1 }
+
+and then:
+
+    foo : ${foo}
+
+Then `${foo}` resolves to `{ a : 1 }`, the value of the overridden
+field.
+
+It would be an error if these two fields were reversed, so first:
+
+    foo : ${foo}
+
+and then second:
+
+    foo : { a : 1 }
+
+Here the `${foo}` self-reference comes before `foo` has a value,
+so it is undefined.
+
+Because `foo : ${foo}` conceptually looks to previous definitions
+of `foo` for a value, the error should be treated as "undefined"
+rather than "intractable cycle"; as a result, the optional
+substitution syntax `${?foo}` does not create a cycle:
+
+    foo : ${?foo} // this field just disappears silently
+
+If a substitution is hidden by a value that could not be merged
+with it (by a non-object value) then it is never evaluated and no
+error will be reported. So for example:
+
+    foo : ${does-not-exist}
+    foo : 42
+
+In this case, no matter what `${does-not-exist}` resolves to, we
+know `foo` is `42`, so `${does-not-exist}` is never evaluated and
+there is no error. The same is true for cycles like `foo : ${foo},
+foo : 42`, where the initial self-reference must simply be ignored.
+
+A self-reference resolves to the value "below" even if it's part
+of a path expression. So for example:
+
+    foo : { a : { c : 1 } }
+    foo : ${foo.a}
+    foo : { a : 2 }
+
+Here, `${foo.a}` would refer to `{ c : 1 }` rather than `2` and so
+the final merge would be `{ a : 2, c : 1 }`.
+
+Recall that for a field to be self-referential, it must have a
+substitution or value concatenation as its value. If a field has
+an object or array value, for example, then it is not
+self-referential even if there is a reference to the field itself
+inside that object or array.
+
+Implementations must be careful to allow objects to refer to paths
+within themselves, for example:
 
     bar : { foo : 42,
             baz : ${bar.foo}
@@ -476,15 +567,43 @@ part of resolving the substitution `${bar.foo}`, there would be a
 cycle. The implementation must only resolve the `foo` field in
 `bar`, rather than recursing the entire `bar` object.
 
-Mutually-referring objects should also work:
+Because there is no inherent cycle here, the substitution must
+"look forward" (including looking at the field currently being
+defined). To make this clearer, `bar.baz` would be `43` in:
 
+    bar : { foo : 42,
+            baz : ${bar.foo}
+          }
+    bar : { foo : 43 }
+
+Mutually-referring objects should also work, and are not
+self-referential (so they look forward):
+
+    // bar.a should end up as 4
     bar : { a : ${foo.d}, b : 1 }
+    bar.b = 3
+    // foo.c should end up as 3
     foo : { c : ${bar.b}, d : 2 }
+    foo.d = 4
 
-In general, in resolving a substitution the implementation must
-lazy-evaluate the substitution target so there's no "circularity
-by side effect"; only truly unresolveable circular references
-should be an error. For example, this is not possible to resolve:
+Another tricky case is an optional self-reference in a value
+concatenation, in this example `a` should be `foo` not `foofoo`
+because the self reference has to "look back" to an undefined `a`:
+
+    a = ${?a}foo
+
+In general, in resolving a substitution the implementation must:
+
+ - lazy-evaluate the substitution target so there's no
+   "circularity by side effect"
+ - "look forward" and use the final value for the path
+   specified in the substitution
+ - if a cycle results, the implementation must "look back"
+   in the merge stack to try to resolve the cycle
+ - if neither lazy evaluation nor "looking only backward" resolves
+   a cycle, it is an error
+
+For example, this is not possible to resolve:
 
     bar : ${foo}
     foo : ${bar}
@@ -494,6 +613,23 @@ A multi-step loop like this should also be detected as invalid:
     a : ${b}
     b : ${c}
     c : ${a}
+
+Some cases have undefined behavior because the behavior depends on
+the order in which two fields are resolved, and that order is not
+defined. For example:
+
+    a : 1
+    b : 2
+    a : ${b}
+    b : ${a}
+
+Implementations are allowed to handle this by setting both `a` and
+`b` to 1, setting both to `2`, or generating an error. Ideally
+this situation would generate an error, but that may be difficult
+to implement. Making the behavior defined would require always
+working with ordered maps rather than unordered maps, which is too
+constraining. Implementations only have to track order for
+duplicate instances of the same field (i.e. merges).
 
 ### Includes
 

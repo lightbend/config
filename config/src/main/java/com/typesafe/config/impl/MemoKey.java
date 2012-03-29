@@ -10,6 +10,10 @@ final class MemoKey {
     final private AbstractConfigValue value;
     final private Path restrictToChildOrNull;
 
+    AbstractConfigValue value() {
+        return value;
+    }
+
     @Override
     public final int hashCode() {
         int h = System.identityHashCode(value);

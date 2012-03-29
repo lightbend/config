@@ -198,6 +198,13 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(intValue(57), v)
     }
 
+    @Test
+    def substitutionsLookForward() {
+        val obj = parseObject("""a=1,b=${a},a=2""")
+        val resolved = resolve(obj)
+        assertEquals(2, resolved.getInt("b"))
+    }
+
     private val substCycleObject = {
         parseObject("""
 {
@@ -214,7 +221,54 @@ class ConfigSubstitutionTest extends TestUtils {
         val e = intercept[ConfigException.BadValue] {
             val v = resolveWithoutFallbacks(s, substCycleObject)
         }
-        assertTrue(e.getMessage().contains("cycle"))
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
+    }
+
+    @Test
+    def throwOnOptionalReferenceToNonOptionalCycle() {
+        // we look up ${?foo}, but the cycle has hard
+        // non-optional links in it so still has to throw.
+        val s = subst("foo", optional = true)
+        val e = intercept[ConfigException.BadValue] {
+            val v = resolveWithoutFallbacks(s, substCycleObject)
+        }
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
+    }
+
+    // ALL the links have to be optional here for the cycle to be ignored
+    private val substCycleObjectOptionalLink = {
+        parseObject("""
+{
+    "foo" : ${?bar},
+    "bar" : ${?a.b.c},
+    "a" : { "b" : { "c" : ${?foo} } }
+}
+""")
+    }
+
+    @Test
+    def optionalLinkCyclesActLikeUndefined() {
+        val s = subst("foo", optional = true)
+        val v = resolveWithoutFallbacks(s, substCycleObjectOptionalLink)
+        assertNull("Cycle with optional links in it resolves to null if it's a cycle", v)
+    }
+
+    @Test
+    def throwOnTwoKeyCycle() {
+        val obj = parseObject("""a:${b},b:${a}""")
+        val e = intercept[ConfigException.BadValue] {
+            resolve(obj)
+        }
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
+    }
+
+    @Test
+    def throwOnFourKeyCycle() {
+        val obj = parseObject("""a:${b},b:${c},c:${d},d:${a}""")
+        val e = intercept[ConfigException.BadValue] {
+            resolve(obj)
+        }
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
     }
 
     @Test
@@ -247,6 +301,33 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(42, resolved.getInt("foo"))
         assertEquals(42, resolved.getInt("a.b.cycle"))
         assertEquals(42, resolved.getInt("a.cycle"))
+    }
+
+    @Test
+    def ignoreHiddenUndefinedSubst() {
+        // if a substitution is overridden then it shouldn't matter that it's undefined
+        val obj = parseObject("""a=${nonexistent},a=42""")
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("a"))
+    }
+
+    @Test
+    def objectDoesNotHideUndefinedSubst() {
+        // if a substitution is overridden by an object we still need to
+        // evaluate the substitution
+        val obj = parseObject("""a=${nonexistent},a={ b : 42 }""")
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("Could not resolve"))
+    }
+
+    @Test
+    def ignoreHiddenCircularSubst() {
+        // if a substitution is overridden then it shouldn't matter that it's circular
+        val obj = parseObject("""a=${a},a=42""")
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("a"))
     }
 
     private val delayedMergeObjectResolveProblem1 = {
@@ -305,22 +386,24 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(43, resolved.getInt("item2.b.c"))
     }
 
-    // this case has to traverse ${defaults} twice, once
-    // trying to resolve it all and then as part of that
-    // trying a partial resolve of only b.c
-    // thus a simple cycle-detector would get confused
-    // and think that defaults was a cycle.
+    // in this case, item1 is self-referential because
+    // it refers to ${defaults} which refers back to
+    // ${item1}. When self-referencing, only the
+    // value of ${item1} "looking back" should be
+    // visible. This is really a test of the
+    // self-referencing semantics.
     private val delayedMergeObjectResolveProblem3 = {
         parseObject("""
+  item1.b.c = 100
   defaults {
-    // we depend on item1.b.c, creating a cycle that can be handled
+    // we depend on item1.b.c
     a = ${item1.b.c}
     b = 2
   }
   // make item1 into a ConfigDelayedMergeObject
   item1 = ${defaults}
-  // note that we'll resolve to an object value
-  // so item1.b will depend on also looking up ${defaults}
+  // the ${item1.b.c} above in ${defaults} should ignore
+  // this because it only looks back
   item1.b = { c : 43 }
   // be sure we can resolve a substitution to a value in
   // a delayed-merge object.
@@ -337,7 +420,7 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(parseObject("{ c : 43 }"), resolved.getObject("item1.b"))
         assertEquals(43, resolved.getInt("item1.b.c"))
         assertEquals(43, resolved.getInt("item2.b.c"))
-        assertEquals(43, resolved.getInt("defaults.a"))
+        assertEquals(100, resolved.getInt("defaults.a"))
     }
 
     private val delayedMergeObjectResolveProblem4 = {
@@ -850,5 +933,234 @@ class ConfigSubstitutionTest extends TestUtils {
         val obj = parseObject("""{ HERE: 4, a : [ 1, 2, 3, ${?HERE} ] }""")
         val resolved = resolve(obj)
         assertEquals(Seq(1, 2, 3, 4), resolved.getIntList("a").asScala)
+    }
+
+    @Test
+    def substSelfReference() {
+        val obj = parseObject("""a=1, a=${a}""")
+        val resolved = resolve(obj)
+        assertEquals(1, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceUndefined() {
+        val obj = parseObject("""a=${a}""")
+        val e = intercept[ConfigException.BadValue] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
+    }
+
+    @Test
+    def substSelfReferenceOptional() {
+        val obj = parseObject("""a=${?a}""")
+        val resolved = resolve(obj)
+        assertEquals("optional self reference disappears", 0, resolved.root.size)
+    }
+
+    @Test
+    def substSelfReferenceIndirect() {
+        val obj = parseObject("""a=1, b=${a}, a=${b}""")
+        val resolved = resolve(obj)
+        assertEquals(1, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceDoubleIndirect() {
+        val obj = parseObject("""a=1, b=${c}, c=${a}, a=${b}""")
+        val resolved = resolve(obj)
+        assertEquals(1, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceIndirectStackCycle() {
+        // this situation is undefined, depends on
+        // whether we resolve a or b first.
+        val obj = parseObject("""a=1, b={c=5}, b=${a}, a=${b}""")
+        val resolved = resolve(obj)
+        val option1 = parseObject(""" b={c=5}, a={c=5} """).toConfig()
+        val option2 = parseObject(""" b=1, a=1 """).toConfig()
+        assertTrue("not an expected possibility: " + resolved +
+            " expected 1: " + option1 + " or 2: " + option2,
+            resolved == option1 || resolved == option2)
+    }
+
+    @Test
+    def substSelfReferenceObject() {
+        val obj = parseObject("""a={b=5}, a=${a}""")
+        val resolved = resolve(obj)
+        assertEquals(5, resolved.getInt("a.b"))
+    }
+
+    @Test
+    def substSelfReferenceInConcat() {
+        val obj = parseObject("""a=1, a=${a}foo""")
+        val resolved = resolve(obj)
+        assertEquals("1foo", resolved.getString("a"))
+    }
+
+    @Test
+    def substSelfReferenceIndirectInConcat() {
+        // this situation is undefined, depends on
+        // whether we resolve a or b first. If b first
+        // then there's an error because ${a} is undefined.
+        // if a first then b=1foo and a=1foo.
+        val obj = parseObject("""a=1, b=${a}foo, a=${b}""")
+        val either = try {
+            Left(resolve(obj))
+        } catch {
+            case e: ConfigException.UnresolvedSubstitution =>
+                Right(e)
+        }
+        val option1 = Left(parseObject("""a:1foo,b:1foo""").toConfig)
+        assertTrue("not an expected possibility: " + either +
+            " expected value " + option1 + " or an exception",
+            either == option1 || either.isRight)
+    }
+
+    @Test
+    def substOptionalSelfReferenceInConcat() {
+        val obj = parseObject("""a=${?a}foo""")
+        val resolved = resolve(obj)
+        assertEquals("foo", resolved.getString("a"))
+    }
+
+    @Test
+    def substSelfReferenceMiddleOfStack() {
+        val obj = parseObject("""a=1, a=${a}, a=2""")
+        val resolved = resolve(obj)
+        // the substitution would be 1, but then 2 overrides
+        assertEquals(2, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceObjectMiddleOfStack() {
+        val obj = parseObject("""a={b=5}, a=${a}, a={c=6}""")
+        val resolved = resolve(obj)
+        assertEquals(5, resolved.getInt("a.b"))
+        assertEquals(6, resolved.getInt("a.c"))
+    }
+
+    @Test
+    def substOptionalSelfReferenceMiddleOfStack() {
+        val obj = parseObject("""a=1, a=${?a}, a=2""")
+        val resolved = resolve(obj)
+        // the substitution would be 1, but then 2 overrides
+        assertEquals(2, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceBottomOfStack() {
+        // self-reference should just be ignored since it's
+        // overridden
+        val obj = parseObject("""a=${a}, a=1, a=2""")
+        val resolved = resolve(obj)
+        assertEquals(2, resolved.getInt("a"))
+    }
+
+    @Test
+    def substOptionalSelfReferenceBottomOfStack() {
+        val obj = parseObject("""a=${?a}, a=1, a=2""")
+        val resolved = resolve(obj)
+        assertEquals(2, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceTopOfStack() {
+        val obj = parseObject("""a=1, a=2, a=${a}""")
+        val resolved = resolve(obj)
+        assertEquals(2, resolved.getInt("a"))
+    }
+
+    @Test
+    def substOptionalSelfReferenceTopOfStack() {
+        val obj = parseObject("""a=1, a=2, a=${?a}""")
+        val resolved = resolve(obj)
+        assertEquals(2, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceAlongAPath() {
+        // ${a} in the middle of the stack means "${a} in the stack
+        // below us" and so ${a.b} means b inside the "${a} below us"
+        // not b inside the final "${a}"
+        val obj = parseObject("""a={b={c=5}}, a=${a.b}, a={b=2}""")
+        val resolved = resolve(obj)
+        assertEquals(5, resolved.getInt("a.c"))
+    }
+
+    @Test
+    def substInChildFieldNotASelfReference1() {
+        // here, ${bar.foo} is not a self reference because
+        // it's the value of a child field of bar, not bar
+        // itself; so we use bar's current value, rather than
+        // looking back in the merge stack
+        val obj = parseObject("""
+         bar : { foo : 42,
+                 baz : ${bar.foo}
+         }
+            """)
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("bar.baz"))
+        assertEquals(42, resolved.getInt("bar.foo"))
+    }
+
+    @Test
+    def substInChildFieldNotASelfReference2() {
+        // checking that having bar.foo later in the stack
+        // doesn't break the behavior
+        val obj = parseObject("""
+         bar : { foo : 42,
+                 baz : ${bar.foo}
+         }
+         bar : { foo : 43 }
+            """)
+        val resolved = resolve(obj)
+        assertEquals(43, resolved.getInt("bar.baz"))
+        assertEquals(43, resolved.getInt("bar.foo"))
+    }
+
+    @Test
+    def substInChildFieldNotASelfReference3() {
+        // checking that having bar.foo earlier in the merge
+        // stack doesn't break the behavior
+        val obj = parseObject("""
+         bar : { foo : 43 }
+         bar : { foo : 42,
+                 baz : ${bar.foo}
+         }
+            """)
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("bar.baz"))
+        assertEquals(42, resolved.getInt("bar.foo"))
+    }
+
+    @Test
+    def mutuallyReferringNotASelfReference() {
+        val obj = parseObject("""
+    // bar.a should end up as 4
+    bar : { a : ${foo.d}, b : 1 }
+    bar.b = 3
+    // foo.c should end up as 3
+    foo : { c : ${bar.b}, d : 2 }
+    foo.d = 4
+                """)
+        val resolved = resolve(obj)
+        assertEquals(4, resolved.getInt("bar.a"))
+        assertEquals(3, resolved.getInt("foo.c"))
+    }
+
+    @Test
+    def substSelfReferenceMultipleTimes() {
+        val obj = parseObject("""a=1,a=${a},a=${a},a=${a}""")
+        val resolved = resolve(obj)
+        assertEquals(1, resolved.getInt("a"))
+    }
+
+    @Test
+    def substSelfReferenceInConcatMultipleTimes() {
+        val obj = parseObject("""a=1,a=${a}x,a=${a}y,a=${a}z""")
+        val resolved = resolve(obj)
+        assertEquals("1xyz", resolved.getString("a"))
     }
 }

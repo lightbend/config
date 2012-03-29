@@ -338,20 +338,12 @@ Here are some features that might be nice to add.
    If you include a file and it turns out to be a directory then
    it would be processed in this way.
  - some way to merge array types. One approach could be:
-   `searchPath=${searchPath} ["/usr/local/foo"]`, which involves
-   two features: 1) substitutions referring to the key being
-   assigned would have to look at that key's value later in the
-   merge stack (rather than complaining about circularity); 2)
+   `searchPath=${searchPath} ["/usr/local/foo"]`, here
    arrays would have to be merged if a series of them appear after
-   a key, similar to how strings are concatenated already. A
-   simpler but much more limited approach would add `+=` as an
-   alternative to `:`/`=`, where `+=` would append an array value
-   to the array's previous value.  (Note that regular `=` already
-   merges object values, to avoid object merge you have to first
-   set the object to a non-object such as null, then set a new
-   object. For consistency, if there's "array concatenation"
-   within one value, maybe objects should also be able to merge
-   within one value.)
+   a key, similar to how strings are concatenated already.
+   For consistency, maybe objects would also support this
+   syntax, though there's an existing way to merge objects
+   (duplicate fields).
  - including URLs (which would allow forcing file: when inside
    a classpath resource, among other things)
 
