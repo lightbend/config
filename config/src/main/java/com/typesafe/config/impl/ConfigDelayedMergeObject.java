@@ -70,7 +70,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements
             return (AbstractConfigObject) merged;
         } else {
             throw new ConfigException.BugOrBroken(
-                    "somehow brokenly merged an object and didn't get an object");
+                    "somehow brokenly merged an object and didn't get an object, got " + merged);
         }
     }
 
