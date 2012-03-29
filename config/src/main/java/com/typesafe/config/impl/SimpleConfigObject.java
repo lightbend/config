@@ -261,7 +261,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
 
     @Override
     AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
-            final Set<ConfigSubstitution> traversed, final ConfigResolveOptions options,
+            final Set<MemoKey> traversed, final ConfigResolveOptions options,
             final Path restrictToChildOrNull)
             throws NotPossibleToResolve, NeedsFullResolve {
         if (resolveStatus() == ResolveStatus.RESOLVED)

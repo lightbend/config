@@ -92,7 +92,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      * @throws NotPossibleToResolve
      */
     protected AbstractConfigValue peekPath(Path path, SubstitutionResolver resolver,
-            Set<ConfigSubstitution> traversed, ConfigResolveOptions options)
+            Set<MemoKey> traversed, ConfigResolveOptions options)
             throws NotPossibleToResolve, NeedsFullResolve {
         return peekPath(this, path, resolver, traversed, options);
     }
@@ -103,7 +103,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      */
     AbstractConfigValue peekPathWithExternalExceptions(Path path) {
         try {
-            return peekPath(this, path, null, Collections.<ConfigSubstitution> emptySet(), null);
+            return peekPath(this, path, null, Collections.<MemoKey> emptySet(), null);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(origin(), path.render());
         } catch (NeedsFullResolve e) {
@@ -116,8 +116,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     // child being peeked, but NOT the child itself. Caller has to resolve
     // the child itself if needed.
     private static AbstractConfigValue peekPath(AbstractConfigObject self, Path path,
-            SubstitutionResolver resolver, Set<ConfigSubstitution> traversed,
-            ConfigResolveOptions options)
+            SubstitutionResolver resolver, Set<MemoKey> traversed, ConfigResolveOptions options)
             throws NotPossibleToResolve, NeedsFullResolve {
         if (resolver != null) {
             // walk down through the path resolving only things along that path,
@@ -142,7 +141,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             } else {
                 if (v instanceof AbstractConfigObject) {
                     return peekPath((AbstractConfigObject) v, next, null,
-                            Collections.<ConfigSubstitution> emptySet(), null);
+                            Collections.<MemoKey> emptySet(), null);
                 } else {
                     return null;
                 }
@@ -225,8 +224,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     abstract AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
-            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
-            Path restrictToChildOrNull)
+            Set<MemoKey> traversed, ConfigResolveOptions options, Path restrictToChildOrNull)
             throws NotPossibleToResolve, NeedsFullResolve;
 
     @Override

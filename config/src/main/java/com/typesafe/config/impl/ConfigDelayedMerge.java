@@ -65,17 +65,15 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
-            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
-            Path restrictToChildOrNull) throws NotPossibleToResolve,
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, Set<MemoKey> traversed,
+            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
         return resolveSubstitutions(stack, resolver, traversed, options, restrictToChildOrNull);
     }
 
     // static method also used by ConfigDelayedMergeObject
     static AbstractConfigValue resolveSubstitutions(List<AbstractConfigValue> stack,
-            SubstitutionResolver resolver, Set<ConfigSubstitution> traversed,
-            ConfigResolveOptions options,
+            SubstitutionResolver resolver, Set<MemoKey> traversed, ConfigResolveOptions options,
             Path restrictToChildOrNull) throws NotPossibleToResolve, NeedsFullResolve {
         // to resolve substitutions, we need to recursively resolve
         // the stack of stuff to merge, and merge the stack so

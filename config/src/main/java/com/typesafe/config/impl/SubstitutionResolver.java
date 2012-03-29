@@ -3,9 +3,8 @@
  */
 package com.typesafe.config.impl;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -20,43 +19,6 @@ import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
  * of values or whole trees of values as we follow chains of substitutions.
  */
 final class SubstitutionResolver {
-    private final class MemoKey {
-        MemoKey(AbstractConfigValue value, Path restrictToChildOrNull) {
-            this.value = value;
-            this.restrictToChildOrNull = restrictToChildOrNull;
-        }
-
-        final private AbstractConfigValue value;
-        final private Path restrictToChildOrNull;
-
-        @Override
-        public final int hashCode() {
-            int h = System.identityHashCode(value);
-            if (restrictToChildOrNull != null) {
-                return h + 41 * (41 + restrictToChildOrNull.hashCode());
-            } else {
-                return h;
-            }
-        }
-
-        @Override
-        public final boolean equals(Object other) {
-            if (other instanceof MemoKey) {
-                MemoKey o = (MemoKey) other;
-                if (o.value != this.value)
-                    return false;
-                else if (o.restrictToChildOrNull == this.restrictToChildOrNull)
-                    return true;
-                else if (o.restrictToChildOrNull == null || this.restrictToChildOrNull == null)
-                    return false;
-                else
-                    return o.restrictToChildOrNull.equals(this.restrictToChildOrNull);
-            } else {
-                return false;
-            }
-        }
-    }
-
     final private AbstractConfigObject root;
     // note that we can resolve things to undefined (represented as Java null,
     // rather than ConfigNull) so this map can have null values.
@@ -67,7 +29,7 @@ final class SubstitutionResolver {
         this.memos = new HashMap<MemoKey, AbstractConfigValue>();
     }
 
-    AbstractConfigValue resolve(AbstractConfigValue original, Set<ConfigSubstitution> traversed,
+    AbstractConfigValue resolve(AbstractConfigValue original, Set<MemoKey> traversed,
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
 
@@ -122,8 +84,10 @@ final class SubstitutionResolver {
         return this.root;
     }
 
-    private static Set<ConfigSubstitution> newTraversedSet() {
-        return Collections.newSetFromMap(new IdentityHashMap<ConfigSubstitution, Boolean>());
+    private static Set<MemoKey> newTraversedSet() {
+        // using LinkedHashSet just to show the order of traversal
+        // in error messages.
+        return new LinkedHashSet<MemoKey>();
     }
 
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,

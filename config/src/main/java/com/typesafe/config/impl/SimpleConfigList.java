@@ -106,7 +106,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
 
     @Override
     SimpleConfigList resolveSubstitutions(final SubstitutionResolver resolver,
-            final Set<ConfigSubstitution> traversed, final ConfigResolveOptions options,
+            final Set<MemoKey> traversed, final ConfigResolveOptions options,
             Path restrictToChildOrNull)
             throws NotPossibleToResolve, NeedsFullResolve {
         if (resolved)

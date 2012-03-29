@@ -127,7 +127,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
     private static AbstractConfigValue findInObject(AbstractConfigObject root,
             SubstitutionResolver resolver, /* null if we should not have refs */
-            Path subst, Set<ConfigSubstitution> traversed, ConfigResolveOptions options)
+            Path subst, Set<MemoKey> traversed, ConfigResolveOptions options)
             throws NotPossibleToResolve, NeedsFullResolve {
 
         AbstractConfigValue result = root.peekPath(subst, resolver, traversed, options);
@@ -136,13 +136,14 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     private AbstractConfigValue resolve(SubstitutionResolver resolver,
-            SubstitutionExpression subst, Set<ConfigSubstitution> traversed,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
+            SubstitutionExpression subst, Set<MemoKey> traversed, ConfigResolveOptions options,
+            Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
-        if (traversed.contains(this))
+        MemoKey key = new MemoKey(this, restrictToChildOrNull);
+        if (traversed.contains(key))
             throw new SelfReferential(origin(), subst.path().render());
 
-        traversed.add(this);
+        traversed.add(key);
 
         try {
 
@@ -175,11 +176,11 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             return result;
 
         } finally {
-            traversed.remove(this);
+            traversed.remove(key);
         }
     }
 
-    private ConfigValue resolve(SubstitutionResolver resolver, Set<ConfigSubstitution> traversed,
+    private ConfigValue resolve(SubstitutionResolver resolver, Set<MemoKey> traversed,
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
         if (pieces.size() > 1) {
             // need to concat everything into a string
@@ -240,9 +241,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
-            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
-            Path restrictToChildOrNull) throws NotPossibleToResolve {
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, Set<MemoKey> traversed,
+            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
         AbstractConfigValue resolved = (AbstractConfigValue) resolve(resolver, traversed, options,
                 restrictToChildOrNull);
         return resolved;

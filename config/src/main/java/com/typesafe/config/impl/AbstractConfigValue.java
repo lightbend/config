@@ -110,9 +110,8 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
      *            if non-null, only recurse into this child path
      * @return a new value if there were changes, or this if no changes
      */
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver,
-            Set<ConfigSubstitution> traversed, ConfigResolveOptions options,
-            Path restrictToChildOrNull) throws NotPossibleToResolve,
+    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, Set<MemoKey> traversed,
+            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
             NeedsFullResolve {
         return this;
     }

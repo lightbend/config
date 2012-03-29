@@ -305,6 +305,11 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(43, resolved.getInt("item2.b.c"))
     }
 
+    // this case has to traverse ${defaults} twice, once
+    // trying to resolve it all and then as part of that
+    // trying a partial resolve of only b.c
+    // thus a simple cycle-detector would get confused
+    // and think that defaults was a cycle.
     private val delayedMergeObjectResolveProblem3 = {
         parseObject("""
   defaults {
