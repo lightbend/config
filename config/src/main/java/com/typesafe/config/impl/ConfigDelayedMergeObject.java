@@ -61,7 +61,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
 
     @Override
     AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            throws NotPossibleToResolve {
         AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(this, stack, resolver,
                 context);
         if (merged instanceof AbstractConfigObject) {
@@ -189,7 +189,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
 
     private static ConfigException notResolved() {
         return new ConfigException.NotResolved(
-                "bug: this object has not had substitutions resolved, so can't be used");
+                "need to Config#resolve() before using this object, see the API docs for Config#resolve()");
     }
 
     @Override
@@ -238,7 +238,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    protected AbstractConfigValue attemptPeekWithPartialResolve(String key) throws NeedsFullResolve {
+    protected AbstractConfigValue attemptPeekWithPartialResolve(String key) {
         // a partial resolve of a ConfigDelayedMergeObject always results in a
         // SimpleConfigObject because all the substitutions in the stack get
         // resolved in order to look up the partial.
@@ -286,11 +286,11 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
                     continue;
                 }
             } else if (layer instanceof Unmergeable) {
-                throw new NeedsFullResolve("Key '" + key + "' is not available at '"
+                throw new ConfigException.NotResolved("Key '" + key + "' is not available at '"
                         + origin().description() + "' because value at '"
                         + layer.origin().description()
                         + "' has not been resolved and may turn out to contain '" + key + "'."
-                        + " Be sure to Config.resolve() before using a config object.");
+                        + " Be sure to Config#resolve() before using a config object.");
             } else {
                 // non-object, but not unresolved, like an integer or something.
                 // has no children so the one we're after won't be in it.

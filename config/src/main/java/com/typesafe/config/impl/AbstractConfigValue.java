@@ -83,15 +83,6 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
         }
     }
 
-    // thrown if a full rather than partial resolve is needed
-    static final class NeedsFullResolve extends Exception {
-        private static final long serialVersionUID = 1L;
-
-        NeedsFullResolve(String message) {
-            super(message);
-        }
-    }
-
     /**
      * Called only by SubstitutionResolver object. The "restrict to child"
      * parameter is to avoid unnecessary cycles as a side effect (any sibling of
@@ -105,7 +96,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
      * @return a new value if there were changes, or this if no changes
      */
     AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            throws NotPossibleToResolve {
         return this;
     }
 

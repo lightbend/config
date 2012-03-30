@@ -117,6 +117,6 @@ class ValidationTest extends TestUtils {
             conf.checkValid(reference)
         }
         assertTrue("expected different message, got: " + e.getMessage,
-            e.getMessage.contains("unresolved"))
+            e.getMessage.contains("resolve"))
     }
 }

@@ -260,7 +260,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
 
     @Override
     AbstractConfigObject resolveSubstitutions(final SubstitutionResolver resolver,
-            final ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve {
+            final ResolveContext context) throws NotPossibleToResolve {
         if (resolveStatus() == ResolveStatus.RESOLVED)
             return this;
 
@@ -269,7 +269,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
 
                 @Override
                 public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
-                        throws NotPossibleToResolve, NeedsFullResolve {
+                        throws NotPossibleToResolve {
                     if (context.isRestrictedToChild()) {
                         if (key.equals(context.restrictToChild().first())) {
                             Path remainder = context.restrictToChild().remainder();
@@ -291,8 +291,6 @@ final class SimpleConfigObject extends AbstractConfigObject {
 
             });
         } catch (NotPossibleToResolve e) {
-            throw e;
-        } catch (NeedsFullResolve e) {
             throw e;
         } catch (RuntimeException e) {
             throw e;

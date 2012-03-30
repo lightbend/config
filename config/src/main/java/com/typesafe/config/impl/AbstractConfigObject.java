@@ -16,8 +16,7 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
-abstract class AbstractConfigObject extends AbstractConfigValue implements
-        ConfigObject {
+abstract class AbstractConfigObject extends AbstractConfigValue implements ConfigObject {
 
     private static final long serialVersionUID = 1L;
 
@@ -61,8 +60,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     protected final AbstractConfigValue peekAssumingResolved(String key, String originalPath) {
         try {
             return attemptPeekWithPartialResolve(key);
-        } catch (NeedsFullResolve e) {
-            throw new ConfigException.NotResolved(originalPath + ": " + e.getMessage(), e);
+        } catch (ConfigException.NotResolved e) {
+            throw ConfigImpl.improveNotResolved(originalPath, e);
         }
     }
 
@@ -74,12 +73,11 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      * @param key
      *            key to look up
      * @return the value of the key, or null if known not to exist
-     * @throws NeedsFullResolve
+     * @throws ConfigException.NotResolved
      *             if can't figure out key's value or can't know whether it
      *             exists
      */
-    protected abstract AbstractConfigValue attemptPeekWithPartialResolve(String key)
-            throws NeedsFullResolve;
+    protected abstract AbstractConfigValue attemptPeekWithPartialResolve(String key);
 
     /**
      * Looks up the path with no transformation, type conversion, or exceptions
@@ -89,7 +87,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
      * @throws NotPossibleToResolve
      */
     protected AbstractConfigValue peekPath(Path path, SubstitutionResolver resolver,
-            ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve {
+            ResolveContext context) throws NotPossibleToResolve {
         return peekPath(this, path, resolver, context);
     }
 
@@ -102,9 +100,6 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
             return peekPath(this, path, null, null);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(origin(), path.render());
-        } catch (NeedsFullResolve e) {
-            throw new ConfigException.NotResolved(
-                    "need to resolve() this Config before looking up value at " + path.render(), e);
         }
     }
 
@@ -112,33 +107,39 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
     // child being peeked, but NOT the child itself. Caller has to resolve
     // the child itself if needed.
     private static AbstractConfigValue peekPath(AbstractConfigObject self, Path path,
-            SubstitutionResolver resolver, ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
-        if (resolver != null) {
-            // walk down through the path resolving only things along that path,
-            // and then recursively call ourselves with no resolver.
-            AbstractConfigValue partiallyResolved = resolver.resolve(self, context.restrict(path));
-            if (partiallyResolved instanceof AbstractConfigObject) {
-                return peekPath((AbstractConfigObject) partiallyResolved, path, null, null);
-            } else {
-                throw new ConfigException.BugOrBroken("resolved object to non-object " + self
-                        + " to " + partiallyResolved);
-            }
-        } else {
-            // with no resolver, we'll fail if anything along the path can't be
-            // looked at without resolving.
-            Path next = path.remainder();
-            AbstractConfigValue v = self.attemptPeekWithPartialResolve(path.first());
-
-            if (next == null) {
-                return v;
-            } else {
-                if (v instanceof AbstractConfigObject) {
-                    return peekPath((AbstractConfigObject) v, next, null, null);
+            SubstitutionResolver resolver, ResolveContext context) throws NotPossibleToResolve {
+        try {
+            if (resolver != null) {
+                // walk down through the path resolving only things along that
+                // path,
+                // and then recursively call ourselves with no resolver.
+                AbstractConfigValue partiallyResolved = resolver.resolve(self,
+                        context.restrict(path));
+                if (partiallyResolved instanceof AbstractConfigObject) {
+                    return peekPath((AbstractConfigObject) partiallyResolved, path, null, null);
                 } else {
-                    return null;
+                    throw new ConfigException.BugOrBroken("resolved object to non-object " + self
+                            + " to " + partiallyResolved);
+                }
+            } else {
+                // with no resolver, we'll fail if anything along the path can't
+                // be
+                // looked at without resolving.
+                Path next = path.remainder();
+                AbstractConfigValue v = self.attemptPeekWithPartialResolve(path.first());
+
+                if (next == null) {
+                    return v;
+                } else {
+                    if (v instanceof AbstractConfigObject) {
+                        return peekPath((AbstractConfigObject) v, next, null, null);
+                    } else {
+                        return null;
+                    }
                 }
             }
+        } catch (ConfigException.NotResolved e) {
+            throw ConfigImpl.improveNotResolved(path.render(), e);
         }
     }
 
@@ -217,7 +218,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements
 
     @Override
     abstract AbstractConfigObject resolveSubstitutions(SubstitutionResolver resolver,
-            ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve;
+            ResolveContext context) throws NotPossibleToResolve;
 
     @Override
     abstract AbstractConfigObject relativized(final Path prefix);

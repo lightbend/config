@@ -104,7 +104,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
 
     @Override
     SimpleConfigList resolveSubstitutions(final SubstitutionResolver resolver,
-            final ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve {
+            final ResolveContext context) throws NotPossibleToResolve {
         if (resolved)
             return this;
 
@@ -117,14 +117,12 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
                 return modifyMayThrow(new Modifier() {
                     @Override
                     public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
-                            throws NotPossibleToResolve, NeedsFullResolve {
+                            throws NotPossibleToResolve {
                         return resolver.resolve(v, context);
                     }
 
                 }, ResolveStatus.RESOLVED);
             } catch (NotPossibleToResolve e) {
-                throw e;
-            } catch (NeedsFullResolve e) {
                 throw e;
             } catch (RuntimeException e) {
                 throw e;

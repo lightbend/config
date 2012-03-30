@@ -10,7 +10,6 @@ import java.util.concurrent.Callable;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
-import com.typesafe.config.impl.AbstractConfigValue.NeedsFullResolve;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 import com.typesafe.config.impl.AbstractConfigValue.SelfReferential;
 import com.typesafe.config.impl.ResolveReplacer.Undefined;
@@ -71,11 +70,11 @@ final class ResolveContext {
     // this just exists to fix the "throws Exception" on Callable
     interface Resolver extends Callable<AbstractConfigValue> {
         @Override
-        AbstractConfigValue call() throws NotPossibleToResolve, NeedsFullResolve;
+        AbstractConfigValue call() throws NotPossibleToResolve;
     }
 
     AbstractConfigValue traversing(ConfigSubstitution value, SubstitutionExpression subst,
-            Resolver callable) throws NotPossibleToResolve, NeedsFullResolve {
+            Resolver callable) throws NotPossibleToResolve {
         try {
             traverse(value, subst);
         } catch (SelfReferential e) {

@@ -11,7 +11,6 @@ import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -54,18 +53,20 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             throw new ConfigException.BugOrBroken("ConfigSubstitution may never ignore fallbacks");
     }
 
-    @Override
-    public ConfigValueType valueType() {
-        throw new ConfigException.NotResolved(
-                "need to call resolve() on root config; tried to get value type on an unresolved substitution: "
+    private ConfigException.NotResolved notResolved() {
+        return new ConfigException.NotResolved(
+                "need to Config#resolve(), see the API docs for Config#resolve(); substitution not resolved: "
                         + this);
     }
 
     @Override
+    public ConfigValueType valueType() {
+        throw notResolved();
+    }
+
+    @Override
     public Object unwrapped() {
-        throw new ConfigException.NotResolved(
-                "need to call resolve() on root config; tried to unwrap an unresolved substitution: "
-                        + this);
+        throw notResolved();
     }
 
     @Override
@@ -135,10 +136,10 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     /** resolver is null if we should not have refs */
     private AbstractConfigValue findInObject(final AbstractConfigObject root,
             final SubstitutionResolver resolver, final SubstitutionExpression subst,
-            final ResolveContext context) throws NotPossibleToResolve, NeedsFullResolve {
+            final ResolveContext context) throws NotPossibleToResolve {
         return context.traversing(this, subst, new ResolveContext.Resolver() {
             @Override
-            public AbstractConfigValue call() throws NotPossibleToResolve, NeedsFullResolve {
+            public AbstractConfigValue call() throws NotPossibleToResolve {
                 return root.peekPath(subst.path(), resolver, context);
             }
         });
@@ -146,7 +147,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
     private AbstractConfigValue resolve(final SubstitutionResolver resolver,
             final SubstitutionExpression subst, final ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            throws NotPossibleToResolve {
         // First we look up the full path, which means relative to the
         // included file if we were not a root file
         AbstractConfigValue result = findInObject(resolver.root(), resolver, subst, context);
@@ -172,7 +173,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             final AbstractConfigValue unresolved = result;
             result = context.traversing(this, subst, new ResolveContext.Resolver() {
                 @Override
-                public AbstractConfigValue call() throws NotPossibleToResolve, NeedsFullResolve {
+                public AbstractConfigValue call() throws NotPossibleToResolve {
                     return resolver.resolve(unresolved, context);
                 }
             });
@@ -197,15 +198,10 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                 sb.append((String) p);
             } else {
                 SubstitutionExpression exp = (SubstitutionExpression) p;
-                ConfigValue v;
-                try {
-                    // to concat into a string we have to do a full resolve,
-                    // so unrestrict the context
-                    v = resolve(resolver, exp, context.unrestricted());
-                } catch (NeedsFullResolve e) {
-                    throw new NotPossibleToResolve(null, exp.path().render(),
-                            "Some kind of loop or interdependency prevents resolving " + exp, e);
-                }
+
+                // to concat into a string we have to do a full resolve,
+                // so unrestrict the context
+                AbstractConfigValue v = resolve(resolver, exp, context.unrestricted());
 
                 if (v == null) {
                     if (exp.optional()) {
@@ -221,7 +217,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                         throw new ConfigException.WrongType(v.origin(), exp.path().render(),
                                 "not a list or object", v.valueType().name());
                     default:
-                        sb.append(((AbstractConfigValue) v).transformToString());
+                        sb.append(v.transformToString());
                     }
                 }
             }
@@ -237,13 +233,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                     "ConfigSubstitution should never contain a single String piece");
 
         SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
-        AbstractConfigValue v;
-        try {
-            v = resolve(resolver, exp, context);
-        } catch (NeedsFullResolve e) {
-            throw new NotPossibleToResolve(null, exp.path().render(),
-                    "Some kind of loop or interdependency prevents resolving " + exp, e);
-        }
+        AbstractConfigValue v = resolve(resolver, exp, context);
+
         if (v == null && !exp.optional()) {
             throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
         }

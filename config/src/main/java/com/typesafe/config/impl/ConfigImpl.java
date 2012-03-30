@@ -521,4 +521,18 @@ public class ConfigImpl {
     public static void trace(String message) {
         System.err.println(message);
     }
+
+    // the basic idea here is to add the "what" and have a canonical
+    // toplevel error message. the "original" exception may however have extra
+    // detail about what happened. call this if you have a better "what" than
+    // further down on the stack.
+    static ConfigException.NotResolved improveNotResolved(String what,
+            ConfigException.NotResolved original) {
+        String newMessage = what + " has not been resolved, you need to call Config#resolve(),"
+                + " see API docs for Config#resolve()";
+        if (newMessage.equals(original.getMessage()))
+            return original;
+        else
+            return new ConfigException.NotResolved(newMessage, original);
+    }
 }

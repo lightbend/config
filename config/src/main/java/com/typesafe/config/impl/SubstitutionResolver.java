@@ -8,7 +8,6 @@ import java.util.Map;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
-import com.typesafe.config.impl.AbstractConfigValue.NeedsFullResolve;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
@@ -29,7 +28,7 @@ final class SubstitutionResolver {
     }
 
     AbstractConfigValue resolve(AbstractConfigValue original, ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            throws NotPossibleToResolve {
 
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
@@ -103,8 +102,7 @@ final class SubstitutionResolver {
     }
 
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve,
-            NeedsFullResolve {
+            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
         SubstitutionResolver resolver = new SubstitutionResolver(root);
         ResolveContext context = new ResolveContext(options, restrictToChildOrNull);
 
@@ -120,9 +118,6 @@ final class SubstitutionResolver {
             return resolver.resolve(value, context);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(value.origin(), null);
-        } catch (NeedsFullResolve e) {
-            throw new ConfigException.NotResolved(value.origin().description()
-                    + ": Must resolve() config object before use", e);
         }
     }
 }

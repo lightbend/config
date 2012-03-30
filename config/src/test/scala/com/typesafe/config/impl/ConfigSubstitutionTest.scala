@@ -570,7 +570,8 @@ class ConfigSubstitutionTest extends TestUtils {
         val e = intercept[ConfigException.NotResolved] {
             delayedMergeObjectNeedsFullResolve.toConfig().getObject("item1.b")
         }
-        assertTrue(e.getMessage.contains("item1.b"))
+
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("item1.b"))
     }
 
     // objects that mutually refer to each other

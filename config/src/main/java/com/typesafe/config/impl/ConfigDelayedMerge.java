@@ -54,25 +54,25 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     @Override
     public ConfigValueType valueType() {
         throw new ConfigException.NotResolved(
-                "called valueType() on value with unresolved substitutions, need to resolve first");
+                "called valueType() on value with unresolved substitutions, need to Config#resolve() first, see API docs");
     }
 
     @Override
     public Object unwrapped() {
         throw new ConfigException.NotResolved(
-                "called unwrapped() on value with unresolved substitutions, need to resolve first");
+                "called unwrapped() on value with unresolved substitutions, need to Config#resolve() first, see API docs");
     }
 
     @Override
     AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            throws NotPossibleToResolve {
         return resolveSubstitutions(this, stack, resolver, context);
     }
 
     // static method also used by ConfigDelayedMergeObject
     static AbstractConfigValue resolveSubstitutions(ReplaceableMergeStack replaceable,
             List<AbstractConfigValue> stack, SubstitutionResolver resolver, ResolveContext context)
-            throws NotPossibleToResolve, NeedsFullResolve {
+            throws NotPossibleToResolve {
         // to resolve substitutions, we need to recursively resolve
         // the stack of stuff to merge, and merge the stack so
         // we won't be a delayed merge anymore. If restrictToChildOrNull

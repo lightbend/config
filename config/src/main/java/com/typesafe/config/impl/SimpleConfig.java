@@ -22,7 +22,6 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
-import com.typesafe.config.impl.AbstractConfigValue.NeedsFullResolve;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 
 /**
@@ -76,9 +75,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             peeked = object.peekPath(path, null, null);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(origin(), pathExpression);
-        } catch (NeedsFullResolve e) {
-            throw new ConfigException.NotResolved(origin().description() + ": " + pathExpression
-                    + ": Have to resolve() the Config before using hasPath() here");
+        } catch (ConfigException.NotResolved e) {
+            throw ConfigImpl.improveNotResolved(pathExpression, e);
         }
         return peeked != null && peeked.valueType() != ConfigValueType.NULL;
     }
@@ -119,8 +117,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return find(self, path, expected, originalPath);
     }
 
-    static private AbstractConfigValue findKey(AbstractConfigObject self,
-            String key, ConfigValueType expected, String originalPath) {
+    static private AbstractConfigValue findKey(AbstractConfigObject self, String key,
+            ConfigValueType expected, String originalPath) {
         AbstractConfigValue v = self.peekAssumingResolved(key, originalPath);
         if (v == null)
             throw new ConfigException.Missing(originalPath);
@@ -132,23 +130,27 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             throw new ConfigException.Null(v.origin(), originalPath,
                     expected != null ? expected.name() : null);
         else if (expected != null && v.valueType() != expected)
-            throw new ConfigException.WrongType(v.origin(), originalPath,
-                    expected.name(), v.valueType().name());
+            throw new ConfigException.WrongType(v.origin(), originalPath, expected.name(), v
+                    .valueType().name());
         else
             return v;
     }
 
-    static private AbstractConfigValue find(AbstractConfigObject self,
-            Path path, ConfigValueType expected, String originalPath) {
-        String key = path.first();
-        Path next = path.remainder();
-        if (next == null) {
-            return findKey(self, key, expected, originalPath);
-        } else {
-            AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
-                    ConfigValueType.OBJECT, originalPath);
-            assert (o != null); // missing was supposed to throw
-            return find(o, next, expected, originalPath);
+    static private AbstractConfigValue find(AbstractConfigObject self, Path path,
+            ConfigValueType expected, String originalPath) {
+        try {
+            String key = path.first();
+            Path next = path.remainder();
+            if (next == null) {
+                return findKey(self, key, expected, originalPath);
+            } else {
+                AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
+                        ConfigValueType.OBJECT, originalPath);
+                assert (o != null); // missing was supposed to throw
+                return find(o, next, expected, originalPath);
+            }
+        } catch (ConfigException.NotResolved e) {
+            throw ConfigImpl.improveNotResolved(path.render(), e);
         }
     }
 
@@ -803,14 +805,13 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         // unresolved reference config is a bug in the caller of checkValid
         if (ref.root().resolveStatus() != ResolveStatus.RESOLVED)
             throw new ConfigException.BugOrBroken(
-                    "do not call checkValid() with an unresolved reference config, call Config.resolve()");
+                    "do not call checkValid() with an unresolved reference config, call Config#resolve(), see Config#resolve() API docs");
 
-        // unresolved config under validation is probably a bug in something,
-        // but our whole goal here is to check for bugs in this config, so
-        // BugOrBroken is not the appropriate exception.
+        // unresolved config under validation is a bug in something,
+        // NotResolved is a more specific subclass of BugOrBroken
         if (root().resolveStatus() != ResolveStatus.RESOLVED)
             throw new ConfigException.NotResolved(
-                    "config has unresolved substitutions; must call Config.resolve()");
+                    "need to Config#resolve() each config before using it, see the API docs for Config#resolve()");
 
         // Now we know that both reference and this config are resolved
 
