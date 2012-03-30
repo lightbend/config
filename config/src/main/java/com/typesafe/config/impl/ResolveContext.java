@@ -17,7 +17,7 @@ import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 final class ResolveContext {
     // Resolves that we have already begun (for cycle detection).
-    // SubstitutionResolve separately memoizes completed resolves.
+    // SubstitutionResolver separately memoizes completed resolves.
     // this set is unfortunately mutable and the user of ResolveContext
     // has to be sure it's only shared between ResolveContext that
     // are in the same traversal.

@@ -146,8 +146,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
     private AbstractConfigValue resolve(final SubstitutionResolver resolver,
             final SubstitutionExpression subst, final ResolveContext context)
-            throws NotPossibleToResolve,
-            NeedsFullResolve {
+            throws NotPossibleToResolve, NeedsFullResolve {
         // First we look up the full path, which means relative to the
         // included file if we were not a root file
         AbstractConfigValue result = findInObject(resolver.root(), resolver, subst, context);
@@ -231,8 +230,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     private AbstractConfigValue resolveSingleSubst(SubstitutionResolver resolver,
-            ResolveContext context)
-            throws NotPossibleToResolve {
+            ResolveContext context) throws NotPossibleToResolve {
 
         if (!(pieces.get(0) instanceof SubstitutionExpression))
             throw new ConfigException.BugOrBroken(
