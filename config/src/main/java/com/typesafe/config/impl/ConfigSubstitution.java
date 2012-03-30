@@ -133,54 +133,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         return pieces;
     }
 
-    /** resolver is null if we should not have refs */
-    private AbstractConfigValue findInObject(final AbstractConfigObject root,
-            final SubstitutionResolver resolver, final SubstitutionExpression subst,
-            final ResolveContext context) throws NotPossibleToResolve {
-        return context.traversing(this, subst, new ResolveContext.Resolver() {
-            @Override
-            public AbstractConfigValue call() throws NotPossibleToResolve {
-                return root.peekPath(subst.path(), resolver, context);
-            }
-        });
-    }
 
-    private AbstractConfigValue resolve(final SubstitutionResolver resolver,
-            final SubstitutionExpression subst, final ResolveContext context)
-            throws NotPossibleToResolve {
-        // First we look up the full path, which means relative to the
-        // included file if we were not a root file
-        AbstractConfigValue result = findInObject(resolver.root(), resolver, subst, context);
-
-        if (result == null) {
-            // Then we want to check relative to the root file. We don't
-            // want the prefix we were included at to be used when looking
-            // up env variables either.
-            SubstitutionExpression unprefixed = subst
-                    .changePath(subst.path().subPath(prefixLength));
-
-            if (result == null && prefixLength > 0) {
-                result = findInObject(resolver.root(), resolver, unprefixed, context);
-            }
-
-            if (result == null && context.options().getUseSystemEnvironment()) {
-                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null, unprefixed,
-                        context);
-            }
-        }
-
-        if (result != null) {
-            final AbstractConfigValue unresolved = result;
-            result = context.traversing(this, subst, new ResolveContext.Resolver() {
-                @Override
-                public AbstractConfigValue call() throws NotPossibleToResolve {
-                    return resolver.resolve(unresolved, context);
-                }
-            });
-        }
-
-        return result;
-    }
 
     private static ResolveReplacer undefinedReplacer = new ResolveReplacer() {
         @Override
@@ -201,7 +154,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
                 // to concat into a string we have to do a full resolve,
                 // so unrestrict the context
-                AbstractConfigValue v = resolve(resolver, exp, context.unrestricted());
+                AbstractConfigValue v = context.source().lookupSubst(resolver,
+                        context.unrestricted(), this, exp, prefixLength);
 
                 if (v == null) {
                     if (exp.optional()) {
@@ -233,7 +187,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
                     "ConfigSubstitution should never contain a single String piece");
 
         SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
-        AbstractConfigValue v = resolve(resolver, exp, context);
+        AbstractConfigValue v = context.source().lookupSubst(resolver, context, this, exp,
+                prefixLength);
 
         if (v == null && !exp.optional()) {
             throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());

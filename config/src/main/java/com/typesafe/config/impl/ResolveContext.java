@@ -15,6 +15,9 @@ import com.typesafe.config.impl.AbstractConfigValue.SelfReferential;
 import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 final class ResolveContext {
+    // this is unfortunately mutable so should only be shared among
+    // ResolveContext in the same traversal.
+    final private ResolveSource source;
     // Resolves that we have already begun (for cycle detection).
     // SubstitutionResolver separately memoizes completed resolves.
     // this set is unfortunately mutable and the user of ResolveContext
@@ -30,19 +33,21 @@ final class ResolveContext {
     // given replacement instead.
     final private Map<MemoKey, LinkedList<ResolveReplacer>> replacements;
 
-    ResolveContext(LinkedList<Set<MemoKey>> traversedStack, ConfigResolveOptions options,
-            Path restrictToChild,
+    ResolveContext(ResolveSource source, LinkedList<Set<MemoKey>> traversedStack,
+            ConfigResolveOptions options, Path restrictToChild,
             Map<MemoKey, LinkedList<ResolveReplacer>> replacements) {
+        this.source = source;
         this.traversedStack = traversedStack;
         this.options = options;
         this.restrictToChild = restrictToChild;
         this.replacements = replacements;
     }
 
-    ResolveContext(ConfigResolveOptions options, Path restrictToChild) {
+    ResolveContext(AbstractConfigObject root, ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
-        this(new LinkedList<Set<MemoKey>>(Collections.singletonList(new LinkedHashSet<MemoKey>())),
+        this(new ResolveSource(root), new LinkedList<Set<MemoKey>>(
+                Collections.singletonList(new LinkedHashSet<MemoKey>())),
                 options, restrictToChild, new HashMap<MemoKey, LinkedList<ResolveReplacer>>());
     }
 
@@ -125,6 +130,10 @@ final class ResolveContext {
             return stack.peek().replace();
     }
 
+    ResolveSource source() {
+        return source;
+    }
+
     ConfigResolveOptions options() {
         return options;
     }
@@ -141,7 +150,7 @@ final class ResolveContext {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(traversedStack, options, restrictTo, replacements);
+            return new ResolveContext(source, traversedStack, options, restrictTo, replacements);
     }
 
     ResolveContext unrestricted() {

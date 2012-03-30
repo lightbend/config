@@ -17,13 +17,11 @@ import com.typesafe.config.impl.ResolveReplacer.Undefined;
  * of values or whole trees of values as we follow chains of substitutions.
  */
 final class SubstitutionResolver {
-    final private AbstractConfigObject root;
     // note that we can resolve things to undefined (represented as Java null,
     // rather than ConfigNull) so this map can have null values.
     final private Map<MemoKey, AbstractConfigValue> memos;
 
-    SubstitutionResolver(AbstractConfigObject root) {
-        this.root = root;
+    SubstitutionResolver() {
         this.memos = new HashMap<MemoKey, AbstractConfigValue>();
     }
 
@@ -97,22 +95,18 @@ final class SubstitutionResolver {
         }
     }
 
-    AbstractConfigObject root() {
-        return this.root;
-    }
-
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
             ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
-        SubstitutionResolver resolver = new SubstitutionResolver(root);
-        ResolveContext context = new ResolveContext(options, restrictToChildOrNull);
+        SubstitutionResolver resolver = new SubstitutionResolver();
+        ResolveContext context = new ResolveContext(root, options, restrictToChildOrNull);
 
         return resolver.resolve(value, context);
     }
 
     static AbstractConfigValue resolveWithExternalExceptions(AbstractConfigValue value,
             AbstractConfigObject root, ConfigResolveOptions options) {
-        SubstitutionResolver resolver = new SubstitutionResolver(root);
-        ResolveContext context = new ResolveContext(options, null /* restrictToChild */);
+        SubstitutionResolver resolver = new SubstitutionResolver();
+        ResolveContext context = new ResolveContext(root, options, null /* restrictToChild */);
 
         try {
             return resolver.resolve(value, context);
