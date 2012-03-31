@@ -118,7 +118,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
                     @Override
                     public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
                             throws NotPossibleToResolve {
-                        return resolver.resolve(v, context);
+                        return context.resolve(resolver, v);
                     }
 
                 }, ResolveStatus.RESOLVED);

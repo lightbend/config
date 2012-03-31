@@ -18,6 +18,11 @@ final class ResolveContext {
     // this is unfortunately mutable so should only be shared among
     // ResolveContext in the same traversal.
     final private ResolveSource source;
+
+    // this is unfortunately mutable so should only be shared among
+    // ResolveContext in the same traversal.
+    final private ResolveMemos memos;
+
     // Resolves that we have already begun (for cycle detection).
     // SubstitutionResolver separately memoizes completed resolves.
     // this set is unfortunately mutable and the user of ResolveContext
@@ -33,10 +38,11 @@ final class ResolveContext {
     // given replacement instead.
     final private Map<MemoKey, LinkedList<ResolveReplacer>> replacements;
 
-    ResolveContext(ResolveSource source, LinkedList<Set<MemoKey>> traversedStack,
-            ConfigResolveOptions options, Path restrictToChild,
-            Map<MemoKey, LinkedList<ResolveReplacer>> replacements) {
+    ResolveContext(ResolveSource source, ResolveMemos memos,
+            LinkedList<Set<MemoKey>> traversedStack, ConfigResolveOptions options,
+            Path restrictToChild, Map<MemoKey, LinkedList<ResolveReplacer>> replacements) {
         this.source = source;
+        this.memos = memos;
         this.traversedStack = traversedStack;
         this.options = options;
         this.restrictToChild = restrictToChild;
@@ -46,9 +52,9 @@ final class ResolveContext {
     ResolveContext(AbstractConfigObject root, ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
-        this(new ResolveSource(root), new LinkedList<Set<MemoKey>>(
-                Collections.singletonList(new LinkedHashSet<MemoKey>())),
-                options, restrictToChild, new HashMap<MemoKey, LinkedList<ResolveReplacer>>());
+        this(new ResolveSource(root), new ResolveMemos(), new LinkedList<Set<MemoKey>>(
+                Collections.singletonList(new LinkedHashSet<MemoKey>())), options, restrictToChild,
+                new HashMap<MemoKey, LinkedList<ResolveReplacer>>());
     }
 
     private void traverse(ConfigSubstitution value, SubstitutionExpression via)
@@ -150,10 +156,81 @@ final class ResolveContext {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(source, traversedStack, options, restrictTo, replacements);
+            return new ResolveContext(source, memos, traversedStack, options, restrictTo,
+                    replacements);
     }
 
     ResolveContext unrestricted() {
         return restrict(null);
+    }
+
+    AbstractConfigValue resolve(SubstitutionResolver resolver, AbstractConfigValue original)
+            throws NotPossibleToResolve {
+
+        // a fully-resolved (no restrictToChild) object can satisfy a
+        // request for a restricted object, so always check that first.
+        final MemoKey fullKey = new MemoKey(original, null);
+        MemoKey restrictedKey = null;
+
+        AbstractConfigValue cached = memos.get(fullKey);
+
+        // but if there was no fully-resolved object cached, we'll only
+        // compute the restrictToChild object so use a more limited
+        // memo key
+        if (cached == null && isRestrictedToChild()) {
+            restrictedKey = new MemoKey(original, restrictToChild());
+            cached = memos.get(restrictedKey);
+        }
+
+        if (cached != null) {
+            return cached;
+        } else {
+            MemoKey key = restrictedKey != null ? restrictedKey : fullKey;
+
+            AbstractConfigValue replacement;
+            boolean forceUndefined = false;
+            try {
+                replacement = replacement(key);
+            } catch (Undefined e) {
+                replacement = original;
+                forceUndefined = true;
+            }
+
+            if (replacement != original) {
+                // start over, checking if replacement was memoized
+                return resolve(resolver, replacement);
+            } else {
+                AbstractConfigValue resolved;
+
+                if (forceUndefined)
+                    resolved = null;
+                else
+                    resolved = original.resolveSubstitutions(resolver, this);
+
+                if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
+                    // if the resolved object is fully resolved by resolving
+                    // only the restrictToChildOrNull, then it can be cached
+                    // under fullKey since the child we were restricted to
+                    // turned out to be the only unresolved thing.
+                    memos.put(fullKey, resolved);
+                } else {
+                    // if we have an unresolved object then either we did a
+                    // partial resolve restricted to a certain child, or it's
+                    // a bug.
+                    if (isRestrictedToChild()) {
+                        if (restrictedKey == null) {
+                            throw new ConfigException.BugOrBroken(
+                                    "restrictedKey should not be null here");
+                        }
+                        memos.put(restrictedKey, resolved);
+                    } else {
+                        throw new ConfigException.BugOrBroken(
+                                "resolveSubstitutions() did not give us a resolved object");
+                    }
+                }
+
+                return resolved;
+            }
+        }
     }
 }

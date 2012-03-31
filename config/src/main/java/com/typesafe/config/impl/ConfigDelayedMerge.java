@@ -99,7 +99,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
             AbstractConfigValue resolved;
             try {
-                resolved = resolver.resolve(v, context);
+                resolved = context.resolve(resolver, v);
             } finally {
                 if (replaced)
                     context.unreplace((AbstractConfigValue) replaceable);

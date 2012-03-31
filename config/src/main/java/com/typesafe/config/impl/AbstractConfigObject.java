@@ -113,8 +113,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
                 // walk down through the path resolving only things along that
                 // path,
                 // and then recursively call ourselves with no resolver.
-                AbstractConfigValue partiallyResolved = resolver.resolve(self,
-                        context.restrict(path));
+                AbstractConfigValue partiallyResolved = context.restrict(path).resolve(resolver,
+                        self);
                 if (partiallyResolved instanceof AbstractConfigObject) {
                     return peekPath((AbstractConfigObject) partiallyResolved, path, null, null);
                 } else {

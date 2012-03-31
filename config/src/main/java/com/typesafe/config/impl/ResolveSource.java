@@ -54,7 +54,7 @@ final class ResolveSource {
             result = context.traversing(traversed, subst, new ResolveContext.Resolver() {
                 @Override
                 public AbstractConfigValue call() throws NotPossibleToResolve {
-                    return resolver.resolve(unresolved, context);
+                    return context.resolve(resolver, unresolved);
                 }
             });
         }

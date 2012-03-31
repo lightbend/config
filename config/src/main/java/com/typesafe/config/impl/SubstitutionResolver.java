@@ -3,96 +3,16 @@
  */
 package com.typesafe.config.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
-import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 /**
- * This exists because we have to memoize resolved substitutions as we go
- * through the config tree; otherwise we could end up creating multiple copies
- * of values or whole trees of values as we follow chains of substitutions.
+ * TODO there is no reason for this class to exist, will remove in upcoming
+ * commit
  */
 final class SubstitutionResolver {
-    // note that we can resolve things to undefined (represented as Java null,
-    // rather than ConfigNull) so this map can have null values.
-    final private Map<MemoKey, AbstractConfigValue> memos;
-
     SubstitutionResolver() {
-        this.memos = new HashMap<MemoKey, AbstractConfigValue>();
-    }
 
-    AbstractConfigValue resolve(AbstractConfigValue original, ResolveContext context)
-            throws NotPossibleToResolve {
-
-        // a fully-resolved (no restrictToChild) object can satisfy a
-        // request for a restricted object, so always check that first.
-        final MemoKey fullKey = new MemoKey(original, null);
-        MemoKey restrictedKey = null;
-
-        AbstractConfigValue cached = memos.get(fullKey);
-
-        // but if there was no fully-resolved object cached, we'll only
-        // compute the restrictToChild object so use a more limited
-        // memo key
-        if (cached == null && context.isRestrictedToChild()) {
-            restrictedKey = new MemoKey(original, context.restrictToChild());
-            cached = memos.get(restrictedKey);
-        }
-
-        if (cached != null) {
-            return cached;
-        } else {
-            MemoKey key = restrictedKey != null ? restrictedKey : fullKey;
-
-            AbstractConfigValue replacement;
-            boolean forceUndefined = false;
-            try {
-                replacement = context.replacement(key);
-            } catch (Undefined e) {
-                replacement = original;
-                forceUndefined = true;
-            }
-
-            if (replacement != original) {
-                // start over, checking if replacement was memoized
-                return resolve(replacement, context);
-            } else {
-                AbstractConfigValue resolved;
-
-                if (forceUndefined)
-                    resolved = null;
-                else
-                    resolved = original.resolveSubstitutions(this, context);
-
-                if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
-                    // if the resolved object is fully resolved by resolving
-                    // only the restrictToChildOrNull, then it can be cached
-                    // under fullKey since the child we were restricted to
-                    // turned out to be the only unresolved thing.
-                    memos.put(fullKey, resolved);
-                } else {
-                    // if we have an unresolved object then either we did a
-                    // partial resolve restricted to a certain child, or it's
-                    // a bug.
-                    if (context.isRestrictedToChild()) {
-                        if (restrictedKey == null) {
-                            throw new ConfigException.BugOrBroken(
-                                    "restrictedKey should not be null here");
-                        }
-                        memos.put(restrictedKey, resolved);
-                    } else {
-                        throw new ConfigException.BugOrBroken(
-                                "resolveSubstitutions() did not give us a resolved object");
-                    }
-                }
-
-                return resolved;
-            }
-        }
     }
 
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
@@ -100,7 +20,7 @@ final class SubstitutionResolver {
         SubstitutionResolver resolver = new SubstitutionResolver();
         ResolveContext context = new ResolveContext(root, options, restrictToChildOrNull);
 
-        return resolver.resolve(value, context);
+        return context.resolve(resolver, value);
     }
 
     static AbstractConfigValue resolveWithExternalExceptions(AbstractConfigValue value,
@@ -109,7 +29,7 @@ final class SubstitutionResolver {
         ResolveContext context = new ResolveContext(root, options, null /* restrictToChild */);
 
         try {
-            return resolver.resolve(value, context);
+            return context.resolve(resolver, value);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(value.origin(), null);
         }

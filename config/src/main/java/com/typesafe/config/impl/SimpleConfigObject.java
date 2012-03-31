@@ -274,7 +274,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
                         if (key.equals(context.restrictToChild().first())) {
                             Path remainder = context.restrictToChild().remainder();
                             if (remainder != null) {
-                                return resolver.resolve(v, context.restrict(remainder));
+                                return context.restrict(remainder).resolve(resolver, v);
                             } else {
                                 // we don't want to resolve the leaf child.
                                 return v;
@@ -285,7 +285,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
                         }
                     } else {
                         // no restrictToChild, resolve everything
-                        return resolver.resolve(v, context.unrestricted());
+                        return context.unrestricted().resolve(resolver, v);
                     }
                 }
 
