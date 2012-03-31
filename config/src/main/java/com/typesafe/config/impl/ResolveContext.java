@@ -161,9 +161,7 @@ final class ResolveContext {
         if (cached != null) {
             return cached;
         } else {
-            MemoKey key = restrictedKey != null ? restrictedKey : fullKey;
-
-            AbstractConfigValue resolved = source.resolveCheckingReplacement(this, key);
+            AbstractConfigValue resolved = source.resolveCheckingReplacement(this, original);
 
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
                 // if the resolved object is fully resolved by resolving

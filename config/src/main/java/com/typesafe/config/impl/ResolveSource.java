@@ -1,6 +1,6 @@
 package com.typesafe.config.impl;
 
-import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -18,11 +18,11 @@ final class ResolveSource {
     // traversed node and therefore avoid circular dependencies.
     // We implement it with this somewhat hacky "patch a replacement"
     // mechanism instead of actually transforming the tree.
-    final private Map<MemoKey, LinkedList<ResolveReplacer>> replacements;
+    final private Map<AbstractConfigValue, LinkedList<ResolveReplacer>> replacements;
 
     ResolveSource(AbstractConfigObject root) {
         this.root = root;
-        this.replacements = new HashMap<MemoKey, LinkedList<ResolveReplacer>>();
+        this.replacements = new IdentityHashMap<AbstractConfigValue, LinkedList<ResolveReplacer>>();
     }
 
     static private AbstractConfigValue findInObject(final AbstractConfigObject obj,
@@ -73,28 +73,26 @@ final class ResolveSource {
     }
 
     void replace(AbstractConfigValue value, ResolveReplacer replacer) {
-        MemoKey key = new MemoKey(value, null /* restrictToChild */);
-        LinkedList<ResolveReplacer> stack = replacements.get(key);
+        LinkedList<ResolveReplacer> stack = replacements.get(value);
         if (stack == null) {
             stack = new LinkedList<ResolveReplacer>();
-            replacements.put(key, stack);
+            replacements.put(value, stack);
         }
         stack.addFirst(replacer);
     }
 
     void unreplace(AbstractConfigValue value) {
-        MemoKey key = new MemoKey(value, null /* restrictToChild */);
-        LinkedList<ResolveReplacer> stack = replacements.get(key);
+        LinkedList<ResolveReplacer> stack = replacements.get(value);
         if (stack == null)
             throw new ConfigException.BugOrBroken("unreplace() without replace(): " + value);
 
         stack.removeFirst();
     }
 
-    private AbstractConfigValue replacement(MemoKey key) throws Undefined {
-        LinkedList<ResolveReplacer> stack = replacements.get(new MemoKey(key.value(), null));
+    private AbstractConfigValue replacement(AbstractConfigValue value) throws Undefined {
+        LinkedList<ResolveReplacer> stack = replacements.get(value);
         if (stack == null || stack.isEmpty())
-            return key.value();
+            return value;
         else
             return stack.peek().replace();
     }
@@ -103,14 +101,12 @@ final class ResolveSource {
      * Conceptually, this is key.value().resolveSubstitutions() but using the
      * replacement for key.value() if any.
      */
-    AbstractConfigValue resolveCheckingReplacement(ResolveContext context, MemoKey key)
-            throws NotPossibleToResolve {
-        AbstractConfigValue original = key.value();
-
+    AbstractConfigValue resolveCheckingReplacement(ResolveContext context,
+            AbstractConfigValue original) throws NotPossibleToResolve {
         AbstractConfigValue replacement;
         boolean forceUndefined = false;
         try {
-            replacement = replacement(key);
+            replacement = replacement(original);
         } catch (Undefined e) {
             replacement = original;
             forceUndefined = true;
