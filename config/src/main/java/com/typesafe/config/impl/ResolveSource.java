@@ -12,25 +12,22 @@ final class ResolveSource {
         this.root = root;
     }
 
-    /** resolver is null if we should not have refs */
     static private AbstractConfigValue findInObject(final AbstractConfigObject obj,
-            final SubstitutionResolver resolver, final ResolveContext context,
-            ConfigSubstitution traversed, final SubstitutionExpression subst)
-            throws NotPossibleToResolve {
+            final ResolveContext context, ConfigSubstitution traversed,
+            final SubstitutionExpression subst) throws NotPossibleToResolve {
         return context.traversing(traversed, subst, new ResolveContext.Resolver() {
             @Override
             public AbstractConfigValue call() throws NotPossibleToResolve {
-                return obj.peekPath(subst.path(), resolver, context);
+                return obj.peekPath(subst.path(), context);
             }
         });
     }
 
-    AbstractConfigValue lookupSubst(final SubstitutionResolver resolver,
-            final ResolveContext context, ConfigSubstitution traversed,
+    AbstractConfigValue lookupSubst(final ResolveContext context, ConfigSubstitution traversed,
             final SubstitutionExpression subst, int prefixLength) throws NotPossibleToResolve {
         // First we look up the full path, which means relative to the
         // included file if we were not a root file
-        AbstractConfigValue result = findInObject(root, resolver, context, traversed, subst);
+        AbstractConfigValue result = findInObject(root, context, traversed, subst);
 
         if (result == null) {
             // Then we want to check relative to the root file. We don't
@@ -40,12 +37,12 @@ final class ResolveSource {
                     .changePath(subst.path().subPath(prefixLength));
 
             if (result == null && prefixLength > 0) {
-                result = findInObject(root, resolver, context, traversed, unprefixed);
+                result = findInObject(root, context, traversed, unprefixed);
             }
 
             if (result == null && context.options().getUseSystemEnvironment()) {
-                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), null, context,
-                        traversed, unprefixed);
+                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context, traversed,
+                        unprefixed);
             }
         }
 
@@ -54,7 +51,7 @@ final class ResolveSource {
             result = context.traversing(traversed, subst, new ResolveContext.Resolver() {
                 @Override
                 public AbstractConfigValue call() throws NotPossibleToResolve {
-                    return context.resolve(resolver, unresolved);
+                    return context.resolve(unresolved);
                 }
             });
         }

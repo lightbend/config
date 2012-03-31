@@ -64,15 +64,14 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
+    AbstractConfigValue resolveSubstitutions(ResolveContext context)
             throws NotPossibleToResolve {
-        return resolveSubstitutions(this, stack, resolver, context);
+        return resolveSubstitutions(this, stack, context);
     }
 
     // static method also used by ConfigDelayedMergeObject
     static AbstractConfigValue resolveSubstitutions(ReplaceableMergeStack replaceable,
-            List<AbstractConfigValue> stack, SubstitutionResolver resolver, ResolveContext context)
-            throws NotPossibleToResolve {
+            List<AbstractConfigValue> stack, ResolveContext context) throws NotPossibleToResolve {
         // to resolve substitutions, we need to recursively resolve
         // the stack of stuff to merge, and merge the stack so
         // we won't be a delayed merge anymore. If restrictToChildOrNull
@@ -99,7 +98,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
             AbstractConfigValue resolved;
             try {
-                resolved = context.resolve(resolver, v);
+                resolved = context.resolve(v);
             } finally {
                 if (replaced)
                     context.unreplace((AbstractConfigValue) replaceable);

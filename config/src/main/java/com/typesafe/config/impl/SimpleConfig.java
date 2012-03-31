@@ -57,7 +57,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public SimpleConfig resolve(ConfigResolveOptions options) {
-        AbstractConfigValue resolved = SubstitutionResolver.resolveWithExternalExceptions(object,
+        AbstractConfigValue resolved = ResolveContext.resolveWithExternalExceptions(object,
                 object, options);
 
         if (resolved == object)
@@ -72,7 +72,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         Path path = Path.newPath(pathExpression);
         ConfigValue peeked;
         try {
-            peeked = object.peekPath(path, null, null);
+            peeked = object.peekPath(path, null);
         } catch (NotPossibleToResolve e) {
             throw e.exportException(origin(), pathExpression);
         } catch (ConfigException.NotResolved e) {

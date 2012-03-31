@@ -142,8 +142,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         }
     };
 
-    private AbstractConfigValue resolveValueConcat(SubstitutionResolver resolver,
-            ResolveContext context) throws NotPossibleToResolve {
+    private AbstractConfigValue resolveValueConcat(ResolveContext context)
+            throws NotPossibleToResolve {
         // need to concat everything into a string
         StringBuilder sb = new StringBuilder();
         for (Object p : pieces) {
@@ -154,8 +154,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
 
                 // to concat into a string we have to do a full resolve,
                 // so unrestrict the context
-                AbstractConfigValue v = context.source().lookupSubst(resolver,
-                        context.unrestricted(), this, exp, prefixLength);
+                AbstractConfigValue v = context.source().lookupSubst(context.unrestricted(), this,
+                        exp, prefixLength);
 
                 if (v == null) {
                     if (exp.optional()) {
@@ -179,15 +179,15 @@ final class ConfigSubstitution extends AbstractConfigValue implements
         return new ConfigString(origin(), sb.toString());
     }
 
-    private AbstractConfigValue resolveSingleSubst(SubstitutionResolver resolver,
-            ResolveContext context) throws NotPossibleToResolve {
+    private AbstractConfigValue resolveSingleSubst(ResolveContext context)
+            throws NotPossibleToResolve {
 
         if (!(pieces.get(0) instanceof SubstitutionExpression))
             throw new ConfigException.BugOrBroken(
                     "ConfigSubstitution should never contain a single String piece");
 
         SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
-        AbstractConfigValue v = context.source().lookupSubst(resolver, context, this, exp,
+        AbstractConfigValue v = context.source().lookupSubst(context, this, exp,
                 prefixLength);
 
         if (v == null && !exp.optional()) {
@@ -197,7 +197,7 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
+    AbstractConfigValue resolveSubstitutions(ResolveContext context)
             throws NotPossibleToResolve {
         AbstractConfigValue resolved;
         if (pieces.size() > 1) {
@@ -206,12 +206,12 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             // get undefined, rather than "bar"
             context.replace(this, undefinedReplacer);
             try {
-                resolved = resolveValueConcat(resolver, context);
+                resolved = resolveValueConcat(context);
             } finally {
                 context.unreplace(this);
             }
         } else {
-            resolved = resolveSingleSubst(resolver, context);
+            resolved = resolveSingleSubst(context);
         }
         return resolved;
     }

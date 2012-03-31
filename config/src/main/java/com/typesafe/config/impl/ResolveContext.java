@@ -31,7 +31,9 @@ final class ResolveContext {
     final private LinkedList<Set<MemoKey>> traversedStack;
     final private ConfigResolveOptions options;
     // the current path restriction, used to ensure lazy
-    // resolution and avoid gratuitous cycles.
+    // resolution and avoid gratuitous cycles. without this,
+    // any sibling of an object we're traversing could
+    // cause a cycle "by side effect"
     // CAN BE NULL for a full resolve.
     final private Path restrictToChild;
     // if we try to resolve something in here, use the
@@ -164,7 +166,7 @@ final class ResolveContext {
         return restrict(null);
     }
 
-    AbstractConfigValue resolve(SubstitutionResolver resolver, AbstractConfigValue original)
+    AbstractConfigValue resolve(AbstractConfigValue original)
             throws NotPossibleToResolve {
 
         // a fully-resolved (no restrictToChild) object can satisfy a
@@ -198,14 +200,14 @@ final class ResolveContext {
 
             if (replacement != original) {
                 // start over, checking if replacement was memoized
-                return resolve(resolver, replacement);
+                return resolve(replacement);
             } else {
                 AbstractConfigValue resolved;
 
                 if (forceUndefined)
                     resolved = null;
                 else
-                    resolved = original.resolveSubstitutions(resolver, this);
+                    resolved = original.resolveSubstitutions(this);
 
                 if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
                     // if the resolved object is fully resolved by resolving
@@ -231,6 +233,24 @@ final class ResolveContext {
 
                 return resolved;
             }
+        }
+    }
+
+    static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
+            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
+        ResolveContext context = new ResolveContext(root, options, restrictToChildOrNull);
+
+        return context.resolve(value);
+    }
+
+    static AbstractConfigValue resolveWithExternalExceptions(AbstractConfigValue value,
+            AbstractConfigObject root, ConfigResolveOptions options) {
+        ResolveContext context = new ResolveContext(root, options, null /* restrictToChild */);
+
+        try {
+            return context.resolve(value);
+        } catch (NotPossibleToResolve e) {
+            throw e.exportException(value.origin(), null);
         }
     }
 }

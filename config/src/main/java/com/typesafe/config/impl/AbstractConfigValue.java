@@ -84,18 +84,13 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
     }
 
     /**
-     * Called only by SubstitutionResolver object. The "restrict to child"
-     * parameter is to avoid unnecessary cycles as a side effect (any sibling of
-     * the object we want to follow could cause a cycle, not just the object we
-     * want to follow, otherwise).
+     * Called only by ResolveContext.resolve().
      *
-     * @param resolver
-     *            the resolver doing the resolving
      * @param context
      *            state of the current resolve
      * @return a new value if there were changes, or this if no changes
      */
-    AbstractConfigValue resolveSubstitutions(SubstitutionResolver resolver, ResolveContext context)
+    AbstractConfigValue resolveSubstitutions(ResolveContext context)
             throws NotPossibleToResolve {
         return this;
     }

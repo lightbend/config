@@ -15,20 +15,20 @@ class ConfigSubstitutionTest extends TestUtils {
 
     private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
-        SubstitutionResolver.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
+        ResolveContext.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolveWithoutFallbacks(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
-        SubstitutionResolver.resolveWithExternalExceptions(s, root, options)
+        ResolveContext.resolveWithExternalExceptions(s, root, options)
     }
 
     private def resolve(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
-        SubstitutionResolver.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
+        ResolveContext.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolve(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
-        SubstitutionResolver.resolveWithExternalExceptions(s, root, options)
+        ResolveContext.resolveWithExternalExceptions(s, root, options)
     }
 
     private val simpleObject = {

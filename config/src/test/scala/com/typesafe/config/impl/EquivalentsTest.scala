@@ -34,7 +34,7 @@ class EquivalentsTest extends TestUtils {
                 // for purposes of these tests, substitutions are only
                 // against the same file's root, and without looking at
                 // system prop or env variable fallbacks.
-                SubstitutionResolver.resolveWithExternalExceptions(v, v, ConfigResolveOptions.noSystem())
+                ResolveContext.resolveWithExternalExceptions(v, v, ConfigResolveOptions.noSystem())
             case v =>
                 v
         }
