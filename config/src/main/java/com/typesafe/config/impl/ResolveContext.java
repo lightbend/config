@@ -10,7 +10,6 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 import com.typesafe.config.impl.AbstractConfigValue.SelfReferential;
-import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 final class ResolveContext {
     // this is unfortunately mutable so should only be shared among
@@ -164,50 +163,31 @@ final class ResolveContext {
         } else {
             MemoKey key = restrictedKey != null ? restrictedKey : fullKey;
 
-            AbstractConfigValue replacement;
-            boolean forceUndefined = false;
-            try {
-                replacement = source.replacement(key);
-            } catch (Undefined e) {
-                replacement = original;
-                forceUndefined = true;
-            }
+            AbstractConfigValue resolved = source.resolveCheckingReplacement(this, key);
 
-            if (replacement != original) {
-                // start over, checking if replacement was memoized
-                return resolve(replacement);
+            if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
+                // if the resolved object is fully resolved by resolving
+                // only the restrictToChildOrNull, then it can be cached
+                // under fullKey since the child we were restricted to
+                // turned out to be the only unresolved thing.
+                memos.put(fullKey, resolved);
             } else {
-                AbstractConfigValue resolved;
-
-                if (forceUndefined)
-                    resolved = null;
-                else
-                    resolved = original.resolveSubstitutions(this);
-
-                if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
-                    // if the resolved object is fully resolved by resolving
-                    // only the restrictToChildOrNull, then it can be cached
-                    // under fullKey since the child we were restricted to
-                    // turned out to be the only unresolved thing.
-                    memos.put(fullKey, resolved);
-                } else {
-                    // if we have an unresolved object then either we did a
-                    // partial resolve restricted to a certain child, or it's
-                    // a bug.
-                    if (isRestrictedToChild()) {
-                        if (restrictedKey == null) {
-                            throw new ConfigException.BugOrBroken(
-                                    "restrictedKey should not be null here");
-                        }
-                        memos.put(restrictedKey, resolved);
-                    } else {
+                // if we have an unresolved object then either we did a
+                // partial resolve restricted to a certain child, or it's
+                // a bug.
+                if (isRestrictedToChild()) {
+                    if (restrictedKey == null) {
                         throw new ConfigException.BugOrBroken(
-                                "resolveSubstitutions() did not give us a resolved object");
+                                "restrictedKey should not be null here");
                     }
+                    memos.put(restrictedKey, resolved);
+                } else {
+                    throw new ConfigException.BugOrBroken(
+                            "resolveSubstitutions() did not give us a resolved object");
                 }
-
-                return resolved;
             }
+
+            return resolved;
         }
     }
 

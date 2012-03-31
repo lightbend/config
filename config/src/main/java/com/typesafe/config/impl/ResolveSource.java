@@ -91,11 +91,43 @@ final class ResolveSource {
         stack.removeFirst();
     }
 
-    AbstractConfigValue replacement(MemoKey key) throws Undefined {
+    private AbstractConfigValue replacement(MemoKey key) throws Undefined {
         LinkedList<ResolveReplacer> stack = replacements.get(new MemoKey(key.value(), null));
         if (stack == null || stack.isEmpty())
             return key.value();
         else
             return stack.peek().replace();
+    }
+
+    /**
+     * Conceptually, this is key.value().resolveSubstitutions() but using the
+     * replacement for key.value() if any.
+     */
+    AbstractConfigValue resolveCheckingReplacement(ResolveContext context, MemoKey key)
+            throws NotPossibleToResolve {
+        AbstractConfigValue original = key.value();
+
+        AbstractConfigValue replacement;
+        boolean forceUndefined = false;
+        try {
+            replacement = replacement(key);
+        } catch (Undefined e) {
+            replacement = original;
+            forceUndefined = true;
+        }
+
+        if (replacement != original) {
+            // start over, checking if replacement was memoized
+            return context.resolve(replacement);
+        } else {
+            AbstractConfigValue resolved;
+
+            if (forceUndefined)
+                resolved = null;
+            else
+                resolved = original.resolveSubstitutions(context);
+
+            return resolved;
+        }
     }
 }
