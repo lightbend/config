@@ -1,15 +1,28 @@
 package com.typesafe.config.impl;
 
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
+import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 /**
  * This class is the source for values for a substitution like ${foo}.
  */
 final class ResolveSource {
     final private AbstractConfigObject root;
+    // Conceptually, we transform the ResolveSource whenever we traverse
+    // a substitution or delayed merge stack, in order to remove the
+    // traversed node and therefore avoid circular dependencies.
+    // We implement it with this somewhat hacky "patch a replacement"
+    // mechanism instead of actually transforming the tree.
+    final private Map<MemoKey, LinkedList<ResolveReplacer>> replacements;
 
     ResolveSource(AbstractConfigObject root) {
         this.root = root;
+        this.replacements = new HashMap<MemoKey, LinkedList<ResolveReplacer>>();
     }
 
     static private AbstractConfigValue findInObject(final AbstractConfigObject obj,
@@ -57,5 +70,32 @@ final class ResolveSource {
         }
 
         return result;
+    }
+
+    void replace(AbstractConfigValue value, ResolveReplacer replacer) {
+        MemoKey key = new MemoKey(value, null /* restrictToChild */);
+        LinkedList<ResolveReplacer> stack = replacements.get(key);
+        if (stack == null) {
+            stack = new LinkedList<ResolveReplacer>();
+            replacements.put(key, stack);
+        }
+        stack.addFirst(replacer);
+    }
+
+    void unreplace(AbstractConfigValue value) {
+        MemoKey key = new MemoKey(value, null /* restrictToChild */);
+        LinkedList<ResolveReplacer> stack = replacements.get(key);
+        if (stack == null)
+            throw new ConfigException.BugOrBroken("unreplace() without replace(): " + value);
+
+        stack.removeFirst();
+    }
+
+    AbstractConfigValue replacement(MemoKey key) throws Undefined {
+        LinkedList<ResolveReplacer> stack = replacements.get(new MemoKey(key.value(), null));
+        if (stack == null || stack.isEmpty())
+            return key.value();
+        else
+            return stack.peek().replace();
     }
 }

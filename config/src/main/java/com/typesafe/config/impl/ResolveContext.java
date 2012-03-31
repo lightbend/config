@@ -1,9 +1,7 @@
 package com.typesafe.config.impl;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 import java.util.LinkedHashSet;
 import java.util.concurrent.Callable;
@@ -36,27 +34,22 @@ final class ResolveContext {
     // cause a cycle "by side effect"
     // CAN BE NULL for a full resolve.
     final private Path restrictToChild;
-    // if we try to resolve something in here, use the
-    // given replacement instead.
-    final private Map<MemoKey, LinkedList<ResolveReplacer>> replacements;
 
     ResolveContext(ResolveSource source, ResolveMemos memos,
             LinkedList<Set<MemoKey>> traversedStack, ConfigResolveOptions options,
-            Path restrictToChild, Map<MemoKey, LinkedList<ResolveReplacer>> replacements) {
+            Path restrictToChild) {
         this.source = source;
         this.memos = memos;
         this.traversedStack = traversedStack;
         this.options = options;
         this.restrictToChild = restrictToChild;
-        this.replacements = replacements;
     }
 
     ResolveContext(AbstractConfigObject root, ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
         this(new ResolveSource(root), new ResolveMemos(), new LinkedList<Set<MemoKey>>(
-                Collections.singletonList(new LinkedHashSet<MemoKey>())), options, restrictToChild,
-                new HashMap<MemoKey, LinkedList<ResolveReplacer>>());
+                Collections.singletonList(new LinkedHashSet<MemoKey>())), options, restrictToChild);
     }
 
     private void traverse(ConfigSubstitution value, SubstitutionExpression via)
@@ -105,37 +98,20 @@ final class ResolveContext {
     }
 
     void replace(AbstractConfigValue value, ResolveReplacer replacer) {
-        MemoKey key = new MemoKey(value, null /* restrictToChild */);
-        LinkedList<ResolveReplacer> stack = replacements.get(key);
-        if (stack == null) {
-            stack = new LinkedList<ResolveReplacer>();
-            replacements.put(key, stack);
-        }
-        stack.addFirst(replacer);
+        source.replace(value, replacer);
+
         // we have to reset the cycle detection because with the
-        // replacement, a cycle may be broken
+        // replacement, a cycle may not exist anymore.
         traversedStack.addFirst(new LinkedHashSet<MemoKey>());
     }
 
     void unreplace(AbstractConfigValue value) {
-        MemoKey key = new MemoKey(value, null /* restrictToChild */);
-        LinkedList<ResolveReplacer> stack = replacements.get(key);
-        if (stack == null)
-            throw new ConfigException.BugOrBroken("unreplace() without replace(): " + value);
+        source.unreplace(value);
 
-        stack.removeFirst();
         Set<MemoKey> oldTraversed = traversedStack.removeFirst();
         if (!oldTraversed.isEmpty())
             throw new ConfigException.BugOrBroken(
                     "unreplace() with stuff still in the traverse set: " + oldTraversed);
-    }
-
-    AbstractConfigValue replacement(MemoKey key) throws Undefined {
-        LinkedList<ResolveReplacer> stack = replacements.get(new MemoKey(key.value(), null));
-        if (stack == null || stack.isEmpty())
-            return key.value();
-        else
-            return stack.peek().replace();
     }
 
     ResolveSource source() {
@@ -158,8 +134,7 @@ final class ResolveContext {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(source, memos, traversedStack, options, restrictTo,
-                    replacements);
+            return new ResolveContext(source, memos, traversedStack, options, restrictTo);
     }
 
     ResolveContext unrestricted() {
@@ -192,7 +167,7 @@ final class ResolveContext {
             AbstractConfigValue replacement;
             boolean forceUndefined = false;
             try {
-                replacement = replacement(key);
+                replacement = source.replacement(key);
             } catch (Undefined e) {
                 replacement = original;
                 forceUndefined = true;
