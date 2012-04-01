@@ -26,7 +26,7 @@ final class ResolveSource {
     }
 
     static private AbstractConfigValue findInObject(final AbstractConfigObject obj,
-            final ResolveContext context, ConfigSubstitution traversed,
+            final ResolveContext context, ConfigReference traversed,
             final SubstitutionExpression subst) throws NotPossibleToResolve {
         return context.traversing(traversed, subst, new ResolveContext.Resolver() {
             @Override
@@ -36,7 +36,7 @@ final class ResolveSource {
         });
     }
 
-    AbstractConfigValue lookupSubst(final ResolveContext context, ConfigSubstitution traversed,
+    AbstractConfigValue lookupSubst(final ResolveContext context, ConfigReference traversed,
             final SubstitutionExpression subst, int prefixLength) throws NotPossibleToResolve {
         // First we look up the full path, which means relative to the
         // included file if we were not a root file

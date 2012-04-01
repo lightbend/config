@@ -51,7 +51,7 @@ final class ResolveContext {
                 Collections.singletonList(new LinkedHashSet<MemoKey>())), options, restrictToChild);
     }
 
-    private void traverse(ConfigSubstitution value, SubstitutionExpression via)
+    private void traverse(ConfigReference value, SubstitutionExpression via)
             throws SelfReferential {
         Set<MemoKey> traversed = traversedStack.peekFirst();
 
@@ -63,7 +63,7 @@ final class ResolveContext {
         traversed.add(key);
     }
 
-    private void untraverse(ConfigSubstitution value) {
+    private void untraverse(ConfigReference value) {
         Set<MemoKey> traversed = traversedStack.peekFirst();
 
         MemoKey key = new MemoKey(value, restrictToChild);
@@ -78,7 +78,7 @@ final class ResolveContext {
         AbstractConfigValue call() throws NotPossibleToResolve;
     }
 
-    AbstractConfigValue traversing(ConfigSubstitution value, SubstitutionExpression subst,
+    AbstractConfigValue traversing(ConfigReference value, SubstitutionExpression subst,
             Resolver callable) throws NotPossibleToResolve {
         try {
             traverse(value, subst);

@@ -77,10 +77,8 @@ class ConfParserTest extends TestUtils {
             tree match {
                 case list: ConfigList =>
                     list.get(0) match {
-                        case subst: ConfigSubstitution =>
-                            subst.pieces().get(0) match {
-                                case exp: SubstitutionExpression => exp.path()
-                            }
+                        case ref: ConfigReference =>
+                            ref.expression().path()
                     }
             }
         } catch {

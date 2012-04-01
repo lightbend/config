@@ -237,6 +237,9 @@ class ConfigValueTest extends TestUtils {
         val sameAsA = subst("foo")
         val b = subst("bar")
 
+        assertTrue("wrong type " + a, a.isInstanceOf[ConfigSubstitution])
+        assertTrue("wrong type " + b, b.isInstanceOf[ConfigSubstitution])
+
         checkEqualObjects(a, a)
         checkEqualObjects(a, sameAsA)
         checkNotEqualObjects(a, b)
@@ -269,6 +272,122 @@ class ConfigValueTest extends TestUtils {
 
         val a = subst("foo")
         val b = checkSerializable(expectedSerialization, a)
+    }
+
+    @Test
+    def configReferenceEquality() {
+        val a = subst("foo").delegate()
+        val sameAsA = subst("foo").delegate()
+        val b = subst("bar").delegate()
+        val c = subst("foo", optional = true).delegate()
+
+        assertTrue("wrong type " + a, a.isInstanceOf[ConfigReference])
+        assertTrue("wrong type " + b, b.isInstanceOf[ConfigReference])
+        assertTrue("wrong type " + c, c.isInstanceOf[ConfigReference])
+
+        checkEqualObjects(a, a)
+        checkEqualObjects(a, sameAsA)
+        checkNotEqualObjects(a, b)
+        checkNotEqualObjects(a, c)
+
+    }
+
+    @Test
+    def configReferenceSerializable() {
+        val expectedSerialization = "" +
+            "aced000573720028636f6d2e74797065736166652e636f6e6669672e696d706c2e436f6e66696752" +
+            "65666572656e6365000000000000000102000249000c7072656669784c656e6774684c0004657870" +
+            "727400314c636f6d2f74797065736166652f636f6e6669672f696d706c2f53756273746974757469" +
+            "6f6e45787072657373696f6e3b7872002c636f6d2e74797065736166652e636f6e6669672e696d70" +
+            "6c2e4162737472616374436f6e66696756616c756500000000000000010200014c00066f72696769" +
+            "6e74002d4c636f6d2f74797065736166652f636f6e6669672f696d706c2f53696d706c65436f6e66" +
+            "69674f726967696e3b78707372002b636f6d2e74797065736166652e636f6e6669672e696d706c2e" +
+            "53696d706c65436f6e6669674f726967696e000000000000000102000649000d656e644c696e654e" +
+            "756d62657249000a6c696e654e756d6265724c000e636f6d6d656e74734f724e756c6c7400104c6a" +
+            "6176612f7574696c2f4c6973743b4c000b6465736372697074696f6e7400124c6a6176612f6c616e" +
+            "672f537472696e673b4c000a6f726967696e547970657400254c636f6d2f74797065736166652f63" +
+            "6f6e6669672f696d706c2f4f726967696e547970653b4c000975726c4f724e756c6c71007e000778" +
+            "70ffffffffffffffff7074000b66616b65206f726967696e7e720023636f6d2e7479706573616665" +
+            "2e636f6e6669672e696d706c2e4f726967696e5479706500000000000000001200007872000e6a61" +
+            "76612e6c616e672e456e756d0000000000000000120000787074000747454e455249437000000000" +
+            "7372002f636f6d2e74797065736166652e636f6e6669672e696d706c2e537562737469747574696f" +
+            "6e45787072657373696f6e00000000000000010200025a00086f7074696f6e616c4c000470617468" +
+            "74001f4c636f6d2f74797065736166652f636f6e6669672f696d706c2f506174683b787000737200" +
+            "1d636f6d2e74797065736166652e636f6e6669672e696d706c2e5061746800000000000000010200" +
+            "024c0005666972737471007e00074c000972656d61696e64657271007e00107870740003666f6f70"
+
+        val a = subst("foo").delegate()
+        assertTrue("wrong type " + a, a.isInstanceOf[ConfigReference])
+        val b = checkSerializable(expectedSerialization, a)
+        assertTrue("wrong type " + b, b.isInstanceOf[ConfigReference])
+    }
+
+    @Test
+    def configConcatenationEquality() {
+        val a = substInString("foo").delegate()
+        val sameAsA = substInString("foo").delegate()
+        val b = substInString("bar").delegate()
+        val c = substInString("foo", optional = true).delegate()
+
+        assertTrue("wrong type " + a, a.isInstanceOf[ConfigConcatenation])
+        assertTrue("wrong type " + b, b.isInstanceOf[ConfigConcatenation])
+        assertTrue("wrong type " + c, c.isInstanceOf[ConfigConcatenation])
+
+        checkEqualObjects(a, a)
+        checkEqualObjects(a, sameAsA)
+        checkNotEqualObjects(a, b)
+        checkNotEqualObjects(a, c)
+    }
+
+    @Test
+    def configConcatenationSerializable() {
+        val expectedSerialization = "" +
+            "aced00057372002c636f6d2e74797065736166652e636f6e6669672e696d706c2e436f6e66696743" +
+            "6f6e636174656e6174696f6e00000000000000010200014c00067069656365737400104c6a617661" +
+            "2f7574696c2f4c6973743b7872002c636f6d2e74797065736166652e636f6e6669672e696d706c2e" +
+            "4162737472616374436f6e66696756616c756500000000000000010200014c00066f726967696e74" +
+            "002d4c636f6d2f74797065736166652f636f6e6669672f696d706c2f53696d706c65436f6e666967" +
+            "4f726967696e3b78707372002b636f6d2e74797065736166652e636f6e6669672e696d706c2e5369" +
+            "6d706c65436f6e6669674f726967696e000000000000000102000649000d656e644c696e654e756d" +
+            "62657249000a6c696e654e756d6265724c000e636f6d6d656e74734f724e756c6c71007e00014c00" +
+            "0b6465736372697074696f6e7400124c6a6176612f6c616e672f537472696e673b4c000a6f726967" +
+            "696e547970657400254c636f6d2f74797065736166652f636f6e6669672f696d706c2f4f72696769" +
+            "6e547970653b4c000975726c4f724e756c6c71007e00067870ffffffffffffffff7074000b66616b" +
+            "65206f726967696e7e720023636f6d2e74797065736166652e636f6e6669672e696d706c2e4f7269" +
+            "67696e5479706500000000000000001200007872000e6a6176612e6c616e672e456e756d00000000" +
+            "00000000120000787074000747454e4552494370737200146a6176612e7574696c2e4c696e6b6564" +
+            "4c6973740c29535d4a608822030000787077040000000373720025636f6d2e74797065736166652e" +
+            "636f6e6669672e696d706c2e436f6e666967537472696e6700000000000000010200014c00057661" +
+            "6c756571007e00067871007e000271007e000874000673746172743c73720028636f6d2e74797065" +
+            "736166652e636f6e6669672e696d706c2e436f6e6669675265666572656e63650000000000000001" +
+            "02000249000c7072656669784c656e6774684c0004657870727400314c636f6d2f74797065736166" +
+            "652f636f6e6669672f696d706c2f537562737469747574696f6e45787072657373696f6e3b787100" +
+            "7e000271007e0008000000007372002f636f6d2e74797065736166652e636f6e6669672e696d706c" +
+            "2e537562737469747574696f6e45787072657373696f6e00000000000000010200025a00086f7074" +
+            "696f6e616c4c00047061746874001f4c636f6d2f74797065736166652f636f6e6669672f696d706c" +
+            "2f506174683b7870007372001d636f6d2e74797065736166652e636f6e6669672e696d706c2e5061" +
+            "746800000000000000010200024c0005666972737471007e00064c000972656d61696e6465727100" +
+            "7e00177870740003666f6f707371007e001071007e00087400043e656e6478"
+
+        val a = substInString("foo").delegate()
+        assertTrue("wrong type " + a, a.isInstanceOf[ConfigConcatenation])
+        val b = checkSerializable(expectedSerialization, a)
+        assertTrue("wrong type " + b, b.isInstanceOf[ConfigConcatenation])
+    }
+
+    @Test
+    def configSubstitutionEqualsItsDelegates() {
+        val a = subst("foo")
+        assertTrue("wrong type " + a, a.isInstanceOf[ConfigSubstitution])
+        val aD = a.delegate()
+        assertTrue("wrong type " + aD, aD.isInstanceOf[ConfigReference])
+        val b = substInString("bar")
+        assertTrue("wrong type " + b, b.isInstanceOf[ConfigSubstitution])
+        val bD = b.delegate()
+        assertTrue("wrong type " + bD, bD.isInstanceOf[ConfigConcatenation])
+
+        checkEqualObjects(a, aD)
+        checkEqualObjects(b, bD)
     }
 
     @Test

@@ -335,10 +335,15 @@ final class Parser {
             if (minimized.size() == 1 && minimized.get(0) instanceof String) {
                 consolidated = Tokens.newString(firstOrigin,
                         (String) minimized.get(0));
+            } else if (minimized.size() == 1 && minimized.get(0) instanceof SubstitutionExpression) {
+                // a substitution expression ${}
+                consolidated = Tokens.newValue(new ConfigReference(firstOrigin,
+                        (SubstitutionExpression) minimized.get(0)));
             } else {
-                // there's some substitution to do later (post-parse step)
-                consolidated = Tokens.newValue(new ConfigSubstitution(
-                        firstOrigin, minimized));
+                // a value concatenation with a substitution expression in it
+                List<AbstractConfigValue> vs = ConfigConcatenation.valuesFromPieces(
+                        firstOrigin, minimized);
+                consolidated = Tokens.newValue(new ConfigConcatenation(firstOrigin, vs));
             }
 
             putBack(new TokenWithComments(consolidated, firstValueWithComments.comments));

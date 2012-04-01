@@ -3,10 +3,9 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.IOException;
 import java.io.ObjectStreamException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
@@ -14,10 +13,11 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
 /**
- * A ConfigSubstitution represents a value with one or more substitutions in it;
- * it can resolve to a value of any type, though if the substitution has more
- * than one piece it always resolves to a string via value concatenation.
+ * ConfigSubstitution is now a shim for back-compat with serialization. i.e. an
+ * old version may unserialize one of these. We now split into ConfigReference
+ * and ConfigConcatenation.
  */
+@Deprecated
 final class ConfigSubstitution extends AbstractConfigValue implements
         Unmergeable {
 
@@ -27,224 +27,109 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     // SubstitutionExpression has to be resolved to values, then if there's more
     // than one piece everything is stringified and concatenated
     final private List<Object> pieces;
-    // the length of any prefixes added with relativized()
-    final private int prefixLength;
 
-    // this is just here to avoid breaking serialization;
-    // it is always false at the moment.
+    // this is just here to avoid breaking serialization
+    @SuppressWarnings("unused")
+    @Deprecated
+    final private int prefixLength = 0;
+
+    // this is just here to avoid breaking serialization
+    @SuppressWarnings("unused")
+    @Deprecated
     final private boolean ignoresFallbacks = false;
 
-    ConfigSubstitution(ConfigOrigin origin, List<Object> pieces) {
-        this(origin, pieces, 0, false);
-    }
+    // we chain the ConfigSubstitution back-compat stub to a new value
+    private transient AbstractConfigValue delegate = null;
 
-    private ConfigSubstitution(ConfigOrigin origin, List<Object> pieces,
-            int prefixLength, boolean ignoresFallbacks) {
-        super(origin);
-        this.pieces = pieces;
-        this.prefixLength = prefixLength;
+    private void createDelegate() {
+        if (delegate != null)
+            throw new ConfigException.BugOrBroken("creating delegate twice: " + this);
 
-        for (Object p : pieces) {
-            if (p instanceof Path)
-                throw new RuntimeException("broken here");
+        List<AbstractConfigValue> values = ConfigConcatenation.valuesFromPieces(origin(), pieces);
+
+        if (values.size() == 1) {
+            delegate = values.get(0);
+        } else {
+            delegate = new ConfigConcatenation(origin(), values);
         }
 
-        if (ignoresFallbacks)
-            throw new ConfigException.BugOrBroken("ConfigSubstitution may never ignore fallbacks");
+        if (!(delegate instanceof Unmergeable))
+            throw new ConfigException.BugOrBroken("delegate must be Unmergeable: " + this
+                    + " delegate was: " + delegate);
     }
 
-    private ConfigException.NotResolved notResolved() {
-        return new ConfigException.NotResolved(
-                "need to Config#resolve(), see the API docs for Config#resolve(); substitution not resolved: "
-                        + this);
+    AbstractConfigValue delegate() {
+        if (delegate == null)
+            throw new NullPointerException("failed to create delegate " + this);
+        return delegate;
+    }
+
+    ConfigSubstitution(ConfigOrigin origin, List<Object> pieces) {
+        super(origin);
+        this.pieces = pieces;
+
+        createDelegate();
     }
 
     @Override
     public ConfigValueType valueType() {
-        throw notResolved();
+        return delegate().valueType();
     }
 
     @Override
     public Object unwrapped() {
-        throw notResolved();
+        return delegate().unwrapped();
     }
 
     @Override
-    protected ConfigSubstitution newCopy(boolean ignoresFallbacks, ConfigOrigin newOrigin) {
-        return new ConfigSubstitution(newOrigin, pieces, prefixLength, ignoresFallbacks);
+    protected AbstractConfigValue newCopy(boolean ignoresFallbacks, ConfigOrigin newOrigin) {
+        return delegate().newCopy(ignoresFallbacks, newOrigin);
     }
 
     @Override
     protected boolean ignoresFallbacks() {
-        return ignoresFallbacks;
+        return delegate().ignoresFallbacks();
     }
 
     @Override
     protected AbstractConfigValue mergedWithTheUnmergeable(Unmergeable fallback) {
-        if (ignoresFallbacks)
-            throw new ConfigException.BugOrBroken("should not be reached");
-
-        // if we turn out to be an object, and the fallback also does,
-        // then a merge may be required; delay until we resolve.
-        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
-        newStack.add(this);
-        newStack.addAll(fallback.unmergedValues());
-        return new ConfigDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack,
-                ((AbstractConfigValue) fallback).ignoresFallbacks());
-    }
-
-    protected AbstractConfigValue mergedLater(AbstractConfigValue fallback) {
-        if (ignoresFallbacks)
-            throw new ConfigException.BugOrBroken("should not be reached");
-
-        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
-        newStack.add(this);
-        newStack.add(fallback);
-        return new ConfigDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack,
-                fallback.ignoresFallbacks());
+        return delegate().mergedWithTheUnmergeable(fallback);
     }
 
     @Override
     protected AbstractConfigValue mergedWithObject(AbstractConfigObject fallback) {
-        // if we turn out to be an object, and the fallback also does,
-        // then a merge may be required; delay until we resolve.
-        return mergedLater(fallback);
+        return delegate().mergedWithObject(fallback);
     }
 
     @Override
     protected AbstractConfigValue mergedWithNonObject(AbstractConfigValue fallback) {
-        // We may need the fallback for two reasons:
-        // 1. if an optional substitution ends up getting deleted
-        // because it is not defined
-        // 2. if the substitution is self-referential
-        //
-        // we can't easily detect the self-referential case since the cycle
-        // may involve more than one step, so we have to wait and
-        // merge later when resolving.
-        return mergedLater(fallback);
+        return delegate().mergedWithNonObject(fallback);
     }
 
     @Override
-    public Collection<ConfigSubstitution> unmergedValues() {
-        return Collections.singleton(this);
-    }
-
-    List<Object> pieces() {
-        return pieces;
-    }
-
-
-
-    private static ResolveReplacer undefinedReplacer = new ResolveReplacer() {
-        @Override
-        protected AbstractConfigValue makeReplacement() throws Undefined {
-            throw new Undefined();
-        }
-    };
-
-    private AbstractConfigValue resolveValueConcat(ResolveContext context)
-            throws NotPossibleToResolve {
-        // need to concat everything into a string
-        StringBuilder sb = new StringBuilder();
-        for (Object p : pieces) {
-            if (p instanceof String) {
-                sb.append((String) p);
-            } else {
-                SubstitutionExpression exp = (SubstitutionExpression) p;
-
-                // to concat into a string we have to do a full resolve,
-                // so unrestrict the context
-                AbstractConfigValue v = context.source().lookupSubst(context.unrestricted(), this,
-                        exp, prefixLength);
-
-                if (v == null) {
-                    if (exp.optional()) {
-                        // append nothing to StringBuilder
-                    } else {
-                        throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
-                    }
-                } else {
-                    switch (v.valueType()) {
-                    case LIST:
-                    case OBJECT:
-                        // cannot substitute lists and objects into strings
-                        throw new ConfigException.WrongType(v.origin(), exp.path().render(),
-                                "not a list or object", v.valueType().name());
-                    default:
-                        sb.append(v.transformToString());
-                    }
-                }
-            }
-        }
-        return new ConfigString(origin(), sb.toString());
-    }
-
-    private AbstractConfigValue resolveSingleSubst(ResolveContext context)
-            throws NotPossibleToResolve {
-
-        if (!(pieces.get(0) instanceof SubstitutionExpression))
-            throw new ConfigException.BugOrBroken(
-                    "ConfigSubstitution should never contain a single String piece");
-
-        SubstitutionExpression exp = (SubstitutionExpression) pieces.get(0);
-        AbstractConfigValue v = context.source().lookupSubst(context, this, exp,
-                prefixLength);
-
-        if (v == null && !exp.optional()) {
-            throw new ConfigException.UnresolvedSubstitution(origin(), exp.toString());
-        }
-        return v;
+    public Collection<? extends AbstractConfigValue> unmergedValues() {
+        return ((Unmergeable) delegate()).unmergedValues();
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(ResolveContext context)
-            throws NotPossibleToResolve {
-        AbstractConfigValue resolved;
-        if (pieces.size() > 1) {
-            // if you have "foo = ${?foo}bar" then we will
-            // self-referentially look up foo and we need to
-            // get undefined, rather than "bar"
-            context.replace(this, undefinedReplacer);
-            try {
-                resolved = resolveValueConcat(context);
-            } finally {
-                context.unreplace(this);
-            }
-        } else {
-            resolved = resolveSingleSubst(context);
-        }
-        return resolved;
+    AbstractConfigValue resolveSubstitutions(ResolveContext context) throws NotPossibleToResolve {
+        return context.resolve(delegate());
     }
 
     @Override
     ResolveStatus resolveStatus() {
-        return ResolveStatus.UNRESOLVED;
+        return delegate().resolveStatus();
     }
 
-    // when you graft a substitution into another object,
-    // you have to prefix it with the location in that object
-    // where you grafted it; but save prefixLength so
-    // system property and env variable lookups don't get
-    // broken.
     @Override
-    ConfigSubstitution relativized(Path prefix) {
-        List<Object> newPieces = new ArrayList<Object>();
-        for (Object p : pieces) {
-            if (p instanceof SubstitutionExpression) {
-                SubstitutionExpression exp = (SubstitutionExpression) p;
-
-                newPieces.add(exp.changePath(exp.path().prepend(prefix)));
-            } else {
-                newPieces.add(p);
-            }
-        }
-        return new ConfigSubstitution(origin(), newPieces, prefixLength
-                + prefix.length(), ignoresFallbacks);
+    AbstractConfigValue relativized(Path prefix) {
+        return delegate().relativized(prefix);
     }
 
     @Override
     protected boolean canEqual(Object other) {
-        return other instanceof ConfigSubstitution;
+        return other instanceof ConfigSubstitution || other instanceof ConfigReference
+                || other instanceof ConfigConcatenation;
     }
 
     @Override
@@ -254,25 +139,18 @@ final class ConfigSubstitution extends AbstractConfigValue implements
             return canEqual(other)
                     && this.pieces.equals(((ConfigSubstitution) other).pieces);
         } else {
-            return false;
+            return delegate().equals(other);
         }
     }
 
     @Override
     public int hashCode() {
-        // note that "origin" is deliberately NOT part of equality
-        return pieces.hashCode();
+        return delegate().hashCode();
     }
 
     @Override
     protected void render(StringBuilder sb, int indent, boolean formatted) {
-        for (Object p : pieces) {
-            if (p instanceof SubstitutionExpression) {
-                sb.append(p.toString());
-            } else {
-                sb.append(ConfigImplUtil.renderJsonString((String) p));
-            }
-        }
+        delegate().render(sb, indent, formatted);
     }
 
     // This ridiculous hack is because some JDK versions apparently can't
@@ -281,7 +159,20 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6446627
     private Object writeReplace() throws ObjectStreamException {
         // switch to LinkedList
-        return new ConfigSubstitution(origin(), new java.util.LinkedList<Object>(pieces),
-                prefixLength, ignoresFallbacks);
+        return new ConfigSubstitution(origin(), new java.util.LinkedList<Object>(pieces));
     }
+
+    // generate the delegate when we deserialize to avoid thread safety
+    // issues later
+    private void readObject(java.io.ObjectInputStream in) throws IOException,
+            ClassNotFoundException {
+        in.defaultReadObject();
+        createDelegate();
+    }
+
+    // this is a little cleaner but just causes compat issues probably
+    // private Object readResolve() throws ObjectStreamException {
+        // replace ourselves on deserialize
+    // return delegate();
+    // }
 }

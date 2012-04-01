@@ -103,7 +103,7 @@ abstract trait TestUtils {
         copy
     }
 
-    protected def checkSerializationCompat[T: Manifest](expectedHex: String, o: T): Unit = {
+    protected def checkSerializationCompat[T: Manifest](expectedHex: String, o: T, changedOK: Boolean = false): Unit = {
         // be sure we can still deserialize the old one
         val inStream = new ByteArrayInputStream(Hex.decodeHex(expectedHex.toCharArray()))
         val inObjectStream = new ObjectInputStream(inStream)
@@ -146,8 +146,9 @@ abstract trait TestUtils {
                 o, deserialized)
             assertFalse(failure.isDefined) // should have thrown if we had a failure
 
-            assertEquals(o.getClass.getSimpleName + " serialization has changed (though we still deserialized the old serialization)",
-                expectedHex, hex)
+            if (!changedOK)
+                assertEquals(o.getClass.getSimpleName + " serialization has changed (though we still deserialized the old serialization)",
+                    expectedHex, hex)
         } catch {
             case e: Throwable =>
                 showCorrectResult()
@@ -158,6 +159,12 @@ abstract trait TestUtils {
     protected def checkSerializable[T: Manifest](expectedHex: String, o: T): T = {
         val t = checkSerializable(o)
         checkSerializationCompat(expectedHex, o)
+        t
+    }
+
+    protected def checkSerializableOldFormat[T: Manifest](expectedHex: String, o: T): T = {
+        val t = checkSerializable(o)
+        checkSerializationCompat(expectedHex, o, changedOK = true)
         t
     }
 
