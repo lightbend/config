@@ -72,7 +72,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         try {
             peeked = object.peekPath(path);
         } catch (ConfigException.NotResolved e) {
-            throw ConfigImpl.improveNotResolved(pathExpression, e);
+            throw ConfigImpl.improveNotResolved(path, e);
         }
         return peeked != null && peeked.valueType() != ConfigValueType.NULL;
     }
@@ -107,33 +107,27 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return entries;
     }
 
-    static private AbstractConfigValue find(AbstractConfigObject self,
-            String pathExpression, ConfigValueType expected, String originalPath) {
-        Path path = Path.newPath(pathExpression);
-        return find(self, path, expected, originalPath);
-    }
-
     static private AbstractConfigValue findKey(AbstractConfigObject self, String key,
-            ConfigValueType expected, String originalPath) {
+            ConfigValueType expected, Path originalPath) {
         AbstractConfigValue v = self.peekAssumingResolved(key, originalPath);
         if (v == null)
-            throw new ConfigException.Missing(originalPath);
+            throw new ConfigException.Missing(originalPath.render());
 
         if (expected != null)
             v = DefaultTransformer.transform(v, expected);
 
         if (v.valueType() == ConfigValueType.NULL)
-            throw new ConfigException.Null(v.origin(), originalPath,
+            throw new ConfigException.Null(v.origin(), originalPath.render(),
                     expected != null ? expected.name() : null);
         else if (expected != null && v.valueType() != expected)
-            throw new ConfigException.WrongType(v.origin(), originalPath, expected.name(), v
-                    .valueType().name());
+            throw new ConfigException.WrongType(v.origin(), originalPath.render(), expected.name(),
+                    v.valueType().name());
         else
             return v;
     }
 
     static private AbstractConfigValue find(AbstractConfigObject self, Path path,
-            ConfigValueType expected, String originalPath) {
+            ConfigValueType expected, Path originalPath) {
         try {
             String key = path.first();
             Path next = path.remainder();
@@ -141,33 +135,38 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 return findKey(self, key, expected, originalPath);
             } else {
                 AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
-                        ConfigValueType.OBJECT, originalPath);
+                        ConfigValueType.OBJECT,
+                        originalPath.subPath(0, originalPath.length() - next.length()));
                 assert (o != null); // missing was supposed to throw
                 return find(o, next, expected, originalPath);
             }
         } catch (ConfigException.NotResolved e) {
-            throw ConfigImpl.improveNotResolved(path.render(), e);
+            throw ConfigImpl.improveNotResolved(path, e);
         }
     }
 
-    AbstractConfigValue find(String pathExpression, ConfigValueType expected,
-            String originalPath) {
+    AbstractConfigValue find(Path pathExpression, ConfigValueType expected, Path originalPath) {
         return find(object, pathExpression, expected, originalPath);
+    }
+
+    AbstractConfigValue find(String pathExpression, ConfigValueType expected) {
+        Path path = Path.newPath(pathExpression);
+        return find(path, expected, path);
     }
 
     @Override
     public AbstractConfigValue getValue(String path) {
-        return find(path, null, path);
+        return find(path, null);
     }
 
     @Override
     public boolean getBoolean(String path) {
-        ConfigValue v = find(path, ConfigValueType.BOOLEAN, path);
+        ConfigValue v = find(path, ConfigValueType.BOOLEAN);
         return (Boolean) v.unwrapped();
     }
 
     private ConfigNumber getConfigNumber(String path) {
-        ConfigValue v = find(path, ConfigValueType.NUMBER, path);
+        ConfigValue v = find(path, ConfigValueType.NUMBER);
         return (ConfigNumber) v;
     }
 
@@ -194,20 +193,19 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public String getString(String path) {
-        ConfigValue v = find(path, ConfigValueType.STRING, path);
+        ConfigValue v = find(path, ConfigValueType.STRING);
         return (String) v.unwrapped();
     }
 
     @Override
     public ConfigList getList(String path) {
-        AbstractConfigValue v = find(path, ConfigValueType.LIST, path);
+        AbstractConfigValue v = find(path, ConfigValueType.LIST);
         return (ConfigList) v;
     }
 
     @Override
     public AbstractConfigObject getObject(String path) {
-        AbstractConfigObject obj = (AbstractConfigObject) find(path,
-                ConfigValueType.OBJECT, path);
+        AbstractConfigObject obj = (AbstractConfigObject) find(path, ConfigValueType.OBJECT);
         return obj;
     }
 
@@ -218,7 +216,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public Object getAnyRef(String path) {
-        ConfigValue v = find(path, null, path);
+        ConfigValue v = find(path, null);
         return v.unwrapped();
     }
 
@@ -228,7 +226,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         try {
             size = getLong(path);
         } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING, path);
+            ConfigValue v = find(path, ConfigValueType.STRING);
             size = parseBytes((String) v.unwrapped(),
                     v.origin(), path);
         }
@@ -248,7 +246,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         try {
             ns = TimeUnit.MILLISECONDS.toNanos(getLong(path));
         } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING, path);
+            ConfigValue v = find(path, ConfigValueType.STRING);
             ns = parseDuration((String) v.unwrapped(), v.origin(), path);
         }
         return ns;

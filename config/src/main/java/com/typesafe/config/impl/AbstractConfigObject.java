@@ -57,7 +57,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
      * @param key
      * @return the unmodified raw value or null
      */
-    protected final AbstractConfigValue peekAssumingResolved(String key, String originalPath) {
+    protected final AbstractConfigValue peekAssumingResolved(String key, Path originalPath) {
         try {
             return attemptPeekWithPartialResolve(key);
         } catch (ConfigException.NotResolved e) {
@@ -138,7 +138,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
                 }
             }
         } catch (ConfigException.NotResolved e) {
-            throw ConfigImpl.improveNotResolved(path.render(), e);
+            throw ConfigImpl.improveNotResolved(path, e);
         }
     }
 

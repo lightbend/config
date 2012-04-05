@@ -123,6 +123,23 @@ final class Path implements Serializable {
         return p;
     }
 
+    Path subPath(int firstIndex, int lastIndex) {
+        if (lastIndex < firstIndex)
+            throw new ConfigException.BugOrBroken("bad call to subPath");
+
+        Path from = subPath(firstIndex);
+        PathBuilder pb = new PathBuilder();
+        int count = lastIndex - firstIndex;
+        while (count > 0) {
+            count -= 1;
+            pb.appendKey(from.first());
+            from = from.remainder();
+            if (from == null)
+                throw new ConfigException.BugOrBroken("subPath lastIndex out of range " + lastIndex);
+        }
+        return pb.result();
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Path) {
