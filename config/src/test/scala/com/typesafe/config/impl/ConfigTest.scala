@@ -20,11 +20,11 @@ import com.typesafe.config.ConfigMergeable
 class ConfigTest extends TestUtils {
 
     private def resolveNoSystem(v: AbstractConfigValue, root: AbstractConfigObject) = {
-        ResolveContext.resolveWithExternalExceptions(v, root, ConfigResolveOptions.noSystem())
+        ResolveContext.resolve(v, root, ConfigResolveOptions.noSystem())
     }
 
     private def resolveNoSystem(v: SimpleConfig, root: SimpleConfig) = {
-        ResolveContext.resolveWithExternalExceptions(v.root, root.root,
+        ResolveContext.resolve(v.root, root.root,
             ConfigResolveOptions.noSystem()).asInstanceOf[AbstractConfigObject].toConfig
     }
 
@@ -346,10 +346,10 @@ class ConfigTest extends TestUtils {
         // the point here is that we should not try to evaluate a substitution
         // that's been overridden, and thus not end up with a cycle as long
         // as we override the problematic link in the cycle.
-        val e = intercept[ConfigException.BadValue] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             val v = resolveNoSystem(subst("foo"), cycleObject)
         }
-        assertTrue(e.getMessage().contains("cycle"))
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : 57 } } } """)
         val merged = mergeUnresolved(fixUpCycle, cycleObject)
@@ -362,10 +362,10 @@ class ConfigTest extends TestUtils {
         // the point here is that if our eventual value will be an object, then
         // we have to evaluate the substitution to see if it's an object to merge,
         // so we don't avoid the cycle.
-        val e = intercept[ConfigException.BadValue] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             val v = resolveNoSystem(subst("foo"), cycleObject)
         }
-        assertTrue(e.getMessage().contains("cycle"))
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
 
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : { "q" : "u" } } } } """)
         val merged = mergeUnresolved(fixUpCycle, cycleObject)

@@ -22,7 +22,6 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
-import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 
 /**
  * One thing to keep in mind in the future: as Collection-like APIs are added
@@ -57,8 +56,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public SimpleConfig resolve(ConfigResolveOptions options) {
-        AbstractConfigValue resolved = ResolveContext.resolveWithExternalExceptions(object,
-                object, options);
+        AbstractConfigValue resolved = ResolveContext.resolve(object, object, options);
 
         if (resolved == object)
             return this;
@@ -72,9 +70,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         Path path = Path.newPath(pathExpression);
         ConfigValue peeked;
         try {
-            peeked = object.peekPath(path, null);
-        } catch (NotPossibleToResolve e) {
-            throw e.exportException(origin(), pathExpression);
+            peeked = object.peekPath(path);
         } catch (ConfigException.NotResolved e) {
             throw ConfigImpl.improveNotResolved(pathExpression, e);
         }
@@ -669,7 +665,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     private AbstractConfigValue peekPath(Path path) {
-        return root().peekPathWithExternalExceptions(path);
+        return root().peekPath(path);
     }
 
     private static void addProblem(List<ConfigException.ValidationProblem> accumulator, Path path,

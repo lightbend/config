@@ -244,12 +244,12 @@ public abstract class ConfigException extends RuntimeException {
     public static class UnresolvedSubstitution extends Parse {
         private static final long serialVersionUID = 1L;
 
-        public UnresolvedSubstitution(ConfigOrigin origin, String expression, Throwable cause) {
-            super(origin, "Could not resolve substitution to a value: " + expression, cause);
+        public UnresolvedSubstitution(ConfigOrigin origin, String detail, Throwable cause) {
+            super(origin, "Could not resolve substitution to a value: " + detail, cause);
         }
 
-        public UnresolvedSubstitution(ConfigOrigin origin, String expression) {
-            this(origin, expression, null);
+        public UnresolvedSubstitution(ConfigOrigin origin, String detail) {
+            this(origin, detail, null);
         }
     }
 

@@ -12,7 +12,6 @@ import java.util.List;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
-import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 /**
  * The issue here is that we want to first merge our stack of config files, and
@@ -91,7 +90,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                 // ConfigDelayedMerge with a value that is only
                 // the remainder of the stack below this one.
 
-                context.replace((AbstractConfigValue) replaceable,
+                context.source().replace((AbstractConfigValue) replaceable,
                         replaceable.makeReplacer(count + 1));
                 replaced = true;
             }
@@ -101,7 +100,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                 resolved = context.resolve(v);
             } finally {
                 if (replaced)
-                    context.unreplace((AbstractConfigValue) replaceable);
+                    context.source().unreplace((AbstractConfigValue) replaceable);
             }
 
             if (resolved != null) {
@@ -120,20 +119,21 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     public ResolveReplacer makeReplacer(final int skipping) {
         return new ResolveReplacer() {
             @Override
-            protected AbstractConfigValue makeReplacement() throws Undefined {
-                return ConfigDelayedMerge.makeReplacement(stack, skipping);
+            protected AbstractConfigValue makeReplacement(ResolveContext context)
+                    throws NotPossibleToResolve {
+                return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
             }
         };
     }
 
     // static method also used by ConfigDelayedMergeObject
-    static AbstractConfigValue makeReplacement(List<AbstractConfigValue> stack, int skipping)
-            throws Undefined {
+    static AbstractConfigValue makeReplacement(ResolveContext context,
+            List<AbstractConfigValue> stack, int skipping) throws NotPossibleToResolve {
 
         List<AbstractConfigValue> subStack = stack.subList(skipping, stack.size());
 
         if (subStack.isEmpty()) {
-            throw new ResolveReplacer.Undefined();
+            throw new NotPossibleToResolve(context);
         } else {
             // generate a new merge stack from only the remaining items
             AbstractConfigValue merged = null;

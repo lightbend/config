@@ -103,14 +103,33 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
         return Collections.singleton(this);
     }
 
+    // ConfigReference should be a firewall against NotPossibleToResolve going
+    // further up the stack; it should convert everything to ConfigException.
+    // This way it's impossible for NotPossibleToResolve to "escape" since
+    // any failure to resolve has to start with a ConfigReference.
     @Override
-    AbstractConfigValue resolveSubstitutions(ResolveContext context) throws NotPossibleToResolve {
-        AbstractConfigValue v = context.source().lookupSubst(context, this, expr, prefixLength);
+    AbstractConfigValue resolveSubstitutions(ResolveContext context) {
+        context.source().replace(this, ResolveReplacer.cycleResolveReplacer);
+        try {
+            AbstractConfigValue v;
+            try {
+                v = context.source().lookupSubst(context, expr, prefixLength);
+            } catch (NotPossibleToResolve e) {
+                if (expr.optional())
+                    v = null;
+                else
+                    throw new ConfigException.UnresolvedSubstitution(origin(), expr
+                            + " was part of a cycle of substitutions involving " + e.traceString(),
+                            e);
+            }
 
-        if (v == null && !expr.optional()) {
-            throw new ConfigException.UnresolvedSubstitution(origin(), expr.toString());
+            if (v == null && !expr.optional()) {
+                throw new ConfigException.UnresolvedSubstitution(origin(), expr.toString());
+            }
+            return v;
+        } finally {
+            context.source().unreplace(this);
         }
-        return v;
     }
 
     @Override

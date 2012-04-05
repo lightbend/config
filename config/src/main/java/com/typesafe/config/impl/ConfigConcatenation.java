@@ -102,20 +102,13 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         return Collections.singleton(this);
     }
 
-    private static ResolveReplacer undefinedReplacer = new ResolveReplacer() {
-        @Override
-        protected AbstractConfigValue makeReplacement() throws Undefined {
-            throw new Undefined();
-        }
-    };
-
     @Override
     AbstractConfigValue resolveSubstitutions(ResolveContext context) throws NotPossibleToResolve {
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
         // if you have "foo = ${?foo}bar" then we will
         // self-referentially look up foo and we need to
         // get undefined, rather than "bar"
-        context.replace(this, undefinedReplacer);
+        context.source().replace(this, ResolveReplacer.cycleResolveReplacer);
         try {
             for (AbstractConfigValue p : pieces) {
                 // to concat into a string we have to do a full resolve,
@@ -138,7 +131,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
                 }
             }
         } finally {
-            context.unreplace(this);
+            context.source().unreplace(this);
         }
 
         // now need to concat everything

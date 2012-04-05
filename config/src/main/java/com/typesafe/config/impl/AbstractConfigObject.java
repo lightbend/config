@@ -83,22 +83,24 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
      * Looks up the path with no transformation, type conversion, or exceptions
      * (just returns null if path not found). Does however resolve the path, if
      * resolver != null.
-     *
+     * 
      * @throws NotPossibleToResolve
+     *             if context is not null and resolution fails
      */
     protected AbstractConfigValue peekPath(Path path, ResolveContext context) throws NotPossibleToResolve {
         return peekPath(this, path, context);
     }
 
     /**
-     * Looks up the path and throws public API exceptions (ConfigException).
-     * Doesn't do any resolution, will throw if any is needed.
+     * Looks up the path. Doesn't do any resolution, will throw if any is
+     * needed.
      */
-    AbstractConfigValue peekPathWithExternalExceptions(Path path) {
+    AbstractConfigValue peekPath(Path path) {
         try {
             return peekPath(this, path, null);
         } catch (NotPossibleToResolve e) {
-            throw e.exportException(origin(), path.render());
+            throw new ConfigException.BugOrBroken(
+                    "NotPossibleToResolve happened though we had no ResolveContext in peekPath");
         }
     }
 

@@ -75,8 +75,9 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     public ResolveReplacer makeReplacer(final int skipping) {
         return new ResolveReplacer() {
             @Override
-            protected AbstractConfigValue makeReplacement() throws Undefined {
-                return ConfigDelayedMerge.makeReplacement(stack, skipping);
+            protected AbstractConfigValue makeReplacement(ResolveContext context)
+                    throws NotPossibleToResolve {
+                return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
             }
         };
     }

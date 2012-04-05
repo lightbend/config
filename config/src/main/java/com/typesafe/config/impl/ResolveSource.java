@@ -1,12 +1,10 @@
 package com.typesafe.config.impl;
 
 import java.util.IdentityHashMap;
-import java.util.LinkedList;
 import java.util.Map;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
-import com.typesafe.config.impl.ResolveReplacer.Undefined;
 
 /**
  * This class is the source for values for a substitution like ${foo}.
@@ -18,83 +16,79 @@ final class ResolveSource {
     // traversed node and therefore avoid circular dependencies.
     // We implement it with this somewhat hacky "patch a replacement"
     // mechanism instead of actually transforming the tree.
-    final private Map<AbstractConfigValue, LinkedList<ResolveReplacer>> replacements;
+    final private Map<AbstractConfigValue, ResolveReplacer> replacements;
 
     ResolveSource(AbstractConfigObject root) {
         this.root = root;
-        this.replacements = new IdentityHashMap<AbstractConfigValue, LinkedList<ResolveReplacer>>();
+        this.replacements = new IdentityHashMap<AbstractConfigValue, ResolveReplacer>();
     }
 
-    static private AbstractConfigValue findInObject(final AbstractConfigObject obj,
-            final ResolveContext context, ConfigReference traversed,
-            final SubstitutionExpression subst) throws NotPossibleToResolve {
-        return context.traversing(traversed, subst, new ResolveContext.Resolver() {
-            @Override
-            public AbstractConfigValue call() throws NotPossibleToResolve {
-                return obj.peekPath(subst.path(), context);
-            }
-        });
+    static private AbstractConfigValue findInObject(AbstractConfigObject obj,
+            ResolveContext context, SubstitutionExpression subst)
+            throws NotPossibleToResolve {
+        return obj.peekPath(subst.path(), context);
     }
 
-    AbstractConfigValue lookupSubst(final ResolveContext context, ConfigReference traversed,
-            final SubstitutionExpression subst, int prefixLength) throws NotPossibleToResolve {
-        // First we look up the full path, which means relative to the
-        // included file if we were not a root file
-        AbstractConfigValue result = findInObject(root, context, traversed, subst);
+    AbstractConfigValue lookupSubst(ResolveContext context, SubstitutionExpression subst,
+            int prefixLength) throws NotPossibleToResolve {
+        context.trace(subst);
+        try {
+            // First we look up the full path, which means relative to the
+            // included file if we were not a root file
+            AbstractConfigValue result = findInObject(root, context, subst);
 
-        if (result == null) {
-            // Then we want to check relative to the root file. We don't
-            // want the prefix we were included at to be used when looking
-            // up env variables either.
-            SubstitutionExpression unprefixed = subst
-                    .changePath(subst.path().subPath(prefixLength));
+            if (result == null) {
+                // Then we want to check relative to the root file. We don't
+                // want the prefix we were included at to be used when looking
+                // up env variables either.
+                SubstitutionExpression unprefixed = subst.changePath(subst.path().subPath(
+                        prefixLength));
 
-            if (result == null && prefixLength > 0) {
-                result = findInObject(root, context, traversed, unprefixed);
-            }
+                // replace the debug trace path
+                context.untrace();
+                context.trace(unprefixed);
 
-            if (result == null && context.options().getUseSystemEnvironment()) {
-                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context, traversed,
-                        unprefixed);
-            }
-        }
-
-        if (result != null) {
-            final AbstractConfigValue unresolved = result;
-            result = context.traversing(traversed, subst, new ResolveContext.Resolver() {
-                @Override
-                public AbstractConfigValue call() throws NotPossibleToResolve {
-                    return context.resolve(unresolved);
+                if (result == null && prefixLength > 0) {
+                    result = findInObject(root, context, unprefixed);
                 }
-            });
-        }
 
-        return result;
+                if (result == null && context.options().getUseSystemEnvironment()) {
+                    result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context,
+                            unprefixed);
+                }
+            }
+
+            if (result != null) {
+                result = context.resolve(result);
+            }
+
+            return result;
+        } finally {
+            context.untrace();
+        }
     }
 
     void replace(AbstractConfigValue value, ResolveReplacer replacer) {
-        LinkedList<ResolveReplacer> stack = replacements.get(value);
-        if (stack == null) {
-            stack = new LinkedList<ResolveReplacer>();
-            replacements.put(value, stack);
-        }
-        stack.addFirst(replacer);
+        ResolveReplacer old = replacements.put(value, replacer);
+        if (old != null)
+            throw new ConfigException.BugOrBroken("should not have replaced the same value twice: "
+                    + value);
     }
 
     void unreplace(AbstractConfigValue value) {
-        LinkedList<ResolveReplacer> stack = replacements.get(value);
-        if (stack == null)
+        ResolveReplacer replacer = replacements.remove(value);
+        if (replacer == null)
             throw new ConfigException.BugOrBroken("unreplace() without replace(): " + value);
-
-        stack.removeFirst();
     }
 
-    private AbstractConfigValue replacement(AbstractConfigValue value) throws Undefined {
-        LinkedList<ResolveReplacer> stack = replacements.get(value);
-        if (stack == null || stack.isEmpty())
+    private AbstractConfigValue replacement(ResolveContext context, AbstractConfigValue value)
+            throws NotPossibleToResolve {
+        ResolveReplacer replacer = replacements.get(value);
+        if (replacer == null) {
             return value;
-        else
-            return stack.peek().replace();
+        } else {
+            return replacer.replace(context);
+        }
     }
 
     /**
@@ -104,13 +98,8 @@ final class ResolveSource {
     AbstractConfigValue resolveCheckingReplacement(ResolveContext context,
             AbstractConfigValue original) throws NotPossibleToResolve {
         AbstractConfigValue replacement;
-        boolean forceUndefined = false;
-        try {
-            replacement = replacement(original);
-        } catch (Undefined e) {
-            replacement = original;
-            forceUndefined = true;
-        }
+
+        replacement = replacement(context, original);
 
         if (replacement != original) {
             // start over, checking if replacement was memoized
@@ -118,10 +107,7 @@ final class ResolveSource {
         } else {
             AbstractConfigValue resolved;
 
-            if (forceUndefined)
-                resolved = null;
-            else
-                resolved = original.resolveSubstitutions(context);
+            resolved = original.resolveSubstitutions(context);
 
             return resolved;
         }

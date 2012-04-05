@@ -1,15 +1,9 @@
 package com.typesafe.config.impl;
 
+import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
+
 /** Callback that generates a replacement to use for resolving a substitution. */
 abstract class ResolveReplacer {
-    static final class Undefined extends Exception {
-        private static final long serialVersionUID = 1L;
-
-        Undefined() {
-            super("No replacement, substitution will resolve to undefined");
-        }
-    }
-
     // this is a "lazy val" in essence (we only want to
     // make the replacement one time). Making it volatile
     // is good enough for thread safety as long as this
@@ -17,11 +11,20 @@ abstract class ResolveReplacer {
     // twice has no side effects, which it should not...
     private volatile AbstractConfigValue replacement = null;
 
-    final AbstractConfigValue replace() throws Undefined {
+    final AbstractConfigValue replace(ResolveContext context) throws NotPossibleToResolve {
         if (replacement == null)
-            replacement = makeReplacement();
+            replacement = makeReplacement(context);
         return replacement;
     }
 
-    protected abstract AbstractConfigValue makeReplacement() throws Undefined;
+    protected abstract AbstractConfigValue makeReplacement(ResolveContext context)
+            throws NotPossibleToResolve;
+
+    static final ResolveReplacer cycleResolveReplacer = new ResolveReplacer() {
+        @Override
+        protected AbstractConfigValue makeReplacement(ResolveContext context)
+                throws NotPossibleToResolve {
+            throw new NotPossibleToResolve(context);
+        }
+    };
 }

@@ -15,20 +15,20 @@ class ConfigSubstitutionTest extends TestUtils {
 
     private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
-        ResolveContext.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
+        ResolveContext.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolveWithoutFallbacks(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
-        ResolveContext.resolveWithExternalExceptions(s, root, options)
+        ResolveContext.resolve(s, root, options)
     }
 
     private def resolve(v: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
-        ResolveContext.resolveWithExternalExceptions(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
+        ResolveContext.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolve(s: ConfigSubstitution, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
-        ResolveContext.resolveWithExternalExceptions(s, root, options)
+        ResolveContext.resolve(s, root, options)
     }
 
     private val simpleObject = {
@@ -97,10 +97,12 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def resolveMissingThrows() {
-        intercept[ConfigException.UnresolvedSubstitution] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             val s = subst("bar.missing")
             val v = resolveWithoutFallbacks(s, simpleObject)
         }
+        assertTrue("wrong exception: " + e.getMessage,
+            !e.getMessage.contains("cycle"))
     }
 
     @Test
@@ -218,10 +220,11 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def throwOnCycles() {
         val s = subst("foo")
-        val e = intercept[ConfigException.BadValue] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             val v = resolveWithoutFallbacks(s, substCycleObject)
         }
         assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("${foo}, ${bar}, ${a.b.c}, ${foo}"))
     }
 
     @Test
@@ -229,7 +232,7 @@ class ConfigSubstitutionTest extends TestUtils {
         // we look up ${?foo}, but the cycle has hard
         // non-optional links in it so still has to throw.
         val s = subst("foo", optional = true)
-        val e = intercept[ConfigException.BadValue] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             val v = resolveWithoutFallbacks(s, substCycleObject)
         }
         assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
@@ -256,7 +259,7 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def throwOnTwoKeyCycle() {
         val obj = parseObject("""a:${b},b:${a}""")
-        val e = intercept[ConfigException.BadValue] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             resolve(obj)
         }
         assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
@@ -265,7 +268,7 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def throwOnFourKeyCycle() {
         val obj = parseObject("""a:${b},b:${c},c:${d},d:${a}""")
-        val e = intercept[ConfigException.BadValue] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             resolve(obj)
         }
         assertTrue("Wrong exception: " + e.getMessage, e.getMessage().contains("cycle"))
@@ -1023,7 +1026,7 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def substSelfReferenceUndefined() {
         val obj = parseObject("""a=${a}""")
-        val e = intercept[ConfigException.BadValue] {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
             resolve(obj)
         }
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
@@ -1039,15 +1042,19 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def substSelfReferenceIndirect() {
         val obj = parseObject("""a=1, b=${a}, a=${b}""")
-        val resolved = resolve(obj)
-        assertEquals(1, resolved.getInt("a"))
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
     }
 
     @Test
     def substSelfReferenceDoubleIndirect() {
         val obj = parseObject("""a=1, b=${c}, c=${a}, a=${b}""")
-        val resolved = resolve(obj)
-        assertEquals(1, resolved.getInt("a"))
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
     }
 
     @Test
@@ -1201,7 +1208,7 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def substInChildFieldNotASelfReference3() {
         // checking that having bar.foo earlier in the merge
-        // stack doesn't break the behavior
+        // stack doesn't break the behavior.
         val obj = parseObject("""
          bar : { foo : 43 }
          bar : { foo : 42,

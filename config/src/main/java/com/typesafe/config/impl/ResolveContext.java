@@ -1,15 +1,11 @@
 package com.typesafe.config.impl;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.Set;
-import java.util.LinkedHashSet;
-import java.util.concurrent.Callable;
+import java.util.List;
+import java.util.ArrayList;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
-import com.typesafe.config.impl.AbstractConfigValue.SelfReferential;
 
 final class ResolveContext {
     // this is unfortunately mutable so should only be shared among
@@ -20,12 +16,6 @@ final class ResolveContext {
     // ResolveContext in the same traversal.
     final private ResolveMemos memos;
 
-    // Resolves that we have already begun (for cycle detection).
-    // SubstitutionResolver separately memoizes completed resolves.
-    // this set is unfortunately mutable and the user of ResolveContext
-    // has to be sure it's only shared between ResolveContext that
-    // are in the same traversal.
-    final private LinkedList<Set<MemoKey>> traversedStack;
     final private ConfigResolveOptions options;
     // the current path restriction, used to ensure lazy
     // resolution and avoid gratuitous cycles. without this,
@@ -34,83 +24,25 @@ final class ResolveContext {
     // CAN BE NULL for a full resolve.
     final private Path restrictToChild;
 
-    ResolveContext(ResolveSource source, ResolveMemos memos,
-            LinkedList<Set<MemoKey>> traversedStack, ConfigResolveOptions options,
-            Path restrictToChild) {
+    // another mutable unfortunate. This is
+    // used to make nice error messages when
+    // resolution fails.
+    final private List<SubstitutionExpression> expressionTrace;
+
+    ResolveContext(ResolveSource source, ResolveMemos memos, ConfigResolveOptions options,
+            Path restrictToChild, List<SubstitutionExpression> expressionTrace) {
         this.source = source;
         this.memos = memos;
-        this.traversedStack = traversedStack;
         this.options = options;
         this.restrictToChild = restrictToChild;
+        this.expressionTrace = expressionTrace;
     }
 
     ResolveContext(AbstractConfigObject root, ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
-        this(new ResolveSource(root), new ResolveMemos(), new LinkedList<Set<MemoKey>>(
-                Collections.singletonList(new LinkedHashSet<MemoKey>())), options, restrictToChild);
-    }
-
-    private void traverse(ConfigReference value, SubstitutionExpression via)
-            throws SelfReferential {
-        Set<MemoKey> traversed = traversedStack.peekFirst();
-
-        MemoKey key = new MemoKey(value, restrictToChild);
-        if (traversed.contains(key)) {
-            throw new SelfReferential(value.origin(), via.path().render());
-        }
-
-        traversed.add(key);
-    }
-
-    private void untraverse(ConfigReference value) {
-        Set<MemoKey> traversed = traversedStack.peekFirst();
-
-        MemoKey key = new MemoKey(value, restrictToChild);
-        if (!traversed.remove(key))
-            throw new ConfigException.BugOrBroken(
-                    "untraverse() did not find the untraversed substitution " + value);
-    }
-
-    // this just exists to fix the "throws Exception" on Callable
-    interface Resolver extends Callable<AbstractConfigValue> {
-        @Override
-        AbstractConfigValue call() throws NotPossibleToResolve;
-    }
-
-    AbstractConfigValue traversing(ConfigReference value, SubstitutionExpression subst,
-            Resolver callable) throws NotPossibleToResolve {
-        try {
-            traverse(value, subst);
-        } catch (SelfReferential e) {
-            if (subst.optional())
-                return null;
-            else
-                throw e;
-        }
-
-        try {
-            return callable.call();
-        } finally {
-            untraverse(value);
-        }
-    }
-
-    void replace(AbstractConfigValue value, ResolveReplacer replacer) {
-        source.replace(value, replacer);
-
-        // we have to reset the cycle detection because with the
-        // replacement, a cycle may not exist anymore.
-        traversedStack.addFirst(new LinkedHashSet<MemoKey>());
-    }
-
-    void unreplace(AbstractConfigValue value) {
-        source.unreplace(value);
-
-        Set<MemoKey> oldTraversed = traversedStack.removeFirst();
-        if (!oldTraversed.isEmpty())
-            throw new ConfigException.BugOrBroken(
-                    "unreplace() with stuff still in the traverse set: " + oldTraversed);
+        this(new ResolveSource(root), new ResolveMemos(), options, restrictToChild,
+                new ArrayList<SubstitutionExpression>());
     }
 
     ResolveSource source() {
@@ -133,15 +65,34 @@ final class ResolveContext {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(source, memos, traversedStack, options, restrictTo);
+            return new ResolveContext(source, memos, options, restrictTo, expressionTrace);
     }
 
     ResolveContext unrestricted() {
         return restrict(null);
     }
 
-    AbstractConfigValue resolve(AbstractConfigValue original)
-            throws NotPossibleToResolve {
+    void trace(SubstitutionExpression expr) {
+        expressionTrace.add(expr);
+    }
+
+    void untrace() {
+        expressionTrace.remove(expressionTrace.size() - 1);
+    }
+
+    String traceString() {
+        String separator = ", ";
+        StringBuilder sb = new StringBuilder();
+        for (SubstitutionExpression expr : expressionTrace) {
+            sb.append(expr.toString());
+            sb.append(separator);
+        }
+        if (sb.length() > 0)
+            sb.setLength(sb.length() - separator.length());
+        return sb.toString();
+    }
+
+    AbstractConfigValue resolve(AbstractConfigValue original) throws NotPossibleToResolve {
 
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
@@ -190,20 +141,20 @@ final class ResolveContext {
     }
 
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
-            ConfigResolveOptions options, Path restrictToChildOrNull) throws NotPossibleToResolve {
-        ResolveContext context = new ResolveContext(root, options, restrictToChildOrNull);
-
-        return context.resolve(value);
-    }
-
-    static AbstractConfigValue resolveWithExternalExceptions(AbstractConfigValue value,
-            AbstractConfigObject root, ConfigResolveOptions options) {
+            ConfigResolveOptions options, Path restrictToChildOrNull) {
         ResolveContext context = new ResolveContext(root, options, null /* restrictToChild */);
 
         try {
             return context.resolve(value);
         } catch (NotPossibleToResolve e) {
-            throw e.exportException(value.origin(), null);
+            // ConfigReference was supposed to catch NotPossibleToResolve
+            throw new ConfigException.BugOrBroken(
+                    "NotPossibleToResolve was thrown from an outermost resolve", e);
         }
+    }
+
+    static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
+            ConfigResolveOptions options) {
+        return resolve(value, root, options, null);
     }
 }

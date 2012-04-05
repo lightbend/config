@@ -31,7 +31,7 @@ class ConfParserTest extends TestUtils {
         // interpolating arrays into strings
         tree match {
             case obj: AbstractConfigObject =>
-                ResolveContext.resolveWithExternalExceptions(tree, obj, ConfigResolveOptions.noSystem())
+                ResolveContext.resolve(tree, obj, ConfigResolveOptions.noSystem())
             case _ =>
                 tree
         }

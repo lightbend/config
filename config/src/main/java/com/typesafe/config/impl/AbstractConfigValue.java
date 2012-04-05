@@ -33,53 +33,29 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
     }
 
     /**
-     * This exception means that a value is inherently not resolveable, for
-     * example because there's a cycle in the substitutions. That's different
-     * from a ConfigException.NotResolved which just means it hasn't been
-     * resolved. This is a checked exception since it's internal to the library
-     * and we want to be sure we handle it before passing it out to public API.
+     * This exception means that a value is inherently not resolveable, at the
+     * moment the only known cause is a cycle of substitutions. This is a
+     * checked exception since it's internal to the library and we want to be
+     * sure we handle it before passing it out to public API. This is only
+     * supposed to be thrown by the target of a cyclic reference and it's
+     * supposed to be caught by the ConfigReference looking up that reference,
+     * so it should be impossible for an outermost resolve() to throw this.
+     *
+     * Contrast with ConfigException.NotResolved which just means nobody called
+     * resolve().
      */
     static class NotPossibleToResolve extends Exception {
         private static final long serialVersionUID = 1L;
 
-        ConfigOrigin origin;
-        String path;
+        final private String traceString;
 
-        NotPossibleToResolve(String message) {
-            super(message);
-            this.origin = null;
-            this.path = null;
+        NotPossibleToResolve(ResolveContext context) {
+            super("was not possible to resolve");
+            this.traceString = context.traceString();
         }
 
-        // use this constructor ONLY if you know the right origin and path
-        // to describe the problem.
-        NotPossibleToResolve(ConfigOrigin origin, String path, String message) {
-            this(origin, path, message, null);
-        }
-
-        NotPossibleToResolve(ConfigOrigin origin, String path, String message, Throwable cause) {
-            super(message, cause);
-            this.origin = origin;
-            this.path = path;
-        }
-
-        ConfigException exportException(ConfigOrigin outerOrigin, String outerPath) {
-            ConfigOrigin o = origin != null ? origin : outerOrigin;
-            String p = path != null ? path : outerPath;
-            if (p == null)
-                path = "";
-            if (o != null)
-                return new ConfigException.BadValue(o, p, getMessage(), this);
-            else
-                return new ConfigException.BadValue(p, getMessage(), this);
-        }
-    }
-
-    static final class SelfReferential extends NotPossibleToResolve {
-        private static final long serialVersionUID = 1L;
-
-        SelfReferential(ConfigOrigin origin, String path) {
-            super(origin, path, "Substitution ${" + path + "} is part of a cycle of substitutions");
+        String traceString() {
+            return traceString;
         }
     }
 
