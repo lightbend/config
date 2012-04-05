@@ -77,9 +77,15 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         int count = 0;
         AbstractConfigValue merged = null;
         for (AbstractConfigValue v : stack) {
+            if (v instanceof ReplaceableMergeStack)
+                throw new ConfigException.BugOrBroken(
+                        "A delayed merge should not contain another one: " + replaceable);
+
             boolean replaced = false;
             // we only replace if we have a substitution, or
-            // value-concatenation containing one
+            // value-concatenation containing one. The Unmergeable
+            // here isn't a delayed merge stack since we can't contain
+            // another stack (see assertion above).
             if (v instanceof Unmergeable) {
                 // If, while resolving 'v' we come back to the same
                 // merge stack, we only want to look _below_ 'v'
