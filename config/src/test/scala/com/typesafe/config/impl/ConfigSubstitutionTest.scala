@@ -1040,6 +1040,20 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     @Test
+    def substSelfReferenceAlongPath() {
+        val obj = parseObject("""a.b=1, a.b=${a.b}""")
+        val resolved = resolve(obj)
+        assertEquals(1, resolved.getInt("a.b"))
+    }
+
+    @Test
+    def substSelfReferenceAlongLongerPath() {
+        val obj = parseObject("""a.b.c=1, a.b.c=${a.b.c}""")
+        val resolved = resolve(obj)
+        assertEquals(1, resolved.getInt("a.b.c"))
+    }
+
+    @Test
     def substSelfReferenceIndirect() {
         val obj = parseObject("""a=1, b=${a}, a=${b}""")
         val e = intercept[ConfigException.UnresolvedSubstitution] {
@@ -1075,6 +1089,13 @@ class ConfigSubstitutionTest extends TestUtils {
         val obj = parseObject("""a={b=5}, a=${a}""")
         val resolved = resolve(obj)
         assertEquals(5, resolved.getInt("a.b"))
+    }
+
+    @Test
+    def substSelfReferenceObjectAlongPath() {
+        val obj = parseObject("""a.b={c=5}, a.b=${a.b}""")
+        val resolved = resolve(obj)
+        assertEquals(5, resolved.getInt("a.b.c"))
     }
 
     @Test
@@ -1175,6 +1196,15 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     @Test
+    def substSelfReferenceAlongAPathInsideObject() {
+        // if the ${a.b} is _inside_ a field value instead of
+        // _being_ the field value, it does not look backward.
+        val obj = parseObject("""a={b={c=5}}, a={ x : ${a.b} }, a={b=2}""")
+        val resolved = resolve(obj)
+        assertEquals(2, resolved.getInt("a.x"))
+    }
+
+    @Test
     def substInChildFieldNotASelfReference1() {
         // here, ${bar.foo} is not a self reference because
         // it's the value of a child field of bar, not bar
@@ -1221,6 +1251,37 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     @Test
+    def substInChildFieldNotASelfReference4() {
+        // checking that having bar set to non-object earlier
+        // doesn't break the behavior.
+        val obj = parseObject("""
+         bar : 101
+         bar : { foo : 42,
+                 baz : ${bar.foo}
+         }
+            """)
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("bar.baz"))
+        assertEquals(42, resolved.getInt("bar.foo"))
+    }
+
+    @Test
+    def substInChildFieldNotASelfReference5() {
+        // checking that having bar set to unresolved array earlier
+        // doesn't break the behavior.
+        val obj = parseObject("""
+         x : 0
+         bar : [ ${x}, 1, 2, 3 ]
+         bar : { foo : 42,
+                 baz : ${bar.foo}
+         }
+            """)
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("bar.baz"))
+        assertEquals(42, resolved.getInt("bar.foo"))
+    }
+
+    @Test
     def mutuallyReferringNotASelfReference() {
         val obj = parseObject("""
     // bar.a should end up as 4
@@ -1247,5 +1308,43 @@ class ConfigSubstitutionTest extends TestUtils {
         val obj = parseObject("""a=1,a=${a}x,a=${a}y,a=${a}z""")
         val resolved = resolve(obj)
         assertEquals("1xyz", resolved.getString("a"))
+    }
+
+    @Test
+    def substSelfReferenceInArray() {
+        // never "look back" from "inside" an array
+        val obj = parseObject("""a=1,a=[${a}, 2]""")
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage,
+            e.getMessage.contains("cycle") && e.getMessage.contains("${a}"))
+    }
+
+    @Test
+    def substSelfReferenceInObject() {
+        // never "look back" from "inside" an object
+        val obj = parseObject("""a=1,a={ x : ${a} }""")
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage,
+            e.getMessage.contains("cycle") && e.getMessage.contains("${a}"))
+    }
+
+    @Test
+    def selfReferentialObjectNotAffectedByOverriding() {
+        // this is testing that we can still refer to another
+        // field in the same object, even though we are overriding
+        // an earlier object.
+        val obj = parseObject("""a={ x : 42, y : ${a.x} }""")
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ x : 42, y : 42 }"), resolved.getConfig("a").root)
+
+        // this is expected because if adding "a=1" here affects the outcome,
+        // it would be flat-out bizarre.
+        val obj2 = parseObject("""a=1, a={ x : 42, y : ${a.x} }""")
+        val resolved2 = resolve(obj2)
+        assertEquals(parseObject("{ x : 42, y : 42 }"), resolved2.getConfig("a").root)
     }
 }

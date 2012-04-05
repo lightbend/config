@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
@@ -23,18 +24,16 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     private static final long serialVersionUID = 1L;
 
     final private List<AbstractConfigValue> stack;
-    final private boolean ignoresFallbacks;
 
-    ConfigDelayedMergeObject(ConfigOrigin origin,
-            List<AbstractConfigValue> stack) {
-        this(origin, stack, false /* ignoresFallbacks */);
-    }
+    // this is just here for serialization compat; whether we ignore is purely
+    // a function of the bottom of the merge stack
+    @SuppressWarnings("unused")
+    @Deprecated
+    final private boolean ignoresFallbacks = false;
 
-    ConfigDelayedMergeObject(ConfigOrigin origin, List<AbstractConfigValue> stack,
-            boolean ignoresFallbacks) {
+    ConfigDelayedMergeObject(ConfigOrigin origin, List<AbstractConfigValue> stack) {
         super(origin);
         this.stack = stack;
-        this.ignoresFallbacks = ignoresFallbacks;
 
         if (stack.isEmpty())
             throw new ConfigException.BugOrBroken(
@@ -56,7 +55,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
         if (status != resolveStatus())
             throw new ConfigException.BugOrBroken(
                     "attempt to create resolved ConfigDelayedMergeObject");
-        return new ConfigDelayedMergeObject(origin, stack, ignoresFallbacks);
+        return new ConfigDelayedMergeObject(origin, stack);
     }
 
     @Override
@@ -93,30 +92,31 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
         for (AbstractConfigValue o : stack) {
             newStack.add(o.relativized(prefix));
         }
-        return new ConfigDelayedMergeObject(origin(), newStack,
-                ignoresFallbacks);
+        return new ConfigDelayedMergeObject(origin(), newStack);
     }
 
     @Override
     protected boolean ignoresFallbacks() {
-        return ignoresFallbacks;
+        return ConfigDelayedMerge.stackIgnoresFallbacks(stack);
     }
 
     @Override
-    protected ConfigDelayedMergeObject mergedWithObject(AbstractConfigObject fallback) {
+    protected final ConfigDelayedMergeObject mergedWithTheUnmergeable(Unmergeable fallback) {
+        requireNotIgnoringFallbacks();
+
+        return (ConfigDelayedMergeObject) mergedWithTheUnmergeable(stack, fallback);
+    }
+
+    @Override
+    protected final ConfigDelayedMergeObject mergedWithObject(AbstractConfigObject fallback) {
         return mergedWithNonObject(fallback);
     }
 
     @Override
-    protected ConfigDelayedMergeObject mergedWithNonObject(AbstractConfigValue fallback) {
-        if (ignoresFallbacks)
-            throw new ConfigException.BugOrBroken("should not be reached");
+    protected final ConfigDelayedMergeObject mergedWithNonObject(AbstractConfigValue fallback) {
+        requireNotIgnoringFallbacks();
 
-        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
-        newStack.addAll(stack);
-        newStack.add(fallback);
-        return new ConfigDelayedMergeObject(AbstractConfigObject.mergeOrigins(newStack), newStack,
-                fallback.ignoresFallbacks());
+        return (ConfigDelayedMergeObject) mergedWithNonObject(stack, fallback);
     }
 
     @Override
@@ -249,10 +249,6 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
         // to touch the exact key that isn't resolved, so this is in that
         // spirit.
 
-        // this function should never return null; if we know a value doesn't
-        // exist, then there would be no reason for the merge to be delayed
-        // (i.e. as long as some stuff is unmerged, the value may be non-null).
-
         // we'll be able to return a key if we have a value that ignores
         // fallbacks, prior to any unmergeable values.
         for (AbstractConfigValue layer : stack) {
@@ -289,17 +285,33 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
                 throw new ConfigException.NotResolved("Key '" + key + "' is not available at '"
                         + origin().description() + "' because value at '"
                         + layer.origin().description()
-                        + "' has not been resolved and may turn out to contain '" + key + "'."
+                        + "' has not been resolved and may turn out to contain or hide '" + key
+                        + "'."
                         + " Be sure to Config#resolve() before using a config object.");
+            } else if (layer.resolveStatus() == ResolveStatus.UNRESOLVED) {
+                // if the layer is not an object, and not a substitution or
+                // merge,
+                // then it's something that's unresolved because it _contains_
+                // an unresolved object... i.e. it's an array
+                if (!(layer instanceof ConfigList))
+                    throw new ConfigException.BugOrBroken("Expecting a list here, not " + layer);
+                // all later objects will be hidden so we can say we won't find
+                // the key
+                return null;
             } else {
-                // non-object, but not unresolved, like an integer or something.
+                // non-object, but resolved, like an integer or something.
                 // has no children so the one we're after won't be in it.
-                // this should always be overridden by an object though so
-                // ideally we never build a stack that would have this in it.
-                continue;
+                // we would only have this in the stack in case something
+                // else "looks back" to it due to a cycle.
+                // anyway at this point we know we can't find the key anymore.
+                if (!layer.ignoresFallbacks()) {
+                    throw new ConfigException.BugOrBroken(
+                            "resolved non-object should ignore fallbacks");
+                }
+                return null;
             }
         }
-        // If we get here, then we never found an unmergeable which means
+        // If we get here, then we never found anything unresolved which means
         // the ConfigDelayedMergeObject should not have existed. some
         // invariant was violated.
         throw new ConfigException.BugOrBroken(
@@ -314,6 +326,6 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     private Object writeReplace() throws ObjectStreamException {
         // switch to LinkedList
         return new ConfigDelayedMergeObject(origin(),
-                new java.util.LinkedList<AbstractConfigValue>(stack), ignoresFallbacks);
+                new java.util.LinkedList<AbstractConfigValue>(stack));
     }
 }

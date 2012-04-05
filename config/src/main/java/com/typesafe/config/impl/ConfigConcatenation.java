@@ -61,43 +61,6 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    protected AbstractConfigValue mergedWithTheUnmergeable(Unmergeable fallback) {
-        // if we turn out to be an object, and the fallback also does,
-        // then a merge may be required; delay until we resolve.
-        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
-        newStack.add(this);
-        newStack.addAll(fallback.unmergedValues());
-        return new ConfigDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack,
-                ((AbstractConfigValue) fallback).ignoresFallbacks());
-    }
-
-    protected AbstractConfigValue mergedLater(AbstractConfigValue fallback) {
-        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
-        newStack.add(this);
-        newStack.add(fallback);
-        return new ConfigDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack,
-                fallback.ignoresFallbacks());
-    }
-
-    @Override
-    protected AbstractConfigValue mergedWithObject(AbstractConfigObject fallback) {
-        // if we turn out to be an object, and the fallback also does,
-        // then a merge may be required; delay until we resolve.
-        return mergedLater(fallback);
-    }
-
-    @Override
-    protected AbstractConfigValue mergedWithNonObject(AbstractConfigValue fallback) {
-        // We may need the fallback if we contain a self-referential
-        // ConfigReference.
-        //
-        // we can't easily detect the self-referential case since the cycle
-        // may involve more than one step, so we have to wait and
-        // merge later when resolving.
-        return mergedLater(fallback);
-    }
-
-    @Override
     public Collection<ConfigConcatenation> unmergedValues() {
         return Collections.singleton(this);
     }

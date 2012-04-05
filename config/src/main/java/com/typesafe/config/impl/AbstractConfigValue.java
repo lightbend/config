@@ -4,6 +4,10 @@
 package com.typesafe.config.impl;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
@@ -124,32 +128,91 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
     // really need to store the boolean, and they may be able to pack it
     // with another boolean to save space.
     protected boolean ignoresFallbacks() {
-        return true;
+        // if we are not resolved, then somewhere in this value there's
+        // a substitution that may need to look at the fallbacks.
+        return resolveStatus() == ResolveStatus.RESOLVED;
     }
 
-    private ConfigException badMergeException() {
+    // the withFallback() implementation is supposed to avoid calling
+    // mergedWith* if we're ignoring fallbacks.
+    protected final void requireNotIgnoringFallbacks() {
         if (ignoresFallbacks())
             throw new ConfigException.BugOrBroken(
-                    "method should not have been called with ignoresFallbacks=true"
+                    "method should not have been called with ignoresFallbacks=true "
                             + getClass().getSimpleName());
-        else
-            throw new ConfigException.BugOrBroken("should override this in "
-                    + getClass().getSimpleName());
+    }
+
+    protected AbstractConfigValue constructDelayedMerge(ConfigOrigin origin,
+            List<AbstractConfigValue> stack) {
+        return new ConfigDelayedMerge(origin, stack);
+    }
+
+    protected final AbstractConfigValue mergedWithTheUnmergeable(
+            Collection<AbstractConfigValue> stack, Unmergeable fallback) {
+        requireNotIgnoringFallbacks();
+
+        // if we turn out to be an object, and the fallback also does,
+        // then a merge may be required; delay until we resolve.
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+        newStack.addAll(stack);
+        newStack.addAll(fallback.unmergedValues());
+        return constructDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack);
+    }
+
+    private final AbstractConfigValue delayMerge(Collection<AbstractConfigValue> stack,
+            AbstractConfigValue fallback) {
+        // if we turn out to be an object, and the fallback also does,
+        // then a merge may be required.
+        // if we contain a substitution, resolving it may need to look
+        // back to the fallback.
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+        newStack.addAll(stack);
+        newStack.add(fallback);
+        return constructDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack);
+    }
+
+    protected final AbstractConfigValue mergedWithObject(Collection<AbstractConfigValue> stack,
+            AbstractConfigObject fallback) {
+        requireNotIgnoringFallbacks();
+
+        if (this instanceof AbstractConfigObject)
+            throw new ConfigException.BugOrBroken("Objects must reimplement mergedWithObject");
+
+        return mergedWithNonObject(stack, fallback);
+    }
+
+    protected final AbstractConfigValue mergedWithNonObject(Collection<AbstractConfigValue> stack,
+            AbstractConfigValue fallback) {
+        requireNotIgnoringFallbacks();
+
+        if (resolveStatus() == ResolveStatus.RESOLVED) {
+            // falling back to a non-object doesn't merge anything, and also
+            // prohibits merging any objects that we fall back to later.
+            // so we have to switch to ignoresFallbacks mode.
+            return newCopy(true /* ignoresFallbacks */, origin);
+        } else {
+            // if unresolved, we may have to look back to fallbacks as part of
+            // the resolution process, so always delay
+            return delayMerge(stack, fallback);
+        }
     }
 
     protected AbstractConfigValue mergedWithTheUnmergeable(Unmergeable fallback) {
-        throw badMergeException();
+        requireNotIgnoringFallbacks();
+
+        return mergedWithTheUnmergeable(Collections.singletonList(this), fallback);
     }
 
     protected AbstractConfigValue mergedWithObject(AbstractConfigObject fallback) {
-        throw badMergeException();
+        requireNotIgnoringFallbacks();
+
+        return mergedWithObject(Collections.singletonList(this), fallback);
     }
 
     protected AbstractConfigValue mergedWithNonObject(AbstractConfigValue fallback) {
-        // falling back to a non-object doesn't merge anything, and also
-        // prohibits merging any objects that we fall back to later.
-        // so we have to switch to ignoresFallbacks mode.
-        return newCopy(true /* ignoresFallbacks */, origin);
+        requireNotIgnoringFallbacks();
+
+        return mergedWithNonObject(Collections.singletonList(this), fallback);
     }
 
     public AbstractConfigValue withOrigin(ConfigOrigin origin) {
@@ -159,6 +222,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
             return newCopy(ignoresFallbacks(), origin);
     }
 
+    // this is only overridden to change the return type
     @Override
     public AbstractConfigValue withFallback(ConfigMergeable mergeable) {
         if (ignoresFallbacks()) {
@@ -169,15 +233,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
             if (other instanceof Unmergeable) {
                 return mergedWithTheUnmergeable((Unmergeable) other);
             } else if (other instanceof AbstractConfigObject) {
-                AbstractConfigObject fallback = (AbstractConfigObject) other;
-                if (fallback.resolveStatus() == ResolveStatus.RESOLVED && fallback.isEmpty()) {
-                    if (fallback.ignoresFallbacks())
-                        return newCopy(true /* ignoresFallbacks */, origin);
-                    else
-                        return this;
-                } else {
-                    return mergedWithObject((AbstractConfigObject) other);
-                }
+                return mergedWithObject((AbstractConfigObject) other);
             } else {
                 return mergedWithNonObject((AbstractConfigValue) other);
             }

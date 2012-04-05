@@ -83,7 +83,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
      * Looks up the path with no transformation, type conversion, or exceptions
      * (just returns null if path not found). Does however resolve the path, if
      * resolver != null.
-     * 
+     *
      * @throws NotPossibleToResolve
      *             if context is not null and resolution fails
      */
@@ -156,19 +156,9 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
     }
 
     @Override
-    protected final AbstractConfigObject mergedWithTheUnmergeable(Unmergeable fallback) {
-        if (ignoresFallbacks())
-            throw new ConfigException.BugOrBroken("should not be reached");
-
-        List<AbstractConfigValue> stack = new ArrayList<AbstractConfigValue>();
-        if (this instanceof Unmergeable) {
-            stack.addAll(((Unmergeable) this).unmergedValues());
-        } else {
-            stack.add(this);
-        }
-        stack.addAll(fallback.unmergedValues());
-        return new ConfigDelayedMergeObject(mergeOrigins(stack), stack,
-                ((AbstractConfigValue) fallback).ignoresFallbacks());
+    protected AbstractConfigObject constructDelayedMerge(ConfigOrigin origin,
+            List<AbstractConfigValue> stack) {
+        return new ConfigDelayedMergeObject(origin, stack);
     }
 
     @Override

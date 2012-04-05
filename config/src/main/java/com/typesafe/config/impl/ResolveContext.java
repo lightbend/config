@@ -93,7 +93,6 @@ final class ResolveContext {
     }
 
     AbstractConfigValue resolve(AbstractConfigValue original) throws NotPossibleToResolve {
-
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
         final MemoKey fullKey = new MemoKey(original, null);

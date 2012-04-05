@@ -159,8 +159,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
 
     @Override
     protected SimpleConfigObject mergedWithObject(AbstractConfigObject abstractFallback) {
-        if (ignoresFallbacks())
-            throw new ConfigException.BugOrBroken("should not be reached");
+        requireNotIgnoringFallbacks();
 
         if (!(abstractFallback instanceof SimpleConfigObject)) {
             throw new ConfigException.BugOrBroken(

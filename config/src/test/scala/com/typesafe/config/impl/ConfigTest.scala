@@ -79,7 +79,8 @@ class ConfigTest extends TestUtils {
             if (!trees(0).equals(tree))
                 throw new AssertionError("Merge was not associative, " +
                     "verify that it should not be, then don't use associativeMerge " +
-                    "for this one.\none: " + trees(0) + "\ntwo: " + tree)
+                    "for this one. two results were: \none: " + trees(0) + "\ntwo: " +
+                    tree + "\noriginal list: " + allObjects)
         }
 
         for (tree <- trees) {
@@ -501,6 +502,20 @@ class ConfigTest extends TestUtils {
     def ignoredMergesDoNothing() {
         val conf = parseConfig("{ a : 1 }")
         testIgnoredMergesDoNothing(conf)
+    }
+
+    @Test
+    def testNoMergeAcrossArray() {
+        val conf = parseConfig("a: {b:1}, a: [2,3], a:{c:4}")
+        assertFalse("a.b found in: " + conf, conf.hasPath("a.b"))
+        assertTrue("a.c not found in: " + conf, conf.hasPath("a.c"))
+    }
+
+    @Test
+    def testNoMergeAcrossUnresolvedArray() {
+        val conf = parseConfig("a: {b:1}, a: [2,${x}], a:{c:4}, x: 42")
+        assertFalse("a.b found in: " + conf, conf.hasPath("a.b"))
+        assertTrue("a.c not found in: " + conf, conf.hasPath("a.c"))
     }
 
     @Test
