@@ -1054,6 +1054,19 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     @Test
+    def substSelfReferenceAlongPathMoreComplex() {
+        // this is an example from the spec
+        val obj = parseObject("""
+    foo : { a : { c : 1 } }
+    foo : ${foo.a}
+    foo : { a : 2 }
+                """)
+        val resolved = resolve(obj)
+        assertEquals(1, resolved.getInt("foo.c"))
+        assertEquals(2, resolved.getInt("foo.a"))
+    }
+
+    @Test
     def substSelfReferenceIndirect() {
         val obj = parseObject("""a=1, b=${a}, a=${b}""")
         val e = intercept[ConfigException.UnresolvedSubstitution] {
@@ -1129,6 +1142,27 @@ class ConfigSubstitutionTest extends TestUtils {
         val obj = parseObject("""a=${?a}foo""")
         val resolved = resolve(obj)
         assertEquals("foo", resolved.getString("a"))
+    }
+
+    @Test
+    def substOptionalIndirectSelfReferenceInConcat() {
+        val obj = parseObject("""a=${?b}foo,b=${a}""")
+        val resolved = resolve(obj)
+        assertEquals("foo", resolved.getString("a"))
+    }
+
+    @Test
+    def substTwoOptionalSelfReferencesInConcat() {
+        val obj = parseObject("""a=${?a}foo${?a}""")
+        val resolved = resolve(obj)
+        assertEquals("foo", resolved.getString("a"))
+    }
+
+    @Test
+    def substTwoOptionalSelfReferencesInConcatWithPriorValue() {
+        val obj = parseObject("""a=1,a=${?a}foo${?a}""")
+        val resolved = resolve(obj)
+        assertEquals("1foo1", resolved.getString("a"))
     }
 
     @Test

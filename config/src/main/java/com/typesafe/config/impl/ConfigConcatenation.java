@@ -68,33 +68,26 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     @Override
     AbstractConfigValue resolveSubstitutions(ResolveContext context) throws NotPossibleToResolve {
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
-        // if you have "foo = ${?foo}bar" then we will
-        // self-referentially look up foo and we need to
-        // get undefined, rather than "bar"
-        context.source().replace(this, ResolveReplacer.cycleResolveReplacer);
-        try {
-            for (AbstractConfigValue p : pieces) {
-                // to concat into a string we have to do a full resolve,
-                // so unrestrict the context
-                AbstractConfigValue r = context.unrestricted().resolve(p);
-                if (r == null) {
-                    // it was optional... omit
-                } else {
-                    switch (r.valueType()) {
-                    case LIST:
-                    case OBJECT:
-                        // cannot substitute lists and objects into strings
-                        // we know p was a ConfigReference since it wasn't
-                        // a ConfigString
-                        String pathString = ((ConfigReference) p).expression().toString();
-                        throw new ConfigException.WrongType(r.origin(), pathString, "not a list or object", r.valueType().name());
-                    default:
-                        resolved.add(r);
-                    }
+        for (AbstractConfigValue p : pieces) {
+            // to concat into a string we have to do a full resolve,
+            // so unrestrict the context
+            AbstractConfigValue r = context.unrestricted().resolve(p);
+            if (r == null) {
+                // it was optional... omit
+            } else {
+                switch (r.valueType()) {
+                case LIST:
+                case OBJECT:
+                    // cannot substitute lists and objects into strings
+                    // we know p was a ConfigReference since it wasn't
+                    // a ConfigString
+                    String pathString = ((ConfigReference) p).expression().toString();
+                    throw new ConfigException.WrongType(r.origin(), pathString,
+                            "not a list or object", r.valueType().name());
+                default:
+                    resolved.add(r);
                 }
             }
-        } finally {
-            context.source().unreplace(this);
         }
 
         // now need to concat everything
