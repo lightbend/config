@@ -132,10 +132,22 @@ final class SimpleConfigObject extends AbstractConfigObject {
         return value.get(key);
     }
 
-    @Override
-    protected SimpleConfigObject newCopy(ResolveStatus newStatus, boolean newIgnoresFallbacks,
-            ConfigOrigin newOrigin) {
+    private SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin,
+            boolean newIgnoresFallbacks) {
         return new SimpleConfigObject(newOrigin, value, newStatus, newIgnoresFallbacks);
+    }
+
+    @Override
+    protected SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin) {
+        return newCopy(newStatus, newOrigin, ignoresFallbacks);
+    }
+
+    @Override
+    protected SimpleConfigObject withFallbacksIgnored() {
+        if (ignoresFallbacks)
+            return this;
+        else
+            return newCopy(resolveStatus(), origin(), true /* ignoresFallbacks */);
     }
 
     @Override
@@ -201,7 +213,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
             return new SimpleConfigObject(mergeOrigins(this, fallback), merged, newResolveStatus,
                     newIgnoresFallbacks);
         else if (newResolveStatus != resolveStatus() || newIgnoresFallbacks != ignoresFallbacks())
-            return newCopy(newResolveStatus, newIgnoresFallbacks, origin());
+            return newCopy(newResolveStatus, origin(), newIgnoresFallbacks);
         else
             return this;
     }
@@ -230,7 +242,7 @@ final class SimpleConfigObject extends AbstractConfigObject {
             }
         }
         if (changes == null) {
-            return newCopy(resolveStatus(), ignoresFallbacks(), origin());
+            return this;
         } else {
             Map<String, AbstractConfigValue> modified = new HashMap<String, AbstractConfigValue>();
             boolean sawUnresolved = false;

@@ -47,7 +47,7 @@ final class ConfigInt extends ConfigNumber {
     }
 
     @Override
-    protected ConfigInt newCopy(boolean ignoresFallbacks, ConfigOrigin origin) {
+    protected ConfigInt newCopy(ConfigOrigin origin) {
         return new ConfigInt(origin, value, originalText);
     }
 }

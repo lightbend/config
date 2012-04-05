@@ -176,7 +176,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    protected AbstractConfigValue newCopy(boolean newIgnoresFallbacks, ConfigOrigin newOrigin) {
+    protected AbstractConfigValue newCopy(ConfigOrigin newOrigin) {
         return new ConfigDelayedMerge(newOrigin, stack);
     }
 

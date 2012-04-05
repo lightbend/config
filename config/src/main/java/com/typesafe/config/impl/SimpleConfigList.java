@@ -396,7 +396,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
     }
 
     @Override
-    protected SimpleConfigList newCopy(boolean ignoresFallbacks, ConfigOrigin newOrigin) {
+    protected SimpleConfigList newCopy(ConfigOrigin newOrigin) {
         return new SimpleConfigList(newOrigin, value);
     }
 

@@ -47,7 +47,7 @@ final class ConfigDouble extends ConfigNumber {
     }
 
     @Override
-    protected ConfigDouble newCopy(boolean ignoresFallbacks, ConfigOrigin origin) {
+    protected ConfigDouble newCopy(ConfigOrigin origin) {
         return new ConfigDouble(origin, value, originalText);
     }
 }

@@ -33,7 +33,7 @@ final class ConfigBoolean extends AbstractConfigValue {
     }
 
     @Override
-    protected ConfigBoolean newCopy(boolean ignoresFallbacks, ConfigOrigin origin) {
+    protected ConfigBoolean newCopy(ConfigOrigin origin) {
         return new ConfigBoolean(origin, value);
     }
 }

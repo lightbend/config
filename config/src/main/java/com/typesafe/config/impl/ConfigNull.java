@@ -43,7 +43,7 @@ final class ConfigNull extends AbstractConfigValue {
     }
 
     @Override
-    protected ConfigNull newCopy(boolean ignoresFallbacks, ConfigOrigin origin) {
+    protected ConfigNull newCopy(ConfigOrigin origin) {
         return new ConfigNull(origin);
     }
 }

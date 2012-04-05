@@ -50,8 +50,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    protected ConfigDelayedMergeObject newCopy(ResolveStatus status, boolean ignoresFallbacks,
-            ConfigOrigin origin) {
+    protected ConfigDelayedMergeObject newCopy(ResolveStatus status, ConfigOrigin origin) {
         if (status != resolveStatus())
             throw new ConfigException.BugOrBroken(
                     "attempt to create resolved ConfigDelayedMergeObject");

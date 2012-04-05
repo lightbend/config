@@ -46,9 +46,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     }
 
     @Override
-    protected ConfigReference newCopy(boolean ignoresFallbacks, ConfigOrigin newOrigin) {
-        if (ignoresFallbacks)
-            throw new ConfigException.BugOrBroken("Cannot ignore fallbacks for " + this);
+    protected ConfigReference newCopy(ConfigOrigin newOrigin) {
         return new ConfigReference(newOrigin, expr, prefixLength);
     }
 

@@ -147,12 +147,11 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
         return ConfigValueType.OBJECT;
     }
 
-    protected abstract AbstractConfigObject newCopy(ResolveStatus status, boolean ignoresFallbacks,
-            ConfigOrigin origin);
+    protected abstract AbstractConfigObject newCopy(ResolveStatus status, ConfigOrigin origin);
 
     @Override
-    protected AbstractConfigObject newCopy(boolean ignoresFallbacks, ConfigOrigin origin) {
-        return newCopy(resolveStatus(), ignoresFallbacks, origin);
+    protected AbstractConfigObject newCopy(ConfigOrigin origin) {
+        return newCopy(resolveStatus(), origin);
     }
 
     @Override

@@ -82,8 +82,8 @@ final class ConfigSubstitution extends AbstractConfigValue implements
     }
 
     @Override
-    protected AbstractConfigValue newCopy(boolean ignoresFallbacks, ConfigOrigin newOrigin) {
-        return delegate().newCopy(ignoresFallbacks, newOrigin);
+    protected AbstractConfigValue newCopy(ConfigOrigin newOrigin) {
+        return delegate().newCopy(newOrigin);
     }
 
     @Override

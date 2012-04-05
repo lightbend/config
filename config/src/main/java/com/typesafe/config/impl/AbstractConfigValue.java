@@ -122,7 +122,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
         return this;
     }
 
-    protected abstract AbstractConfigValue newCopy(boolean ignoresFallbacks, ConfigOrigin origin);
+    protected abstract AbstractConfigValue newCopy(ConfigOrigin origin);
 
     // this is virtualized rather than a field because only some subclasses
     // really need to store the boolean, and they may be able to pack it
@@ -131,6 +131,14 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
         // if we are not resolved, then somewhere in this value there's
         // a substitution that may need to look at the fallbacks.
         return resolveStatus() == ResolveStatus.RESOLVED;
+    }
+
+    protected AbstractConfigValue withFallbacksIgnored() {
+        if (ignoresFallbacks())
+            return this;
+        else
+            throw new ConfigException.BugOrBroken(
+                    "value class doesn't implement forced fallback-ignoring " + this);
     }
 
     // the withFallback() implementation is supposed to avoid calling
@@ -189,7 +197,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
             // falling back to a non-object doesn't merge anything, and also
             // prohibits merging any objects that we fall back to later.
             // so we have to switch to ignoresFallbacks mode.
-            return newCopy(true /* ignoresFallbacks */, origin);
+            return withFallbacksIgnored();
         } else {
             // if unresolved, we may have to look back to fallbacks as part of
             // the resolution process, so always delay
@@ -219,7 +227,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Seria
         if (this.origin == origin)
             return this;
         else
-            return newCopy(ignoresFallbacks(), origin);
+            return newCopy(origin);
     }
 
     // this is only overridden to change the return type

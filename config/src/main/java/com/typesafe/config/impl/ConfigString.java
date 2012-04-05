@@ -38,7 +38,7 @@ final class ConfigString extends AbstractConfigValue {
     }
 
     @Override
-    protected ConfigString newCopy(boolean ignoresFallbacks, ConfigOrigin origin) {
+    protected ConfigString newCopy(ConfigOrigin origin) {
         return new ConfigString(origin, value);
     }
 }

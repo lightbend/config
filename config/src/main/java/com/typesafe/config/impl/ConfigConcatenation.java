@@ -48,7 +48,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    protected ConfigConcatenation newCopy(boolean ignoresFallbacks, ConfigOrigin newOrigin) {
+    protected ConfigConcatenation newCopy(ConfigOrigin newOrigin) {
         return new ConfigConcatenation(newOrigin, pieces);
     }
 
