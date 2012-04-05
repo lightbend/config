@@ -485,10 +485,52 @@ A _self-referential field_ is one which:
 
  - has a substitution, or value concatenation containing a
    substitution, as its value
- - where the substitution refers to the field being defined,
+ - where this field value refers to the field being defined,
    either directly or by referring to one or more other
    substitutions which eventually point back to the field being
    defined
+
+Examples of self-referential fields:
+
+ - `a : ${a}`
+ - `a : ${a}bc`
+
+Note that an object or array with a substitution inside it is
+_not_ considered self-referential for this purpose. The
+self-referential rules do _not_ apply to:
+
+ - `a : { b : ${a} }`
+ - `a : [${a}]`
+
+These cases are unbreakable cycles that generate an error. (If
+"looking backward" were allowed for these, something like
+`a={ x : 42, y : ${a.x} }` would look backward for a
+nonexistent `a` while resolving `${a.x}`.)
+
+A possible implementation is:
+
+ - substitutions are resolved by looking up paths in a document.
+   Cycles only arise when the lookup document is an ancestor
+   node of the substitution node.
+ - while resolving a potentially self-referential field (any
+   substitution or value concatenation that contains a
+   substitution), remove that field and all fields which override
+   it from the lookup document.
+
+The simplest form of this implementation will report a circular
+reference as missing; in `a : ${a}` you would remove `a : ${a}`
+while resolving `${a}`, leaving an empty document to look up
+`${a}` in. You can give a more helpful error message if, rather
+than simply removing the field, you leave a marker value
+describing the cycle. Then generate an error if you return to that
+marker value during resolution.
+
+Cycles should be treated the same as a missing value when
+resolving an optional substitution (i.e. the `${?foo}` syntax).
+If `${?foo}` refers to itself then it's as if it referred to a
+nonexistent value.
+
+#### Examples of Self-Referential Substitutions
 
 In isolation (with no merges involved), a self-referential field
 is an error because the substitution cannot be resolved:
@@ -518,7 +560,8 @@ and then second:
     foo : { a : 1 }
 
 Here the `${foo}` self-reference comes before `foo` has a value,
-so it is undefined.
+so it is undefined, exactly as if the substitution referenced a
+path not found in the document.
 
 Because `foo : ${foo}` conceptually looks to previous definitions
 of `foo` for a value, the error should be treated as "undefined"
@@ -601,7 +644,8 @@ In general, in resolving a substitution the implementation must:
  - if a cycle results, the implementation must "look back"
    in the merge stack to try to resolve the cycle
  - if neither lazy evaluation nor "looking only backward" resolves
-   a cycle, it is an error
+   a cycle, the substitution is missing which is an error unless
+   the `${?foo}` optional-substitution syntax was used.
 
 For example, this is not possible to resolve:
 
