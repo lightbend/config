@@ -128,7 +128,7 @@ While all Unicode separators should be treated as whitespace, in
 this spec "newline" refers only and specifically to ASCII newline
 0x000A.
 
-### Duplicate keys
+### Duplicate keys and object merging
 
 The JSON spec does not clarify how duplicate keys in the same
 object should be handled. In HOCON, duplicate keys that appear
@@ -204,7 +204,8 @@ unquoted string.
 unquoted string `foo`. However, `footrue` parses as the unquoted
 string `footrue`. Similarly, `10.0bar` is the number `10.0` then
 the unquoted string `bar` but `bar10.0` is the unquoted string
-`bar10.0`.
+`bar10.0`. (In practice, this distinction doesn't matter much
+because of value concatenation; see later section.)
 
 In general, once an unquoted string begins, it continues until a
 forbidden character or the two-character string "//" is
@@ -242,9 +243,9 @@ concatenation:
  - if all the values are objects, they are merged (as with
    duplicate keys) into one object.
 
-String value concatenation is allowed in object field keys, in
-addition to object field values and array elements. Objects and
-arrays do not make sense as object field keys.
+String value concatenation is allowed in field keys, in addition
+to field values and array elements. Objects and arrays do not make
+sense as field keys.
 
 #### String value concatenation
 
@@ -316,7 +317,7 @@ For purposes of concatenation, "array" also means "substitution
 that resolves to an array" and "object" also means "substitution
 that resolves to an object."
 
-Within an object field value or array element, if only non-newline
+Within an field value or array element, if only non-newline
 whitespace separates the end of a first array or object or
 substitution from the start of a second array or object or
 substitution, the two values are concatenated. Newlines may occur
@@ -357,8 +358,8 @@ A common use of object concatenation is "inheritance":
 
 A common use of array concatenation is to add to paths:
 
-   path = [ /bin ]
-   path = ${path} [ /usr/bin ]
+    path = [ /bin ]
+    path = ${path} [ /usr/bin ]
 
 #### Note: Arrays without commas or newlines
 
@@ -557,7 +558,7 @@ If a substitution with the `${?foo}` syntax is undefined:
    concatenation so if `bar` or `baz` are not defined, the result
    is an empty string.
 
-Substitutions are only allowed in object field values and array
+Substitutions are only allowed in field values and array
 elements (value concatenations), they are not allowed in keys or
 nested inside other substitutions (path expressions).
 
@@ -595,6 +596,7 @@ Examples of self-referential fields:
 
  - `a : ${a}`
  - `a : ${a}bc`
+ - `path : ${path} [ /usr/bin ]`
 
 Note that an object or array with a substitution inside it is
 _not_ considered self-referential for this purpose. The
