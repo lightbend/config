@@ -321,7 +321,6 @@ final class Parser {
             return new ConfigException.Parse(lineOrigin(), message, cause);
         }
 
-
         private String previousFieldName(Path lastPath) {
             if (lastPath != null) {
                 return lastPath.render();
@@ -329,6 +328,18 @@ final class Parser {
                 return null;
             else
                 return pathStack.peek().render();
+        }
+
+        private Path fullCurrentPath() {
+            Path full = null;
+            // pathStack has top of stack at front
+            for (Path p : pathStack) {
+                if (full == null)
+                    full = p;
+                else
+                    full = full.prepend(p);
+            }
+            return full;
         }
 
         private String previousFieldName() {
@@ -517,7 +528,7 @@ final class Parser {
             if (flavor == ConfigSyntax.JSON) {
                 return t == Tokens.COLON;
             } else {
-                return t == Tokens.COLON || t == Tokens.EQUALS;
+                return t == Tokens.COLON || t == Tokens.EQUALS || t == Tokens.PLUS_EQUALS;
             }
         }
 
@@ -578,6 +589,17 @@ final class Parser {
                     }
 
                     newValue = parseValue(valueToken.prepend(keyToken.comments));
+
+                    if (afterKey.token == Tokens.PLUS_EQUALS) {
+                        List<AbstractConfigValue> concat = new ArrayList<AbstractConfigValue>(2);
+                        AbstractConfigValue previousRef = new ConfigReference(newValue.origin(),
+                                new SubstitutionExpression(fullCurrentPath(), true /* optional */));
+                        AbstractConfigValue list = new SimpleConfigList(newValue.origin(),
+                                Collections.singletonList(newValue));
+                        concat.add(previousRef);
+                        concat.add(list);
+                        newValue = ConfigConcatenation.concatenate(concat);
+                    }
 
                     lastPath = pathStack.pop();
                     if (insideEquals) {

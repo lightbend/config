@@ -279,6 +279,10 @@ abstract trait TestUtils {
         "[ * ]",
         "[ & ]",
         "[ \\ ]",
+        "+=",
+        "[ += ]",
+        "+= 10",
+        "10 +=",
         ParseTest(true, "[ \"foo\nbar\" ]"), // unescaped newline in quoted string, lift doesn't care
         "[ # comment ]",
         "${ #comment }",
@@ -399,7 +403,11 @@ abstract trait TestUtils {
         ParseTest(false, true, "[${\"foo.bar\" }]"), // substitution with trailing spaces and quoted
         """[ ${"foo""bar"} ]""", // multiple strings in substitution
         """[ ${foo  "bar"  baz} ]""", // multiple strings and whitespace in substitution
-        "[${true}]") // substitution with unquoted true token
+        "[${true}]", // substitution with unquoted true token
+        "a = [], a += b", // += operator with previous init
+        "{ a = [], a += 10 }", // += in braces object with previous init
+        "a += b", // += operator without previous init
+        "{ a += 10 }") // += in braces object without previous init
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
 

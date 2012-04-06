@@ -33,38 +33,38 @@ class TokenizerTest extends TestUtils {
         // but spec is unclear to me when spaces are required, and banning them
         // is actually extra work).
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
-            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
+            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.PLUS_EQUALS, tokenString("foo"),
             tokenTrue, tokenDouble(3.14), tokenFalse,
             tokenLong(42), tokenNull, tokenSubstitution(tokenUnquoted("a.b")),
             tokenOptionalSubstitution(tokenUnquoted("x.y")),
             tokenKeySubstitution("c.d"), tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""",:=}{]["foo"true3.14false42null${a.b}${?x.y}${"c.d"}""" + "\n"))
+        assertEquals(expected, tokenizeAsList(""",:=}{][+="foo"true3.14false42null${a.b}${?x.y}${"c.d"}""" + "\n"))
     }
 
     @Test
     def tokenizeAllTypesWithSingleSpaces() {
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
-            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
+            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.PLUS_EQUALS, tokenString("foo"),
             tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
             tokenDouble(3.14), tokenUnquoted(" "), tokenFalse, tokenUnquoted(" "), tokenNull,
             tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "),
             tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted(" "),
             tokenKeySubstitution("c.d"),
             tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""" , : = } { ] [ "foo" 42 true 3.14 false null ${a.b} ${?x.y} ${"c.d"} """ + "\n "))
+        assertEquals(expected, tokenizeAsList(""" , : = } { ] [ += "foo" 42 true 3.14 false null ${a.b} ${?x.y} ${"c.d"} """ + "\n "))
     }
 
     @Test
     def tokenizeAllTypesWithMultipleSpaces() {
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
-            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, tokenString("foo"),
+            Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.PLUS_EQUALS, tokenString("foo"),
             tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
             tokenDouble(3.14), tokenUnquoted("   "), tokenFalse, tokenUnquoted("   "), tokenNull,
             tokenUnquoted("   "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted("   "),
             tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted("   "),
             tokenKeySubstitution("c.d"),
             tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   "foo"   42   true   3.14   false   null   ${a.b}   ${?x.y}   ${"c.d"}  """ + "\n   "))
+        assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   +=   "foo"   42   true   3.14   false   null   ${a.b}   ${?x.y}   ${"c.d"}  """ + "\n   "))
     }
 
     @Test
@@ -228,7 +228,10 @@ class TokenizerTest extends TestUtils {
             assertEquals(Tokens.END, tokenized(2))
             val problem = tokenized(1)
             assertTrue("reserved char is a problem", Tokens.isProblem(problem))
-            assertEquals("'" + invalid + "'", problem.toString())
+            if (invalid == '+')
+                assertEquals("'end of file'", problem.toString())
+            else
+                assertEquals("'" + invalid + "'", problem.toString())
         }
     }
 }

@@ -209,6 +209,7 @@ tree that you could have written (less conveniently) in JSON.
     you could use `${user.home}`.
   - substitutions normally cause an error if unresolved, but
     there is a syntax `${?a.b}` to permit them to be missing.
+  - `+=` syntax to append elements to arrays, `path += "/bin"`
 
 ### Examples of HOCON
 
@@ -357,6 +358,13 @@ Arrays can be concatenated as well:
 
     path : [ "/bin" ]
     path : ${path} [ "/usr/bin" ]
+
+There is a shorthand for appending to arrays:
+
+    // equivalent to: path = ${?path} [ "/usr/bin" ]
+    path += "/usr/bin"
+
+To prepend or insert into an array, there is no shorthand.
 
 When objects are "concatenated," they are merged, so object
 concatenation is just a shorthand for defining the same object

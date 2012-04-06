@@ -245,4 +245,79 @@ class ConcatenationTest extends TestUtils {
         }
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close") && e.getMessage.contains("'['"))
     }
+
+    @Test
+    def emptyArrayPlusEquals() {
+        val conf = parseConfig(""" a = [], a += 2 """).resolve()
+        assertEquals(Seq(2), conf.getIntList("a").asScala.toList)
+    }
+
+    @Test
+    def missingArrayPlusEquals() {
+        val conf = parseConfig(""" a += 2 """).resolve()
+        assertEquals(Seq(2), conf.getIntList("a").asScala.toList)
+    }
+
+    @Test
+    def shortArrayPlusEquals() {
+        val conf = parseConfig(""" a = [1], a += 2 """).resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a").asScala.toList)
+    }
+
+    @Test
+    def numberPlusEquals() {
+        val e = intercept[ConfigException.WrongType] {
+            val conf = parseConfig(""" a = 10, a += 2 """).resolve()
+        }
+        assertTrue("wrong exception: " + e.getMessage,
+            e.getMessage.contains("Cannot concatenate") &&
+                e.getMessage.contains("10") &&
+                e.getMessage.contains("[2]"))
+    }
+
+    @Test
+    def stringPlusEquals() {
+        val e = intercept[ConfigException.WrongType] {
+            parseConfig(""" a = abc, a += 2 """).resolve()
+        }
+        assertTrue("wrong exception: " + e.getMessage,
+            e.getMessage.contains("Cannot concatenate") &&
+                e.getMessage.contains("abc") &&
+                e.getMessage.contains("[2]"))
+    }
+
+    @Test
+    def objectPlusEquals() {
+        val e = intercept[ConfigException.WrongType] {
+            parseConfig(""" a = { x : y }, a += 2 """).resolve()
+        }
+        assertTrue("wrong exception: " + e.getMessage,
+            e.getMessage.contains("Cannot concatenate") &&
+                e.getMessage.contains("\"x\" : \"y\"") &&
+                e.getMessage.contains("[2]"))
+    }
+
+    @Test
+    def plusEqualsNestedPath() {
+        val conf = parseConfig(""" a.b.c = [1], a.b.c += 2 """).resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a.b.c").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsNestedObjects() {
+        val conf = parseConfig(""" a : { b : { c : [1] } }, a : { b : { c += 2 } }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a.b.c").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsSingleNestedObject() {
+        val conf = parseConfig(""" a : { b : { c : [1], c += 2 } }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a.b.c").asScala.toList)
+    }
+
+    @Test
+    def substitutionPlusEqualsSubstitution() {
+        val conf = parseConfig(""" a = ${x}, a += ${y}, x = [1], y = 2 """).resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a").asScala.toList)
+    }
 }

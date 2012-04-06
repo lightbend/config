@@ -633,6 +633,25 @@ resolving an optional substitution (i.e. the `${?foo}` syntax).
 If `${?foo}` refers to itself then it's as if it referred to a
 nonexistent value.
 
+#### The `+=` field separator
+
+Fields may have `+=` as a separator rather than `:` or `=`. A
+field with `+=` transforms into a self-referential array
+concatenation, like this:
+
+    a += b
+
+becomes:
+
+    a = ${?a} [b]
+
+`+=` appends an element to a previous array. If the previous value
+was not an array, an error will result just as it would in the
+long form `a = ${?a} [b]`. Note that the previous value is
+optional (`${?a}` not `${a}`), which allows `a += b` to be the
+first mention of `a` in the file (it is not necessary to have `a =
+[]` first).
+
 #### Examples of Self-Referential Substitutions
 
 In isolation (with no merges involved), a self-referential field

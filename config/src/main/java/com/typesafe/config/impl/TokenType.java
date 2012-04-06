@@ -18,5 +18,6 @@ enum TokenType {
     UNQUOTED_TEXT,
     SUBSTITUTION,
     PROBLEM,
-    COMMENT;
+    COMMENT,
+    PLUS_EQUALS;
 }

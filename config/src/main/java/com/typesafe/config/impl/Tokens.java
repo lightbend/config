@@ -357,6 +357,7 @@ final class Tokens {
     final static Token CLOSE_CURLY = Token.newWithoutOrigin(TokenType.CLOSE_CURLY, "'}'");
     final static Token OPEN_SQUARE = Token.newWithoutOrigin(TokenType.OPEN_SQUARE, "'['");
     final static Token CLOSE_SQUARE = Token.newWithoutOrigin(TokenType.CLOSE_SQUARE, "']'");
+    final static Token PLUS_EQUALS = Token.newWithoutOrigin(TokenType.PLUS_EQUALS, "'+='");
 
     static Token newLine(ConfigOrigin origin) {
         return new Line(origin);

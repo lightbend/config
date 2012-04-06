@@ -136,8 +136,9 @@ final class Tokenizer {
 
 
         // this should ONLY be called from nextCharSkippingComments
-        // or when inside a quoted string, everything else should
-        // use nextCharSkippingComments().
+        // or when inside a quoted string, or when parsing a sequence
+        // like ${ or +=, everything else should use
+        // nextCharSkippingComments().
         private int nextCharRaw() {
             if (buffer.isEmpty()) {
                 try {
@@ -438,6 +439,16 @@ final class Tokenizer {
             return Tokens.newString(lineOrigin, sb.toString());
         }
 
+        private Token pullPlusEquals() throws ProblemException {
+            // the initial '+' has already been consumed
+            int c = nextCharRaw();
+            if (c != '=') {
+                throw problem(asString(c), "'+' not followed by =, '" + asString(c)
+                        + "' not allowed after '+'", true /* suggestQuotes */);
+            }
+            return Tokens.PLUS_EQUALS;
+        }
+
         private Token pullSubstitution() throws ProblemException {
             // the initial '$' has already been consumed
             ConfigOrigin origin = lineOrigin;
@@ -524,6 +535,9 @@ final class Tokenizer {
                         break;
                     case ']':
                         t = Tokens.CLOSE_SQUARE;
+                        break;
+                    case '+':
+                        t = pullPlusEquals();
                         break;
                     }
 
