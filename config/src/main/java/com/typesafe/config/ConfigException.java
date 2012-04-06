@@ -53,25 +53,21 @@ public abstract class ConfigException extends RuntimeException {
     public static class WrongType extends ConfigException {
         private static final long serialVersionUID = 1L;
 
-        public WrongType(ConfigOrigin origin, String path, String expected,
-                String actual,
+        public WrongType(ConfigOrigin origin, String path, String expected, String actual,
                 Throwable cause) {
-            super(origin, path + " has type " + actual + " rather than "
-                    + expected,
-                    cause);
+            super(origin, path + " has type " + actual + " rather than " + expected, cause);
         }
 
-        public WrongType(ConfigOrigin origin, String path, String expected,
-                String actual) {
+        public WrongType(ConfigOrigin origin, String path, String expected, String actual) {
             this(origin, path, expected, actual, null);
         }
 
-        WrongType(ConfigOrigin origin, String message, Throwable cause) {
+        public WrongType(ConfigOrigin origin, String message, Throwable cause) {
             super(origin, message, cause);
         }
 
-        WrongType(ConfigOrigin origin, String message) {
-            this(origin, message, null);
+        public WrongType(ConfigOrigin origin, String message) {
+            super(origin, message, null);
         }
     }
 
