@@ -246,6 +246,14 @@ final class Parser {
             }
         }
 
+        private static SubstitutionExpression tokenToSubstitutionExpression(Token valueToken) {
+            List<Token> expression = Tokens.getSubstitutionPathExpression(valueToken);
+            Path path = parsePathExpression(expression.iterator(), valueToken.origin());
+            boolean optional = Tokens.getSubstitutionOptional(valueToken);
+
+            return new SubstitutionExpression(path, optional);
+        }
+
         // merge a bunch of adjacent values into one
         // value; change unquoted text into a string
         // value.
@@ -254,18 +262,39 @@ final class Parser {
             if (flavor == ConfigSyntax.JSON)
                 return;
 
-            List<Token> values = null; // create only if we have value tokens
+            // create only if we have value tokens
+            List<AbstractConfigValue> values = null;
             TokenWithComments firstValueWithComments = null;
-            TokenWithComments t = nextTokenIgnoringNewline(); // ignore a
-                                                              // newline up
-                                                              // front
-            while (Tokens.isValue(t.token) || Tokens.isUnquotedText(t.token)
-                    || Tokens.isSubstitution(t.token)) {
+            // ignore a newline up front
+            TokenWithComments t = nextTokenIgnoringNewline();
+            while (true) {
+                AbstractConfigValue v = null;
+                if (Tokens.isValue(t.token)) {
+                    // if we consolidateValueTokens() multiple times then
+                    // this value could be a concatenation, object, array,
+                    // or substitution already.
+                    v = Tokens.getValue(t.token);
+                } else if (Tokens.isUnquotedText(t.token)) {
+                    v = new ConfigString(t.token.origin(), Tokens.getUnquotedText(t.token));
+                } else if (Tokens.isSubstitution(t.token)) {
+                    v = new ConfigReference(t.token.origin(),
+                            tokenToSubstitutionExpression(t.token));
+                } else if (t.token == Tokens.OPEN_CURLY || t.token == Tokens.OPEN_SQUARE) {
+                    // there may be newlines _within_ the objects and arrays
+                    v = parseValue(t);
+                } else {
+                    break;
+                }
+
+                if (v == null)
+                    throw new ConfigException.BugOrBroken("no value");
+
                 if (values == null) {
-                    values = new ArrayList<Token>();
+                    values = new ArrayList<AbstractConfigValue>();
                     firstValueWithComments = t;
                 }
-                values.add(t.token);
+                values.add(v);
+
                 t = nextToken(); // but don't consolidate across a newline
             }
             // the last one wasn't a value token
@@ -274,79 +303,10 @@ final class Parser {
             if (values == null)
                 return;
 
-            if (values.size() == 1 && Tokens.isValue(firstValueWithComments.token)) {
-                // a single value token requires no consolidation
-                putBack(firstValueWithComments);
-                return;
-            }
+            AbstractConfigValue consolidated = ConfigConcatenation.concatenate(values);
 
-            // this will be a list of String and SubstitutionExpression
-            List<Object> minimized = new ArrayList<Object>();
-
-            // we have multiple value tokens or one unquoted text token;
-            // collapse into a string token.
-            StringBuilder sb = new StringBuilder();
-            ConfigOrigin firstOrigin = null;
-            for (Token valueToken : values) {
-                if (Tokens.isValue(valueToken)) {
-                    AbstractConfigValue v = Tokens.getValue(valueToken);
-                    sb.append(v.transformToString());
-                    if (firstOrigin == null)
-                        firstOrigin = v.origin();
-                } else if (Tokens.isUnquotedText(valueToken)) {
-                    String text = Tokens.getUnquotedText(valueToken);
-                    if (firstOrigin == null)
-                        firstOrigin = valueToken.origin();
-                    sb.append(text);
-                } else if (Tokens.isSubstitution(valueToken)) {
-                    if (firstOrigin == null)
-                        firstOrigin = valueToken.origin();
-
-                    if (sb.length() > 0) {
-                        // save string so far
-                        minimized.add(sb.toString());
-                        sb.setLength(0);
-                    }
-                    // now save substitution
-                    List<Token> expression = Tokens
-                            .getSubstitutionPathExpression(valueToken);
-                    Path path = parsePathExpression(expression.iterator(), valueToken.origin());
-                    boolean optional = Tokens.getSubstitutionOptional(valueToken);
-
-                    minimized.add(new SubstitutionExpression(path, optional));
-                } else {
-                    throw new ConfigException.BugOrBroken(
-                            "should not be trying to consolidate token: "
-                                    + valueToken);
-                }
-            }
-
-            if (sb.length() > 0) {
-                // save string so far
-                minimized.add(sb.toString());
-            }
-
-            if (minimized.isEmpty())
-                throw new ConfigException.BugOrBroken(
-                        "trying to consolidate values to nothing");
-
-            Token consolidated = null;
-
-            if (minimized.size() == 1 && minimized.get(0) instanceof String) {
-                consolidated = Tokens.newString(firstOrigin,
-                        (String) minimized.get(0));
-            } else if (minimized.size() == 1 && minimized.get(0) instanceof SubstitutionExpression) {
-                // a substitution expression ${}
-                consolidated = Tokens.newValue(new ConfigReference(firstOrigin,
-                        (SubstitutionExpression) minimized.get(0)));
-            } else {
-                // a value concatenation with a substitution expression in it
-                List<AbstractConfigValue> vs = ConfigConcatenation.valuesFromPieces(
-                        firstOrigin, minimized);
-                consolidated = Tokens.newValue(new ConfigConcatenation(firstOrigin, vs));
-            }
-
-            putBack(new TokenWithComments(consolidated, firstValueWithComments.comments));
+            putBack(new TokenWithComments(Tokens.newValue(consolidated),
+                    firstValueWithComments.comments));
         }
 
         private ConfigOrigin lineOrigin() {

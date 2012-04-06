@@ -176,6 +176,9 @@ Tentatively called "Human-Optimized Config Object Notation" or
 HOCON, also called `.conf`, see HOCON.md in this directory for more
 detail.
 
+After processing a `.conf` file, the result is always just a JSON
+tree that you could have written (less conveniently) in JSON.
+
 ### Features of HOCON
 
   - Comments, with `#` or `//`
@@ -328,6 +331,56 @@ value just disappear if the substitution is not found:
     // this array could have one or two elements
     path = [ "a", ${?OPTIONAL_A} ]
 
+### Concatenation
+
+Values _on the same line_ are concatenated (for strings and
+arrays) or merged (for objects).
+
+This is why unquoted strings work, here the number `42` and the
+string `foo` are concatenated into a string `42 foo`:
+
+    key : 42 foo
+
+When concatenating values into a string, leading and trailing
+whitespace is stripped but whitespace between values is kept.
+
+Unquoted strings also support substitutions of course:
+
+    tasks-url : ${base-url}/tasks
+
+A concatenation can refer to earlier values of the same field:
+
+    path : "/bin"
+    path : ${path}":/usr/bin"
+
+Arrays can be concatenated as well:
+
+    path : [ "/bin" ]
+    path : ${path} [ "/usr/bin" ]
+
+When objects are "concatenated," they are merged, so object
+concatenation is just a shorthand for defining the same object
+twice. The long way (mentioned earlier) is:
+
+    data-center-generic = { cluster-size = 6 }
+    data-center-east = ${data-center-generic}
+    data-center-east = { name = "east" }
+
+The concatenation-style shortcut is:
+
+    data-center-generic = { cluster-size = 6 }
+    data-center-east = ${data-center-generic} { name = "east" }
+
+When concatenating objects and arrays, newlines are allowed
+_inside_ each object or array, but not between them.
+
+Non-newline whitespace is never a field or element separator. So
+`[ 1 2 3 4 ]` is an array with one unquoted string element
+`"1 2 3 4"`. To get an array of four numbers you need either commas or
+newlines separating the numbers.
+
+See the spec for full details on concatenation.
+
 ## Future Directions
 
 Here are some features that might be nice to add.
@@ -337,13 +390,6 @@ Here are some features that might be nice to add.
    deterministic order based on their filename.
    If you include a file and it turns out to be a directory then
    it would be processed in this way.
- - some way to merge array types. One approach could be:
-   `searchPath=${searchPath} ["/usr/local/foo"]`, here
-   arrays would have to be merged if a series of them appear after
-   a key, similar to how strings are concatenated already.
-   For consistency, maybe objects would also support this
-   syntax, though there's an existing way to merge objects
-   (duplicate fields).
  - including URLs (which would allow forcing file: when inside
    a classpath resource, among other things)
 

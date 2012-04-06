@@ -231,21 +231,41 @@ reserved keywords to allow future extensions to this spec.
 
 ### Value concatenation
 
-The value of an object field or an array element may consist of
-multiple values which are concatenated into one string.
+The value of an object field or array element may consist of
+multiple values which are combined. There are three kinds of value
+concatenation:
 
-Only simple values participate in value concatenation. Recall that
-a simple value is any value other than arrays and objects.
+ - if all the values are simple values (neither objects nor
+   arrays), they are concatenated into a string.
+ - if all the values are arrays, they are concatenated into
+   one array.
+ - if all the values are objects, they are merged (as with
+   duplicate keys) into one object.
+
+String value concatenation is allowed in object field keys, in
+addition to object field values and array elements. Objects and
+arrays do not make sense as object field keys.
+
+#### String value concatenation
+
+String value concatenation is the trick that makes unquoted
+strings work; it also supports substitutions (`${foo}` syntax) in
+strings.
+
+Only simple values participate in string value
+concatenation. Recall that a simple value is any value other than
+arrays and objects.
 
 As long as simple values are separated only by non-newline
 whitespace, the _whitespace between them is preserved_ and the
 values, along with the whitespace, are concatenated into a string.
 
-Value concatenations never span a newline, or a character that is
-not part of a simple value.
+String value concatenations never span a newline, or a character
+that is not part of a simple value.
 
-A value concatenation may appear in any place that a string may
-appear, including object keys, object values, and array elements.
+A string value concatenation may appear in any place that a string
+may appear, including object keys, object values, and array
+elements.
 
 Whenever a value would appear in JSON, a HOCON parser instead
 collects multiple values (including the whitespace between them)
@@ -261,11 +281,11 @@ whitespace is kept and the leading and trailing whitespace is
 trimmed. The equivalent string, written in quoted form, would be
 `"foo bar baz"`.
 
-Value concatenation `foo bar` (two unquoted strings with
+Value concatenating `foo bar` (two unquoted strings with
 whitespace) and quoted string `"foo bar"` would result in the same
 in-memory representation, seven characters.
 
-For purposes of value concatenation, non-string values are
+For purposes of string value concatenation, non-string values are
 converted to strings as follows (strings shown as quoted strings):
 
  - `true` and `false` become the strings `"true"` and `"false"`.
@@ -278,7 +298,7 @@ converted to strings as follows (strings shown as quoted strings):
    as it was written in the file.
  - a substitution is replaced with its value which is then
    converted to a string as above.
- - it is invalid for arrays or objects to appear in a value
+ - it is invalid for arrays or objects to appear in a string value
    concatenation.
 
 A single value is never converted to a string. That is, it would
@@ -286,6 +306,87 @@ be wrong to value concatenate `true` by itself; that should be
 parsed as a boolean-typed value. Only `true foo` (`true` with
 another simple value on the same line) should be parsed as a value
 concatenation and converted to a string.
+
+#### Array and object concatenation
+
+Arrays can be concatenated with arrays, and objects with objects,
+but it is an error if they are mixed.
+
+For purposes of concatenation, "array" also means "substitution
+that resolves to an array" and "object" also means "substitution
+that resolves to an object."
+
+Within an object field value or array element, if only non-newline
+whitespace separates the end of a first array or object or
+substitution from the start of a second array or object or
+substitution, the two values are concatenated. Newlines may occur
+_within_ the array or object, but not _between_ them. Newlines
+_between_ prevent concatenation.
+
+For objects, "concatenation" means "merging", so the second object
+overrides the first.
+
+Arrays and objects cannot be field keys, whether concatenation is
+involved or not.
+
+Here are several ways to define `a` to the same object value:
+
+    // one object
+    a : { b : 1, c : 2 }
+    // two objects that are merged via concatenation rules
+    a : { b : 1 } { c : 2 }
+    // two fields that are merged
+    a : { b : 1 }
+    a : { c : 2 }
+
+Here are several ways to define `a` to the same array value:
+
+    // one array
+    a : [ 1, 2, 3, 4 ]
+    // two arrays that are concatenated
+    a : [ 1, 2 ] [ 3, 4 ]
+    // a later definition referring to an earlier
+    // (see "self-referential substitutions" below)
+    a : [ 1, 2 ]
+    a : ${a} [ 3, 4 ]
+
+A common use of object concatenation is "inheritance":
+
+    data-center-generic = { cluster-size = 6 }
+    data-center-east = ${data-center-generic} { name = "east" }
+
+A common use of array concatenation is to add to paths:
+
+   path = [ /bin ]
+   path = ${path} [ /usr/bin ]
+
+#### Note: Arrays without commas or newlines
+
+Arrays allow you to use newlines instead of commas, but not
+whitespace instead of commas. Non-newline whitespace will produce
+concatenation rather than separate elements.
+
+    // this is an array with one element, the string "1 2 3 4"
+    [ 1 2 3 4 ]
+    // this is an array of four integers
+    [ 1
+      2
+      3
+      4 ]
+
+    // an array of one element, the array [ 1, 2, 3, 4 ]
+    [ [ 1, 2 ] [ 3, 4 ] ]
+    // an array of two arrays
+    [ [ 1, 2 ]
+      [ 3, 4 ] ]
+
+If this gets confusing, just use commas. The concatenation
+behavior is useful rather than surprising in cases like:
+
+    [ This is an unquoted string my name is ${name}, Hello ${world} ]
+    [ ${a} ${b}, ${x} ${y} ]
+
+Non-newline whitespace is never an element or field separator.
 
 ### Path expressions
 

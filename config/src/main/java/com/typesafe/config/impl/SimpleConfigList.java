@@ -400,6 +400,15 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList {
         return new SimpleConfigList(newOrigin, value);
     }
 
+    final SimpleConfigList concatenate(SimpleConfigList other) {
+        ConfigOrigin combinedOrigin = SimpleConfigOrigin.mergeOrigins(origin(), other.origin());
+        List<AbstractConfigValue> combined = new ArrayList<AbstractConfigValue>(value.size()
+                + other.value.size());
+        combined.addAll(value);
+        combined.addAll(other.value);
+        return new SimpleConfigList(combinedOrigin, combined);
+    }
+
     // This ridiculous hack is because some JDK versions apparently can't
     // serialize an array, which is used to implement ArrayList and EmptyList.
     // maybe

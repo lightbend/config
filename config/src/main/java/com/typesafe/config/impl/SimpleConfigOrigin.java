@@ -30,8 +30,7 @@ final class SimpleConfigOrigin implements ConfigOrigin, Serializable {
     final private List<String> commentsOrNull;
 
     protected SimpleConfigOrigin(String description, int lineNumber, int endLineNumber,
-            OriginType originType,
- String urlOrNull, List<String> commentsOrNull) {
+            OriginType originType, String urlOrNull, List<String> commentsOrNull) {
         this.description = description;
         this.lineNumber = lineNumber;
         this.endLineNumber = endLineNumber;
@@ -306,6 +305,18 @@ final class SimpleConfigOrigin implements ConfigOrigin, Serializable {
         } else {
             return mergeTwo(a, mergeTwo(b, c));
         }
+    }
+
+    static ConfigOrigin mergeOrigins(ConfigOrigin a, ConfigOrigin b) {
+        return mergeTwo((SimpleConfigOrigin) a, (SimpleConfigOrigin) b);
+    }
+
+    static ConfigOrigin mergeOrigins(List<? extends AbstractConfigValue> stack) {
+        List<ConfigOrigin> origins = new ArrayList<ConfigOrigin>(stack.size());
+        for (AbstractConfigValue v : stack) {
+            origins.add(v.origin());
+        }
+        return mergeOrigins(origins);
     }
 
     static ConfigOrigin mergeOrigins(Collection<? extends ConfigOrigin> stack) {

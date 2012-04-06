@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
@@ -29,6 +30,22 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     ConfigConcatenation(ConfigOrigin origin, List<AbstractConfigValue> pieces) {
         super(origin);
         this.pieces = pieces;
+
+        if (pieces.size() < 2)
+            throw new ConfigException.BugOrBroken("Created concatenation with less than 2 items: "
+                    + this);
+
+        boolean hadUnmergeable = false;
+        for (AbstractConfigValue p : pieces) {
+            if (p instanceof ConfigConcatenation)
+                throw new ConfigException.BugOrBroken(
+                        "ConfigConcatenation should never be nested: " + this);
+            if (p instanceof Unmergeable)
+                hadUnmergeable = true;
+        }
+        if (!hadUnmergeable)
+            throw new ConfigException.BugOrBroken(
+                    "Created concatenation without an unmergeable in it: " + this);
     }
 
     private ConfigException.NotResolved notResolved() {
@@ -65,6 +82,85 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         return Collections.singleton(this);
     }
 
+    /**
+     * Add left and right, or their merger, to builder.
+     */
+    private static void join(ArrayList<AbstractConfigValue> builder,
+            AbstractConfigValue right) {
+        AbstractConfigValue left = builder.get(builder.size() - 1);
+        // Since this depends on the type of two instances, I couldn't think
+        // of much alternative to an instanceof chain. Visitors are sometimes
+        // used for multiple dispatch but seems like overkill.
+        AbstractConfigValue joined = null;
+        if (left instanceof ConfigObject && right instanceof ConfigObject) {
+            joined = right.withFallback(left);
+        } else if (left instanceof SimpleConfigList && right instanceof SimpleConfigList) {
+            joined = ((SimpleConfigList)left).concatenate((SimpleConfigList)right);
+        } else if (left instanceof ConfigConcatenation || right instanceof ConfigConcatenation) {
+            throw new ConfigException.BugOrBroken("unflattened ConfigConcatenation");
+        } else if (left instanceof Unmergeable || right instanceof Unmergeable) {
+            // leave joined=null, cannot join
+        } else {
+            // handle primitive type or primitive type mixed with object or list
+            String s1 = left.transformToString();
+            String s2 = right.transformToString();
+            if (s1 == null || s2 == null) {
+                throw new ConfigException.WrongType(left.origin(),
+                        "Cannot concatenate object or list with a non-object-or-list, " + left
+                                + " and " + right + " are not compatible");
+            } else {
+                ConfigOrigin joinedOrigin = SimpleConfigOrigin.mergeOrigins(left.origin(),
+                        right.origin());
+                joined = new ConfigString(joinedOrigin, s1 + s2);
+            }
+        }
+
+        if (joined == null) {
+            builder.add(right);
+        } else {
+            builder.remove(builder.size() - 1);
+            builder.add(joined);
+        }
+    }
+
+    static List<AbstractConfigValue> consolidate(List<AbstractConfigValue> pieces) {
+        if (pieces.size() < 2) {
+            return pieces;
+        } else {
+            List<AbstractConfigValue> flattened = new ArrayList<AbstractConfigValue>(pieces.size());
+            for (AbstractConfigValue v : pieces) {
+                if (v instanceof ConfigConcatenation) {
+                    flattened.addAll(((ConfigConcatenation) v).pieces);
+                } else {
+                    flattened.add(v);
+                }
+            }
+
+            ArrayList<AbstractConfigValue> consolidated = new ArrayList<AbstractConfigValue>(
+                    flattened.size());
+            for (AbstractConfigValue v : flattened) {
+                if (consolidated.isEmpty())
+                    consolidated.add(v);
+                else
+                    join(consolidated, v);
+            }
+
+            return consolidated;
+        }
+    }
+
+    static AbstractConfigValue concatenate(List<AbstractConfigValue> pieces) {
+        List<AbstractConfigValue> consolidated = consolidate(pieces);
+        if (consolidated.isEmpty()) {
+            return null;
+        } else if (consolidated.size() == 1) {
+            return consolidated.get(0);
+        } else {
+            ConfigOrigin mergedOrigin = SimpleConfigOrigin.mergeOrigins(consolidated);
+            return new ConfigConcatenation(mergedOrigin, consolidated);
+        }
+    }
+
     @Override
     AbstractConfigValue resolveSubstitutions(ResolveContext context) throws NotPossibleToResolve {
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
@@ -75,28 +171,16 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             if (r == null) {
                 // it was optional... omit
             } else {
-                switch (r.valueType()) {
-                case LIST:
-                case OBJECT:
-                    // cannot substitute lists and objects into strings
-                    // we know p was a ConfigReference since it wasn't
-                    // a ConfigString
-                    String pathString = ((ConfigReference) p).expression().toString();
-                    throw new ConfigException.WrongType(r.origin(), pathString,
-                            "not a list or object", r.valueType().name());
-                default:
-                    resolved.add(r);
-                }
+                resolved.add(r);
             }
         }
 
         // now need to concat everything
-        StringBuilder sb = new StringBuilder();
-        for (AbstractConfigValue r : resolved) {
-            sb.append(r.transformToString());
-        }
-
-        return new ConfigString(origin(), sb.toString());
+        List<AbstractConfigValue> joined = consolidate(resolved);
+        if (joined.size() != 1)
+            throw new ConfigException.BugOrBroken(
+                    "Resolved list should always join to exactly one value, not " + joined);
+        return joined.get(0);
     }
 
     @Override
