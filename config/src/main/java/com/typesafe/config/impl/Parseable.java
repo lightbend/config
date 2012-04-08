@@ -65,12 +65,7 @@ public abstract class Parseable implements ConfigParseable {
     protected void postConstruct(ConfigParseOptions baseOptions) {
         this.initialOptions = fixupOptions(baseOptions);
 
-        this.includeContext = new ConfigIncludeContext() {
-            @Override
-            public ConfigParseable relativeTo(String filename) {
-                return Parseable.this.relativeTo(filename);
-            }
-        };
+        this.includeContext = new SimpleIncludeContext(this);
 
         if (initialOptions.getOriginDescription() != null)
             initialOrigin = SimpleConfigOrigin.newSimple(initialOptions.getOriginDescription());
@@ -80,6 +75,7 @@ public abstract class Parseable implements ConfigParseable {
 
     // the general idea is that any work should be in here, not in the
     // constructor,
+
     // so that exceptions are thrown from the public parse() function and not
     // from the creation of the Parseable. Essentially this is a lazy field.
     // The parser should close the reader when it's done with it.
