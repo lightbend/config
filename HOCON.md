@@ -802,33 +802,42 @@ duplicate instances of the same field (i.e. merges).
 #### Include syntax
 
 An _include statement_ consists of the unquoted string `include`
-and a single quoted string immediately following it. An include
-statement can appear in place of an object field.
+followed by whitespace and then either:
+ - a single _quoted_ string which is interpreted heuristically as
+   URL, filename, or classpath resource.
+ - `url()`, `file()`, or `classpath()` surrounding a quoted string
+   which is then interpreted as a URL, file, or classpath. The
+   string must be quoted, unlike in CSS.
+
+An include statement can appear in place of an object field.
 
 If the unquoted string `include` appears at the start of a path
 expression where an object key would be expected, then it is not
 interpreted as a path expression or a key.
 
-Instead, the next value must be a _quoted_ string. The quoted
-string is interpreted as a filename or resource name to be
-included.
+Instead, the next value must be a _quoted_ string or a quoted
+string surrounded by `url()`, `file()`, or `classpath()`.
+This value is the _resource name_.
 
-Together, the unquoted `include` and the quoted string substitute
+Together, the unquoted `include` and the resource name substitute
 for an object field syntactically, and are separated from the
 following object fields or includes by the usual comma (and as
 usual the comma may be omitted if there's a newline).
 
 If an unquoted `include` at the start of a key is followed by
-anything other than a single quoted string, it is invalid and an
+anything other than a single quoted string or the
+`url("")`/`file("")/`classpath("")` syntax, it is invalid and an
 error should be generated.
 
 There can be any amount of whitespace, including newlines, between
-the unquoted `include` and the quoted string.
+the unquoted `include` and the resource name. For `url()` etc.,
+whitespace is allowed inside the parentheses `()` (outside of the
+quotes).
 
 Value concatenation is NOT performed on the "argument" to
-`include`. The argument must be a single quoted string. No
-substitutions are allowed, and the argument may not be an unquoted
-string or any other kind of value.
+`include` or `url()` etc. The argument must be a single quoted
+string. No substitutions are allowed, and the argument may not be
+an unquoted string or any other kind of value.
 
 Unquoted `include` has no special meaning if it is not the start
 of a key's path expression.
@@ -925,6 +934,11 @@ If an included file does not exist, the include statement should
 be silently ignored (as if the included file contained only an
 empty object).
 
+Other IO errors probably should not be ignored but implementations
+will have to make a judgment which IO errors reflect an ignorable
+missing file, and which reflect a problem to bring to the user's
+attention.
+
 #### Include semantics: file formats and extensions
 
 Implementations may support including files in other formats.
@@ -951,22 +965,35 @@ In short, `include "foo"` might be equivalent to:
     include "foo.json"
     include "foo.conf"
 
+This same extension-based behavior is applied to classpath
+resources and files.
+
+For URLs, a basename without extension is not allowed; only the
+exact URL specified is used. The format will be chosen based on
+the Content-Type if available, or by the extension of the path
+component of the URL if no Content-Type is set. This is true even
+for file: URLs.
+
 #### Include semantics: locating resources
 
-Conceptually speaking, the quoted string in an include statement
-identifies a file or other resource "adjacent to" the one being
-parsed and of the same type as the one being parsed. The meaning
-of "adjacent to", and the string itself, has to be specified
-separately for each kind of resource.
+A quoted string not surrounded by `url()`, `file()`, `classpath()`
+must be interpreted heuristically. The heuristic is to treat the
+quoted string as:
 
-Implementations may vary in the kinds of resources they support
-including.
+ - a URL, if the quoted string is a valid URL with a known
+   protocol.
+ - otherwise, a file or other resource "adjacent to" the one being
+   parsed and of the same type as the one being parsed. The meaning
+   of "adjacent to", and the string itself, has to be specified
+   separately for each kind of resource.
+ - On the Java Virtual Machine, if an include statement does not
+   identify a valid URL or an existing resource "adjacent to" the
+   including resource, implementations may wish to fall back to a
+   classpath resource.  This allows configurations found in files
+   or URLs to access classpath resources in a natural way.
 
-On the Java Virtual Machine, if an include statement does not
-identify anything "adjacent to" the including resource,
-implementations may wish to fall back to a classpath resource.
-This allows configurations found in files or URLs to access
-classpath resources.
+Implementations may vary in the kinds of resources they can
+include.
 
 For resources located on the Java classpath:
 
@@ -1007,10 +1034,6 @@ For plain files on the filesystem:
 
 URLs:
 
- - for both filesystem files and Java resources, if the
-   included name is a URL (begins with a protocol), it would
-   be reasonable behavior to try to load the URL rather than
-   treating the name as a filename or resource name.
  - for files loaded from a URL, "adjacent to" should be based
    on parsing the URL's path component, replacing the last
    path element with the included name.
