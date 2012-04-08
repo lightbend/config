@@ -8,6 +8,13 @@ package com.typesafe.config;
  * Context provided to a {@link ConfigIncluder}; this interface is only useful
  * inside a {@code ConfigIncluder} implementation, and is not intended for apps
  * to implement.
+ *
+ * <p>
+ * <em>Do not implement this interface</em>; it should only be implemented by
+ * the config library. Arbitrary implementations will not work because the
+ * library internals assume a specific concrete implementation. Also, this
+ * interface is likely to grow new methods over time, so third-party
+ * implementations will break.
  */
 public interface ConfigIncludeContext {
     /**
