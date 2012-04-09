@@ -97,7 +97,14 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     ConfigParseable relativeTo(String filename) {
-        return null;
+        // fall back to classpath; we treat the "filename" as absolute
+        // (don't add a package name in front),
+        // if it starts with "/" then remove the "/", for consistency
+        // with ParseableResources.relativeTo
+        String resource = filename;
+        if (filename.startsWith("/"))
+            resource = filename.substring(1);
+        return newResources(resource, options().setOriginDescription(null));
     }
 
     ConfigIncludeContext includeContext() {
@@ -434,14 +441,7 @@ public abstract class Parseable implements ConfigParseable {
             if (sibling.exists()) {
                 return newFile(sibling, options().setOriginDescription(null));
             } else {
-                // fall back to classpath; we treat the "filename" as absolute
-                // (don't add a package name in front),
-                // if it starts with "/" then remove the "/", for consistency
-                // with ParseableResources.relativeTo
-                String resource = filename;
-                if (filename.startsWith("/"))
-                    resource = filename.substring(1);
-                return newResources(resource, options().setOriginDescription(null));
+                return super.relativeTo(filename);
             }
         }
 

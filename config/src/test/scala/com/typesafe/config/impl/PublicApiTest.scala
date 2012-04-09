@@ -330,6 +330,14 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
+    def includersAreUsedRecursivelyWithString() {
+        val included = whatWasIncluded(ConfigFactory.parseString(""" include "equiv03/includes.conf" """, _))
+
+        assertEquals(List("equiv03/includes.conf", "letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
+            included.map(_.name))
+    }
+
+    @Test
     def includersAreUsedWithClasspath() {
         val included = whatWasIncluded(ConfigFactory.parseResources(classOf[PublicApiTest], "/test03.conf", _))
 
