@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Properties;
 
 import com.typesafe.config.ConfigException;
@@ -43,8 +44,16 @@ public abstract class Parseable implements ConfigParseable {
     private ConfigParseOptions initialOptions;
     private ConfigOrigin initialOrigin;
 
-    protected Parseable() {
+    private static final ThreadLocal<LinkedList<Parseable>> parseStack = new ThreadLocal<LinkedList<Parseable>>() {
+        @Override
+        protected LinkedList<Parseable> initialValue() {
+            return new LinkedList<Parseable>();
+        }
+    };
 
+    private static final int MAX_INCLUDE_DEPTH = 50;
+
+    protected Parseable() {
     }
 
     private ConfigParseOptions fixupOptions(ConfigParseOptions baseOptions) {
@@ -122,7 +131,23 @@ public abstract class Parseable implements ConfigParseable {
 
     @Override
     public ConfigObject parse(ConfigParseOptions baseOptions) {
-        return forceParsedToObject(parseValue(baseOptions));
+
+        LinkedList<Parseable> stack = parseStack.get();
+        if (stack.size() >= MAX_INCLUDE_DEPTH) {
+            throw new ConfigException.Parse(initialOrigin, "include statements nested more than "
+                    + MAX_INCLUDE_DEPTH
+                    + " times, you probably have a cycle in your includes. Trace: " + stack);
+        }
+
+        stack.addFirst(this);
+        try {
+            return forceParsedToObject(parseValue(baseOptions));
+        } finally {
+            stack.removeFirst();
+            if (stack.isEmpty()) {
+                parseStack.remove();
+            }
+        }
     }
 
     final AbstractConfigValue parseValue(ConfigParseOptions baseOptions) {
@@ -349,6 +374,11 @@ public abstract class Parseable implements ConfigParseable {
         @Override
         protected ConfigOrigin createOrigin() {
             return SimpleConfigOrigin.newSimple("String");
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "(" + input + ")";
         }
     }
 

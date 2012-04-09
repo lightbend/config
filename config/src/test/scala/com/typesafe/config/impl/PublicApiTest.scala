@@ -817,4 +817,13 @@ class PublicApiTest extends TestUtils {
         assertTrue("cache was dropped when switching loaders", load3 ne load7)
         assertEquals(load3, load7)
     }
+
+    @Test
+    def detectIncludeCycle() {
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.load("cycle")
+        }
+
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("include statements nested"))
+    }
 }

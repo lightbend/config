@@ -30,6 +30,8 @@
    implement ConfigIncluderFile, ConfigIncluderURL, and
    ConfigIncluderClasspath. You should also use
    ConfigIncludeContext.parseOptions() if appropriate.
+ - cycles in include statements (self-includes) are now detected
+   and result in a nicer error instead of stack overflow
  - the serialization format has changed for a Config that has not
    had resolve() called on it. The library can still deserialize
    the old format, but old versions of the library will not be
