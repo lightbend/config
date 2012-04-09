@@ -86,11 +86,10 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     // the general idea is that any work should be in here, not in the
-    // constructor,
-
-    // so that exceptions are thrown from the public parse() function and not
-    // from the creation of the Parseable. Essentially this is a lazy field.
-    // The parser should close the reader when it's done with it.
+    // constructor, so that exceptions are thrown from the public parse()
+    // function and not from the creation of the Parseable.
+    // Essentially this is a lazy field. The parser should close the
+    // reader when it's done with it.
     // ALSO, IMPORTANT: if the file or URL is not found, this must throw.
     // to support the "allow missing" feature.
     protected abstract Reader reader() throws IOException;
