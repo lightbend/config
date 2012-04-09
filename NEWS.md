@@ -1,3 +1,50 @@
+# 0.NEXT.0: Sometime
+
+ - supports self-referential substitutions, such as
+   `path=${path}":/bin"`, by "looking backward" to the previous
+   value of `path`
+ - supports concatenating arrays and merging objects within a
+   single value. So you can do `path=${path} [ "/bin" ]` for
+   example. See README and spec for more details.
+ - supports `+=` where `path+="/bin"` expands to `path=${?path}
+   [ "/bin" ]`
+ - supports `include url("http://example.com/")`, `include
+   file("/my/file.conf")`, and `include classpath("whatever")`.
+   This syntax forces treatment as URL, file, or classpath
+   resource.
+ - supports `include "http://example.com/whatever.conf"` (if an
+   include is a valid URL, it's loaded as such). This is
+   incompatible with prior versions, if you have a filename that
+   is also a valid URL, it would have loaded previously but now
+   it will not. Use the `include file("")` syntax to force
+   treatment as a file.
+ - class loaders are now recursively inherited through include
+   statements; previously, even if you set a custom class loader
+   when parsing a file, it would not be used for parsing a
+   classpath resource included from the file.
+ - parseString() and parseReader() now support include statements
+   in the parsed string or reader
+ - in -Dconfig.resource=name, name can start with a "/" or not,
+   doesn't matter
+ - if you implement ConfigIncluder, you should most likely also
+   implement ConfigIncluderFile, ConfigIncluderURL, and
+   ConfigIncluderClasspath. You should also use
+   ConfigIncludeContext.parseOptions() if appropriate.
+ - the serialization format has changed for a Config that has not
+   had resolve() called on it. The library can still deserialize
+   the old format, but old versions of the library will not be
+   able to deserialize the new format. Serializing unresolved
+   Config is probably a bad idea anyway and maybe shouldn't even
+   be supported, but keeping it for back compat.
+ - since 0.3.0, there is an obscure incompatible semantic change
+   in that self-referential substitutions where the cycle could
+   be broken by partially resolving the object now "look backward"
+   and may fail to resolve. This is not incompatible with the
+   version included in Play/Akka 2.0 because in that version this
+   obscure case just threw an exception. But in 0.3.0 there
+   were cases that worked that now work differently. You are very
+   unlikely to be affected by this.
+
 # 0.3.0: March 1, 2012
 
  - ConfigFactory methods now use the thread's context class loader
