@@ -13,6 +13,7 @@ import java.io.File
 import scala.collection.mutable
 import equiv03.SomethingInEquiv03
 import java.io.StringReader
+import java.net.URL
 
 class PublicApiTest extends TestUtils {
     @Test
@@ -282,11 +283,17 @@ class PublicApiTest extends TestUtils {
         assertEquals(conf, conf2)
     }
 
-    case class Included(name: String, fallback: ConfigIncluder)
+    sealed trait IncludeKind
+    case object IncludeKindHeuristic extends IncludeKind;
+    case object IncludeKindFile extends IncludeKind;
+    case object IncludeKindURL extends IncludeKind;
+    case object IncludeKindClasspath extends IncludeKind;
+
+    case class Included(name: String, fallback: ConfigIncluder, kind: IncludeKind)
 
     class RecordingIncluder(val fallback: ConfigIncluder, val included: mutable.ListBuffer[Included]) extends ConfigIncluder {
         override def include(context: ConfigIncludeContext, name: String): ConfigObject = {
-            included += Included(name, fallback)
+            included += Included(name, fallback, IncludeKindHeuristic)
             fallback.include(context, name)
         }
 
@@ -301,9 +308,47 @@ class PublicApiTest extends TestUtils {
         }
     }
 
+    class RecordingFullIncluder(fallback: ConfigIncluder, included: mutable.ListBuffer[Included])
+        extends RecordingIncluder(fallback, included)
+        with ConfigIncluderFile with ConfigIncluderURL with ConfigIncluderClasspath {
+        override def includeFile(context: ConfigIncludeContext, file: File) = {
+            included += Included("file(" + file.getName() + ")", fallback, IncludeKindFile)
+            fallback.asInstanceOf[ConfigIncluderFile].includeFile(context, file)
+        }
+
+        override def includeURL(context: ConfigIncludeContext, url: URL) = {
+            included += Included("url(" + url.toExternalForm() + ")", fallback, IncludeKindURL)
+            fallback.asInstanceOf[ConfigIncluderURL].includeURL(context, url)
+        }
+
+        override def includeResources(context: ConfigIncludeContext, name: String) = {
+            included += Included("classpath(" + name + ")", fallback, IncludeKindFile)
+            fallback.asInstanceOf[ConfigIncluderClasspath].includeResources(context, name)
+        }
+
+        override def withFallback(fallback: ConfigIncluder) = {
+            if (this.fallback == fallback) {
+                this;
+            } else if (this.fallback == null) {
+                new RecordingFullIncluder(fallback, included);
+            } else {
+                new RecordingFullIncluder(this.fallback.withFallback(fallback), included)
+            }
+        }
+    }
+
     private def whatWasIncluded(parser: ConfigParseOptions => Config): List[Included] = {
         val included = mutable.ListBuffer[Included]()
         val includer = new RecordingIncluder(null, included)
+
+        val conf = parser(ConfigParseOptions.defaults().setIncluder(includer).setAllowMissing(false))
+
+        included.toList
+    }
+
+    private def whatWasIncludedFull(parser: ConfigParseOptions => Config): List[Included] = {
+        val included = mutable.ListBuffer[Included]()
+        val includer = new RecordingFullIncluder(null, included)
 
         val conf = parser(ConfigParseOptions.defaults().setIncluder(includer).setAllowMissing(false))
 
@@ -335,6 +380,18 @@ class PublicApiTest extends TestUtils {
 
         assertEquals(List("equiv03/includes.conf", "letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
             included.map(_.name))
+    }
+
+    // full includer should only be used with the file(), url(), classpath() syntax.
+    @Test
+    def fullIncluderNotUsedWithoutNewSyntax() {
+        val included = whatWasIncluded(ConfigFactory.parseFile(resourceFile("equiv03/includes.conf"), _))
+
+        assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
+            included.map(_.name))
+
+        val includedFull = whatWasIncludedFull(ConfigFactory.parseFile(resourceFile("equiv03/includes.conf"), _))
+        assertEquals(included, includedFull)
     }
 
     @Test
@@ -374,6 +431,33 @@ class PublicApiTest extends TestUtils {
         val included = whatWasIncluded(ConfigFactory.parseURL(resourceFile("/equiv03/includes.conf").toURI.toURL, _))
 
         assertEquals(List("letters/a.conf", "numbers/1.conf", "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
+            included.map(_.name))
+    }
+
+    @Test
+    def fullIncluderUsed() {
+        val included = whatWasIncludedFull(ConfigFactory.parseString("""
+                    include "equiv03/includes.conf"
+                    include file("nonexistent")
+                    include url("file:/nonexistent")
+                    include classpath("nonexistent")
+                """, _))
+        assertEquals(List("equiv03/includes.conf", "letters/a.conf", "numbers/1.conf",
+            "numbers/2", "letters/b.json", "letters/c", "root/foo.conf",
+            "file(nonexistent)", "url(file:/nonexistent)", "classpath(nonexistent)"),
+            included.map(_.name))
+    }
+
+    @Test
+    def nonFullIncluderSurvivesNewStyleIncludes() {
+        val included = whatWasIncluded(ConfigFactory.parseString("""
+                    include "equiv03/includes.conf"
+                    include file("nonexistent")
+                    include url("file:/nonexistent")
+                    include classpath("nonexistent")
+                """, _))
+        assertEquals(List("equiv03/includes.conf", "letters/a.conf", "numbers/1.conf",
+            "numbers/2", "letters/b.json", "letters/c", "root/foo.conf"),
             included.map(_.name))
     }
 

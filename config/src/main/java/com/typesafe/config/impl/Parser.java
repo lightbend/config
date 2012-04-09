@@ -3,7 +3,10 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.File;
 import java.io.StringReader;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -496,29 +499,87 @@ final class Parser {
                 t = nextTokenIgnoringNewline();
             }
 
-            if (Tokens.isValueWithType(t.token, ConfigValueType.STRING)) {
-                String name = (String) Tokens.getValue(t.token).unwrapped();
-                AbstractConfigObject obj = (AbstractConfigObject) includer
-                        .include(includeContext, name);
+            AbstractConfigObject obj;
 
-                if (!pathStack.isEmpty()) {
-                    Path prefix = new Path(pathStack);
-                    obj = obj.relativized(prefix);
+            // we either have a quoted string or the "file()" syntax
+            if (Tokens.isUnquotedText(t.token)) {
+                // get foo(
+                String kind = Tokens.getUnquotedText(t.token);
+
+                if (kind.equals("url(")) {
+
+                } else if (kind.equals("file(")) {
+
+                } else if (kind.equals("classpath(")) {
+
+                } else {
+                    throw parseError("expecting include parameter to be quoted filename, file(), classpath(), or url(). No spaces are allowed before the open paren. Not expecting: "
+                            + t);
                 }
 
-                for (String key : obj.keySet()) {
-                    AbstractConfigValue v = obj.get(key);
-                    AbstractConfigValue existing = values.get(key);
-                    if (existing != null) {
-                        values.put(key, v.withFallback(existing));
-                    } else {
-                        values.put(key, v);
+                // skip space inside parens
+                t = nextTokenIgnoringNewline();
+                while (isUnquotedWhitespace(t.token)) {
+                    t = nextTokenIgnoringNewline();
+                }
+
+                // quoted string
+                String name;
+                if (Tokens.isValueWithType(t.token, ConfigValueType.STRING)) {
+                    name = (String) Tokens.getValue(t.token).unwrapped();
+                } else {
+                    throw parseError("expecting a quoted string inside file(), classpath(), or url(), rather than: "
+                            + t);
+                }
+                // skip space after string, inside parens
+                t = nextTokenIgnoringNewline();
+                while (isUnquotedWhitespace(t.token)) {
+                    t = nextTokenIgnoringNewline();
+                }
+
+                if (Tokens.isUnquotedText(t.token) && Tokens.getUnquotedText(t.token).equals(")")) {
+                    // OK, close paren
+                } else {
+                    throw parseError("expecting a close parentheses ')' here, not: " + t);
+                }
+
+                if (kind.equals("url(")) {
+                    URL url;
+                    try {
+                        url = new URL(name);
+                    } catch (MalformedURLException e) {
+                        throw parseError("include url() specifies an invalid URL: " + name, e);
                     }
+                    obj = (AbstractConfigObject) includer.includeURL(includeContext, url);
+                } else if (kind.equals("file(")) {
+                    obj = (AbstractConfigObject) includer.includeFile(includeContext,
+                            new File(name));
+                } else if (kind.equals("classpath(")) {
+                    obj = (AbstractConfigObject) includer.includeResources(includeContext, name);
+                } else {
+                    throw new ConfigException.BugOrBroken("should not be reached");
                 }
-
+            } else if (Tokens.isValueWithType(t.token, ConfigValueType.STRING)) {
+                String name = (String) Tokens.getValue(t.token).unwrapped();
+                obj = (AbstractConfigObject) includer
+                        .include(includeContext, name);
             } else {
-                throw parseError("include keyword is not followed by a quoted string, but by: "
-                        + t);
+                throw parseError("include keyword is not followed by a quoted string, but by: " + t);
+            }
+
+            if (!pathStack.isEmpty()) {
+                Path prefix = new Path(pathStack);
+                obj = obj.relativized(prefix);
+            }
+
+            for (String key : obj.keySet()) {
+                AbstractConfigValue v = obj.get(key);
+                AbstractConfigValue existing = values.get(key);
+                if (existing != null) {
+                    values.put(key, v.withFallback(existing));
+                } else {
+                    values.put(key, v);
+                }
             }
         }
 

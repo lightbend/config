@@ -489,4 +489,121 @@ class ConfParserTest extends TestUtils {
         assertComments(Seq(), conf8, "x")
         assertComments(Seq(), conf8, "a")
     }
+
+    @Test
+    def includeFile() {
+        val conf = ConfigFactory.parseString("include file(\"" + resourceFile("test01") + "\")")
+
+        // should have loaded conf, json, properties
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertEquals(1, conf.getInt("fromJson1"))
+        assertEquals("abc", conf.getString("fromProps.abc"))
+    }
+
+    @Test
+    def includeFileWithExtension() {
+        val conf = ConfigFactory.parseString("include file(\"" + resourceFile("test01.conf") + "\")")
+
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertFalse(conf.hasPath("fromJson1"))
+        assertFalse(conf.hasPath("fromProps.abc"))
+    }
+
+    @Test
+    def includeFileWhitespaceInsideParens() {
+        val conf = ConfigFactory.parseString("include file(  \n  \"" + resourceFile("test01") + "\"  \n  )")
+
+        // should have loaded conf, json, properties
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertEquals(1, conf.getInt("fromJson1"))
+        assertEquals("abc", conf.getString("fromProps.abc"))
+    }
+
+    @Test
+    def includeFileNoWhitespaceOutsideParens() {
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString("include file (\"" + resourceFile("test01") + "\")")
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting include parameter"))
+    }
+
+    @Test
+    def includeFileNotQuoted() {
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString("include file(" + resourceFile("test01") + ")")
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting include parameter"))
+    }
+
+    @Test
+    def includeFileNotQuotedAndSpecialChar() {
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString("include file(:" + resourceFile("test01") + ")")
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a quoted string"))
+    }
+
+    @Test
+    def includeFileUnclosedParens() {
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString("include file(\"" + resourceFile("test01") + "\" something")
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close paren"))
+    }
+
+    @Test
+    def includeURLBasename() {
+        // "AnySyntax" trick doesn't work for url() includes
+        val url = resourceFile("test01").toURI().toURL().toExternalForm()
+        val conf = ConfigFactory.parseString("include url(\"" + url + "\")")
+
+        assertTrue("including basename URL doesn't load anything", conf.isEmpty())
+    }
+
+    @Test
+    def includeURLWithExtension() {
+        val url = resourceFile("test01.conf").toURI().toURL().toExternalForm()
+        val conf = ConfigFactory.parseString("include url(\"" + url + "\")")
+
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertFalse(conf.hasPath("fromJson1"))
+        assertFalse(conf.hasPath("fromProps.abc"))
+    }
+
+    @Test
+    def includeURLInvalid() {
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString("include url(\"junk:junk:junk\")")
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("invalid URL"))
+    }
+
+    @Test
+    def includeResources() {
+        val conf = ConfigFactory.parseString("include classpath(\"test01\")")
+
+        // should have loaded conf, json, properties
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertEquals(1, conf.getInt("fromJson1"))
+        assertEquals("abc", conf.getString("fromProps.abc"))
+    }
+
+    @Test
+    def includeURLHeuristically() {
+        val url = resourceFile("test01.conf").toURI().toURL().toExternalForm()
+        val conf = ConfigFactory.parseString("include \"" + url + "\"")
+
+        assertEquals(42, conf.getInt("ints.fortyTwo"))
+        assertFalse(conf.hasPath("fromJson1"))
+        assertFalse(conf.hasPath("fromProps.abc"))
+    }
+
+    @Test
+    def includeURLBasenameHeuristically() {
+        // "AnySyntax" trick doesn't work for url includes
+        val url = resourceFile("test01").toURI().toURL().toExternalForm()
+        val conf = ConfigFactory.parseString("include \"" + url + "\"")
+
+        assertTrue("including basename URL doesn't load anything", conf.isEmpty())
+    }
 }
