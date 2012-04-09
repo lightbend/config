@@ -16,7 +16,6 @@ import java.util.Stack;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigIncludeContext;
-import com.typesafe.config.ConfigIncluder;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
@@ -27,8 +26,8 @@ final class Parser {
     static AbstractConfigValue parse(Iterator<Token> tokens,
             ConfigOrigin origin, ConfigParseOptions options,
             ConfigIncludeContext includeContext) {
-        ParseContext context = new ParseContext(options.getSyntax(), origin,
-                tokens, options.getIncluder(), includeContext);
+        ParseContext context = new ParseContext(options.getSyntax(), origin, tokens,
+                SimpleIncluder.makeFull(options.getIncluder()), includeContext);
         return context.parse();
     }
 
@@ -80,7 +79,7 @@ final class Parser {
         private int lineNumber;
         final private Stack<TokenWithComments> buffer;
         final private Iterator<Token> tokens;
-        final private ConfigIncluder includer;
+        final private FullIncluder includer;
         final private ConfigIncludeContext includeContext;
         final private ConfigSyntax flavor;
         final private ConfigOrigin baseOrigin;
@@ -90,9 +89,8 @@ final class Parser {
         // someone may think this is .properties format.
         int equalsCount;
 
-        ParseContext(ConfigSyntax flavor, ConfigOrigin origin,
-                Iterator<Token> tokens, ConfigIncluder includer,
-                ConfigIncludeContext includeContext) {
+        ParseContext(ConfigSyntax flavor, ConfigOrigin origin, Iterator<Token> tokens,
+                FullIncluder includer, ConfigIncludeContext includeContext) {
             lineNumber = 1;
             buffer = new Stack<TokenWithComments>();
             this.tokens = tokens;

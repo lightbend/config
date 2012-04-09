@@ -123,8 +123,7 @@ public final class ConfigParseOptions {
         if (this.includer == includer)
             return this;
         else
-            return new ConfigParseOptions(this.syntax, this.originDescription,
- this.allowMissing,
+            return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
                     includer, this.classLoader);
     }
 
@@ -153,7 +152,7 @@ public final class ConfigParseOptions {
     /**
      * Set the class loader. If set to null,
      * <code>Thread.currentThread().getContextClassLoader()</code> will be used.
-     * 
+     *
      * @param loader
      *            a class loader or {@code null} to use thread context class
      *            loader

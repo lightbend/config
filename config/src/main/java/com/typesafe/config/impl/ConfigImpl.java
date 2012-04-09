@@ -77,39 +77,51 @@ public class ConfigImpl {
         return cache.getOrElseUpdate(loader, key, updater);
     }
 
+
+    static class FileNameSource implements SimpleIncluder.NameSource {
+        @Override
+        public ConfigParseable nameToParseable(String name, ConfigParseOptions parseOptions) {
+            return Parseable.newFile(new File(name), parseOptions);
+        }
+    };
+
+    static class ClasspathNameSource implements SimpleIncluder.NameSource {
+        @Override
+        public ConfigParseable nameToParseable(String name, ConfigParseOptions parseOptions) {
+            return Parseable.newResources(name, parseOptions);
+        }
+    };
+
+    static class ClasspathNameSourceWithClass implements SimpleIncluder.NameSource {
+        final private Class<?> klass;
+
+        public ClasspathNameSourceWithClass(Class<?> klass) {
+            this.klass = klass;
+        }
+
+        @Override
+        public ConfigParseable nameToParseable(String name, ConfigParseOptions parseOptions) {
+            return Parseable.newResources(klass, name, parseOptions);
+        }
+    };
+
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject parseResourcesAnySyntax(final Class<?> klass,
-            String resourceBasename, final ConfigParseOptions baseOptions) {
-        NameSource source = new NameSource() {
-            @Override
-            public ConfigParseable nameToParseable(String name) {
-                return Parseable.newResources(klass, name, baseOptions);
-            }
-        };
+    public static ConfigObject parseResourcesAnySyntax(Class<?> klass, String resourceBasename,
+            ConfigParseOptions baseOptions) {
+        NameSource source = new ClasspathNameSourceWithClass(klass);
         return SimpleIncluder.fromBasename(source, resourceBasename, baseOptions);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject parseResourcesAnySyntax(String resourceBasename,
-            final ConfigParseOptions baseOptions) {
-        NameSource source = new NameSource() {
-            @Override
-            public ConfigParseable nameToParseable(String name) {
-                return Parseable.newResources(name, baseOptions);
-            }
-        };
+            ConfigParseOptions baseOptions) {
+        NameSource source = new ClasspathNameSource();
         return SimpleIncluder.fromBasename(source, resourceBasename, baseOptions);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject parseFileAnySyntax(final File basename,
-            final ConfigParseOptions baseOptions) {
-        NameSource source = new NameSource() {
-            @Override
-            public ConfigParseable nameToParseable(String name) {
-                return Parseable.newFile(new File(name), baseOptions);
-            }
-        };
+    public static ConfigObject parseFileAnySyntax(File basename, ConfigParseOptions baseOptions) {
+        NameSource source = new FileNameSource();
         return SimpleIncluder.fromBasename(source, basename.getPath(), baseOptions);
     }
 

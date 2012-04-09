@@ -57,7 +57,10 @@ public abstract class Parseable implements ConfigParseable {
         }
         ConfigParseOptions modified = baseOptions.setSyntax(syntax);
 
+        // make sure the app-provided includer falls back to default
         modified = modified.appendIncluder(ConfigImpl.defaultIncluder());
+        // make sure the app-provided includer is complete
+        modified = modified.setIncluder(SimpleIncluder.makeFull(modified.getIncluder()));
 
         return modified;
     }

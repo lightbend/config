@@ -4,6 +4,7 @@
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigIncludeContext;
+import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigParseable;
 
 class SimpleIncludeContext implements ConfigIncludeContext {
@@ -14,12 +15,11 @@ class SimpleIncludeContext implements ConfigIncludeContext {
         this.parseable = parseable;
     }
 
-    SimpleIncludeContext() {
-        this(null);
-    }
-
     SimpleIncludeContext withParseable(Parseable parseable) {
-        return new SimpleIncludeContext(parseable);
+        if (parseable == this.parseable)
+            return this;
+        else
+            return new SimpleIncludeContext(parseable);
     }
 
     @Override
@@ -28,5 +28,10 @@ class SimpleIncludeContext implements ConfigIncludeContext {
             return parseable.relativeTo(filename);
         else
             return null;
+    }
+
+    @Override
+    public ConfigParseOptions parseOptions() {
+        return SimpleIncluder.clearForInclude(parseable.options());
     }
 }
