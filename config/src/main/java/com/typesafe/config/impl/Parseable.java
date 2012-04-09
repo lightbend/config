@@ -438,8 +438,7 @@ public abstract class Parseable implements ConfigParseable {
                 String resource = filename;
                 if (filename.startsWith("/"))
                     resource = filename.substring(1);
-                return newResources(this.getClass().getClassLoader(), resource, options()
-                        .setOriginDescription(null));
+                return newResources(resource, options().setOriginDescription(null));
             }
         }
 
@@ -459,11 +458,9 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     private final static class ParseableResources extends Parseable {
-        final private ClassLoader loader;
         final private String resource;
 
-        ParseableResources(ClassLoader loader, String resource, ConfigParseOptions options) {
-            this.loader = loader;
+        ParseableResources(String resource, ConfigParseOptions options) {
             this.resource = resource;
             postConstruct(options);
         }
@@ -476,6 +473,7 @@ public abstract class Parseable implements ConfigParseable {
         @Override
         protected AbstractConfigObject rawParseValue(ConfigOrigin origin,
                 ConfigParseOptions finalOptions) throws IOException {
+            ClassLoader loader = finalOptions.getClassLoader();
             Enumeration<URL> e = loader.getResources(resource);
             if (!e.hasMoreElements()) {
                 if (ConfigImpl.traceLoadsEnabled())
@@ -543,8 +541,7 @@ public abstract class Parseable implements ConfigParseable {
             if (sibling.startsWith("/")) {
                 // if it starts with "/" then don't make it relative to
                 // the including resource
-                return newResources(loader, sibling.substring(1),
-                        options().setOriginDescription(null));
+                return newResources(sibling.substring(1), options().setOriginDescription(null));
             } else {
                 // here we want to build a new resource name and let
                 // the class loader have it, rather than getting the
@@ -553,9 +550,9 @@ public abstract class Parseable implements ConfigParseable {
                 // search a classpath.
                 String parent = parent(resource);
                 if (parent == null)
-                    return newResources(loader, sibling, options().setOriginDescription(null));
+                    return newResources(sibling, options().setOriginDescription(null));
                 else
-                    return newResources(loader, parent + "/" + sibling, options()
+                    return newResources(parent + "/" + sibling, options()
                             .setOriginDescription(null));
             }
         }
@@ -567,13 +564,13 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         public String toString() {
-            return getClass().getSimpleName() + "(" + resource + ","
-                    + loader.getClass().getSimpleName() + ")";
+            return getClass().getSimpleName() + "(" + resource + ")";
         }
     }
 
     public static Parseable newResources(Class<?> klass, String resource, ConfigParseOptions options) {
-        return newResources(klass.getClassLoader(), convertResourceName(klass, resource), options);
+        return newResources(convertResourceName(klass, resource),
+                options.setClassLoader(klass.getClassLoader()));
     }
 
     // this function is supposed to emulate the difference
@@ -601,9 +598,8 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    public static Parseable newResources(ClassLoader loader, String resource,
-            ConfigParseOptions options) {
-        return new ParseableResources(loader, resource, options);
+    public static Parseable newResources(String resource, ConfigParseOptions options) {
+        return new ParseableResources(resource, options);
     }
 
     private final static class ParseableProperties extends Parseable {

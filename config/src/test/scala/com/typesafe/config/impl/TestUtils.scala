@@ -584,8 +584,11 @@ abstract trait TestUtils {
                 val t = Thread.currentThread()
                 val old = t.getContextClassLoader()
                 t.setContextClassLoader(loader)
-                val result = body
-                t.setContextClassLoader(old)
+                val result = try {
+                    body
+                } finally {
+                    t.setContextClassLoader(old)
+                }
                 result
             }
         })

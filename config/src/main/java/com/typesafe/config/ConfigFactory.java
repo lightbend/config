@@ -58,7 +58,8 @@ public final class ConfigFactory {
      * @return configuration for an application relative to context class loader
      */
     public static Config load(String resourceBasename) {
-        return load(Thread.currentThread().getContextClassLoader(), resourceBasename);
+        return load(resourceBasename, ConfigParseOptions.defaults(),
+                ConfigResolveOptions.defaults());
     }
 
     /**
@@ -70,7 +71,7 @@ public final class ConfigFactory {
      * @return configuration for an application relative to given class loader
      */
     public static Config load(ClassLoader loader, String resourceBasename) {
-        return load(loader, resourceBasename, ConfigParseOptions.defaults(),
+        return load(resourceBasename, ConfigParseOptions.defaults().setClassLoader(loader),
                 ConfigResolveOptions.defaults());
     }
 
@@ -88,29 +89,30 @@ public final class ConfigFactory {
      */
     public static Config load(String resourceBasename, ConfigParseOptions parseOptions,
             ConfigResolveOptions resolveOptions) {
-        return load(Thread.currentThread().getContextClassLoader(), resourceBasename, parseOptions,
-                resolveOptions);
+        Config appConfig = ConfigFactory.parseResourcesAnySyntax(resourceBasename, parseOptions);
+        return load(parseOptions.getClassLoader(), appConfig, resolveOptions);
     }
 
     /**
      * Like {@link #load(String,ConfigParseOptions,ConfigResolveOptions)} but
-     * allows you to specify a class loader
+     * has a class loader parameter that overrides any from the
+     * {@code ConfigParseOptions}.
      *
      * @param loader
-     *            class loader in which to find resources
+     *            class loader in which to find resources (overrides loader in
+     *            parse options)
      * @param resourceBasename
      *            the classpath resource name with optional extension
      * @param parseOptions
-     *            options to use when parsing the resource
+     *            options to use when parsing the resource (class loader
+     *            overridden)
      * @param resolveOptions
      *            options to use when resolving the stack
      * @return configuration for an application
      */
     public static Config load(ClassLoader loader, String resourceBasename,
             ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
-        Config appConfig = ConfigFactory.parseResourcesAnySyntax(loader, resourceBasename,
-                parseOptions);
-        return load(loader, appConfig, resolveOptions);
+        return load(resourceBasename, parseOptions.setClassLoader(loader), resolveOptions);
     }
 
     /**
@@ -192,10 +194,16 @@ public final class ConfigFactory {
                 // people want that they can use an include statement.
                 return load(loader, parseResources(loader, resource));
             } else if (file != null) {
-                return load(loader, parseFile(new File(file)));
+                return load(
+                        loader,
+                        parseFile(new File(file),
+                                ConfigParseOptions.defaults().setClassLoader(loader)));
             } else {
                 try {
-                    return load(loader, parseURL(new URL(url)));
+                    return load(
+                            loader,
+                            parseURL(new URL(url),
+                                    ConfigParseOptions.defaults().setClassLoader(loader)));
                 } catch (MalformedURLException e) {
                     throw new ConfigException.Generic("Bad URL in config.url system property: '"
                             + url + "': " + e.getMessage(), e);
@@ -550,7 +558,8 @@ public final class ConfigFactory {
      *            a resource name as in {@link java.lang.Class#getResource},
      *            with or without extension
      * @param options
-     *            parse options
+     *            parse options (class loader is ignored in favor of the one
+     *            from klass)
      * @return the parsed configuration
      */
     public static Config parseResourcesAnySyntax(Class<?> klass, String resourceBasename,
@@ -566,27 +575,28 @@ public final class ConfigFactory {
     /**
      * Parses all resources on the classpath with the given name and merges them
      * into a single <code>Config</code>.
-     *
+     * 
      * <p>
      * This works like {@link java.lang.ClassLoader#getResource}, not like
      * {@link java.lang.Class#getResource}, so the name never begins with a
      * slash.
-     *
+     * 
      * <p>
      * See {@link #parseResources(Class,String,ConfigParseOptions)} for full
      * details.
-     *
+     * 
      * @param loader
-     *            will be used to load resources
+     *            will be used to load resources by setting this loader on the
+     *            provided options
      * @param resource
      *            resource to look up
      * @param options
-     *            parse options
+     *            parse options (class loader is ignored)
      * @return the parsed configuration
      */
     public static Config parseResources(ClassLoader loader, String resource,
             ConfigParseOptions options) {
-        return Parseable.newResources(loader, resource, options).parse().toConfig();
+        return Parseable.newResources(resource, options.setClassLoader(loader)).parse().toConfig();
     }
 
     public static Config parseResources(ClassLoader loader, String resource) {
@@ -607,18 +617,19 @@ public final class ConfigFactory {
      * some details and caveats on this method.
      *
      * @param loader
-     *            class loader to look up resources in
+     *            class loader to look up resources in, will be set on options
      * @param resourceBasename
      *            a resource name as in
      *            {@link java.lang.ClassLoader#getResource}, with or without
      *            extension
      * @param options
-     *            parse options
+     *            parse options (class loader ignored)
      * @return the parsed configuration
      */
     public static Config parseResourcesAnySyntax(ClassLoader loader, String resourceBasename,
             ConfigParseOptions options) {
-        return ConfigImpl.parseResourcesAnySyntax(loader, resourceBasename, options).toConfig();
+        return ConfigImpl.parseResourcesAnySyntax(resourceBasename, options.setClassLoader(loader))
+                .toConfig();
     }
 
     public static Config parseResourcesAnySyntax(ClassLoader loader, String resourceBasename) {
@@ -630,8 +641,7 @@ public final class ConfigFactory {
      * uses thread's current context class loader.
      */
     public static Config parseResources(String resource, ConfigParseOptions options) {
-        return Parseable
-                .newResources(Thread.currentThread().getContextClassLoader(), resource, options)
+        return Parseable.newResources(resource, options)
                 .parse().toConfig();
     }
 
@@ -640,8 +650,7 @@ public final class ConfigFactory {
      * current context class loader.
      */
     public static Config parseResources(String resource) {
-        return parseResources(Thread.currentThread().getContextClassLoader(), resource,
-                ConfigParseOptions.defaults());
+        return parseResources(resource, ConfigParseOptions.defaults());
     }
 
     /**
@@ -650,8 +659,7 @@ public final class ConfigFactory {
      * but uses thread's current context class loader.
      */
     public static Config parseResourcesAnySyntax(String resourceBasename, ConfigParseOptions options) {
-        return ConfigImpl.parseResourcesAnySyntax(Thread.currentThread().getContextClassLoader(),
-                resourceBasename, options).toConfig();
+        return ConfigImpl.parseResourcesAnySyntax(resourceBasename, options).toConfig();
     }
 
     /**
@@ -659,8 +667,7 @@ public final class ConfigFactory {
      * thread's current context class loader.
      */
     public static Config parseResourcesAnySyntax(String resourceBasename) {
-        return parseResourcesAnySyntax(Thread.currentThread().getContextClassLoader(),
-                resourceBasename, ConfigParseOptions.defaults());
+        return parseResourcesAnySyntax(resourceBasename, ConfigParseOptions.defaults());
     }
 
     public static Config parseString(String s, ConfigParseOptions options) {

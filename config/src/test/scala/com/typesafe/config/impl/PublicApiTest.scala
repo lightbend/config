@@ -466,7 +466,7 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
-    def usesContextClassLoader() {
+    def usesContextClassLoaderForReferenceConf() {
         val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
             Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
         val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
@@ -490,7 +490,31 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
-    def usesSuppliedClassLoader() {
+    def usesContextClassLoaderForApplicationConf() {
+        val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("application.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+        val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("application.conf" -> resourceFile("b_2.conf").toURI.toURL()))
+
+        val configA1 = withContextClassLoader(loaderA1) {
+            ConfigFactory.load()
+        }
+        assertEquals(1, configA1.getInt("a"))
+        assertFalse("no b", configA1.hasPath("b"))
+
+        val configB2 = withContextClassLoader(loaderB2) {
+            ConfigFactory.load()
+        }
+        assertEquals(2, configB2.getInt("b"))
+        assertFalse("no a", configB2.hasPath("a"))
+
+        val configPlain = ConfigFactory.load()
+        assertFalse("no a", configPlain.hasPath("a"))
+        assertFalse("no b", configPlain.hasPath("b"))
+    }
+
+    @Test
+    def usesSuppliedClassLoaderForReferenceConf() {
         val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
             Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
         val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
@@ -526,6 +550,18 @@ class PublicApiTest extends TestUtils {
             assertFalse("no b", c.hasPath("b"))
         }
 
+        // check providing the loader via ConfigParseOptions
+        val withLoader = ConfigParseOptions.defaults().setClassLoader(loaderA1);
+        for (
+            c <- Seq(ConfigFactory.parseResources("reference.conf", withLoader),
+                ConfigFactory.parseResourcesAnySyntax("reference", withLoader),
+                ConfigFactory.load("application", withLoader, ConfigResolveOptions.defaults()))
+        ) {
+            assertEquals(1, c.getInt("a"))
+            assertFalse("no b", c.hasPath("b"))
+        }
+
+        // check not providing the loader
         for (
             c <- Seq(ConfigFactory.parseResources("reference.conf"),
                 ConfigFactory.parseResourcesAnySyntax("reference"),
@@ -539,6 +575,98 @@ class PublicApiTest extends TestUtils {
         ) {
             assertFalse("no a", c.hasPath("a"))
             assertFalse("no b", c.hasPath("b"))
+        }
+
+        // check providing the loader via current context
+        withContextClassLoader(loaderA1) {
+            for (
+                c <- Seq(ConfigFactory.parseResources("reference.conf"),
+                    ConfigFactory.parseResourcesAnySyntax("reference"),
+                    ConfigFactory.parseResources("reference.conf", ConfigParseOptions.defaults()),
+                    ConfigFactory.parseResourcesAnySyntax("reference", ConfigParseOptions.defaults()),
+                    ConfigFactory.load("application"),
+                    ConfigFactory.load("application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()),
+                    ConfigFactory.load(ConfigFactory.parseString("")),
+                    ConfigFactory.load(ConfigFactory.parseString(""), ConfigResolveOptions.defaults()),
+                    ConfigFactory.defaultReference())
+            ) {
+                assertEquals(1, c.getInt("a"))
+                assertFalse("no b", c.hasPath("b"))
+            }
+        }
+    }
+
+    @Test
+    def usesSuppliedClassLoaderForApplicationConf() {
+        val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("application.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+        val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
+            Map("application.conf" -> resourceFile("b_2.conf").toURI.toURL()))
+
+        val configA1 = ConfigFactory.load(loaderA1)
+
+        assertEquals(1, configA1.getInt("a"))
+        assertFalse("no b", configA1.hasPath("b"))
+
+        val configB2 = ConfigFactory.load(loaderB2)
+
+        assertEquals(2, configB2.getInt("b"))
+        assertFalse("no a", configB2.hasPath("a"))
+
+        val configPlain = ConfigFactory.load()
+        assertFalse("no a", configPlain.hasPath("a"))
+        assertFalse("no b", configPlain.hasPath("b"))
+
+        // check the various overloads that take a loader parameter
+        for (
+            c <- Seq(ConfigFactory.parseResources(loaderA1, "application.conf"),
+                ConfigFactory.parseResourcesAnySyntax(loaderA1, "application"),
+                ConfigFactory.parseResources(loaderA1, "application.conf", ConfigParseOptions.defaults()),
+                ConfigFactory.parseResourcesAnySyntax(loaderA1, "application", ConfigParseOptions.defaults()),
+                ConfigFactory.load(loaderA1, "application"),
+                ConfigFactory.load(loaderA1, "application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()))
+        ) {
+            assertEquals(1, c.getInt("a"))
+            assertFalse("no b", c.hasPath("b"))
+        }
+
+        // check providing the loader via ConfigParseOptions
+        val withLoader = ConfigParseOptions.defaults().setClassLoader(loaderA1);
+        for (
+            c <- Seq(ConfigFactory.parseResources("application.conf", withLoader),
+                ConfigFactory.parseResourcesAnySyntax("application", withLoader),
+                ConfigFactory.load("application", withLoader, ConfigResolveOptions.defaults()))
+        ) {
+            assertEquals(1, c.getInt("a"))
+            assertFalse("no b", c.hasPath("b"))
+        }
+
+        // check not providing the loader
+        for (
+            c <- Seq(ConfigFactory.parseResources("application.conf"),
+                ConfigFactory.parseResourcesAnySyntax("application"),
+                ConfigFactory.parseResources("application.conf", ConfigParseOptions.defaults()),
+                ConfigFactory.parseResourcesAnySyntax("application", ConfigParseOptions.defaults()),
+                ConfigFactory.load("application"),
+                ConfigFactory.load("application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()))
+        ) {
+            assertFalse("no a", c.hasPath("a"))
+            assertFalse("no b", c.hasPath("b"))
+        }
+
+        // check providing the loader via current context
+        withContextClassLoader(loaderA1) {
+            for (
+                c <- Seq(ConfigFactory.parseResources("application.conf"),
+                    ConfigFactory.parseResourcesAnySyntax("application"),
+                    ConfigFactory.parseResources("application.conf", ConfigParseOptions.defaults()),
+                    ConfigFactory.parseResourcesAnySyntax("application", ConfigParseOptions.defaults()),
+                    ConfigFactory.load("application"),
+                    ConfigFactory.load("application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()))
+            ) {
+                assertEquals(1, c.getInt("a"))
+                assertFalse("no b", c.hasPath("b"))
+            }
         }
     }
 

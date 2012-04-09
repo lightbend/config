@@ -25,23 +25,25 @@ public final class ConfigParseOptions {
     final String originDescription;
     final boolean allowMissing;
     final ConfigIncluder includer;
+    final ClassLoader classLoader;
 
-    protected ConfigParseOptions(ConfigSyntax syntax, String originDescription,
-            boolean allowMissing, ConfigIncluder includer) {
+    private ConfigParseOptions(ConfigSyntax syntax, String originDescription, boolean allowMissing,
+            ConfigIncluder includer, ClassLoader classLoader) {
         this.syntax = syntax;
         this.originDescription = originDescription;
         this.allowMissing = allowMissing;
         this.includer = includer;
+        this.classLoader = classLoader;
     }
 
     public static ConfigParseOptions defaults() {
-        return new ConfigParseOptions(null, null, true, null);
+        return new ConfigParseOptions(null, null, true, null, null);
     }
 
     /**
      * Set the file format. If set to null, try to guess from any available
      * filename extension; if guessing fails, assume {@link ConfigSyntax#CONF}.
-     * 
+     *
      * @param syntax
      *            a syntax or {@code null} for best guess
      * @return options with the syntax set
@@ -50,8 +52,8 @@ public final class ConfigParseOptions {
         if (this.syntax == syntax)
             return this;
         else
-            return new ConfigParseOptions(syntax, this.originDescription,
-                    this.allowMissing, this.includer);
+            return new ConfigParseOptions(syntax, this.originDescription, this.allowMissing,
+                    this.includer, this.classLoader);
     }
 
     public ConfigSyntax getSyntax() {
@@ -75,8 +77,8 @@ public final class ConfigParseOptions {
                 && this.originDescription.equals(originDescription))
             return this;
         else
-            return new ConfigParseOptions(this.syntax, originDescription,
-                    this.allowMissing, this.includer);
+            return new ConfigParseOptions(this.syntax, originDescription, this.allowMissing,
+                    this.includer, this.classLoader);
     }
 
     public String getOriginDescription() {
@@ -103,8 +105,8 @@ public final class ConfigParseOptions {
         if (this.allowMissing == allowMissing)
             return this;
         else
-            return new ConfigParseOptions(this.syntax, this.originDescription,
-                    allowMissing, this.includer);
+            return new ConfigParseOptions(this.syntax, this.originDescription, allowMissing,
+                    this.includer, this.classLoader);
     }
 
     public boolean getAllowMissing() {
@@ -122,7 +124,8 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, this.originDescription,
-                    this.allowMissing, includer);
+ this.allowMissing,
+                    includer, this.classLoader);
     }
 
     public ConfigParseOptions prependIncluder(ConfigIncluder includer) {
@@ -147,4 +150,34 @@ public final class ConfigParseOptions {
         return includer;
     }
 
+    /**
+     * Set the class loader. If set to null,
+     * <code>Thread.currentThread().getContextClassLoader()</code> will be used.
+     * 
+     * @param loader
+     *            a class loader or {@code null} to use thread context class
+     *            loader
+     * @return options with the class loader set
+     */
+    public ConfigParseOptions setClassLoader(ClassLoader loader) {
+        if (this.classLoader == loader)
+            return this;
+        else
+            return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
+                    this.includer, loader);
+    }
+
+    /**
+     * Get the class loader; never returns {@code null}, if the class loader was
+     * unset, returns
+     * <code>Thread.currentThread().getContextClassLoader()</code>.
+     *
+     * @return class loader to use
+     */
+    public ClassLoader getClassLoader() {
+        if (this.classLoader == null)
+            return Thread.currentThread().getContextClassLoader();
+        else
+            return this.classLoader;
+    }
 }

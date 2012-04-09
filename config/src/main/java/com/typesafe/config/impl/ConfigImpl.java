@@ -90,12 +90,12 @@ public class ConfigImpl {
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject parseResourcesAnySyntax(final ClassLoader loader,
-            String resourceBasename, final ConfigParseOptions baseOptions) {
+    public static ConfigObject parseResourcesAnySyntax(String resourceBasename,
+            final ConfigParseOptions baseOptions) {
         NameSource source = new NameSource() {
             @Override
             public ConfigParseable nameToParseable(String name) {
-                return Parseable.newResources(loader, name, baseOptions);
+                return Parseable.newResources(name, baseOptions);
             }
         };
         return SimpleIncluder.fromBasename(source, resourceBasename, baseOptions);
@@ -334,7 +334,8 @@ public class ConfigImpl {
             @Override
             public Config call() {
                 Config unresolvedResources = Parseable
-                        .newResources(loader, "reference.conf", ConfigParseOptions.defaults())
+                        .newResources("reference.conf",
+                                ConfigParseOptions.defaults().setClassLoader(loader))
                         .parse().toConfig();
                 return systemPropertiesAsConfig().withFallback(unresolvedResources).resolve();
             }
