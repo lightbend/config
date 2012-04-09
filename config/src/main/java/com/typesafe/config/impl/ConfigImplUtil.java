@@ -150,6 +150,10 @@ final public class ConfigImplUtil {
             // this handles some stuff like file:///c:/Whatever/
             // apparently but mangles handling of hex escapes
             return new File(url.getPath());
+        } catch (IllegalArgumentException e) {
+            // file://foo with double slash causes
+            // IllegalArgumentException "url has an authority component"
+            return new File(url.getPath());
         }
     }
 
