@@ -71,6 +71,7 @@ public final class ConfigParseOptions {
      * @return options with the origin description set
      */
     public ConfigParseOptions setOriginDescription(String originDescription) {
+        // findbugs complains about == here but is wrong, do not "fix"
         if (this.originDescription == originDescription)
             return this;
         else if (this.originDescription != null && originDescription != null

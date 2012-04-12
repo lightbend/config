@@ -418,7 +418,13 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
 
     private static void skipField(DataInput in) throws IOException {
         int len = in.readInt();
-        in.skipBytes(len);
+        // skipBytes doesn't have to block
+        int skipped = in.skipBytes(len);
+        if (skipped < len) {
+            // wastefully use readFully() if skipBytes didn't work
+            byte[] bytes = new byte[(len - skipped)];
+            in.readFully(bytes);
+        }
     }
 
     @Override

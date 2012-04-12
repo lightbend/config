@@ -504,7 +504,7 @@ final class Tokenizer {
                 lineOrigin = origin.setLineNumber(lineNumber);
                 return line;
             } else {
-                Token t = null;
+                Token t;
                 if (startOfComment(c)) {
                     t = pullComment(c);
                 } else {
@@ -538,6 +538,9 @@ final class Tokenizer {
                         break;
                     case '+':
                         t = pullPlusEquals();
+                        break;
+                    default:
+                        t = null;
                         break;
                     }
 

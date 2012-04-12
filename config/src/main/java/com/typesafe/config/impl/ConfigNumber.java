@@ -58,7 +58,7 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
     @Override
     public boolean equals(Object other) {
         // note that "origin" is deliberately NOT part of equality
-        if (canEqual(other)) {
+        if (other instanceof ConfigNumber && canEqual(other)) {
             ConfigNumber n = (ConfigNumber) other;
             if (isWhole()) {
                 return n.isWhole() && this.longValue() == n.longValue();

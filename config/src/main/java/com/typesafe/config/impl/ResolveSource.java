@@ -48,7 +48,7 @@ final class ResolveSource {
                 context.untrace();
                 context.trace(unprefixed);
 
-                if (result == null && prefixLength > 0) {
+                if (prefixLength > 0) {
                     result = findInObject(root, context, unprefixed);
                 }
 
