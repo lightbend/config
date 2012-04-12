@@ -3,12 +3,15 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.ObjectStreamException;
+import java.io.Serializable;
+
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
-final class ConfigBoolean extends AbstractConfigValue {
+final class ConfigBoolean extends AbstractConfigValue implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     final private boolean value;
 
@@ -35,5 +38,10 @@ final class ConfigBoolean extends AbstractConfigValue {
     @Override
     protected ConfigBoolean newCopy(ConfigOrigin origin) {
         return new ConfigBoolean(origin, value);
+    }
+
+    // serialization all goes through SerializedConfigValue
+    private Object writeReplace() throws ObjectStreamException {
+        return new SerializedConfigValue(this);
     }
 }

@@ -3,12 +3,15 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.ObjectStreamException;
+import java.io.Serializable;
+
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
-abstract class ConfigNumber extends AbstractConfigValue {
+abstract class ConfigNumber extends AbstractConfigValue implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     // This is so when we concatenate a number into a string (say it appears in
     // a sentence) we always have it exactly as the person typed it into the
@@ -98,5 +101,10 @@ abstract class ConfigNumber extends AbstractConfigValue {
         } else {
             return new ConfigDouble(origin, number, originalText);
         }
+    }
+
+    // serialization all goes through SerializedConfigValue
+    private Object writeReplace() throws ObjectStreamException {
+        return new SerializedConfigValue(this);
     }
 }

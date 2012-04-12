@@ -17,11 +17,12 @@ import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
 import java.io.ByteArrayInputStream
 import java.io.ObjectInputStream
-import org.apache.commons.codec.binary.Hex
+import java.io.NotSerializableException
 import scala.annotation.tailrec
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.Callable
+import com.typesafe.config._
 
 abstract trait TestUtils {
     protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
@@ -91,6 +92,54 @@ abstract trait TestUtils {
         checkNotEqualToRandomOtherThing(b)
     }
 
+    private val hexDigits = {
+        val a = new Array[Char](16)
+        var i = 0
+        for (c <- '0' to '9') {
+            a(i) = c
+            i += 1
+        }
+        for (c <- 'A' to 'F') {
+            a(i) = c
+            i += 1
+        }
+        a
+    }
+
+    private def encodeLegibleBinary(bytes: Array[Byte]): String = {
+        val sb = new java.lang.StringBuilder()
+        for (b <- bytes) {
+            if ((b >= 'a' && b <= 'z') ||
+                (b >= 'A' && b <= 'Z') ||
+                (b >= '0' && b <= '9') ||
+                b == '-' || b == ':' || b == '.' || b == '/' || b == ' ') {
+                sb.append('_')
+                sb.appendCodePoint(b.asInstanceOf[Char])
+            } else {
+                sb.appendCodePoint(hexDigits((b & 0xF0) >> 4))
+                sb.appendCodePoint(hexDigits(b & 0x0F))
+            }
+        }
+        sb.toString
+    }
+
+    private def decodeLegibleBinary(s: String): Array[Byte] = {
+        val a = new Array[Byte](s.length() / 2)
+        var i = 0
+        var j = 0
+        while (i < s.length()) {
+            val sub = s.substring(i, i + 2)
+            i += 2
+            if (sub.charAt(0) == '_') {
+                a(j) = charWrapper(sub.charAt(1)).byteValue
+            } else {
+                a(j) = Integer.parseInt(sub, 16).byteValue
+            }
+            j += 1
+        }
+        a
+    }
+
     private def copyViaSerialize(o: java.io.Serializable): AnyRef = {
         val byteStream = new ByteArrayOutputStream()
         val objectStream = new ObjectOutputStream(byteStream)
@@ -105,17 +154,20 @@ abstract trait TestUtils {
 
     protected def checkSerializationCompat[T: Manifest](expectedHex: String, o: T, changedOK: Boolean = false): Unit = {
         // be sure we can still deserialize the old one
-        val inStream = new ByteArrayInputStream(Hex.decodeHex(expectedHex.toCharArray()))
-        val inObjectStream = new ObjectInputStream(inStream)
+        val inStream = new ByteArrayInputStream(decodeLegibleBinary(expectedHex))
         var failure: Option[Exception] = None
+        var inObjectStream: ObjectInputStream = null
         val deserialized = try {
+            inObjectStream = new ObjectInputStream(inStream) // this can throw too
             inObjectStream.readObject()
         } catch {
             case e: Exception =>
                 failure = Some(e)
                 null
+        } finally {
+            if (inObjectStream != null)
+                inObjectStream.close()
         }
-        inObjectStream.close()
 
         val why = failure.map({ e => ": " + e.getClass.getSimpleName + ": " + e.getMessage }).getOrElse("")
 
@@ -123,7 +175,7 @@ abstract trait TestUtils {
         val objectStream = new ObjectOutputStream(byteStream)
         objectStream.writeObject(o)
         objectStream.close()
-        val hex = Hex.encodeHexString(byteStream.toByteArray())
+        val hex = encodeLegibleBinary(byteStream.toByteArray())
         def showCorrectResult(): Unit = {
             if (expectedHex != hex) {
                 @tailrec
@@ -156,6 +208,15 @@ abstract trait TestUtils {
         }
     }
 
+    protected def checkNotSerializable(o: AnyRef): Unit = {
+        val byteStream = new ByteArrayOutputStream()
+        val objectStream = new ObjectOutputStream(byteStream)
+        val e = intercept[NotSerializableException] {
+            objectStream.writeObject(o)
+        }
+        objectStream.close()
+    }
+
     protected def checkSerializable[T: Manifest](expectedHex: String, o: T): T = {
         val t = checkSerializable(o)
         checkSerializationCompat(expectedHex, o)
@@ -183,6 +244,7 @@ abstract trait TestUtils {
                     "possibly caused by http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6446627",
                     nf)
             case e: Exception =>
+                System.err.println(e.getStackTraceString);
                 throw new AssertionError("failed to make a copy via serialization", e)
         }
 
@@ -190,8 +252,30 @@ abstract trait TestUtils {
             manifest[T].erasure.isAssignableFrom(b.getClass))
 
         checkEqualObjects(a, b)
+        checkEqualOrigins(a, b)
 
         b.asInstanceOf[T]
+    }
+
+    // origin() is not part of value equality but is serialized, so
+    // we check it separately
+    protected def checkEqualOrigins[T](a: T, b: T): Unit = {
+        import scala.collection.JavaConverters._
+        (a, b) match {
+            case (obj1: ConfigObject, obj2: ConfigObject) =>
+                assertEquals(obj1.origin(), obj2.origin())
+                for (e <- obj1.entrySet().asScala) {
+                    checkEqualOrigins(e.getValue(), obj2.get(e.getKey()))
+                }
+            case (list1: ConfigList, list2: ConfigList) =>
+                assertEquals(list1.origin(), list2.origin())
+                for ((v1, v2) <- list1.asScala zip list2.asScala) {
+                    checkEqualOrigins(v1, v2)
+                }
+            case (value1: ConfigValue, value2: ConfigValue) =>
+                assertEquals(value1.origin(), value2.origin())
+            case _ =>
+        }
     }
 
     def fakeOrigin() = {

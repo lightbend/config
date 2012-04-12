@@ -3,6 +3,7 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.ArrayList;
@@ -843,5 +844,10 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     public SimpleConfig withoutPath(String pathExpression) {
         Path path = Path.newPath(pathExpression);
         return new SimpleConfig(root().withoutPath(path));
+    }
+
+    // serialization all goes through SerializedConfigValue
+    private Object writeReplace() throws ObjectStreamException {
+        return new SerializedConfigValue(this);
     }
 }

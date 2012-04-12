@@ -811,6 +811,9 @@ class ConfigTest extends TestUtils {
 
     @Test
     def test01Serializable() {
+        // we can't ever test an expected serialization here because it
+        // will have system props in it that vary by test system,
+        // and the ConfigOrigin in there will also vary by test system
         val conf = ConfigFactory.load("test01")
         val confCopy = checkSerializable(conf)
     }
@@ -1003,6 +1006,18 @@ class ConfigTest extends TestUtils {
                     System.err.println("resolvedRender = " + resolvedRender)
                     throw e
             }
+        }
+    }
+
+    @Test
+    def serializeRoundTrip() {
+        for (i <- 1 to 10) {
+            val numString = i.toString
+            val name = "/test" + { if (numString.size == 1) "0" else "" } + numString
+            val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], name,
+                ConfigParseOptions.defaults().setAllowMissing(false))
+            val resolved = conf.resolve()
+            checkSerializable(resolved)
         }
     }
 }

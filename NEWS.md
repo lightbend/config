@@ -1,5 +1,15 @@
 # 0.NEXT.0: Sometime
 
+ - the serialization format has changed to one that's extensible
+   and lets the library evolve without breaking serialization all
+   the time. The new format is also much more compact. However,
+   this change is incompatible with old serializations, if you
+   rely on that. The hope is to avoid serialization breakage in
+   the future now that the format is not the default Java one
+   (which was a direct dump of all the implementation details).
+ - serializing an unresolved Config (one that hasn't had
+   resolve() called on it) is no longer supported, you will get
+   NotSerializableException if you try.
  - supports self-referential substitutions, such as
    `path=${path}":/bin"`, by "looking backward" to the previous
    value of `path`
@@ -32,12 +42,6 @@
    ConfigIncludeContext.parseOptions() if appropriate.
  - cycles in include statements (self-includes) are now detected
    and result in a nicer error instead of stack overflow
- - the serialization format has changed for a Config that has not
-   had resolve() called on it. The library can still deserialize
-   the old format, but old versions of the library will not be
-   able to deserialize the new format. Serializing unresolved
-   Config is probably a bad idea anyway and maybe shouldn't even
-   be supported, but keeping it for back compat.
  - since 0.3.0, there is an obscure incompatible semantic change
    in that self-referential substitutions where the cycle could
    be broken by partially resolving the object now "look backward"

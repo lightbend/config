@@ -3,15 +3,12 @@
  */
 package com.typesafe.config.impl;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
 
-final class Path implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+final class Path {
 
     final private String first;
     final private Path remainder;

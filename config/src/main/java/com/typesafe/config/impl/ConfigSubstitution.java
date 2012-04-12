@@ -5,6 +5,7 @@ package com.typesafe.config.impl;
 
 import java.io.IOException;
 import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,8 +19,7 @@ import com.typesafe.config.ConfigValueType;
  * and ConfigConcatenation.
  */
 @Deprecated
-final class ConfigSubstitution extends AbstractConfigValue implements
-        Unmergeable {
+final class ConfigSubstitution extends AbstractConfigValue implements Unmergeable, Serializable {
 
     private static final long serialVersionUID = 1L;
 

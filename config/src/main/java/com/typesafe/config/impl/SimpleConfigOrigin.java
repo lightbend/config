@@ -4,23 +4,24 @@
 package com.typesafe.config.impl;
 
 import java.io.File;
-import java.io.Serializable;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.impl.SerializedConfigValue.SerializedField;
 
 // it would be cleaner to have a class hierarchy for various origin types,
 // but was hoping this would be enough simpler to be a little messy. eh.
-final class SimpleConfigOrigin implements ConfigOrigin, Serializable {
-
-    private static final long serialVersionUID = 1L;
+final class SimpleConfigOrigin implements ConfigOrigin {
 
     final private String description;
     final private int lineNumber;
@@ -348,5 +349,172 @@ final class SimpleConfigOrigin implements ConfigOrigin, Serializable {
             // should be down to either 1 or 2
             return mergeOrigins(remaining);
         }
+    }
+
+    Map<SerializedField, Object> toFields() {
+        Map<SerializedField, Object> m = new EnumMap<SerializedField, Object>(SerializedField.class);
+
+        if (description != null)
+            m.put(SerializedField.ORIGIN_DESCRIPTION, description);
+
+        if (lineNumber >= 0)
+            m.put(SerializedField.ORIGIN_LINE_NUMBER, lineNumber);
+        if (endLineNumber >= 0)
+            m.put(SerializedField.ORIGIN_END_LINE_NUMBER, endLineNumber);
+
+        m.put(SerializedField.ORIGIN_TYPE, originType.ordinal());
+
+        if (urlOrNull != null)
+            m.put(SerializedField.ORIGIN_URL, urlOrNull);
+        if (commentsOrNull != null)
+            m.put(SerializedField.ORIGIN_COMMENTS, commentsOrNull);
+
+        return m;
+    }
+
+    Map<SerializedField, Object> toFieldsDelta(SimpleConfigOrigin baseOrigin) {
+        Map<SerializedField, Object> baseFields;
+        if (baseOrigin != null)
+            baseFields = baseOrigin.toFields();
+        else
+            baseFields = Collections.<SerializedField, Object> emptyMap();
+        return fieldsDelta(baseFields, toFields());
+    }
+
+    // Here we're trying to avoid serializing the same info over and over
+    // in the common case that child objects have the same origin fields
+    // as their parent objects. e.g. we don't need to store the source
+    // filename with every single value.
+    static Map<SerializedField, Object> fieldsDelta(Map<SerializedField, Object> base,
+            Map<SerializedField, Object> child) {
+        Map<SerializedField, Object> m = new EnumMap<SerializedField, Object>(child);
+
+        for (Map.Entry<SerializedField, Object> baseEntry : base.entrySet()) {
+            SerializedField f = baseEntry.getKey();
+            if (m.containsKey(f)
+                    && ConfigImplUtil.equalsHandlingNull(baseEntry.getValue(), m.get(f))) {
+                // if field is unchanged, just remove it so we inherit
+                m.remove(f);
+            } else if (!m.containsKey(f)) {
+                // if field has been removed, we have to add a deletion entry
+                switch (f) {
+                case ORIGIN_DESCRIPTION:
+                    m.put(SerializedField.ORIGIN_NULL_DESCRIPTION, "");
+                    break;
+                case ORIGIN_LINE_NUMBER:
+                    m.put(SerializedField.ORIGIN_LINE_NUMBER, -1);
+                    break;
+                case ORIGIN_END_LINE_NUMBER:
+                    m.put(SerializedField.ORIGIN_END_LINE_NUMBER, -1);
+                    break;
+                case ORIGIN_TYPE:
+                    throw new ConfigException.BugOrBroken("should always be an ORIGIN_TYPE field");
+                case ORIGIN_URL:
+                    m.put(SerializedField.ORIGIN_NULL_URL, "");
+                    break;
+                case ORIGIN_COMMENTS:
+                    m.put(SerializedField.ORIGIN_NULL_COMMENTS, "");
+                    break;
+                case ORIGIN_NULL_DESCRIPTION: // FALL THRU
+                case ORIGIN_NULL_URL: // FALL THRU
+                case ORIGIN_NULL_COMMENTS:
+                    // inherit the deletion, nothing to do
+                    break;
+                case END_MARKER:
+                case ROOT_VALUE:
+                case ROOT_WAS_CONFIG:
+                case UNKNOWN:
+                case VALUE_DATA:
+                case VALUE_ORIGIN:
+                    throw new ConfigException.BugOrBroken("should not appear here: " + f);
+                }
+            }
+        }
+
+        return m;
+    }
+
+    static SimpleConfigOrigin fromFields(Map<SerializedField, Object> m) throws IOException {
+        String description = (String) m.get(SerializedField.ORIGIN_DESCRIPTION);
+        Integer lineNumber = (Integer) m.get(SerializedField.ORIGIN_LINE_NUMBER);
+        Integer endLineNumber = (Integer) m.get(SerializedField.ORIGIN_END_LINE_NUMBER);
+        Number originTypeOrdinal = (Number) m.get(SerializedField.ORIGIN_TYPE);
+        if (originTypeOrdinal == null)
+            throw new IOException("Missing ORIGIN_TYPE field");
+        OriginType originType = OriginType.values()[originTypeOrdinal.byteValue()];
+        String urlOrNull = (String) m.get(SerializedField.ORIGIN_URL);
+        @SuppressWarnings("unchecked")
+        List<String> commentsOrNull = (List<String>) m.get(SerializedField.ORIGIN_COMMENTS);
+        return new SimpleConfigOrigin(description, lineNumber != null ? lineNumber : -1,
+                endLineNumber != null ? endLineNumber : -1, originType, urlOrNull, commentsOrNull);
+    }
+
+    static Map<SerializedField, Object> applyFieldsDelta(Map<SerializedField, Object> base,
+            Map<SerializedField, Object> delta) throws IOException {
+
+        Map<SerializedField, Object> m = new EnumMap<SerializedField, Object>(delta);
+
+        for (Map.Entry<SerializedField, Object> baseEntry : base.entrySet()) {
+            SerializedField f = baseEntry.getKey();
+            if (delta.containsKey(f)) {
+                // delta overrides when keys are in both
+                // "m" should already contain the right thing
+            } else if (!delta.containsKey(f)) {
+                // base has the key and delta does not.
+                // we inherit from base unless a "NULL" key blocks.
+                switch (f) {
+                case ORIGIN_DESCRIPTION:
+                    // add to assembled unless delta nulls
+                    if (!delta.containsKey(SerializedField.ORIGIN_NULL_DESCRIPTION))
+                        m.put(f, base.get(f));
+                    break;
+                case ORIGIN_URL:
+                    if (!delta.containsKey(SerializedField.ORIGIN_NULL_URL))
+                        m.put(f, base.get(f));
+                    break;
+                case ORIGIN_COMMENTS:
+                    if (!delta.containsKey(SerializedField.ORIGIN_NULL_COMMENTS))
+                        m.put(f, base.get(f));
+                    break;
+                case ORIGIN_NULL_DESCRIPTION:
+                    if (!delta.containsKey(SerializedField.ORIGIN_DESCRIPTION))
+                        m.put(f, base.get(f));
+                    break;
+                case ORIGIN_NULL_URL:
+                    if (!delta.containsKey(SerializedField.ORIGIN_URL))
+                        m.put(f, base.get(f));
+                    break;
+                case ORIGIN_NULL_COMMENTS:
+                    if (!delta.containsKey(SerializedField.ORIGIN_COMMENTS))
+                        m.put(f, base.get(f));
+                    break;
+                case ORIGIN_END_LINE_NUMBER: // FALL THRU
+                case ORIGIN_LINE_NUMBER: // FALL THRU
+                case ORIGIN_TYPE:
+                    m.put(f, base.get(f));
+                    break;
+
+                case END_MARKER:
+                case ROOT_VALUE:
+                case ROOT_WAS_CONFIG:
+                case UNKNOWN:
+                case VALUE_DATA:
+                case VALUE_ORIGIN:
+                    throw new ConfigException.BugOrBroken("should not appear here: " + f);
+                }
+            }
+        }
+        return m;
+    }
+
+    static SimpleConfigOrigin fromBase(SimpleConfigOrigin baseOrigin,
+            Map<SerializedField, Object> delta) throws IOException {
+        Map<SerializedField, Object> baseFields;
+        if (baseOrigin != null)
+            baseFields = baseOrigin.toFields();
+        else
+            baseFields = Collections.<SerializedField, Object> emptyMap();
+        Map<SerializedField, Object> fields = applyFieldsDelta(baseFields, delta);
+        return fromFields(fields);
     }
 }

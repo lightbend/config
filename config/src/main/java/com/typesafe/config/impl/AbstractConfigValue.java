@@ -3,7 +3,6 @@
  */
 package com.typesafe.config.impl;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -21,9 +20,7 @@ import com.typesafe.config.ConfigValue;
  * improperly-factored and non-modular code. Please don't add parent().
  *
  */
-abstract class AbstractConfigValue implements ConfigValue, MergeableValue, Serializable {
-
-    private static final long serialVersionUID = 1L;
+abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
 
     final private SimpleConfigOrigin origin;
 

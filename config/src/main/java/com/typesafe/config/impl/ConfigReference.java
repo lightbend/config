@@ -13,7 +13,6 @@ import com.typesafe.config.ConfigValueType;
  * kind of value.
  */
 final class ConfigReference extends AbstractConfigValue implements Unmergeable {
-    private static final long serialVersionUID = 1L;
 
     final private SubstitutionExpression expr;
     // the length of any prefixes added with relativized()

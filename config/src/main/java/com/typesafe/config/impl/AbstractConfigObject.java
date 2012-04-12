@@ -18,8 +18,6 @@ import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements ConfigObject {
 
-    private static final long serialVersionUID = 1L;
-
     final private SimpleConfig config;
 
     protected AbstractConfigObject(ConfigOrigin origin) {

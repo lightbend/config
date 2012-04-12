@@ -3,6 +3,8 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,9 +20,9 @@ import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValue;
 
-final class SimpleConfigObject extends AbstractConfigObject {
+final class SimpleConfigObject extends AbstractConfigObject implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     // this map should never be modified - assume immutable
     final private Map<String, AbstractConfigValue> value;
@@ -483,5 +485,10 @@ final class SimpleConfigObject extends AbstractConfigObject {
         return new SimpleConfigObject(SimpleConfigOrigin.newSimple(
                 baseOrigin.description() + " (not found)"),
                 Collections.<String, AbstractConfigValue> emptyMap());
+    }
+
+    // serialization all goes through SerializedConfigValue
+    private Object writeReplace() throws ObjectStreamException {
+        return new SerializedConfigValue(this);
     }
 }

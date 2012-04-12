@@ -3,7 +3,6 @@
  */
 package com.typesafe.config.impl;
 
-import java.io.ObjectStreamException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -21,15 +20,7 @@ import com.typesafe.config.ConfigValue;
 final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unmergeable,
         ReplaceableMergeStack {
 
-    private static final long serialVersionUID = 1L;
-
     final private List<AbstractConfigValue> stack;
-
-    // this is just here for serialization compat; whether we ignore is purely
-    // a function of the bottom of the merge stack
-    @SuppressWarnings("unused")
-    @Deprecated
-    final private boolean ignoresFallbacks = false;
 
     ConfigDelayedMergeObject(ConfigOrigin origin, List<AbstractConfigValue> stack) {
         super(origin);
@@ -316,15 +307,5 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
         throw new ConfigException.BugOrBroken(
                 "Delayed merge stack does not contain any unmergeable values");
 
-    }
-
-    // This ridiculous hack is because some JDK versions apparently can't
-    // serialize an array, which is used to implement ArrayList and EmptyList.
-    // maybe
-    // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6446627
-    private Object writeReplace() throws ObjectStreamException {
-        // switch to LinkedList
-        return new ConfigDelayedMergeObject(origin(),
-                new java.util.LinkedList<AbstractConfigValue>(stack));
     }
 }

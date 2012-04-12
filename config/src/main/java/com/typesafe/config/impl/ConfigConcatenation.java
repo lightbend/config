@@ -1,6 +1,5 @@
 package com.typesafe.config.impl;
 
-import java.io.ObjectStreamException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,7 +22,6 @@ import com.typesafe.config.ConfigValueType;
  * since a concat of objects really will merge, not concatenate.
  */
 final class ConfigConcatenation extends AbstractConfigValue implements Unmergeable {
-    private static final long serialVersionUID = 1L;
 
     final private List<AbstractConfigValue> pieces;
 
@@ -232,16 +230,6 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         for (AbstractConfigValue p : pieces) {
             p.render(sb, indent, formatted);
         }
-    }
-
-    // This ridiculous hack is because some JDK versions apparently can't
-    // serialize an array, which is used to implement ArrayList and EmptyList.
-    // maybe
-    // http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6446627
-    private Object writeReplace() throws ObjectStreamException {
-        // switch to LinkedList
-        return new ConfigConcatenation(origin(), new java.util.LinkedList<AbstractConfigValue>(
-                pieces));
     }
 
     static List<AbstractConfigValue> valuesFromPieces(ConfigOrigin origin, List<Object> pieces) {

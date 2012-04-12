@@ -3,6 +3,9 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.ObjectStreamException;
+import java.io.Serializable;
+
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
@@ -14,9 +17,9 @@ import com.typesafe.config.ConfigValueType;
  * not.
  *
  */
-final class ConfigNull extends AbstractConfigValue {
+final class ConfigNull extends AbstractConfigValue implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     ConfigNull(ConfigOrigin origin) {
         super(origin);
@@ -45,5 +48,10 @@ final class ConfigNull extends AbstractConfigValue {
     @Override
     protected ConfigNull newCopy(ConfigOrigin origin) {
         return new ConfigNull(origin);
+    }
+
+    // serialization all goes through SerializedConfigValue
+    private Object writeReplace() throws ObjectStreamException {
+        return new SerializedConfigValue(this);
     }
 }
