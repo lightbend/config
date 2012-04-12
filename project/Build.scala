@@ -13,8 +13,13 @@ object ConfigBuild extends Build {
         publishLocal := {}
     )
 
-    // this is in newer sbt versions, for now cut-and-pasted
-    val isSnapshot = SettingKey[Boolean]("is-snapshot", "True if the the version of the project is a snapshot version.")
+    object sonatype extends PublishToSonatype(ConfigBuild) {
+        def projectUrl    = "https://github.com/typesafehub/config"
+        def developerId   = "havocp"
+        def developerName = "Havoc Pennington"
+        def developerUrl  = "http://ometer.com/"
+        def scmUrl        = "git://github.com/typesafehub/config.git"
+    }
 
     override val settings = super.settings ++ Seq(isSnapshot <<= isSnapshot or version(_ endsWith "-SNAPSHOT"))
 
@@ -23,7 +28,8 @@ object ConfigBuild extends Build {
                             settings = Project.defaultSettings ++ unpublished) aggregate(testLib, configLib, simpleLib, simpleApp)
 
     lazy val configLib = Project(id = "config",
-                                 base = file("config")) dependsOn(testLib % "test->test")
+                                 base = file("config"),
+                                 settings = Project.defaultSettings ++ sonatype.settings) dependsOn(testLib % "test->test")
 
     lazy val testLib = Project(id = "test-lib",
                                base = file("test-lib"),
@@ -40,4 +46,54 @@ object ConfigBuild extends Build {
     lazy val complexApp = Project(id = "complex-app",
                                   base = file("examples/complex-app"),
                                   settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLib)
+}
+
+// from https://raw.github.com/paulp/scala-improving/master/project/PublishToSonatype.scala
+
+abstract class PublishToSonatype(build: Build) {
+  import build._
+
+  val ossSnapshots = "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
+  val ossStaging   = "Sonatype OSS Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+
+  def projectUrl: String
+  def developerId: String
+  def developerName: String
+  def developerUrl: String
+
+  def licenseName         = "Apache License, Version 2.0"
+  def licenseUrl          = "http://www.apache.org/licenses/LICENSE-2.0"
+  def licenseDistribution = "repo"
+  def scmUrl: String
+  def scmConnection       = "scm:git:" + scmUrl
+
+  def generatePomExtra(scalaVersion: String): xml.NodeSeq = {
+    <url>{ projectUrl }</url>
+      <licenses>
+        <license>
+          <name>{ licenseName }</name>
+          <url>{ licenseUrl }</url>
+          <distribution>{ licenseDistribution }</distribution>
+        </license>
+      </licenses>
+    <scm>
+      <url>{ scmUrl }</url>
+      <connection>{ scmConnection }</connection>
+    </scm>
+    <developers>
+      <developer>
+        <id>{ developerId }</id>
+        <name>{ developerName }</name>
+        <url>{ developerUrl }</url>
+      </developer>
+    </developers>
+  }
+
+  def settings: Seq[Setting[_]] = Seq(
+    publishMavenStyle := true,
+    publishTo <<= (isSnapshot) { (snapshot) => Some(if (snapshot) ossSnapshots else ossStaging) },
+    publishArtifact in Test := false,
+    pomIncludeRepository := (_ => false),
+    pomExtra <<= (scalaVersion)(generatePomExtra)
+  )
 }

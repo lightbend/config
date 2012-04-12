@@ -1,3 +1,4 @@
+import com.jsuereth.pgp.sbtplugin.PgpPlugin
 import de.johoop.findbugs4sbt.FindBugs._
 import de.johoop.findbugs4sbt.ReportType
 import de.johoop.jacoco4sbt._
@@ -34,13 +35,10 @@ JavadocKeys.javadocOptions += "-exclude com.typesafe.config.impl"
 
 doc in Compile <<= JavadocKeys.javadoc
 
-publishTo <<= (isSnapshot) { snapshot =>
-    import Classpaths._
-    val releases = "Maven releases" at "http://repo.typesafe.com/typesafe/maven-releases/"
-    val snapshots = "Maven snapshots" at "http://repo.typesafe.com/typesafe/maven-snapshots/"
-    Some(if (snapshot) snapshots else releases)
-}
+seq(PgpPlugin.configurationSettings : _*)
 
-publishMavenStyle := true
+seq(PgpPlugin.signingSettings : _*)
 
-credentials += Credentials(Path.userHome / ".ivy2" / ".typesafe-credentials")
+PgpPlugin.useGpg := true
+
+//PgpPlugin.useGpgAgent := true
