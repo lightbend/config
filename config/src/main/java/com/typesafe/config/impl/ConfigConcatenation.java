@@ -200,20 +200,16 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         return new ConfigConcatenation(origin(), newPieces);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     protected boolean canEqual(Object other) {
-        return other instanceof ConfigConcatenation || other instanceof ConfigSubstitution;
+        return other instanceof ConfigConcatenation;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public boolean equals(Object other) {
         // note that "origin" is deliberately NOT part of equality
         if (other instanceof ConfigConcatenation) {
             return canEqual(other) && this.pieces.equals(((ConfigConcatenation) other).pieces);
-        } else if (other instanceof ConfigSubstitution) {
-            return equals(((ConfigSubstitution) other).delegate());
         } else {
             return false;
         }

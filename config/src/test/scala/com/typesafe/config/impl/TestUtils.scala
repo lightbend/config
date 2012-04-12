@@ -563,24 +563,23 @@ abstract trait TestUtils {
         ConfigFactory.parseString(s, options).asInstanceOf[SimpleConfig]
     }
 
-    protected def subst(ref: String, optional: Boolean): ConfigSubstitution = {
+    protected def subst(ref: String, optional: Boolean): ConfigReference = {
         val path = Path.newPath(ref)
-        val pieces = java.util.Collections.singletonList[Object](new SubstitutionExpression(path, optional))
-        new ConfigSubstitution(fakeOrigin(), pieces)
+        new ConfigReference(fakeOrigin(), new SubstitutionExpression(path, optional))
     }
 
-    protected def subst(ref: String): ConfigSubstitution = {
+    protected def subst(ref: String): ConfigReference = {
         subst(ref, false)
     }
 
-    protected def substInString(ref: String, optional: Boolean): ConfigSubstitution = {
+    protected def substInString(ref: String, optional: Boolean): ConfigConcatenation = {
         import scala.collection.JavaConverters._
         val path = Path.newPath(ref)
-        val pieces = List[AnyRef]("start<", new SubstitutionExpression(path, optional), ">end")
-        new ConfigSubstitution(fakeOrigin(), pieces.asJava)
+        val pieces = List[AbstractConfigValue](stringValue("start<"), subst(ref, optional), stringValue(">end"))
+        new ConfigConcatenation(fakeOrigin(), pieces.asJava)
     }
 
-    protected def substInString(ref: String): ConfigSubstitution = {
+    protected def substInString(ref: String): ConfigConcatenation = {
         substInString(ref, false)
     }
 

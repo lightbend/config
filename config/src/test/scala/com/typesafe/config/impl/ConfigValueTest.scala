@@ -271,31 +271,11 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
-    def configSubstitutionEquality() {
+    def configReferenceEquality() {
         val a = subst("foo")
         val sameAsA = subst("foo")
         val b = subst("bar")
-
-        assertTrue("wrong type " + a, a.isInstanceOf[ConfigSubstitution])
-        assertTrue("wrong type " + b, b.isInstanceOf[ConfigSubstitution])
-
-        checkEqualObjects(a, a)
-        checkEqualObjects(a, sameAsA)
-        checkNotEqualObjects(a, b)
-    }
-
-    @Test
-    def configSubstitutionNotSerializable() {
-        val a = subst("foo")
-        checkNotSerializable(a)
-    }
-
-    @Test
-    def configReferenceEquality() {
-        val a = subst("foo").delegate()
-        val sameAsA = subst("foo").delegate()
-        val b = subst("bar").delegate()
-        val c = subst("foo", optional = true).delegate()
+        val c = subst("foo", optional = true)
 
         assertTrue("wrong type " + a, a.isInstanceOf[ConfigReference])
         assertTrue("wrong type " + b, b.isInstanceOf[ConfigReference])
@@ -310,17 +290,17 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configReferenceNotSerializable() {
-        val a = subst("foo").delegate()
+        val a = subst("foo")
         assertTrue("wrong type " + a, a.isInstanceOf[ConfigReference])
         checkNotSerializable(a)
     }
 
     @Test
     def configConcatenationEquality() {
-        val a = substInString("foo").delegate()
-        val sameAsA = substInString("foo").delegate()
-        val b = substInString("bar").delegate()
-        val c = substInString("foo", optional = true).delegate()
+        val a = substInString("foo")
+        val sameAsA = substInString("foo")
+        val b = substInString("bar")
+        val c = substInString("foo", optional = true)
 
         assertTrue("wrong type " + a, a.isInstanceOf[ConfigConcatenation])
         assertTrue("wrong type " + b, b.isInstanceOf[ConfigConcatenation])
@@ -334,24 +314,9 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configConcatenationNotSerializable() {
-        val a = substInString("foo").delegate()
+        val a = substInString("foo")
         assertTrue("wrong type " + a, a.isInstanceOf[ConfigConcatenation])
         checkNotSerializable(a)
-    }
-
-    @Test
-    def configSubstitutionEqualsItsDelegates() {
-        val a = subst("foo")
-        assertTrue("wrong type " + a, a.isInstanceOf[ConfigSubstitution])
-        val aD = a.delegate()
-        assertTrue("wrong type " + aD, aD.isInstanceOf[ConfigReference])
-        val b = substInString("bar")
-        assertTrue("wrong type " + b, b.isInstanceOf[ConfigSubstitution])
-        val bD = b.delegate()
-        assertTrue("wrong type " + bD, bD.isInstanceOf[ConfigConcatenation])
-
-        checkEqualObjects(a, aD)
-        checkEqualObjects(b, bD)
     }
 
     @Test

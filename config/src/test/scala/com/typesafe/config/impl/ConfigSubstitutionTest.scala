@@ -17,7 +17,7 @@ class ConfigSubstitutionTest extends TestUtils {
         val options = ConfigResolveOptions.noSystem()
         ResolveContext.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
-    private def resolveWithoutFallbacks(s: ConfigSubstitution, root: AbstractConfigObject) = {
+    private def resolveWithoutFallbacks(s: AbstractConfigValue, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.noSystem()
         ResolveContext.resolve(s, root, options)
     }
@@ -26,7 +26,7 @@ class ConfigSubstitutionTest extends TestUtils {
         val options = ConfigResolveOptions.defaults()
         ResolveContext.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
-    private def resolve(s: ConfigSubstitution, root: AbstractConfigObject) = {
+    private def resolve(s: AbstractConfigValue, root: AbstractConfigObject) = {
         val options = ConfigResolveOptions.defaults()
         ResolveContext.resolve(s, root, options)
     }
