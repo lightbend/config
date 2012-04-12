@@ -32,6 +32,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
     protected SimpleConfigOrigin(String description, int lineNumber, int endLineNumber,
             OriginType originType, String urlOrNull, List<String> commentsOrNull) {
+        if (description == null)
+            throw new ConfigException.BugOrBroken("description may not be null");
         this.description = description;
         this.lineNumber = lineNumber;
         this.endLineNumber = endLineNumber;
@@ -354,8 +356,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     Map<SerializedField, Object> toFields() {
         Map<SerializedField, Object> m = new EnumMap<SerializedField, Object>(SerializedField.class);
 
-        if (description != null)
-            m.put(SerializedField.ORIGIN_DESCRIPTION, description);
+        m.put(SerializedField.ORIGIN_DESCRIPTION, description);
 
         if (lineNumber >= 0)
             m.put(SerializedField.ORIGIN_LINE_NUMBER, lineNumber);
@@ -399,8 +400,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                 // if field has been removed, we have to add a deletion entry
                 switch (f) {
                 case ORIGIN_DESCRIPTION:
-                    m.put(SerializedField.ORIGIN_NULL_DESCRIPTION, "");
-                    break;
+                    throw new ConfigException.BugOrBroken("origin missing description field? "
+                            + child);
                 case ORIGIN_LINE_NUMBER:
                     m.put(SerializedField.ORIGIN_LINE_NUMBER, -1);
                     break;
@@ -415,11 +416,11 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                 case ORIGIN_COMMENTS:
                     m.put(SerializedField.ORIGIN_NULL_COMMENTS, "");
                     break;
-                case ORIGIN_NULL_DESCRIPTION: // FALL THRU
                 case ORIGIN_NULL_URL: // FALL THRU
                 case ORIGIN_NULL_COMMENTS:
-                    // inherit the deletion, nothing to do
-                    break;
+                    throw new ConfigException.BugOrBroken(
+                            "computing delta, base object should not contain " + f
+                            + " " + base);
                 case END_MARKER:
                 case ROOT_VALUE:
                 case ROOT_WAS_CONFIG:
@@ -428,6 +429,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                 case VALUE_ORIGIN:
                     throw new ConfigException.BugOrBroken("should not appear here: " + f);
                 }
+            } else {
+                // field is in base and child, but differs, so leave it
             }
         }
 
@@ -459,35 +462,33 @@ final class SimpleConfigOrigin implements ConfigOrigin {
             if (delta.containsKey(f)) {
                 // delta overrides when keys are in both
                 // "m" should already contain the right thing
-            } else if (!delta.containsKey(f)) {
+            } else {
                 // base has the key and delta does not.
                 // we inherit from base unless a "NULL" key blocks.
                 switch (f) {
                 case ORIGIN_DESCRIPTION:
-                    // add to assembled unless delta nulls
-                    if (!delta.containsKey(SerializedField.ORIGIN_NULL_DESCRIPTION))
-                        m.put(f, base.get(f));
+                    m.put(f, base.get(f));
                     break;
                 case ORIGIN_URL:
-                    if (!delta.containsKey(SerializedField.ORIGIN_NULL_URL))
+                    if (delta.containsKey(SerializedField.ORIGIN_NULL_URL)) {
+                        m.remove(SerializedField.ORIGIN_NULL_URL);
+                    } else {
                         m.put(f, base.get(f));
+                    }
                     break;
                 case ORIGIN_COMMENTS:
-                    if (!delta.containsKey(SerializedField.ORIGIN_NULL_COMMENTS))
+                    if (delta.containsKey(SerializedField.ORIGIN_NULL_COMMENTS)) {
+                        m.remove(SerializedField.ORIGIN_NULL_COMMENTS);
+                    } else {
                         m.put(f, base.get(f));
+                    }
                     break;
-                case ORIGIN_NULL_DESCRIPTION:
-                    if (!delta.containsKey(SerializedField.ORIGIN_DESCRIPTION))
-                        m.put(f, base.get(f));
-                    break;
-                case ORIGIN_NULL_URL:
-                    if (!delta.containsKey(SerializedField.ORIGIN_URL))
-                        m.put(f, base.get(f));
-                    break;
-                case ORIGIN_NULL_COMMENTS:
-                    if (!delta.containsKey(SerializedField.ORIGIN_COMMENTS))
-                        m.put(f, base.get(f));
-                    break;
+                case ORIGIN_NULL_URL: // FALL THRU
+                case ORIGIN_NULL_COMMENTS: // FALL THRU
+                    // base objects shouldn't contain these, should just
+                    // lack the field. these are only in deltas.
+                    throw new ConfigException.BugOrBroken(
+                            "applying fields, base object should not contain " + f + " " + base);
                 case ORIGIN_END_LINE_NUMBER: // FALL THRU
                 case ORIGIN_LINE_NUMBER: // FALL THRU
                 case ORIGIN_TYPE:

@@ -63,7 +63,6 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
         ORIGIN_TYPE,
         ORIGIN_URL,
         ORIGIN_COMMENTS,
-        ORIGIN_NULL_DESCRIPTION,
         ORIGIN_NULL_URL,
         ORIGIN_NULL_COMMENTS;
 
@@ -188,7 +187,6 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
                 out.writeUTF(s);
             }
             break;
-        case ORIGIN_NULL_DESCRIPTION: // FALL THRU
         case ORIGIN_NULL_URL: // FALL THRU
         case ORIGIN_NULL_COMMENTS:
             // nothing to write out besides code and length
@@ -248,7 +246,6 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
                 }
                 v = list;
                 break;
-            case ORIGIN_NULL_DESCRIPTION: // FALL THRU
             case ORIGIN_NULL_URL: // FALL THRU
             case ORIGIN_NULL_COMMENTS:
                 // nothing to read besides code and length

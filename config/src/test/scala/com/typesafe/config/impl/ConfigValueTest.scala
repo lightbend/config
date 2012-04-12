@@ -750,4 +750,54 @@ class ConfigValueTest extends TestUtils {
         assertEquals(ResolveStatus.UNRESOLVED, obj.withoutKey("a").resolveStatus())
         assertEquals(ResolveStatus.RESOLVED, obj.withoutKey("a").withoutKey("b").resolveStatus())
     }
+
+    @Test
+    def configOriginsInSerialization() {
+        import scala.collection.JavaConverters._
+        val bases = Seq(
+            SimpleConfigOrigin.newSimple("foo"),
+            SimpleConfigOrigin.newFile("/tmp/blahblah"),
+            SimpleConfigOrigin.newURL(new URL("http://example.com")),
+            SimpleConfigOrigin.newResource("myresource"))
+        val combos = bases.flatMap({
+            base =>
+                Seq(
+                    (base, base.setComments(Seq("this is a comment", "another one").asJava)),
+                    (base, base.setComments(null)),
+                    (base, base.setLineNumber(41)),
+                    (base, SimpleConfigOrigin.mergeOrigins(base.setLineNumber(10), base.setLineNumber(20))))
+        }) ++
+            bases.sliding(2).map({ seq => (seq.head, seq.tail.head) }) ++
+            bases.sliding(3).map({ seq => (seq.head, seq.tail.tail.head) }) ++
+            bases.sliding(4).map({ seq => (seq.head, seq.tail.tail.tail.head) })
+        val withFlipped = combos ++ combos.map(_.swap)
+        val withDuplicate = withFlipped ++ withFlipped.map(p => (p._1, p._1))
+        val values = withDuplicate.flatMap({
+            combo =>
+                Seq(
+                    // second inside first
+                    new SimpleConfigList(combo._1,
+                        Seq[AbstractConfigValue](new ConfigInt(combo._2, 42, "42")).asJava),
+                    // triple-nested means we have to null then un-null then null, which is a tricky case
+                    // in the origin-serialization code.
+                    new SimpleConfigList(combo._1,
+                        Seq[AbstractConfigValue](new SimpleConfigList(combo._2,
+                            Seq[AbstractConfigValue](new ConfigInt(combo._1, 42, "42")).asJava)).asJava))
+        })
+        def top(v: SimpleConfigList) = v.origin
+        def middle(v: SimpleConfigList) = v.get(0).origin
+        def bottom(v: SimpleConfigList) = if (v.get(0).isInstanceOf[ConfigList])
+            Some(v.get(0).asInstanceOf[ConfigList].get(0).origin)
+        else
+            None
+
+        //System.err.println("values=\n  " + values.map(v => top(v).description + ", " + middle(v).description + ", " + bottom(v).map(_.description)).mkString("\n  "))
+        for (v <- values) {
+            val deserialized = checkSerializable(v)
+            // double-check that checkSerializable verified the origins
+            assertEquals(top(v), top(deserialized))
+            assertEquals(middle(v), middle(deserialized))
+            assertEquals(bottom(v), bottom(deserialized))
+        }
+    }
 }
