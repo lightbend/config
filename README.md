@@ -389,6 +389,15 @@ newlines separating the numbers.
 
 See the spec for full details on concatenation.
 
+## Debugging
+
+If you have trouble with your configuration, some useful tips.
+
+ - Set the Java system property `-Dconfig.trace=loads` to get
+   output on stderr describing each file that is loaded.
+ - Use `myConfig.root().render()` to get a `Config` printed out as a
+   string with comments showing where each value came from.
+
 ## Future Directions
 
 Here are some features that might be nice to add.
