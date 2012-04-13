@@ -222,6 +222,10 @@ tree that you could have written (less conveniently) in JSON.
     `bar.json` into the object `foo`
   - include with no file extension includes any of `.conf`,
     `.json`, `.properties`
+  - you can include files, URLs, or classpath resources; use
+    `include url("http://example.com")` or `file()` or
+    `classpath()` syntax to force the type, or use just `include
+    "whatever"` to have the library do what you probably mean
   - substitutions `foo : ${a.b}` sets key `foo` to the same value
     as the `b` field in the `a` object
   - substitutions concatenate into unquoted strings, `foo : the
