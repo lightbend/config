@@ -1,4 +1,3 @@
-import com.jsuereth.pgp.sbtplugin.PgpPlugin
 import de.johoop.findbugs4sbt.FindBugs._
 import de.johoop.findbugs4sbt.ReportType
 import de.johoop.jacoco4sbt._
@@ -34,11 +33,3 @@ seq(javadocSettings: _*)
 JavadocKeys.javadocOptions += "-exclude com.typesafe.config.impl"
 
 doc in Compile <<= JavadocKeys.javadoc
-
-seq(PgpPlugin.configurationSettings : _*)
-
-seq(PgpPlugin.signingSettings : _*)
-
-PgpPlugin.useGpg := true
-
-//PgpPlugin.useGpgAgent := true
