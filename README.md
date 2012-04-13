@@ -38,23 +38,22 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 
 ## Binary Releases
 
-You can find published releases here:
-
- - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
-
-Alternately, unofficial binary releases are also in [maven central](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22typesafe-config%22) as:
+You can find published releases on Maven Central.
 
     <dependency>
-        <groupId>org.skife.com.typesafe.config</groupId>
-        <artifactId>typesafe-config</artifactId>
-        <version>0.3.0</version>
+        <groupId>com.typesafe</groupId>
+        <artifactId>config</artifactId>
+        <version>0.4.0</version>
     </dependency>
 
+Obsolete releases are here, but you probably don't want these:
+
+ - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
 
 ## API docs
 
  - Online: http://typesafehub.github.com/config/latest/api/
- - also published in jar form at http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
+ - also published in jar form
  - consider reading this README first for an intro
  - for questions about the `.conf` file format, read HOCON.md in
    this directory
