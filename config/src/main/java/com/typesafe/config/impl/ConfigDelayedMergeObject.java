@@ -13,6 +13,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 
 // This is just like ConfigDelayedMerge except we know statically
@@ -168,13 +169,13 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, String atKey, boolean formatted) {
-        ConfigDelayedMerge.render(stack, sb, indent, atKey, formatted);
+    protected void render(StringBuilder sb, int indent, String atKey, ConfigRenderOptions options) {
+        ConfigDelayedMerge.render(stack, sb, indent, atKey, options);
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean formatted) {
-        render(sb, indent, null, formatted);
+    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
+        render(sb, indent, null, options);
     }
 
     private static ConfigException notResolved() {

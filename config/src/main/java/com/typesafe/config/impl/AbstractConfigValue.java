@@ -11,6 +11,7 @@ import java.util.List;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 
 /**
@@ -276,36 +277,45 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
     @Override
     public final String toString() {
         StringBuilder sb = new StringBuilder();
-        render(sb, 0, null /* atKey */, false /* formatted */);
+        render(sb, 0, null /* atKey */, ConfigRenderOptions.concise());
         return getClass().getSimpleName() + "(" + sb.toString() + ")";
     }
 
-    protected static void indent(StringBuilder sb, int indent) {
-        int remaining = indent;
-        while (remaining > 0) {
-            sb.append("    ");
-            --remaining;
+    protected static void indent(StringBuilder sb, int indent, ConfigRenderOptions options) {
+        if (options.getFormatted()) {
+            int remaining = indent;
+            while (remaining > 0) {
+                sb.append("    ");
+                --remaining;
+            }
         }
     }
 
-    protected void render(StringBuilder sb, int indent, String atKey, boolean formatted) {
+    protected void render(StringBuilder sb, int indent, String atKey, ConfigRenderOptions options) {
         if (atKey != null) {
             sb.append(ConfigImplUtil.renderJsonString(atKey));
-            sb.append(" : ");
+            if (options.getFormatted())
+                sb.append(" : ");
+            else
+                sb.append(":");
         }
-        render(sb, indent, formatted);
+        render(sb, indent, options);
     }
 
-    protected void render(StringBuilder sb, int indent, boolean formatted) {
+    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
         Object u = unwrapped();
         sb.append(u.toString());
     }
 
-
     @Override
     public final String render() {
+        return render(ConfigRenderOptions.defaults());
+    }
+
+    @Override
+    public final String render(ConfigRenderOptions options) {
         StringBuilder sb = new StringBuilder();
-        render(sb, 0, null, true /* formatted */);
+        render(sb, 0, null, options);
         return sb.toString();
     }
 

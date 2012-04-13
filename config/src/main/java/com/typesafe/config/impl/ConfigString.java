@@ -7,6 +7,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueType;
 
 final class ConfigString extends AbstractConfigValue implements Serializable {
@@ -36,7 +37,7 @@ final class ConfigString extends AbstractConfigValue implements Serializable {
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean formatted) {
+    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
         sb.append(ConfigImplUtil.renderJsonString(value));
     }
 

@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -215,18 +216,20 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, String atKey, boolean formatted) {
-        render(stack, sb, indent, atKey, formatted);
+    protected void render(StringBuilder sb, int indent, String atKey, ConfigRenderOptions options) {
+        render(stack, sb, indent, atKey, options);
     }
 
     // static method also used by ConfigDelayedMergeObject.
     static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, String atKey,
-            boolean formatted) {
-        if (formatted) {
+            ConfigRenderOptions options) {
+        boolean commentMerge = options.getComments();
+        if (commentMerge) {
             sb.append("# unresolved merge of " + stack.size() + " values follows (\n");
             if (atKey == null) {
-                indent(sb, indent);
+                indent(sb, indent, options);
                 sb.append("# this unresolved merge will not be parseable because it's at the root of the object\n");
+                indent(sb, indent, options);
                 sb.append("# the HOCON format has no way to list multiple root objects in a single file\n");
             }
         }
@@ -237,8 +240,8 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
         int i = 0;
         for (AbstractConfigValue v : reversed) {
-            if (formatted) {
-                indent(sb, indent);
+            if (commentMerge) {
+                indent(sb, indent, options);
                 if (atKey != null) {
                     sb.append("#     unmerged value " + i + " for key "
                             + ConfigImplUtil.renderJsonString(atKey) + " from ");
@@ -248,30 +251,36 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                 i += 1;
                 sb.append(v.origin().description());
                 sb.append("\n");
+
                 for (String comment : v.origin().comments()) {
-                    indent(sb, indent);
+                    indent(sb, indent, options);
                     sb.append("# ");
                     sb.append(comment);
                     sb.append("\n");
                 }
-                indent(sb, indent);
             }
+            indent(sb, indent, options);
 
             if (atKey != null) {
                 sb.append(ConfigImplUtil.renderJsonString(atKey));
-                sb.append(" : ");
+                if (options.getFormatted())
+                    sb.append(" : ");
+                else
+                    sb.append(":");
             }
-            v.render(sb, indent, formatted);
+            v.render(sb, indent, options);
             sb.append(",");
-            if (formatted)
+            if (options.getFormatted())
                 sb.append('\n');
         }
         // chop comma or newline
         sb.setLength(sb.length() - 1);
-        if (formatted) {
+        if (options.getFormatted()) {
             sb.setLength(sb.length() - 1); // also chop comma
             sb.append("\n"); // put a newline back
-            indent(sb, indent);
+        }
+        if (commentMerge) {
+            indent(sb, indent, options);
             sb.append("# ) end of unresolved merge\n");
         }
     }

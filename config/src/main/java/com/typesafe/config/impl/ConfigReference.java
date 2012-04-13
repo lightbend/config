@@ -5,6 +5,7 @@ import java.util.Collections;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -126,7 +127,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean formatted) {
+    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
         sb.append(expr.toString());
     }
 

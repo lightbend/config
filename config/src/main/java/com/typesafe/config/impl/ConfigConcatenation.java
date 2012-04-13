@@ -8,6 +8,7 @@ import java.util.List;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -222,9 +223,9 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean formatted) {
+    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
         for (AbstractConfigValue p : pieces) {
-            p.render(sb, indent, formatted);
+            p.render(sb, indent, options);
         }
     }
 

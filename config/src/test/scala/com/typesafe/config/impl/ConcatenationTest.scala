@@ -51,7 +51,7 @@ class ConcatenationTest extends TestUtils {
         assertTrue("wrong exception: " + e.getMessage,
             e.getMessage.contains("Cannot concatenate") &&
                 e.getMessage.contains("abc") &&
-                e.getMessage.contains("""{"x" : "y"}"""))
+                e.getMessage.contains("""{"x":"y"}"""))
     }
 
     @Test
@@ -62,7 +62,7 @@ class ConcatenationTest extends TestUtils {
         assertTrue("wrong exception: " + e.getMessage,
             e.getMessage.contains("Cannot concatenate") &&
                 e.getMessage.contains("null") &&
-                e.getMessage.contains("""{"x" : "y"}"""))
+                e.getMessage.contains("""{"x":"y"}"""))
     }
 
     @Test
@@ -293,7 +293,7 @@ class ConcatenationTest extends TestUtils {
         }
         assertTrue("wrong exception: " + e.getMessage,
             e.getMessage.contains("Cannot concatenate") &&
-                e.getMessage.contains("\"x\" : \"y\"") &&
+                e.getMessage.contains("\"x\":\"y\"") &&
                 e.getMessage.contains("[2]"))
     }
 

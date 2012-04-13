@@ -18,6 +18,7 @@ import java.util.Set;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 
 final class SimpleConfigObject extends AbstractConfigObject implements Serializable {
@@ -324,41 +325,43 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean formatted) {
+    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
         if (isEmpty()) {
             sb.append("{}");
         } else {
             sb.append("{");
-            if (formatted)
+            if (options.getFormatted())
                 sb.append('\n');
             for (String k : keySet()) {
                 AbstractConfigValue v;
                 v = value.get(k);
 
-                if (formatted) {
-                    indent(sb, indent + 1);
+                if (options.getOriginComments()) {
+                    indent(sb, indent + 1, options);
                     sb.append("# ");
                     sb.append(v.origin().description());
                     sb.append("\n");
+                }
+                if (options.getComments()) {
                     for (String comment : v.origin().comments()) {
-                        indent(sb, indent + 1);
+                        indent(sb, indent + 1, options);
                         sb.append("# ");
                         sb.append(comment);
                         sb.append("\n");
                     }
-                    indent(sb, indent + 1);
                 }
-                v.render(sb, indent + 1, k, formatted);
+                indent(sb, indent + 1, options);
+                v.render(sb, indent + 1, k, options);
                 sb.append(",");
-                if (formatted)
+                if (options.getFormatted())
                     sb.append('\n');
             }
             // chop comma or newline
             sb.setLength(sb.length() - 1);
-            if (formatted) {
+            if (options.getFormatted()) {
                 sb.setLength(sb.length() - 1); // also chop comma
                 sb.append("\n"); // put a newline back
-                indent(sb, indent);
+                indent(sb, indent, options);
             }
             sb.append("}");
         }

@@ -46,14 +46,42 @@ public interface ConfigValue extends ConfigMergeable {
     /**
      * Renders the config value as a HOCON string. This method is primarily
      * intended for debugging, so it tries to add helpful comments and
-     * whitespace. If the config value has not been resolved (see
-     * {@link Config#resolve}), it's possible that it can't be rendered as valid
-     * HOCON. In that case the rendering should still be useful for debugging
-     * but you might not be able to parse it.
-     * 
+     * whitespace.
+     *
+     * <p>
+     * If the config value has not been resolved (see {@link Config#resolve}),
+     * it's possible that it can't be rendered as valid HOCON. In that case the
+     * rendering should still be useful for debugging but you might not be able
+     * to parse it.
+     *
+     * <p>
+     * This method is equivalent to
+     * {@code render(ConfigRenderOptions.defaults())}.
+     *
      * @return the rendered value
      */
     String render();
+
+    /**
+     * Renders the config value to a string, using the provided options.
+     *
+     * <p>
+     * If the config value has not been resolved (see {@link Config#resolve}),
+     * it's possible that it can't be rendered as valid HOCON. In that case the
+     * rendering should still be useful for debugging but you might not be able
+     * to parse it.
+     *
+     * <p>
+     * If the config value has been resolved and the options disable all
+     * HOCON-specific features (such as comments), the rendering will be valid
+     * JSON. If you enable HOCON-only features such as comments, the rendering
+     * will not be valid JSON.
+     * 
+     * @param options
+     *            the rendering options
+     * @return the rendered value
+     */
+    String render(ConfigRenderOptions options);
 
     @Override
     ConfigValue withFallback(ConfigMergeable other);

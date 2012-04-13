@@ -13,6 +13,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -212,7 +213,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
     public abstract AbstractConfigValue get(Object key);
 
     @Override
-    protected abstract void render(StringBuilder sb, int indent, boolean formatted);
+    protected abstract void render(StringBuilder sb, int indent, ConfigRenderOptions options);
 
     private static UnsupportedOperationException weAreImmutable(String method) {
         return new UnsupportedOperationException("ConfigObject is immutable, you can't call Map."

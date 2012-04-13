@@ -16,6 +16,8 @@ import java.io.File
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigMergeable
+import com.typesafe.config.ConfigRenderOptions
+import com.typesafe.config.ConfigSyntax
 
 class ConfigTest extends TestUtils {
 
@@ -989,22 +991,46 @@ class ConfigTest extends TestUtils {
 
     @Test
     def renderRoundTrip() {
+        val allBooleans = true :: false :: Nil
+        val optionsCombos = {
+            for (
+                formatted <- allBooleans;
+                originComments <- allBooleans;
+                comments <- allBooleans
+            ) yield ConfigRenderOptions.defaults()
+                .setFormatted(formatted)
+                .setOriginComments(originComments)
+                .setComments(comments)
+        } toSeq
+
         for (i <- 1 to 10) {
             val numString = i.toString
             val name = "/test" + { if (numString.size == 1) "0" else "" } + numString
             val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], name,
                 ConfigParseOptions.defaults().setAllowMissing(false))
-            val unresolvedRender = conf.root.render()
-            val resolved = conf.resolve()
-            val resolvedRender = resolved.root.render()
-            try {
-                assertEquals(conf.root, ConfigFactory.parseString(unresolvedRender, ConfigParseOptions.defaults()).root)
-                assertEquals(resolved.root, ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults()).root)
-            } catch {
-                case e: Throwable =>
-                    System.err.println("unresolvedRender = " + unresolvedRender)
-                    System.err.println("resolvedRender = " + resolvedRender)
-                    throw e
+            for (renderOptions <- optionsCombos) {
+                val unresolvedRender = conf.root.render(renderOptions)
+                val resolved = conf.resolve()
+                val resolvedRender = resolved.root.render(renderOptions)
+                try {
+                    assertEquals(conf.root, ConfigFactory.parseString(unresolvedRender, ConfigParseOptions.defaults()).root)
+                    assertEquals(resolved.root, ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults()).root)
+                } catch {
+                    case e: Exception =>
+                        System.err.println("unresolvedRender = " + unresolvedRender)
+                        System.err.println("resolvedRender = " + resolvedRender)
+                        throw e
+                }
+                if (!(renderOptions.getComments() || renderOptions.getOriginComments())) {
+                    // should get valid JSON if we don't have comments and are resolved
+                    val json = try {
+                        ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON));
+                    } catch {
+                        case e: Exception =>
+                            System.err.println("resolvedRender is not valid json: " + resolvedRender)
+                            throw e
+                    }
+                }
             }
         }
     }

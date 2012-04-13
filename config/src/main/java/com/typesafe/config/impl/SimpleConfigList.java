@@ -14,6 +14,7 @@ import java.util.ListIterator;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
@@ -166,39 +167,40 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean formatted) {
+    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
         if (value.isEmpty()) {
             sb.append("[]");
         } else {
             sb.append("[");
-            if (formatted)
+            if (options.getFormatted())
                 sb.append('\n');
             for (AbstractConfigValue v : value) {
-                if (formatted) {
-                    indent(sb, indent + 1);
+                if (options.getOriginComments()) {
+                    indent(sb, indent + 1, options);
                     sb.append("# ");
                     sb.append(v.origin().description());
                     sb.append("\n");
-
+                }
+                if (options.getComments()) {
                     for (String comment : v.origin().comments()) {
-                        indent(sb, indent + 1);
+                        indent(sb, indent + 1, options);
                         sb.append("# ");
                         sb.append(comment);
                         sb.append("\n");
                     }
-
-                    indent(sb, indent + 1);
                 }
-                v.render(sb, indent + 1, formatted);
+                indent(sb, indent + 1, options);
+
+                v.render(sb, indent + 1, options);
                 sb.append(",");
-                if (formatted)
+                if (options.getFormatted())
                     sb.append('\n');
             }
             sb.setLength(sb.length() - 1); // chop or newline
-            if (formatted) {
+            if (options.getFormatted()) {
                 sb.setLength(sb.length() - 1); // also chop comma
                 sb.append('\n');
-                indent(sb, indent);
+                indent(sb, indent, options);
             }
             sb.append("]");
         }
