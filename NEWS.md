@@ -58,6 +58,9 @@
    obscure case just threw an exception. But in 0.3.0 there
    were cases that worked that now work differently. You are very
    unlikely to be affected by this.
+ - Play/Akka 2.0 do not and will not have the new stuff in this
+   version due to the serialization break, they will update
+   next time they bump their ABI.
 
 # 0.3.0: March 1, 2012
 

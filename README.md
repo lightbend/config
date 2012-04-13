@@ -226,6 +226,8 @@ tree that you could have written (less conveniently) in JSON.
     `include url("http://example.com")` or `file()` or
     `classpath()` syntax to force the type, or use just `include
     "whatever"` to have the library do what you probably mean
+    (Note: `url()`/`file()`/`classpath()` syntax is not supported
+    in Play/Akka 2.0.)
   - substitutions `foo : ${a.b}` sets key `foo` to the same value
     as the `b` field in the `a` object
   - substitutions concatenate into unquoted strings, `foo : the
@@ -416,12 +418,18 @@ newlines separating the numbers.
 
 See the spec for full details on concatenation.
 
+Note: Play/Akka 2.0 have an earlier version that supports string
+concatenation, but not object/array concatenation. `+=` does not
+work in Play/Akka 2.0 either.
+
 ## Debugging
 
 If you have trouble with your configuration, some useful tips.
 
  - Set the Java system property `-Dconfig.trace=loads` to get
    output on stderr describing each file that is loaded.
+   Note: this feature is not included in the older version in
+   Play/Akka 2.0.
  - Use `myConfig.root().render()` to get a `Config` printed out as a
    string with comments showing where each value came from.
 
