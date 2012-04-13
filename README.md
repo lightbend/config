@@ -101,6 +101,30 @@ In brief, as shown in the examples:
    format or data source you like with the methods in
    `ConfigValueFactory`.
 
+## Schemas and Validation
+
+There isn't a schema language or anything like that. However, two
+suggested tools are:
+
+ - use the
+   [checkValid() method](http://typesafehub.github.com/config/latest/api/com/typesafe/config/Config.html#checkValid%28com.typesafe.config.Config,%20java.lang.String...%29)
+ - access your config through a Settings class with a non-lazy
+   field for each setting, and instantiate it on startup
+
+In Scala, a Settings class might look like:
+
+    class Settings(config: Config) {
+
+        // validate vs. reference.conf
+        config.checkValid(ConfigFactory.defaultReference(), "simple-lib")
+
+        // non-lazy fields, we want all exceptions at construct time
+        val foo = config.getString("simple-lib.foo")
+        val bar = config.getInt("simple-lib.bar")
+    }
+
+See the examples/ directory for a full compilable program.
+
 ## Standard behavior
 
 The convenience method `ConfigFactory.load()` loads the following

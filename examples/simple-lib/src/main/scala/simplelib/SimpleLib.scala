@@ -23,3 +23,37 @@ class SimpleLibContext(config: Config) {
         println("The setting '" + path + "' is: " + config.getString(path))
     }
 }
+
+// Here is an OPTIONAL alternative way to access settings, which
+// has the advantage of validating fields on startup and avoiding
+// typos. This is redundant with the SimpleLibContext above,
+// in fact we'll show a settings-based context below.
+class SimpleLibSettings(config: Config) {
+
+    // checkValid(), just as in the plain SimpleLibContext
+    config.checkValid(ConfigFactory.defaultReference(), "simple-lib")
+
+    // note that these fields are NOT lazy, because if we're going to
+    // get any exceptions, we want to get them on startup.
+    val foo = config.getString("simple-lib.foo")
+    val hello = config.getString("simple-lib.hello")
+    val whatever = config.getString("simple-lib.whatever")
+}
+
+// This is a different way to do SimpleLibContext, using the
+// SimpleLibSettings class to encapsulate and validate your
+// settings on startup
+class SimpleLibContext2(config: Config) {
+    val settings = new SimpleLibSettings(config)
+
+    def this() {
+        this(ConfigFactory.load())
+    }
+
+    // this is the amazing functionality provided by simple-lib with a Settings class
+    def printSettings() {
+        println("foo=" + settings.foo)
+        println("hello=" + settings.hello)
+        println("whatever=" + settings.whatever)
+    }
+}
