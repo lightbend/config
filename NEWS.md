@@ -1,34 +1,37 @@
 # 0.NEXT.0: Sometime
 
- - the serialization format has changed to one that's extensible
+ - the *serialization format has changed* to one that's extensible
    and lets the library evolve without breaking serialization all
    the time. The new format is also much more compact. However,
    this change is incompatible with old serializations, if you
    rely on that. The hope is to avoid serialization breakage in
    the future now that the format is not the default Java one
    (which was a direct dump of all the implementation details).
- - serializing an unresolved Config (one that hasn't had
+ - *serializing an unresolved Config* (one that hasn't had
    resolve() called on it) is no longer supported, you will get
    NotSerializableException if you try.
- - supports self-referential substitutions, such as
+ - ConfigValue.render() now supports ConfigRenderOptions which
+   means you can get a *no-whitespace no-comments plain JSON
+   rendering* of a ConfigValue
+ - supports *self-referential substitutions*, such as
    `path=${path}":/bin"`, by "looking backward" to the previous
    value of `path`
- - supports concatenating arrays and merging objects within a
-   single value. So you can do `path=${path} [ "/bin" ]` for
+ - supports *concatenating arrays and merging objects within a
+   single value*. So you can do `path=${path} [ "/bin" ]` for
    example. See README and spec for more details.
- - supports `+=` where `path+="/bin"` expands to `path=${?path}
-   [ "/bin" ]`
- - supports `include url("http://example.com/")`, `include
-   file("/my/file.conf")`, and `include classpath("whatever")`.
-   This syntax forces treatment as URL, file, or classpath
-   resource.
- - supports `include "http://example.com/whatever.conf"` (if an
-   include is a valid URL, it's loaded as such). This is
-   incompatible with prior versions, if you have a filename that
-   is also a valid URL, it would have loaded previously but now
-   it will not. Use the `include file("")` syntax to force
-   treatment as a file.
- - class loaders are now recursively inherited through include
+ - supports *array append* `+=` where `path+="/bin"` expands to
+   `path=${?path} [ "/bin" ]`
+ - supports *specifying type of include* `include
+   url("http://example.com/")`, `include file("/my/file.conf")`,
+   and `include classpath("whatever")`.  This syntax forces
+   treatment as URL, file, or classpath resource.
+ - supports *including URLs* `include
+   "http://example.com/whatever.conf"` (if an include is a valid
+   URL, it's loaded as such). This is incompatible with prior
+   versions, if you have a filename that is also a valid URL, it
+   would have loaded previously but now it will not. Use the
+   `include file("")` syntax to force treatment as a file.
+ - *class loaders are now recursively inherited* through include
    statements; previously, even if you set a custom class loader
    when parsing a file, it would not be used for parsing a
    classpath resource included from the file.
