@@ -421,18 +421,6 @@ If you have trouble with your configuration, some useful tips.
  - Use `myConfig.root().render()` to get a `Config` printed out as a
    string with comments showing where each value came from.
 
-## Future Directions
-
-Here are some features that might be nice to add.
-
- - "myapp.d directory": allow parsing a directory. All `.json`,
-   `.properties` and `.conf` files should be loaded in a
-   deterministic order based on their filename.
-   If you include a file and it turns out to be a directory then
-   it would be processed in this way.
- - including URLs (which would allow forcing file: when inside
-   a classpath resource, among other things)
-
 ## Rationale
 
 (For the curious.)
