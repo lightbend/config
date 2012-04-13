@@ -2,6 +2,8 @@
 
  - this is **rolling toward 1.0** and should be pretty much
    feature-complete.
+ - this version is published on *Maven central* so you need
+   to update your dependency coordinates
  - the **serialization format has changed** to one that's
    extensible and lets the library evolve without breaking
    serialization all the time. The new format is also much more
