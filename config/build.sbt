@@ -33,3 +33,5 @@ seq(javadocSettings: _*)
 JavadocKeys.javadocOptions += "-exclude com.typesafe.config.impl"
 
 doc in Compile <<= JavadocKeys.javadoc
+
+javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6")
