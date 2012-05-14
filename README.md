@@ -38,7 +38,8 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 
 ## Binary Releases
 
-You can find published releases on Maven Central.
+You can find published releases (compiled for Java 6 and above) on
+Maven Central.
 
     <dependency>
         <groupId>com.typesafe</groupId>
@@ -432,6 +433,11 @@ If you have trouble with your configuration, some useful tips.
    Play/Akka 2.0.
  - Use `myConfig.root().render()` to get a `Config` printed out as a
    string with comments showing where each value came from.
+
+## Java version
+
+Currently the library is maintained against Java 6. It does not
+build with Java 5.
 
 ## Rationale
 
