@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import com.typesafe.sbtosgi.OsgiPlugin._
 
 object ConfigBuild extends Build {
     val unpublished = Seq(
@@ -29,7 +30,15 @@ object ConfigBuild extends Build {
 
     lazy val configLib = Project(id = "config",
                                  base = file("config"),
-                                 settings = Project.defaultSettings ++ sonatype.settings) dependsOn(testLib % "test->test")
+                                 settings =
+                                   Project.defaultSettings ++
+                                   sonatype.settings ++
+                                   osgiSettings ++
+                                   Seq(
+                                     OsgiKeys.exportPackage := Seq("com.typesafe.config"),
+                                     packagedArtifact in (Compile, packageBin) <<= (artifact in (Compile, packageBin), OsgiKeys.bundle).identityMap,
+                                     artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") }
+                                   )) dependsOn(testLib % "test->test")
 
     lazy val testLib = Project(id = "test-lib",
                                base = file("test-lib"),
