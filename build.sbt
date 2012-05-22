@@ -2,14 +2,14 @@
 // to release, bump major/minor/micro as appropriate,
 // update NEWS, update version in README.md, drop SNAPSHOT,
 // tag and publish.
-// then add snapshot back so git master is previous release
+// then add snapshot back so git master is upcoming release
 // with -SNAPSHOT.
 // when releasing a SNAPSHOT to the repo, bump the micro
 // version at least.
 // Versions and git tags should follow: http://semver.org/
 // except using -SNAPSHOT instead of without hyphen.
 
-version in GlobalScope := "0.4.1"
+version in GlobalScope := "0.4.2-SNAPSHOT"
 
 organization in GlobalScope := "com.typesafe"
 
