@@ -1,3 +1,7 @@
+# 0.4.1: May 22, 2012
+
+ - publish as OSGi bundle
+
 # 0.4.0: April 12, 2012
 
  - this is **rolling toward 1.0** and should be pretty much
