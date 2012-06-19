@@ -229,9 +229,9 @@ class TokenizerTest extends TestUtils {
             val problem = tokenized(1)
             assertTrue("reserved char is a problem", Tokens.isProblem(problem))
             if (invalid == '+')
-                assertEquals("'end of file'", problem.toString())
+                assertEquals("end of file", Tokens.getProblemWhat(problem))
             else
-                assertEquals("'" + invalid + "'", problem.toString())
+                assertEquals("" + invalid, Tokens.getProblemWhat(problem))
         }
     }
 }

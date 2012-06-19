@@ -121,6 +121,10 @@ final class Tokens {
             this.cause = cause;
         }
 
+        String what() {
+            return what;
+        }
+
         String message() {
             return message;
         }
@@ -139,6 +143,9 @@ final class Tokens {
             sb.append('\'');
             sb.append(what);
             sb.append('\'');
+            sb.append(" (");
+            sb.append(message);
+            sb.append(")");
             return sb.toString();
         }
 
@@ -274,6 +281,14 @@ final class Tokens {
 
     static boolean isProblem(Token token) {
         return token instanceof Problem;
+    }
+
+    static String getProblemWhat(Token token) {
+        if (token instanceof Problem) {
+            return ((Problem) token).what();
+        } else {
+            throw new ConfigException.BugOrBroken("tried to get problem what from " + token);
+        }
     }
 
     static String getProblemMessage(Token token) {
