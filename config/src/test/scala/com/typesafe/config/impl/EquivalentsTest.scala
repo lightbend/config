@@ -50,6 +50,41 @@ class EquivalentsTest extends TestUtils {
         postParse(ConfigFactory.parseFile(f, options).root)
     }
 
+    private def printIndented(indent: Int, s: String): Unit = {
+        for (i <- 0 to indent)
+            System.err.print(' ')
+        System.err.println(s)
+    }
+
+    private def showDiff(a: ConfigValue, b: ConfigValue, indent: Int = 0): Unit = {
+        if (a != b) {
+            if (a.valueType != b.valueType) {
+                printIndented(indent, "- " + a.valueType)
+                printIndented(indent, "+ " + b.valueType)
+            } else if (a.valueType == ConfigValueType.OBJECT) {
+                import scala.collection.JavaConverters._
+                printIndented(indent, "OBJECT")
+                val aS = a.asInstanceOf[ConfigObject].asScala
+                val bS = b.asInstanceOf[ConfigObject].asScala
+                for (aKV <- aS) {
+                    val bVOption = bS.get(aKV._1)
+                    if (Some(aKV._2) != bVOption) {
+                        printIndented(indent + 1, aKV._1)
+                        if (bVOption.isDefined) {
+                            showDiff(aKV._2, bVOption.get, indent + 2)
+                        } else {
+                            printIndented(indent + 2, "- " + aKV._2)
+                            printIndented(indent + 2, "+ (missing)")
+                        }
+                    }
+                }
+            } else {
+                printIndented(indent, "- " + a)
+                printIndented(indent, "+ " + b)
+            }
+        }
+    }
+
     // would like each "equivNN" directory to be a suite and each file in the dir
     // to be a test, but not sure how to convince junit to do that.
     @Test
@@ -71,7 +106,13 @@ class EquivalentsTest extends TestUtils {
                 fileCount += 1
                 val value = parse(testFile)
                 describeFailure(testFile.getPath()) {
-                    assertEquals(original, value)
+                    try {
+                        assertEquals(original, value)
+                    } catch {
+                        case e =>
+                            showDiff(original, value)
+                            throw e
+                    }
                 }
 
                 // check that all .json files can be parsed as .conf,
@@ -79,7 +120,13 @@ class EquivalentsTest extends TestUtils {
                 if (testFile.getName().endsWith(".json")) {
                     val parsedAsConf = parse(ConfigSyntax.CONF, testFile)
                     describeFailure(testFile.getPath() + " parsed as .conf") {
-                        assertEquals(original, parsedAsConf)
+                        try {
+                            assertEquals(original, parsedAsConf)
+                        } catch {
+                            case e =>
+                                showDiff(original, parsedAsConf)
+                                throw e
+                        }
                     }
                 }
             }
