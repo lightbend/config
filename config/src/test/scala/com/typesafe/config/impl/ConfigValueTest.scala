@@ -14,6 +14,7 @@ import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigValueType
 import com.typesafe.config.ConfigOrigin
+import com.typesafe.config.ConfigValueFactory
 
 class ConfigValueTest extends TestUtils {
 
@@ -749,6 +750,42 @@ class ConfigValueTest extends TestUtils {
         assertEquals(ResolveStatus.UNRESOLVED, obj.resolveStatus())
         assertEquals(ResolveStatus.UNRESOLVED, obj.withoutKey("a").resolveStatus())
         assertEquals(ResolveStatus.RESOLVED, obj.withoutKey("a").withoutKey("b").resolveStatus())
+    }
+
+    @Test
+    def atPathWorksOneElement() {
+        val v = ConfigValueFactory.fromAnyRef(42)
+        val config = v.atPath("a")
+        assertEquals(parseConfig("a=42"), config)
+        assertTrue(config.getValue("a") eq v)
+        assertTrue(config.origin.description.contains("atPath"))
+    }
+
+    @Test
+    def atPathWorksTwoElements() {
+        val v = ConfigValueFactory.fromAnyRef(42)
+        val config = v.atPath("a.b")
+        assertEquals(parseConfig("a.b=42"), config)
+        assertTrue(config.getValue("a.b") eq v)
+        assertTrue(config.origin.description.contains("atPath"))
+    }
+
+    @Test
+    def atPathWorksFourElements() {
+        val v = ConfigValueFactory.fromAnyRef(42)
+        val config = v.atPath("a.b.c.d")
+        assertEquals(parseConfig("a.b.c.d=42"), config)
+        assertTrue(config.getValue("a.b.c.d") eq v)
+        assertTrue(config.origin.description.contains("atPath"))
+    }
+
+    @Test
+    def atKeyWorks() {
+        val v = ConfigValueFactory.fromAnyRef(42)
+        val config = v.atKey("a")
+        assertEquals(parseConfig("a=42"), config)
+        assertTrue(config.getValue("a") eq v)
+        assertTrue(config.origin.description.contains("atKey"))
     }
 
     @Test

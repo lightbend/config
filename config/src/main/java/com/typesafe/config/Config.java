@@ -506,4 +506,25 @@ public interface Config extends ConfigMergeable {
      * @return a copy of the config minus the specified path
      */
     Config withoutPath(String path);
+
+    /**
+     * Places the config inside another {@code Config} at the given path.
+     *
+     * @param path
+     *            path to store this config at.
+     * @return a {@code Config} instance containing this config at the given
+     *         path.
+     */
+    Config atPath(String path);
+
+    /**
+     * Places the config inside a {@code Config} at the given key. See also
+     * atPath().
+     *
+     * @param key
+     *            key to store this config at.
+     * @return a {@code Config} instance containing this config at the given
+     *         key.
+     */
+    Config atKey(String key);
 }

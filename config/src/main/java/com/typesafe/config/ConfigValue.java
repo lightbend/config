@@ -76,7 +76,7 @@ public interface ConfigValue extends ConfigMergeable {
      * HOCON-specific features (such as comments), the rendering will be valid
      * JSON. If you enable HOCON-only features such as comments, the rendering
      * will not be valid JSON.
-     * 
+     *
      * @param options
      *            the rendering options
      * @return the rendered value
@@ -85,4 +85,25 @@ public interface ConfigValue extends ConfigMergeable {
 
     @Override
     ConfigValue withFallback(ConfigMergeable other);
+
+    /**
+     * Places the value inside a {@code Config} at the given path. See also
+     * atKey().
+     *
+     * @param path
+     *            path to store this value at.
+     * @return a {@code Config} instance containing this value at the given
+     *         path.
+     */
+    Config atPath(String path);
+
+    /**
+     * Places the value inside a {@code Config} at the given key. See also
+     * atPath().
+     *
+     * @param key
+     *            key to store this value at.
+     * @return a {@code Config} instance containing this value at the given key.
+     */
+    Config atKey(String key);
 }
