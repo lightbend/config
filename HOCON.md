@@ -230,6 +230,22 @@ Some of the "forbidden characters" are forbidden because they
 already have meaning in JSON or HOCON, others are essentially
 reserved keywords to allow future extensions to this spec.
 
+### Multi-line strings
+
+Multi-line strings are similar to Python or Scala, using triple
+quotes. If the three-character sequence `"""` appears, then all
+Unicode characters until a closing `"""` sequence are used
+unmodified to create a string value. Newlines and whitespace
+receive no special treatment. Unlike Scala, and unlike JSON quoted
+strings, Unicode escapes are not interpreted in triple-quoted
+strings.
+
+In Python, `"""foo""""` is a syntax error (a triple-quoted string
+followed by a dangling unbalanced quote). In Scala, it is a
+four-character string `foo"`. HOCON works like Scala; any sequence
+of at least three quotes ends the multi-line string, and any
+"extra" quotes are part of the string.
+
 ### Value concatenation
 
 The value of an object field or array element may consist of

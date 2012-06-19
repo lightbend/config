@@ -826,7 +826,6 @@ class ConfigTest extends TestUtils {
 
         assertEquals(42, conf.getInt("42_a"))
         assertEquals(42, conf.getInt("42_b"))
-        assertEquals(42, conf.getInt("42_c"))
         assertEquals(57, conf.getInt("57_a"))
         assertEquals(57, conf.getInt("57_b"))
         assertEquals(103, conf.getInt("103_a"))

@@ -416,6 +416,31 @@ final class Tokenizer {
             }
         }
 
+        private void appendTripleQuotedString(StringBuilder sb) throws ProblemException {
+            // we are after the opening triple quote and need to consume the
+            // close triple
+            int consecutiveQuotes = 0;
+            for (;;) {
+                int c = nextCharRaw();
+
+                if (c == '"') {
+                    consecutiveQuotes += 1;
+                } else if (consecutiveQuotes >= 3) {
+                    // the last three quotes end the string and the others are
+                    // kept.
+                    sb.setLength(sb.length() - 3);
+                    putBack(c);
+                    break;
+                } else {
+                    consecutiveQuotes = 0;
+                    if (c == -1)
+                        throw problem("End of input but triple-quoted string was still open");
+                }
+
+                sb.appendCodePoint(c);
+            }
+        }
+
         private Token pullQuotedString() throws ProblemException {
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
@@ -436,6 +461,17 @@ final class Tokenizer {
                     sb.appendCodePoint(c);
                 }
             } while (c != '"');
+
+            // maybe switch to triple-quoted string, sort of hacky...
+            if (sb.length() == 0) {
+                int third = nextCharRaw();
+                if (third == '"') {
+                    appendTripleQuotedString(sb);
+                } else {
+                    putBack(third);
+                }
+            }
+
             return Tokens.newString(lineOrigin, sb.toString());
         }
 

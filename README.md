@@ -240,6 +240,7 @@ tree that you could have written (less conveniently) in JSON.
   - substitutions normally cause an error if unresolved, but
     there is a syntax `${?a.b}` to permit them to be missing.
   - `+=` syntax to append elements to arrays, `path += "/bin"`
+  - multi-line strings with triple quotes as in Python or Scala
 
 ### Examples of HOCON
 

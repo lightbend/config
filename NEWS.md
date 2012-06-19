@@ -1,3 +1,20 @@
+# X.Y.Z: SOMETIME, 2012
+
+ - triple-quoted strings as in Python or Scala
+ - obscure backward incompatibilities:
+    - `""""` previously parsed as two empty strings concatenated
+      into a single empty string, now it parses as an unterminated
+      triple-quoted string.
+    - a triple-quoted string like `"""\n"""` previously parsed as
+      an empty string, a string with one newline character, and
+      another empty string, all concatenated into a single
+      string. Now it parses as a string with two characters
+      (backslash and lowercase "n").
+    - in short you could have two adjacent quoted strings before,
+      where one was an empty string, and now you can't.  As far as
+      I know, the empty string was always worthless in this case
+      and can just be removed.
+
 # 0.4.1: May 22, 2012
 
  - publish as OSGi bundle

@@ -34,37 +34,37 @@ class TokenizerTest extends TestUtils {
         // is actually extra work).
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.PLUS_EQUALS, tokenString("foo"),
-            tokenTrue, tokenDouble(3.14), tokenFalse,
+            tokenString("bar"), tokenTrue, tokenDouble(3.14), tokenFalse,
             tokenLong(42), tokenNull, tokenSubstitution(tokenUnquoted("a.b")),
             tokenOptionalSubstitution(tokenUnquoted("x.y")),
             tokenKeySubstitution("c.d"), tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""",:=}{][+="foo"true3.14false42null${a.b}${?x.y}${"c.d"}""" + "\n"))
+        assertEquals(expected, tokenizeAsList(""",:=}{][+="foo"""" + "\"\"\"bar\"\"\"" + """true3.14false42null${a.b}${?x.y}${"c.d"}""" + "\n"))
     }
 
     @Test
     def tokenizeAllTypesWithSingleSpaces() {
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.PLUS_EQUALS, tokenString("foo"),
-            tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
+            tokenUnquoted(" "), tokenString("bar"), tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "), tokenTrue, tokenUnquoted(" "),
             tokenDouble(3.14), tokenUnquoted(" "), tokenFalse, tokenUnquoted(" "), tokenNull,
             tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "),
             tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted(" "),
             tokenKeySubstitution("c.d"),
             tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(""" , : = } { ] [ += "foo" 42 true 3.14 false null ${a.b} ${?x.y} ${"c.d"} """ + "\n "))
+        assertEquals(expected, tokenizeAsList(""" , : = } { ] [ += "foo" """ + "\"\"\"bar\"\"\"" + """ 42 true 3.14 false null ${a.b} ${?x.y} ${"c.d"} """ + "\n "))
     }
 
     @Test
     def tokenizeAllTypesWithMultipleSpaces() {
         val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.PLUS_EQUALS, tokenString("foo"),
-            tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
+            tokenUnquoted("   "), tokenString("bar"), tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
             tokenDouble(3.14), tokenUnquoted("   "), tokenFalse, tokenUnquoted("   "), tokenNull,
             tokenUnquoted("   "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted("   "),
             tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted("   "),
             tokenKeySubstitution("c.d"),
             tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   +=   "foo"   42   true   3.14   false   null   ${a.b}   ${?x.y}   ${"c.d"}  """ + "\n   "))
+        assertEquals(expected, tokenizeAsList("""   ,   :   =   }   {   ]   [   +=   "foo"   """ + "\"\"\"bar\"\"\"" + """   42   true   3.14   false   null   ${a.b}   ${?x.y}   ${"c.d"}  """ + "\n   "))
     }
 
     @Test
@@ -177,6 +177,36 @@ class TokenizerTest extends TestUtils {
             val maybeProblem = tokenized.find(Tokens.isProblem(_))
             assertTrue(maybeProblem.isDefined)
         }
+    }
+
+    @Test
+    def tokenizerEmptyTripleQuoted(): Unit = {
+        assertEquals(List(Tokens.START, tokenString(""), Tokens.END),
+            tokenizeAsList("\"\"\"\"\"\""))
+    }
+
+    @Test
+    def tokenizerTrivialTripleQuoted(): Unit = {
+        assertEquals(List(Tokens.START, tokenString("bar"), Tokens.END),
+            tokenizeAsList("\"\"\"bar\"\"\""))
+    }
+
+    @Test
+    def tokenizerNoEscapesInTripleQuoted(): Unit = {
+        assertEquals(List(Tokens.START, tokenString("\\n"), Tokens.END),
+            tokenizeAsList("\"\"\"\\n\"\"\""))
+    }
+
+    @Test
+    def tokenizerTrailingQuotesInTripleQuoted(): Unit = {
+        assertEquals(List(Tokens.START, tokenString("\"\"\""), Tokens.END),
+            tokenizeAsList("\"\"\"\"\"\"\"\"\""))
+    }
+
+    @Test
+    def tokenizerNewlineInTripleQuoted(): Unit = {
+        assertEquals(List(Tokens.START, tokenString("foo\nbar"), Tokens.END),
+            tokenizeAsList("\"\"\"foo\nbar\"\"\""))
     }
 
     @Test
