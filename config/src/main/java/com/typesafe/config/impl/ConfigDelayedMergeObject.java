@@ -141,6 +141,16 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
+    public ConfigDelayedMergeObject withValue(String key, ConfigValue value) {
+        throw notResolved();
+    }
+
+    @Override
+    ConfigDelayedMergeObject withValue(Path path, ConfigValue value) {
+        throw notResolved();
+    }
+
+    @Override
     public Collection<AbstractConfigValue> unmergedValues() {
         return stack;
     }

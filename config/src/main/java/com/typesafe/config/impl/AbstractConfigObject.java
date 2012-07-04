@@ -42,11 +42,16 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
     @Override
     abstract public AbstractConfigObject withoutKey(String key);
 
+    @Override
+    abstract public AbstractConfigObject withValue(String key, ConfigValue value);
+
     abstract protected AbstractConfigObject withOnlyPathOrNull(Path path);
 
     abstract AbstractConfigObject withOnlyPath(Path path);
 
     abstract AbstractConfigObject withoutPath(Path path);
+
+    abstract AbstractConfigObject withValue(Path path, ConfigValue value);
 
     /**
      * This looks up the key with no transformation or type conversion of any

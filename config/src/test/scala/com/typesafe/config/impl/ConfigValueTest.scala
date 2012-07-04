@@ -15,6 +15,7 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigValueType
 import com.typesafe.config.ConfigOrigin
 import com.typesafe.config.ConfigValueFactory
+import com.typesafe.config.ConfigFactory
 
 class ConfigValueTest extends TestUtils {
 
@@ -786,6 +787,72 @@ class ConfigValueTest extends TestUtils {
         assertEquals(parseConfig("a=42"), config)
         assertTrue(config.getValue("a") eq v)
         assertTrue(config.origin.description.contains("atKey"))
+    }
+
+    @Test
+    def withValueDepth1FromEmpty() {
+        val v = ConfigValueFactory.fromAnyRef(42)
+        val config = ConfigFactory.empty.withValue("a", v)
+        assertEquals(parseConfig("a=42"), config)
+        assertTrue(config.getValue("a") eq v)
+    }
+
+    @Test
+    def withValueDepth2FromEmpty() {
+        val v = ConfigValueFactory.fromAnyRef(42)
+        val config = ConfigFactory.empty.withValue("a.b", v)
+        assertEquals(parseConfig("a.b=42"), config)
+        assertTrue(config.getValue("a.b") eq v)
+    }
+
+    @Test
+    def withValueDepth3FromEmpty() {
+        val v = ConfigValueFactory.fromAnyRef(42)
+        val config = ConfigFactory.empty.withValue("a.b.c", v)
+        assertEquals(parseConfig("a.b.c=42"), config)
+        assertTrue(config.getValue("a.b.c") eq v)
+    }
+
+    @Test
+    def withValueDepth1OverwritesExisting() {
+        val v = ConfigValueFactory.fromAnyRef(47)
+        val old = v.atPath("a")
+        val config = old.withValue("a", ConfigValueFactory.fromAnyRef(42))
+        assertEquals(parseConfig("a=42"), config)
+        assertEquals(42, config.getInt("a"))
+    }
+
+    @Test
+    def withValueDepth2OverwritesExisting() {
+        val v = ConfigValueFactory.fromAnyRef(47)
+        val old = v.atPath("a.b")
+        val config = old.withValue("a.b", ConfigValueFactory.fromAnyRef(42))
+        assertEquals(parseConfig("a.b=42"), config)
+        assertEquals(42, config.getInt("a.b"))
+    }
+
+    @Test
+    def withValueInsideExistingObject() {
+        val v = ConfigValueFactory.fromAnyRef(47)
+        val old = v.atPath("a.c")
+        val config = old.withValue("a.b", ConfigValueFactory.fromAnyRef(42))
+        assertEquals(parseConfig("a.b=42,a.c=47"), config)
+        assertEquals(42, config.getInt("a.b"))
+        assertEquals(47, config.getInt("a.c"))
+    }
+
+    @Test
+    def withValueBuildComplexConfig() {
+        val v1 = ConfigValueFactory.fromAnyRef(1)
+        val v2 = ConfigValueFactory.fromAnyRef(2)
+        val v3 = ConfigValueFactory.fromAnyRef(3)
+        val v4 = ConfigValueFactory.fromAnyRef(4)
+        val config = ConfigFactory.empty
+            .withValue("a", v1)
+            .withValue("b.c", v2)
+            .withValue("b.d", v3)
+            .withValue("x.y.z", v4)
+        assertEquals(parseConfig("a=1,b.c=2,b.d=3,x.y.z=4"), config)
     }
 
     @Test

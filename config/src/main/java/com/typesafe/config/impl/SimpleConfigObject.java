@@ -131,6 +131,45 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
+    public SimpleConfigObject withValue(String key, ConfigValue v) {
+        if (v == null)
+            throw new ConfigException.BugOrBroken(
+                    "Trying to store null ConfigValue in a ConfigObject");
+
+        Map<String, AbstractConfigValue> newMap;
+        if (value.isEmpty()) {
+            newMap = Collections.singletonMap(key, (AbstractConfigValue) v);
+        } else {
+            newMap = new HashMap<String, AbstractConfigValue>(value);
+            newMap.put(key, (AbstractConfigValue) v);
+        }
+
+        return new SimpleConfigObject(origin(), newMap, ResolveStatus.fromValues(newMap.values()),
+                ignoresFallbacks);
+    }
+
+    @Override
+    SimpleConfigObject withValue(Path path, ConfigValue v) {
+        String key = path.first();
+        Path next = path.remainder();
+
+        if (next == null) {
+            return withValue(key, v);
+        } else {
+            AbstractConfigValue child = value.get(key);
+            if (child != null && child instanceof AbstractConfigObject) {
+                // if we have an object, add to it
+                return withValue(key, ((AbstractConfigObject) child).withValue(next, v));
+            } else {
+                // as soon as we have a non-object, replace it entirely
+                SimpleConfig subtree = ((AbstractConfigValue) v).atPath(
+                        SimpleConfigOrigin.newSimple("withValue(" + next.render() + ")"), next);
+                return withValue(key, subtree.root());
+            }
+        }
+    }
+
+    @Override
     protected AbstractConfigValue attemptPeekWithPartialResolve(String key) {
         return value.get(key);
     }

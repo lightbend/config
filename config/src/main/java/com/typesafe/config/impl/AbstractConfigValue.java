@@ -9,7 +9,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigOrigin;
@@ -340,10 +339,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         return atKey(SimpleConfigOrigin.newSimple("atKey(" + key + ")"), key);
     }
 
-    @Override
-    public Config atPath(String pathExpression) {
-        SimpleConfigOrigin origin = SimpleConfigOrigin.newSimple("atPath(" + pathExpression + ")");
-        Path path = Path.newPath(pathExpression);
+    SimpleConfig atPath(ConfigOrigin origin, Path path) {
         Path parent = path.parent();
         SimpleConfig result = atKey(origin, path.last());
         while (parent != null) {
@@ -352,5 +348,11 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
             parent = parent.parent();
         }
         return result;
+    }
+
+    @Override
+    public SimpleConfig atPath(String pathExpression) {
+        SimpleConfigOrigin origin = SimpleConfigOrigin.newSimple("atPath(" + pathExpression + ")");
+        return atPath(origin, Path.newPath(pathExpression));
     }
 }
