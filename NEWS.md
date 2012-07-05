@@ -14,10 +14,10 @@
       where one was an empty string, and now you can't.  As far as
       I know, the empty string was always worthless in this case
       and can just be removed.
-- added methods atPath() and atKey() to ConfigValue, to wrap
-  the value into a Config
-- added method withValue() to Config and ConfigObject,
-  to add a value at a given path or key
+ - added methods atPath() and atKey() to ConfigValue, to wrap
+   the value into a Config
+ - added method withValue() to Config and ConfigObject,
+   to add a value at a given path or key
 
 # 0.4.1: May 22, 2012
 
