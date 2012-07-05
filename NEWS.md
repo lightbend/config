@@ -1,4 +1,4 @@
-# X.Y.Z: SOMETIME, 2012
+# 0.5.0: July 5, 2012
 
  - triple-quoted strings as in Python or Scala
  - obscure backward incompatibilities:
