@@ -51,6 +51,11 @@ Obsolete releases are here, but you probably don't want these:
 
  - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
 
+## Release Notes
+
+Please see NEWS.md in this directory,
+https://github.com/typesafehub/config/blob/master/NEWS.md
+
 ## API docs
 
  - Online: http://typesafehub.github.com/config/latest/api/
