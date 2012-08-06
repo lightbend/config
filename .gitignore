@@ -4,3 +4,4 @@
 /.settings
 /bin
 target/
+/bin-test-lib/
