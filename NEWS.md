@@ -87,6 +87,15 @@
    version due to the serialization break, they will update
    next time they bump their ABI.
 
+# 0.3.1: August 6, 2012
+
+ - 0.3.1 is a backport of the "-Dconfig.resource=name can start with a
+   /" fix to 0.3.0
+ - 0.3.1 was published on Maven Central while 0.3.0 and earlier
+   are only on Typesafe's repository
+ - 0.3.1 is mostly intended for use by Akka 2.0.x (and therefore
+   Play 2.0.x), everyone else should use a higher version number
+
 # 0.3.0: March 1, 2012
 
  - ConfigFactory methods now use the thread's context class loader
