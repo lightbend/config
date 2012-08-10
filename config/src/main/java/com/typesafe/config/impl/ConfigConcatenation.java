@@ -96,27 +96,22 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             joined = right.withFallback(left);
         } else if (left instanceof SimpleConfigList && right instanceof SimpleConfigList) {
             joined = ((SimpleConfigList)left).concatenate((SimpleConfigList)right);
-        } else 
-        	
-        // XXX 
-        // experimental
-        // https://github.com/typesafehub/config/issues/24
-        if (left instanceof SimpleConfigList && right instanceof AbstractConfigObject) {
-        	
+        } else if (left instanceof SimpleConfigList && right instanceof AbstractConfigObject) {
+
+            // experimental
+            // https://github.com/typesafehub/config/issues/24
+
         	SimpleConfigList source = (SimpleConfigList) left;
         	
         	List<AbstractConfigValue> target = new ArrayList<AbstractConfigValue>(source.size());
         	
-            for(ConfigValue value: source){
+            for( ConfigValue value: source ) {
             	target.add(((AbstractConfigObject) value).withFallback(right));
             }
             
             joined = new SimpleConfigList(source.origin(), target);
             
-        } else
-        // XXX
-        	
-        if (left instanceof ConfigConcatenation || right instanceof ConfigConcatenation) {
+        } else if (left instanceof ConfigConcatenation || right instanceof ConfigConcatenation) {
             throw new ConfigException.BugOrBroken("unflattened ConfigConcatenation");
         } else if (left instanceof Unmergeable || right instanceof Unmergeable) {
             // leave joined=null, cannot join
