@@ -1,3 +1,8 @@
+# 0.5.2: September 6, 2012
+
+ - add versions of ConfigFactory.load() which let you specify
+   ConfigParseOptions and ConfigResolveOptions.
+
 # 0.5.0: July 5, 2012
 
  - triple-quoted strings as in Python or Scala
