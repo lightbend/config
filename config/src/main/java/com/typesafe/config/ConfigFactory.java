@@ -166,7 +166,7 @@ public final class ConfigFactory {
     }
 
     private static Config loadDefaultConfig(ClassLoader loader) {
-        return loadDefaultConfig(loader, ConfigParseOptions.defaults().setClassLoader(loader));
+        return loadDefaultConfig(loader, ConfigParseOptions.defaults());
     }
 
     private static Config loadDefaultConfig(ClassLoader loader, ConfigParseOptions parseOptions) {
@@ -298,7 +298,7 @@ public final class ConfigFactory {
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
      * thread's current context class loader, and resolve options
-     * 
+     *
      * @param loader
      *            class loader for finding resources
      * @param resolveOptions
