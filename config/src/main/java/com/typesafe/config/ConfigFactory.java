@@ -166,15 +166,15 @@ public final class ConfigFactory {
     }
 
     private static Config loadDefaultConfig(ClassLoader loader) {
-      return loadDefaultConfig(loader, ConfigParseOptions.defaults().setClassLoader(loader));
+        return loadDefaultConfig(loader, ConfigParseOptions.defaults().setClassLoader(loader));
     }
 
     private static Config loadDefaultConfig(ClassLoader loader, ConfigParseOptions parseOptions) {
-      return loadDefaultConfig(loader, parseOptions, ConfigResolveOptions.defaults());
+        return loadDefaultConfig(loader, parseOptions, ConfigResolveOptions.defaults());
     }
 
     private static Config loadDefaultConfig(ClassLoader loader, ConfigResolveOptions resolveOptions) {
-      return loadDefaultConfig(loader, ConfigParseOptions.defaults(), resolveOptions);
+        return loadDefaultConfig(loader, ConfigParseOptions.defaults(), resolveOptions);
     }
 
     private static Config loadDefaultConfig(ClassLoader loader, ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
@@ -298,11 +298,11 @@ public final class ConfigFactory {
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
      * thread's current context class loader, and resolve options
-     *
+     * 
      * @param loader
      *            class loader for finding resources
      * @param resolveOptions
-      *            options for resolving the assembled config stack
+     *            options for resolving the assembled config stack
      * @return configuration for an application
      */
     public static Config load(ClassLoader loader, ConfigResolveOptions resolveOptions) {
