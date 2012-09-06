@@ -170,6 +170,14 @@ public final class ConfigFactory {
     }
 
     private static Config loadDefaultConfig(ClassLoader loader, ConfigParseOptions parseOptions) {
+      return loadDefaultConfig(loader, parseOptions, ConfigResolveOptions.defaults());
+    }
+
+    private static Config loadDefaultConfig(ClassLoader loader, ConfigResolveOptions resolveOptions) {
+      return loadDefaultConfig(loader, ConfigParseOptions.defaults(), resolveOptions);
+    }
+
+    private static Config loadDefaultConfig(ClassLoader loader, ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
         int specified = 0;
 
         // override application.conf with config.file, config.resource,
@@ -185,7 +193,7 @@ public final class ConfigFactory {
             specified += 1;
 
         if (specified == 0) {
-            return load(loader, "application", parseOptions, ConfigResolveOptions.defaults());
+            return load(loader, "application", parseOptions, resolveOptions);
         } else if (specified > 1) {
             throw new ConfigException.Generic("You set more than one of config.file='" + file
                     + "', config.url='" + url + "', config.resource='" + resource
@@ -196,16 +204,16 @@ public final class ConfigFactory {
                     resource = resource.substring(1);
                 // this deliberately does not parseResourcesAnySyntax; if
                 // people want that they can use an include statement.
-                return load(loader, parseResources(loader, resource, parseOptions));
+                return load(loader, parseResources(loader, resource, parseOptions), resolveOptions);
             } else if (file != null) {
                 return load(
                         loader,
-                        parseFile(new File(file), parseOptions));
+                        parseFile(new File(file), parseOptions), resolveOptions);
             } else {
                 try {
                     return load(
                             loader,
-                            parseURL(new URL(url), parseOptions));
+                            parseURL(new URL(url), parseOptions), resolveOptions);
                 } catch (MalformedURLException e) {
                     throw new ConfigException.Generic("Bad URL in config.url system property: '"
                             + url + "': " + e.getMessage(), e);
@@ -280,16 +288,42 @@ public final class ConfigFactory {
      * @param loader
      *            class loader for finding resources
      * @param parseOptions
-      *            Options for parsing resources
+     *            Options for parsing resources
      * @return configuration for an application
      */
-    public static Config load(final ClassLoader loader, final ConfigParseOptions parseOptions) {
-        return ConfigImpl.computeCachedConfig(loader, "load", new Callable<Config>() {
-            @Override
-            public Config call() {
-                return loadDefaultConfig(loader, parseOptions);
-            }
-        });
+    public static Config load(ClassLoader loader, ConfigParseOptions parseOptions) {
+        return loadDefaultConfig(loader, parseOptions);
+    }
+
+    /**
+     * Like {@link #load()} but allows specifying a class loader other than the
+     * thread's current context class loader, and resolve options
+     *
+     * @param loader
+     *            class loader for finding resources
+     * @param resolveOptions
+      *            options for resolving the assembled config stack
+     * @return configuration for an application
+     */
+    public static Config load(ClassLoader loader, ConfigResolveOptions resolveOptions) {
+        return loadDefaultConfig(loader, resolveOptions);
+    }
+
+
+    /**
+     * Like {@link #load()} but allows specifying a class loader other than the
+     * thread's current context class loader, parse options, and resolve options
+     *
+     * @param loader
+     *            class loader for finding resources
+     * @param parseOptions
+     *            Options for parsing resources
+     * @param resolveOptions
+     *            options for resolving the assembled config stack
+     * @return configuration for an application
+     */
+    public static Config load(ClassLoader loader, ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
+        return loadDefaultConfig(loader, parseOptions, resolveOptions);
     }
 
     /**
