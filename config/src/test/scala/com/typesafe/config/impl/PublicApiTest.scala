@@ -826,4 +826,22 @@ class PublicApiTest extends TestUtils {
 
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("include statements nested"))
     }
+
+    @Test
+    def missingConfFails() {
+        val old = System.getProperty("config.resource")
+        System.setProperty("config.resource", "donotexists.conf")
+        intercept[ConfigException.IO] {
+          ConfigFactory.load(ConfigParseOptions.defaults().setAllowMissing(false))
+        }
+
+        // cleanup properties
+        Option(old).map{ v =>
+          System.setProperty("config.resource", v)
+          v
+        }.orElse{
+          System.clearProperty("config.resource")
+          None
+        }
+    }
 }
