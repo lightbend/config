@@ -3,6 +3,7 @@
  */
 package com.typesafe.config.impl;
 
+import java.math.BigInteger;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
@@ -415,6 +416,11 @@ final class Tokens {
     }
 
     static Token newLong(ConfigOrigin origin, long value, String originalText) {
+        return newValue(ConfigNumber.newNumber(origin, value,
+                originalText));
+    }
+
+    static Token newBigInteger(ConfigOrigin origin, BigInteger value, String originalText) {
         return newValue(ConfigNumber.newNumber(origin, value,
                 originalText));
     }

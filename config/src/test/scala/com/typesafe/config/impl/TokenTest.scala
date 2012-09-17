@@ -3,6 +3,8 @@
  */
 package com.typesafe.config.impl
 
+import java.math.BigInteger
+
 import org.junit.Assert._
 import org.junit._
 
@@ -21,6 +23,10 @@ class TokenTest extends TestUtils {
         // long
         checkEqualObjects(tokenLong(42), tokenLong(42))
         checkNotEqualObjects(tokenLong(42), tokenLong(43))
+
+        // big integer
+        checkEqualObjects(tokenBigInteger(new BigInteger("42")), tokenBigInteger(new BigInteger("42")))
+        checkNotEqualObjects(tokenBigInteger(new BigInteger("42")), tokenBigInteger(new BigInteger("43")))
 
         // int and long mixed
         checkEqualObjects(tokenInt(42), tokenLong(42))
