@@ -6,6 +6,7 @@ package com.typesafe.config.impl
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config.ConfigValue
+import java.math.BigInteger
 import java.util.Collections
 import java.net.URL
 import scala.collection.JavaConverters._
@@ -85,16 +86,23 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configIntAndLongEquality() {
+        val bigIntegerVal = bigIntegerValue(new BigInteger("42"))
         val longVal = longValue(42L)
         val intValue = longValue(42)
+        val bigIntegerValueB = bigIntegerValue(new BigInteger("43"))
         val longValueB = longValue(43L)
         val intValueB = longValue(43)
 
         checkEqualObjects(intValue, longVal)
         checkEqualObjects(intValueB, longValueB)
+        checkEqualObjects(bigIntegerVal, longVal)
+        checkEqualObjects(bigIntegerValueB, longValueB)
         checkNotEqualObjects(intValue, longValueB)
         checkNotEqualObjects(intValueB, longVal)
+        checkNotEqualObjects(bigIntegerVal, longValueB)
+        checkNotEqualObjects(bigIntegerValueB, longVal)
     }
+
 
     @Test
     def configDoubleEquality() {

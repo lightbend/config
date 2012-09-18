@@ -548,6 +548,7 @@ abstract trait TestUtils {
     // make the test compare public API to itself.
     protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i, null)
     protected def longValue(l: Long) = new ConfigLong(fakeOrigin(), l, null)
+    protected def bigIntegerValue(bi: BigInteger) = new ConfigBigInteger(fakeOrigin(), bi, null)
     protected def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)
     protected def nullValue() = new ConfigNull(fakeOrigin())
     protected def stringValue(s: String) = new ConfigString(fakeOrigin(), s)
