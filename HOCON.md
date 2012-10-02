@@ -187,7 +187,7 @@ The intermediate setting of `"foo"` to `null` prevents the object merge.
 A sequence of characters outside of a quoted string is a string
 value if:
 
- - it does not contain "forbidden characters" '$', '"', '{', '}',
+ - it does not contain "forbidden characters": '$', '"', '{', '}',
    '[', ']', ':', '=', ',', '+', '#', '`', '^', '?', '!', '@',
    '*', '&', '\' (backslash), or whitespace.
  - it does not contain the two-character string "//" (which
