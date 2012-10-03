@@ -229,9 +229,7 @@ abstract trait TestUtils {
         t
     }
 
-    protected def checkSerializable[T: Manifest](o: T): T = {
-        checkEqualObjects(o, o)
-
+    protected def checkSerializableNoMeaningfulEquals[T: Manifest](o: T): T = {
         assertTrue(o.getClass.getSimpleName + " not an instance of Serializable", o.isInstanceOf[java.io.Serializable])
 
         val a = o.asInstanceOf[java.io.Serializable]
@@ -251,10 +249,20 @@ abstract trait TestUtils {
         assertTrue("deserialized type " + b.getClass.getSimpleName + " doesn't match serialized type " + a.getClass.getSimpleName,
             manifest[T].erasure.isAssignableFrom(b.getClass))
 
-        checkEqualObjects(a, b)
-        checkEqualOrigins(a, b)
-
         b.asInstanceOf[T]
+    }
+
+    protected def checkSerializable[T: Manifest](o: T): T = {
+        checkEqualObjects(o, o)
+
+        assertTrue(o.getClass.getSimpleName + " not an instance of Serializable", o.isInstanceOf[java.io.Serializable])
+
+        val b = checkSerializableNoMeaningfulEquals(o)
+
+        checkEqualObjects(o, b)
+        checkEqualOrigins(o, b)
+
+        b
     }
 
     // origin() is not part of value equality but is serialized, so
