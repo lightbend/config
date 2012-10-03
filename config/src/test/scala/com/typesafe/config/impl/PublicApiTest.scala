@@ -832,16 +832,16 @@ class PublicApiTest extends TestUtils {
         val old = System.getProperty("config.resource")
         System.setProperty("config.resource", "donotexists.conf")
         intercept[ConfigException.IO] {
-          ConfigFactory.load(ConfigParseOptions.defaults().setAllowMissing(false))
+            ConfigFactory.load(ConfigParseOptions.defaults().setAllowMissing(false))
         }
 
         // cleanup properties
-        Option(old).map{ v =>
-          System.setProperty("config.resource", v)
-          v
-        }.orElse{
-          System.clearProperty("config.resource")
-          None
+        Option(old).map { v =>
+            System.setProperty("config.resource", v)
+            v
+        }.orElse {
+            System.clearProperty("config.resource")
+            None
         }
     }
 }
