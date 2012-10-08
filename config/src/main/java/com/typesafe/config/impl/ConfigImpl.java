@@ -26,21 +26,29 @@ import com.typesafe.config.impl.SimpleIncluder.NameSource;
 public class ConfigImpl {
 
     private static class LoaderCache {
-        private ClassLoader current;
+        private Config currentSystemProperties;
+        private ClassLoader currentLoader;
         private Map<String, Config> cache;
 
         LoaderCache() {
-            this.current = null;
+            this.currentSystemProperties = null;
+            this.currentLoader = null;
             this.cache = new HashMap<String, Config>();
         }
 
         // for now, caching as long as the loader remains the same,
         // drop entire cache if it changes.
         synchronized Config getOrElseUpdate(ClassLoader loader, String key, Callable<Config> updater) {
-            if (loader != current) {
+            if (loader != currentLoader) {
                 // reset the cache if we start using a different loader
                 cache.clear();
-                current = loader;
+                currentLoader = loader;
+            }
+
+            Config systemProperties = systemPropertiesAsConfig();
+            if (systemProperties != currentSystemProperties) {
+                cache.clear();
+                currentSystemProperties = systemProperties;
             }
 
             Config config = cache.get(key);
@@ -288,7 +296,7 @@ public class ConfigImpl {
 
     private static class SystemPropertiesHolder {
         // this isn't final due to the reloadSystemPropertiesConfig() hack below
-        static AbstractConfigObject systemProperties = loadSystemProperties();
+        static volatile AbstractConfigObject systemProperties = loadSystemProperties();
     }
 
     static AbstractConfigObject systemPropertiesAsConfigObject() {
@@ -304,9 +312,10 @@ public class ConfigImpl {
         return systemPropertiesAsConfigObject().toConfig();
     }
 
-    // this is a hack to let us set system props in the test suite.
-    // obviously not thread-safe.
-    static void reloadSystemPropertiesConfig() {
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static void reloadSystemPropertiesConfig() {
+        // ConfigFactory.invalidateCaches() relies on this having the side
+        // effect that it drops all caches
         SystemPropertiesHolder.systemProperties = loadSystemProperties();
     }
 

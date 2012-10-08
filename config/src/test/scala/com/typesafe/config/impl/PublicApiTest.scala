@@ -856,4 +856,46 @@ class PublicApiTest extends TestUtils {
         assertTrue("cause messages equal after deserialize", e.getCause().getMessage.equals(eCopy.getCause().getMessage))
         assertTrue("origins equal after deserialize", e.origin().equals(eCopy.origin()))
     }
+
+    @Test
+    def invalidateCaches() {
+        val conf0 = ConfigFactory.load()
+        val sys0 = ConfigFactory.systemProperties()
+        val conf1 = ConfigFactory.load()
+        val sys1 = ConfigFactory.systemProperties()
+        ConfigFactory.invalidateCaches()
+        val conf2 = ConfigFactory.load()
+        val sys2 = ConfigFactory.systemProperties()
+        System.setProperty("invalidateCachesTest", "Hello!")
+        ConfigFactory.invalidateCaches()
+        val conf3 = ConfigFactory.load()
+        val sys3 = ConfigFactory.systemProperties()
+        val conf4 = ConfigFactory.load()
+        val sys4 = ConfigFactory.systemProperties()
+        System.clearProperty("invalidateCachesTest")
+
+        assertTrue("stuff gets cached sys", sys0 eq sys1)
+        assertTrue("stuff gets cached conf", conf0 eq conf1)
+
+        assertTrue("test system property is not set sys", !sys0.hasPath("invalidateCachesTest"))
+        assertTrue("test system property is not set conf", !conf0.hasPath("invalidateCachesTest"))
+
+        assertTrue("invalidate caches works on unchanged system props sys", sys1 ne sys2)
+        assertTrue("invalidate caches works on unchanged system props conf", conf1 ne conf2)
+
+        assertTrue("invalidate caches works on changed system props sys", sys2 ne sys3)
+        assertTrue("invalidate caches works on changed system props conf", conf2 ne conf3)
+
+        assertTrue("invalidate caches doesn't change value if no system prop changes sys", sys1 == sys2)
+        assertTrue("invalidate caches doesn't change value if no system prop changes conf", conf1 == conf2)
+
+        assertTrue("test system property is set sys", sys3.hasPath("invalidateCachesTest"))
+        assertTrue("test system property is set conf", conf3.hasPath("invalidateCachesTest"))
+
+        assertTrue("invalidate caches DOES change value if system props changed sys", sys2 != sys3)
+        assertTrue("invalidate caches DOES change value if system props changed conf", conf2 != conf3)
+
+        assertTrue("stuff gets cached repeatedly sys", sys3 eq sys4)
+        assertTrue("stuff gets cached repeatedly conf", conf3 eq conf4)
+    }
 }

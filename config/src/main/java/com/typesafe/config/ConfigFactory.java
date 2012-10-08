@@ -227,7 +227,9 @@ public final class ConfigFactory {
      * load("application")} in most cases. This configuration should be used by
      * libraries and frameworks unless an application provides a different one.
      * <p>
-     * This method may return a cached singleton.
+     * This method may return a cached singleton so will not see changes to
+     * system properties or config files. (Use {@link #invalidateCaches()} to
+     * force it to reload.)
      * <p>
      * If the system properties <code>config.resource</code>,
      * <code>config.file</code>, or <code>config.url</code> are set, then the
@@ -400,6 +402,31 @@ public final class ConfigFactory {
     }
 
     /**
+     * Reloads any cached configs, picking up changes to system properties for
+     * example. Because a {@link Config} is immutable, anyone with a reference
+     * to the old configs will still have the same outdated objects. However,
+     * new calls to {@link #load()} or {@link #defaultOverrides()} or
+     * {@link #defaultReference} may return a new object.
+     * <p>
+     * This method is primarily intended for use in unit tests, for example,
+     * that may want to update a system property then confirm that it's used
+     * correctly. In many cases, use of this method may indicate there's a
+     * better way to set up your code.
+     * <p>
+     * Caches may be reloaded immediately or lazily; once you call this method,
+     * the reload can occur at any time, even during the invalidation process.
+     * So FIRST make the changes you'd like the caches to notice, then SECOND
+     * call this method to invalidate caches. Don't expect that invalidating,
+     * making changes, then calling {@link #load()}, will work. Make changes
+     * before you invalidate.
+     */
+    public static void invalidateCaches() {
+        // We rely on this having the side effect that it drops
+        // all caches
+        ConfigImpl.reloadSystemPropertiesConfig();
+    }
+
+    /**
      * Gets an empty configuration. See also {@link #empty(String)} to create an
      * empty configuration with a description, which may improve user-visible
      * error messages.
@@ -429,16 +456,19 @@ public final class ConfigFactory {
     /**
      * Gets a <code>Config</code> containing the system properties from
      * {@link java.lang.System#getProperties()}, parsed and converted as with
-     * {@link #parseProperties}. This method can return a global immutable
-     * singleton, so it's preferred over parsing system properties yourself.
-     *
+     * {@link #parseProperties}.
+     * <p>
+     * This method can return a global immutable singleton, so it's preferred
+     * over parsing system properties yourself.
      * <p>
      * {@link #load} will include the system properties as overrides already, as
      * will {@link #defaultReference} and {@link #defaultOverrides}.
      *
      * <p>
      * Because this returns a singleton, it will not notice changes to system
-     * properties made after the first time this method is called.
+     * properties made after the first time this method is called. Use
+     * {@link #invalidateCaches()} to force the singleton to reload if you
+     * modify system properties.
      *
      * @return system properties parsed into a <code>Config</code>
      */
