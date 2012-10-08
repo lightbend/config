@@ -11,6 +11,7 @@ import java.util.Map;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMergeable;
+import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
@@ -294,11 +295,28 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
 
     protected void render(StringBuilder sb, int indent, String atKey, ConfigRenderOptions options) {
         if (atKey != null) {
-            sb.append(ConfigImplUtil.renderJsonString(atKey));
-            if (options.getFormatted())
-                sb.append(" : ");
+            String renderedKey;
+            if (options.getJson())
+                renderedKey = ConfigImplUtil.renderJsonString(atKey);
             else
-                sb.append(":");
+                renderedKey = ConfigImplUtil.renderStringUnquotedIfPossible(atKey);
+
+            sb.append(renderedKey);
+
+            if (options.getJson()) {
+                if (options.getFormatted())
+                    sb.append(" : ");
+                else
+                    sb.append(":");
+            } else {
+                // in non-JSON we can omit the colon or equals before an object
+                if (this instanceof ConfigObject) {
+                    if (options.getFormatted())
+                        sb.append(' ');
+                } else {
+                    sb.append("=");
+                }
+            }
         }
         render(sb, indent, options);
     }

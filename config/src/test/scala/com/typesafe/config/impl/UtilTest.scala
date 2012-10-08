@@ -56,4 +56,38 @@ class UtilTest extends TestUtils {
         assertFalse(ConfigImplUtil.equalsHandlingNull(null, new Object()))
         assertTrue(ConfigImplUtil.equalsHandlingNull("", ""))
     }
+
+    val lotsOfStrings = (invalidJson ++ validConf).map(_.test)
+
+    private def roundtripJson(s: String) {
+        val rendered = ConfigImplUtil.renderJsonString(s)
+        val parsed = parseConfig("{ foo: " + rendered + "}").getString("foo")
+        assertTrue("String round-tripped through maybe-unquoted escaping '" + s + "' " + s.length +
+            " rendering '" + rendered + "' " + rendered.length +
+            " parsed '" + parsed + "' " + parsed.length,
+            s == parsed)
+    }
+
+    private def roundtripUnquoted(s: String) {
+        val rendered = ConfigImplUtil.renderStringUnquotedIfPossible(s)
+        val parsed = parseConfig("{ foo: " + rendered + "}").getString("foo")
+        assertTrue("String round-tripped through maybe-unquoted escaping '" + s + "' " + s.length +
+            " rendering '" + rendered + "' " + rendered.length +
+            " parsed '" + parsed + "' " + parsed.length,
+            s == parsed)
+    }
+
+    @Test
+    def renderJsonString() {
+        for (s <- lotsOfStrings) {
+            roundtripJson(s)
+        }
+    }
+
+    @Test
+    def renderUnquotedIfPossible() {
+        for (s <- lotsOfStrings) {
+            roundtripUnquoted(s)
+        }
+    }
 }

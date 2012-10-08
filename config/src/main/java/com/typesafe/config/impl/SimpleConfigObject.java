@@ -368,9 +368,15 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         if (isEmpty()) {
             sb.append("{}");
         } else {
-            sb.append("{");
+            boolean outerBraces = indent > 0 || options.getJson();
+
+            if (outerBraces)
+                sb.append("{");
+
             if (options.getFormatted())
                 sb.append('\n');
+
+            int separatorCount = 0;
             for (String k : keySet()) {
                 AbstractConfigValue v;
                 v = value.get(k);
@@ -391,18 +397,29 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 }
                 indent(sb, indent + 1, options);
                 v.render(sb, indent + 1, k, options);
-                sb.append(",");
-                if (options.getFormatted())
+
+                if (options.getFormatted()) {
+                    if (options.getJson()) {
+                        sb.append(",");
+                        separatorCount = 2;
+                    } else {
+                        separatorCount = 1;
+                    }
                     sb.append('\n');
+                } else {
+                    sb.append(",");
+                    separatorCount = 1;
+                }
             }
-            // chop comma or newline
-            sb.setLength(sb.length() - 1);
+            // chop last commas/newlines
+            sb.setLength(sb.length() - separatorCount);
             if (options.getFormatted()) {
-                sb.setLength(sb.length() - 1); // also chop comma
                 sb.append("\n"); // put a newline back
                 indent(sb, indent, options);
             }
-            sb.append("}");
+
+            if (outerBraces)
+                sb.append("}");
         }
     }
 

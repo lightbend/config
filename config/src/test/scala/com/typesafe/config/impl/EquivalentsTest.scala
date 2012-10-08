@@ -50,41 +50,6 @@ class EquivalentsTest extends TestUtils {
         postParse(ConfigFactory.parseFile(f, options).root)
     }
 
-    private def printIndented(indent: Int, s: String): Unit = {
-        for (i <- 0 to indent)
-            System.err.print(' ')
-        System.err.println(s)
-    }
-
-    private def showDiff(a: ConfigValue, b: ConfigValue, indent: Int = 0): Unit = {
-        if (a != b) {
-            if (a.valueType != b.valueType) {
-                printIndented(indent, "- " + a.valueType)
-                printIndented(indent, "+ " + b.valueType)
-            } else if (a.valueType == ConfigValueType.OBJECT) {
-                import scala.collection.JavaConverters._
-                printIndented(indent, "OBJECT")
-                val aS = a.asInstanceOf[ConfigObject].asScala
-                val bS = b.asInstanceOf[ConfigObject].asScala
-                for (aKV <- aS) {
-                    val bVOption = bS.get(aKV._1)
-                    if (Some(aKV._2) != bVOption) {
-                        printIndented(indent + 1, aKV._1)
-                        if (bVOption.isDefined) {
-                            showDiff(aKV._2, bVOption.get, indent + 2)
-                        } else {
-                            printIndented(indent + 2, "- " + aKV._2)
-                            printIndented(indent + 2, "+ (missing)")
-                        }
-                    }
-                }
-            } else {
-                printIndented(indent, "- " + a)
-                printIndented(indent, "+ " + b)
-            }
-        }
-    }
-
     // would like each "equivNN" directory to be a suite and each file in the dir
     // to be a test, but not sure how to convince junit to do that.
     @Test

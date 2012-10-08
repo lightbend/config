@@ -5,10 +5,12 @@ object RenderExample extends App {
     val formatted = args.contains("--formatted")
     val originComments = args.contains("--origin-comments")
     val comments = args.contains("--comments")
+    val hocon = args.contains("--hocon")
     val options = ConfigRenderOptions.defaults()
         .setFormatted(formatted)
         .setOriginComments(originComments)
         .setComments(comments)
+        .setJson(!hocon)
 
     def render(what: String) {
         val conf = ConfigFactory.defaultOverrides()

@@ -549,7 +549,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def quoteString() {
-        // the actual quote logic shoudl be tested OK in the non-public-API tests,
+        // the actual quote logic should be tested OK in the non-public-API tests,
         // this is just to test the public wrapper.
 
         assertEquals("\"\"", ConfigUtil.quoteString(""))

@@ -995,11 +995,13 @@ class ConfigTest extends TestUtils {
             for (
                 formatted <- allBooleans;
                 originComments <- allBooleans;
-                comments <- allBooleans
+                comments <- allBooleans;
+                json <- allBooleans
             ) yield ConfigRenderOptions.defaults()
                 .setFormatted(formatted)
                 .setOriginComments(originComments)
                 .setComments(comments)
+                .setJson(json)
         } toSeq
 
         for (i <- 1 to 10) {
@@ -1011,16 +1013,20 @@ class ConfigTest extends TestUtils {
                 val unresolvedRender = conf.root.render(renderOptions)
                 val resolved = conf.resolve()
                 val resolvedRender = resolved.root.render(renderOptions)
+                val unresolvedParsed = ConfigFactory.parseString(unresolvedRender, ConfigParseOptions.defaults())
+                val resolvedParsed = ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults())
                 try {
-                    assertEquals(conf.root, ConfigFactory.parseString(unresolvedRender, ConfigParseOptions.defaults()).root)
-                    assertEquals(resolved.root, ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults()).root)
+                    assertEquals("unresolved options=" + renderOptions, conf.root, unresolvedParsed.root)
+                    assertEquals("resolved options=" + renderOptions, resolved.root, resolvedParsed.root)
                 } catch {
-                    case e: Exception =>
-                        System.err.println("unresolvedRender = " + unresolvedRender)
-                        System.err.println("resolvedRender = " + resolvedRender)
+                    case e: Throwable =>
+                        System.err.println("UNRESOLVED diff:")
+                        showDiff(conf.root, unresolvedParsed.root)
+                        System.err.println("RESOLVED diff:")
+                        showDiff(resolved.root, resolvedParsed.root)
                         throw e
                 }
-                if (!(renderOptions.getComments() || renderOptions.getOriginComments())) {
+                if (renderOptions.getJson() && !(renderOptions.getComments() || renderOptions.getOriginComments())) {
                     // should get valid JSON if we don't have comments and are resolved
                     val json = try {
                         ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON));

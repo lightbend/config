@@ -72,6 +72,30 @@ final public class ConfigImplUtil {
         return sb.toString();
     }
 
+    static String renderStringUnquotedIfPossible(String s) {
+        // this can quote unnecessarily as long as it never fails to quote when
+        // necessary
+        if (s.length() == 0)
+            return renderJsonString(s);
+
+        int first = s.codePointAt(0);
+        if (Character.isDigit(first))
+            return renderJsonString(s);
+
+        if (s.startsWith("include") || s.startsWith("true") || s.startsWith("false")
+                || s.startsWith("null") || s.contains("//"))
+            return renderJsonString(s);
+
+        // only unquote if it's pure alphanumeric
+        for (int i = 0; i < s.length(); ++i) {
+            char c = s.charAt(i);
+            if (!(Character.isLetter(c) || Character.isDigit(c)))
+                return renderJsonString(s);
+        }
+
+        return s;
+    }
+
     static boolean isWhitespace(int codepoint) {
         switch (codepoint) {
         // try to hit the most common ASCII ones first, then the nonbreaking
