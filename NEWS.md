@@ -1,3 +1,17 @@
+# 0.6.0: October 10, 2012
+
+ - add ConfigRenderOptions.setJson which can be used to enable or
+   disable the use of HOCON extensions (other than comments, which
+   remain separately-controlled). Right now setJson(false) will
+   result in a somewhat prettier rendering using extensions.
+ - add ConfigFactory.invalidateCaches() to support reloading
+   system properties (mostly this is intended for use in
+   unit tests).
+ - make ConfigException serializable, in case you have some
+   logging system or similar that relies on that. Serialization
+   of ConfigException is not guaranteed to be compatible across
+   releases.
+
 # 0.5.2: September 6, 2012
 
  - add versions of ConfigFactory.load() which let you specify

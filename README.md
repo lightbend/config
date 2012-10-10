@@ -44,7 +44,7 @@ Maven Central.
     <dependency>
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
-        <version>0.5.2</version>
+        <version>0.6.0</version>
     </dependency>
 
 Obsolete releases are here, but you probably don't want these:
