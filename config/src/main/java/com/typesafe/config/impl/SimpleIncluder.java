@@ -166,12 +166,14 @@ class SimpleIncluder implements FullIncluder {
     // loading app.{conf,json,properties} from the filesystem.
     static ConfigObject fromBasename(NameSource source, String name, ConfigParseOptions options) {
         ConfigObject obj;
-        if (name.endsWith(".conf") || name.endsWith(".json") || name.endsWith(".properties")) {
+        if (name.endsWith(".conf") || name.endsWith(".hocon") || name.endsWith(".json") 
+                 || name.endsWith(".properties")) {
             ConfigParseable p = source.nameToParseable(name, options);
 
             obj = p.parse(p.options().setAllowMissing(options.getAllowMissing()));
         } else {
             ConfigParseable confHandle = source.nameToParseable(name + ".conf", options);
+            ConfigParseable hoconHandle = source.nameToParseable(name + ".hocon", options);
             ConfigParseable jsonHandle = source.nameToParseable(name + ".json", options);
             ConfigParseable propsHandle = source.nameToParseable(name + ".properties", options);
             boolean gotSomething = false;
@@ -183,6 +185,16 @@ class SimpleIncluder implements FullIncluder {
             if (syntax == null || syntax == ConfigSyntax.CONF) {
                 try {
                     obj = confHandle.parse(confHandle.options().setAllowMissing(false)
+                            .setSyntax(ConfigSyntax.CONF));
+                    gotSomething = true;
+                } catch (ConfigException.IO e) {
+                    failMessages.add(e.getMessage());
+                }
+            }
+
+            if (syntax == null || syntax == ConfigSyntax.CONF) {
+                try {
+                    obj = hoconHandle.parse(hoconHandle.options().setAllowMissing(false)
                             .setSyntax(ConfigSyntax.CONF));
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
