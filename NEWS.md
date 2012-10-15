@@ -1,3 +1,7 @@
+# 1.0.0: October 15, 2012
+
+ - no changes from 0.6.0. ABI now guaranteed for 1.0.x series.
+
 # 0.6.0: October 10, 2012
 
  - add ConfigRenderOptions.setJson which can be used to enable or
