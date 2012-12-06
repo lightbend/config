@@ -1,13 +1,11 @@
-addSbtPlugin("de.johoop" % "findbugs4sbt" % "1.1.6")
+addSbtPlugin("de.johoop" % "findbugs4sbt" % "1.1.7")
 
 libraryDependencies ++= Seq(
- "org.jacoco" % "org.jacoco.core" % "0.5.6.201201232323" artifacts(Artifact("org.jacoco.core", "jar", "jar")),
-  "org.jacoco" % "org.jacoco.report" % "0.5.6.201201232323" artifacts(Artifact("org.jacoco.report", "jar", "jar")))
+  "org.jacoco" % "org.jacoco.core" % "0.5.9.201207300726" artifacts(Artifact("org.jacoco.core", "jar", "jar")),
+  "org.jacoco" % "org.jacoco.report" % "0.5.9.201207300726" artifacts(Artifact("org.jacoco.report", "jar", "jar")))
 
-addSbtPlugin("de.johoop" % "jacoco4sbt" % "1.2.2")
+addSbtPlugin("de.johoop" % "jacoco4sbt" % "1.2.4")
 
-resolvers += Resolver.url("sbt-plugin-releases", new URL("http://scalasbt.artifactoryonline.com/scalasbt/sbt-plugin-releases/"))(Resolver.ivyStylePatterns)
+addSbtPlugin("com.typesafe.sbt" % "sbt-pgp" % "0.7")
 
-addSbtPlugin("com.jsuereth" % "xsbt-gpg-plugin" % "0.6")
-
-addSbtPlugin("com.typesafe.sbtosgi" % "sbtosgi" % "0.2.0")
+addSbtPlugin("com.typesafe.sbt" % "sbt-osgi" % "0.4.0")

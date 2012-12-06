@@ -2,7 +2,6 @@ import de.johoop.findbugs4sbt.FindBugs._
 import de.johoop.findbugs4sbt.ReportType
 import de.johoop.jacoco4sbt._
 import JacocoPlugin._
-import javadoc.JavadocPlugin._
 
 fork in test := true
 
@@ -14,7 +13,7 @@ autoScalaLibrary := false
 
 crossPaths := false
 
-libraryDependencies += "net.liftweb" %% "lift-json" % "2.4" % "test"
+libraryDependencies += "net.liftweb" %% "lift-json" % "2.5-M3" % "test"
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.7" % "test"
 
@@ -28,10 +27,6 @@ findbugsReportName := "findbugs.html"
 
 seq(jacoco.settings : _*)
 
-seq(javadocSettings: _*)
+javacOptions in (Compile,doc) ++= Seq("-exclude", "com.typesafe.config.impl")
 
-JavadocKeys.javadocOptions += "-exclude com.typesafe.config.impl"
-
-doc in Compile <<= JavadocKeys.javadoc
-
-javacOptions in Compile ++= Seq("-source", "1.6", "-target", "1.6")
+javacOptions in (Compile,compile) ++= Seq("-source", "1.6", "-target", "1.6")

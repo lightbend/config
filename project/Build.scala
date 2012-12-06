@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import com.typesafe.sbtosgi.OsgiPlugin._
+import com.typesafe.sbt.osgi.SbtOsgi._
 
 object ConfigBuild extends Build {
     val unpublished = Seq(
