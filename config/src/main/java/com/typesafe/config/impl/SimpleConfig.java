@@ -234,23 +234,30 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return size;
     }
 
+    @Deprecated
     @Override
     public Long getMilliseconds(String path) {
-        long ns = getNanoseconds(path);
-        long ms = TimeUnit.NANOSECONDS.toMillis(ns);
-        return ms;
+        return getDuration(path, TimeUnit.MILLISECONDS);
+    }
+
+    @Deprecated
+    @Override
+    public Long getNanoseconds(String path) {
+        return getDuration(path, TimeUnit.NANOSECONDS);
     }
 
     @Override
-    public Long getNanoseconds(String path) {
-        Long ns = null;
+    public Long getDuration(String path, TimeUnit unit) {
+        Long result = null;
         try {
-            ns = TimeUnit.MILLISECONDS.toNanos(getLong(path));
+            result = unit.convert(getLong(path), TimeUnit.MILLISECONDS);
         } catch (ConfigException.WrongType e) {
             ConfigValue v = find(path, ConfigValueType.STRING);
-            ns = parseDuration((String) v.unwrapped(), v.origin(), path);
+            result = unit.convert(
+                       parseDuration((String) v.unwrapped(), v.origin(), path),
+                       TimeUnit.NANOSECONDS);
         }
-        return ns;
+        return result;
     }
 
     @SuppressWarnings("unchecked")
@@ -384,34 +391,40 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     @Override
-    public List<Long> getMillisecondsList(String path) {
-        List<Long> nanos = getNanosecondsList(path);
-        List<Long> l = new ArrayList<Long>();
-        for (Long n : nanos) {
-            l.add(TimeUnit.NANOSECONDS.toMillis(n));
-        }
-        return l;
-    }
-
-    @Override
-    public List<Long> getNanosecondsList(String path) {
+    public List<Long> getDurationList(String path, TimeUnit unit) {
         List<Long> l = new ArrayList<Long>();
         List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
             if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(TimeUnit.MILLISECONDS.toNanos(((Number) v.unwrapped())
-                        .longValue()));
+                Long n = unit.convert(
+                           ((Number) v.unwrapped()).longValue(),
+                           TimeUnit.MILLISECONDS);
+                l.add(n);
             } else if (v.valueType() == ConfigValueType.STRING) {
                 String s = (String) v.unwrapped();
-                Long n = parseDuration(s, v.origin(), path);
+                Long n = unit.convert(
+                           parseDuration(s, v.origin(), path),
+                           TimeUnit.NANOSECONDS);
                 l.add(n);
             } else {
                 throw new ConfigException.WrongType(v.origin(), path,
-                        "duration string or number of nanoseconds", v
-                                .valueType().name());
+                        "duration string or number of " + unit.name(),
+                        v.valueType().name());
             }
         }
         return l;
+    }
+
+    @Deprecated
+    @Override
+    public List<Long> getMillisecondsList(String path) {
+        return getDurationList(path, TimeUnit.MILLISECONDS);
+    }
+
+    @Deprecated
+    @Override
+    public List<Long> getNanosecondsList(String path) {
+        return getDurationList(path, TimeUnit.NANOSECONDS);
     }
 
     @Override
