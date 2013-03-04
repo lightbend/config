@@ -343,6 +343,17 @@ class ConfParserTest extends TestUtils {
         lineNumberTest(1, "1e\n")
         lineNumberTest(2, "\n1e\n")
         lineNumberTest(3, "\n\n1e\n")
+
+        // newlines in triple-quoted string should not hose up the numbering
+        lineNumberTest(1, "a : \"\"\"foo\"\"\"}")
+        lineNumberTest(2, "a : \"\"\"foo\n\"\"\"}")
+        lineNumberTest(3, "a : \"\"\"foo\nbar\nbaz\"\"\"}")
+        //   newlines after the triple quoted string
+        lineNumberTest(5, "a : \"\"\"foo\nbar\nbaz\"\"\"\n\n}")
+        //   triple quoted string ends in a newline
+        lineNumberTest(6, "a : \"\"\"foo\nbar\nbaz\n\"\"\"\n\n}")
+        //   end in the middle of triple-quoted string
+        lineNumberTest(5, "a : \"\"\"foo\n\n\nbar\n")
     }
 
     @Test

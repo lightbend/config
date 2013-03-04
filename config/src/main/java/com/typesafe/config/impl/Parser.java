@@ -200,11 +200,18 @@ final class Parser {
 
             while (Tokens.isNewline(t.token)) {
                 // line number tokens have the line that was _ended_ by the
-                // newline, so we have to add one.
+                // newline, so we have to add one. We have to update lineNumber
+                // here and also below, because not all tokens store a line
+                // number, but newline tokens always do.
                 lineNumber = t.token.lineNumber() + 1;
 
                 t = nextToken();
             }
+
+            // update line number again, iff we have one
+            int newNumber = t.token.lineNumber();
+            if (newNumber >= 0)
+                lineNumber = newNumber;
 
             return t;
         }

@@ -435,6 +435,11 @@ final class Tokenizer {
                     consecutiveQuotes = 0;
                     if (c == -1)
                         throw problem("End of input but triple-quoted string was still open");
+                    else if (c == '\n') {
+                        // keep the line number accurate
+                        lineNumber += 1;
+                        lineOrigin = origin.setLineNumber(lineNumber);
+                    }
                 }
 
                 sb.appendCodePoint(c);
