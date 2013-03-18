@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
 import com.typesafe.config.Config;
@@ -289,8 +290,18 @@ public class ConfigImpl {
         }
     }
 
+    private static Properties getSystemProperties() {
+        // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties
+        final Properties systemProperties = System.getProperties();
+        final Properties systemPropertiesCopy = new Properties();
+        synchronized (systemProperties) {
+            systemPropertiesCopy.putAll(systemProperties);
+        }
+        return systemPropertiesCopy;
+    }
+
     private static AbstractConfigObject loadSystemProperties() {
-        return (AbstractConfigObject) Parseable.newProperties(System.getProperties(),
+        return (AbstractConfigObject) Parseable.newProperties(getSystemProperties(),
                 ConfigParseOptions.defaults().setOriginDescription("system properties")).parse();
     }
 
