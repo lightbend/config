@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -673,5 +674,47 @@ public abstract class Parseable implements ConfigParseable {
 
     public static Parseable newProperties(Properties properties, ConfigParseOptions options) {
         return new ParseableProperties(properties, options);
+    }
+
+    private final static class ParseableArray extends Parseable {
+
+        final private String[] args;
+
+        public ParseableArray(String[] args, ConfigParseOptions options) {
+            this.args = args;
+            postConstruct(options);
+        }
+
+        @Override
+        protected Reader reader() throws IOException {
+            throw new ConfigException.BugOrBroken("reader() should not be called on array (String[] args)");
+        }
+
+        @Override
+        protected AbstractConfigObject rawParseValue(ConfigOrigin origin, ConfigParseOptions finalOptions) {
+            if (ConfigImpl.traceLoadsEnabled()) {
+                trace("Loading config from properties " + Arrays.toString(args));
+            }
+            return ArrayParser.fromArray(origin, args);
+        }
+
+        @Override
+        ConfigSyntax guessSyntax() {
+            return ConfigSyntax.PROPERTIES;
+        }
+
+        @Override
+        protected ConfigOrigin createOrigin() {
+            return SimpleConfigOrigin.newSimple("array");
+        }
+
+        @Override
+        public String toString() {
+            return getClass().getSimpleName() + "(" + args.length + " array items)";
+        }
+    }
+
+    public static Parseable newArray(String[] args, ConfigParseOptions options) {
+        return new ParseableArray(args, options);
     }
 }

@@ -522,6 +522,15 @@ public final class ConfigFactory {
     public static Config parseProperties(Properties properties) {
         return parseProperties(properties, ConfigParseOptions.defaults());
     }
+    
+    public static Config parseArray(String[] args,
+            ConfigParseOptions options) {
+        return Parseable.newArray(args, options).parse().toConfig();
+    }
+    
+    public static Config parseArray(String[] args) {
+        return parseArray(args,ConfigParseOptions.defaults());
+    }
 
     public static Config parseReader(Reader reader, ConfigParseOptions options) {
         return Parseable.newReader(reader, options).parse().toConfig();
