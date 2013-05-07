@@ -9,6 +9,7 @@ import java.util.Properties
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigException
 
 class PropertiesTest extends TestUtils {
     @Test
@@ -91,5 +92,64 @@ class PropertiesTest extends TestUtils {
         assertEquals(2, conf.root.size())
         assertEquals("foo", conf.getString("a.b"))
         assertEquals("foo", conf.getString("x.y.z"))
+    }
+
+    @Test
+    def makeListWithNumericKeys() {
+        import scala.collection.JavaConverters._
+
+        val props = new Properties()
+        props.setProperty("a.0", "0")
+        props.setProperty("a.1", "1")
+        props.setProperty("a.2", "2")
+        props.setProperty("a.3", "3")
+        props.setProperty("a.4", "4")
+
+        val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        assertEquals(Seq(0, 1, 2, 3, 4), conf.getIntList("a").asScala.toSeq)
+    }
+
+    @Test
+    def makeListWithNumericKeysWithGaps() {
+        import scala.collection.JavaConverters._
+
+        val props = new Properties()
+        props.setProperty("a.1", "0")
+        props.setProperty("a.2", "1")
+        props.setProperty("a.4", "2")
+
+        val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        assertEquals(Seq(0, 1, 2), conf.getIntList("a").asScala.toSeq)
+    }
+
+    @Test
+    def makeListWithNumericKeysWithNoise() {
+        import scala.collection.JavaConverters._
+
+        val props = new Properties()
+        props.setProperty("a.-1", "-1")
+        props.setProperty("a.foo", "-2")
+        props.setProperty("a.0", "0")
+        props.setProperty("a.1", "1")
+        props.setProperty("a.2", "2")
+        props.setProperty("a.3", "3")
+        props.setProperty("a.4", "4")
+
+        val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        assertEquals(Seq(0, 1, 2, 3, 4), conf.getIntList("a").asScala.toSeq)
+    }
+
+    @Test
+    def noNumericKeysAsListFails() {
+        import scala.collection.JavaConverters._
+
+        val props = new Properties()
+        props.setProperty("a.bar", "0")
+
+        val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        val e = intercept[ConfigException.WrongType] {
+            conf.getList("a")
+        }
+        assertTrue("expected exception thrown", e.getMessage.contains("LIST"))
     }
 }

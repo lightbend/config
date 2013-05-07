@@ -3,6 +3,13 @@
  */
 package com.typesafe.config.impl;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -73,6 +80,49 @@ final class DefaultTransformer {
             case STRING:
                 // no-op STRING to STRING
                 break;
+            }
+        } else if (requested == ConfigValueType.LIST && value.valueType() == ConfigValueType.OBJECT) {
+            // attempt to convert an array-like (numeric indices) object to a
+            // list. This would be used with .properties syntax for example:
+            // -Dfoo.0=bar -Dfoo.1=baz
+            // To ensure we still throw type errors for objects treated
+            // as lists in most cases, we'll refuse to convert if the object
+            // does not contain any numeric keys. This means we don't allow
+            // empty objects here though :-/
+            AbstractConfigObject o = (AbstractConfigObject) value;
+            Map<Integer, AbstractConfigValue> values = new HashMap<Integer, AbstractConfigValue>();
+            for (String key : o.keySet()) {
+                int i;
+                try {
+                    i = Integer.parseInt(key, 10);
+                    if (i < 0)
+                        continue;
+                    values.put(i, o.get(key));
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+            }
+            if (!values.isEmpty()) {
+                ArrayList<Map.Entry<Integer, AbstractConfigValue>> entryList = new ArrayList<Map.Entry<Integer, AbstractConfigValue>>(
+                        values.entrySet());
+                // sort by numeric index
+                Collections.sort(entryList,
+                        new Comparator<Map.Entry<Integer, AbstractConfigValue>>() {
+                            @Override
+                            public int compare(Map.Entry<Integer, AbstractConfigValue> a,
+                                    Map.Entry<Integer, AbstractConfigValue> b) {
+                                // Integer.compare was added in 1.7 so not using
+                                // it here yet
+                                return Integer.valueOf(a.getKey()).compareTo(b.getKey());
+                            }
+                        });
+                // drop the indices (we allow gaps in the indices, for better or
+                // worse)
+                ArrayList<AbstractConfigValue> list = new ArrayList<AbstractConfigValue>();
+                for (Map.Entry<Integer, AbstractConfigValue> entry : entryList) {
+                    list.add(entry.getValue());
+                }
+                return new SimpleConfigList(value.origin(), list);
             }
         }
 
