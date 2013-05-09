@@ -1073,6 +1073,43 @@ Implementations need not support files, Java resources, or URLs;
 and they need not support particular URL protocols. However, if
 they do support them they should do so as described above.
 
+### Conversion of numerically-indexed objects to arrays
+
+In some file formats and contexts, such as Java properties files,
+there isn't a good way to define arrays. To provide some mechanism
+for this, implementations should support converting objects with
+numeric keys into arrays. For example, this object:
+
+    { "0" : "a", "1" : "b" }
+
+could be treated as:
+
+    [ "a", "b" ]
+
+This allows creating an array in a properties file like this:
+
+    foo.0 = "a"
+    foo.1 = "b"
+
+The details:
+
+ - the conversion should be done lazily when required to avoid
+   a type error, NOT eagerly anytime an object has numeric
+   keys.
+ - the conversion should be done when you would do an automatic
+   type conversion (see the section "Automatic type conversions"
+   below).
+ - the conversion should be done in a concatenation when a list
+   is expected and an object with numeric keys is found.
+ - the conversion should not occur if the object is empty or
+   has no keys which parse as positive integers.
+ - the conversion should ignore any keys which do not parse
+   as positive integers.
+ - the conversion should sort by the integer value of each
+   key and then build the array; if the integer keys are "0" and
+   "2" then the resulting array would have indices "0" and "1",
+   i.e. missing indices in the object are eliminated.
+
 ## API Recommendations
 
 Implementations of HOCON ideally follow certain conventions and
@@ -1095,6 +1132,8 @@ implementation should attempt to convert types as follows:
  - string to null: the string `"null"` should be converted to a
    null value if the application specifically asks for a null
    value, though there's probably no reason an app would do this.
+ - numerically-indexed object to array: see the section
+   "Conversion of numerically-indexed objects to arrays" above
 
 The following type conversions should NOT be performed:
 
@@ -1103,7 +1142,8 @@ The following type conversions should NOT be performed:
  - object to anything
  - array to anything
  - anything to object
- - anything to array
+ - anything to array, with the exception of numerically-indexed
+   object to array
 
 Converting objects and arrays to and from strings is tempting, but
 in practical situations raises thorny issues of quoting and
