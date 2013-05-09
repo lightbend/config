@@ -84,9 +84,18 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     /**
      * Add left and right, or their merger, to builder.
      */
-    private static void join(ArrayList<AbstractConfigValue> builder,
-            AbstractConfigValue right) {
+    private static void join(ArrayList<AbstractConfigValue> builder, AbstractConfigValue origRight) {
         AbstractConfigValue left = builder.get(builder.size() - 1);
+        AbstractConfigValue right = origRight;
+
+        // check for an object which can be converted to a list
+        // (this will be an object with numeric keys, like foo.0, foo.1)
+        if (left instanceof ConfigObject && right instanceof SimpleConfigList) {
+            left = DefaultTransformer.transform(left, ConfigValueType.LIST);
+        } else if (left instanceof SimpleConfigList && right instanceof ConfigObject) {
+            right = DefaultTransformer.transform(right, ConfigValueType.LIST);
+        }
+
         // Since this depends on the type of two instances, I couldn't think
         // of much alternative to an instanceof chain. Visitors are sometimes
         // used for multiple dispatch but seems like overkill.

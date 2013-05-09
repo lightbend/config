@@ -10,6 +10,7 @@ import com.typesafe.config.Config
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigException
+import com.typesafe.config.ConfigResolveOptions
 
 class PropertiesTest extends TestUtils {
     @Test
@@ -151,5 +152,28 @@ class PropertiesTest extends TestUtils {
             conf.getList("a")
         }
         assertTrue("expected exception thrown", e.getMessage.contains("LIST"))
+    }
+
+    @Test
+    def makeListWithNumericKeysAndMerge() {
+        import scala.collection.JavaConverters._
+
+        val props = new Properties()
+        props.setProperty("a.0", "0")
+        props.setProperty("a.1", "1")
+        props.setProperty("a.2", "2")
+
+        val conf1 = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        assertEquals(Seq(0, 1, 2), conf1.getIntList("a").asScala.toSeq)
+
+        val conf2 = ConfigFactory.parseString("""
+                a += 3
+                a += 4
+                a = ${a} [ 5, 6 ]
+                a = [-2, -1] ${a}
+                """)
+        val conf = conf2.withFallback(conf1).resolve()
+
+        assertEquals(Seq(-2, -1, 0, 1, 2, 3, 4, 5, 6), conf.getIntList("a").asScala.toSeq)
     }
 }
