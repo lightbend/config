@@ -142,6 +142,16 @@ public interface Config extends ConfigMergeable {
      *   }
      * </pre>
      *
+     * <p>
+     * Many methods on {@link ConfigFactory} such as {@link
+     * ConfigFactory#load()} automatically resolve the loaded
+     * <code>Config</code> on the loaded stack of config files.
+     *
+     * <p> Resolving an already-resolved config is a harmless
+     * no-op, but again, it is best to resolve an entire stack of
+     * fallbacks (such as all your config files combined) rather
+     * than resolving each one individually.
+     *
      * @return an immutable object with substitutions resolved
      * @throws ConfigException.UnresolvedSubstitution
      *             if any substitutions refer to nonexistent paths
