@@ -25,18 +25,34 @@ public interface ConfigMergeable {
      * values just return the original value, since they automatically override
      * any fallback.
      * 
-     * <p>
-     * The semantics of merging are described in the <a
+     * <p> The semantics of merging are described in the <a
      * href="https://github.com/typesafehub/config/blob/master/HOCON.md">spec
-     * for HOCON</a>.
-     * 
+     * for HOCON</a>. Merging typically occurs when either the
+     * same object is created twice in the same file, or two
+     * config files are both loaded. For example:
+     * <pre>
+     *  foo = { a: 42 }
+     *  foo = { b: 43 }
+     * </pre>
+     * Here, the two objects are merged as if you had written:
+     * <pre>
+     *  foo = { a: 42, b: 43 }
+     * </pre>
+     *
      * <p>
      * Note that objects do not merge "across" non-objects; if you write
      * <code>object.withFallback(nonObject).withFallback(otherObject)</code>,
      * then <code>otherObject</code> will simply be ignored. This is an
-     * intentional part of how merging works. Both non-objects, and any object
-     * which has fallen back to a non-object, block subsequent fallbacks.
-     * 
+     * intentional part of how merging works, because non-objects such as
+     * strings and integers replace (rather than merging with) any
+     * prior value:
+     * <pre>
+     * foo = { a: 42 }
+     * foo = 10
+     * </pre>
+     * Here, the number 10 "wins" and the value of <code>foo</code> would be
+     * simply 10. Again, for details see the spec.
+     *
      * @param other
      *            an object whose keys should be used if the keys are not
      *            present in this one
