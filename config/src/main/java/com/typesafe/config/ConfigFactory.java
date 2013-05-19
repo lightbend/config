@@ -27,6 +27,12 @@ import com.typesafe.config.impl.Parseable;
  * operation potentially parsing multiple resources and resolving substitutions,
  * while the ones with "parse" in the name just create a {@link ConfigValue}
  * from a resource and nothing else.
+ *
+ * <p> You can find an example app and library <a
+ * href="https://github.com/typesafehub/config/tree/master/examples">on
+ * GitHub</a>.  Also be sure to read the package overview
+ * ({@link com.typesafe.config}) which describes the big picture as shown
+ * in those examples.
  */
 public final class ConfigFactory {
     private ConfigFactory() {
