@@ -66,6 +66,10 @@ import java.util.Set;
  * can use {@link #entrySet()} which recurses the object tree for you and builds
  * up a <code>Set</code> of all path-value pairs where the value is not null.
  *
+ * <p>Before using a {@code Config} it's necessary to call {@link Config#resolve()}
+ * to handle substitutions (though {@link ConfigFactory#load()} and similar methods
+ * will do the resolve for you already).
+ *
  * <p> You can find an example app and library <a
  * href="https://github.com/typesafehub/config/tree/master/examples">on
  * GitHub</a>.  Also be sure to read the package overview
