@@ -30,9 +30,10 @@ import com.typesafe.config.impl.Parseable;
  *
  * <p> You can find an example app and library <a
  * href="https://github.com/typesafehub/config/tree/master/examples">on
- * GitHub</a>.  Also be sure to read the package overview
- * ({@link com.typesafe.config}) which describes the big picture as shown
- * in those examples.
+ * GitHub</a>.  Also be sure to read the <a
+ * href="package-summary.html#package_description">package
+ * overview</a> which describes the big picture as shown in those
+ * examples.
  */
 public final class ConfigFactory {
     private ConfigFactory() {

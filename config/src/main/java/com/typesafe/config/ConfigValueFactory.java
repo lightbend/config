@@ -90,7 +90,7 @@ public final class ConfigValueFactory {
 
     /**
      * See the fromAnyRef() documentation for details. This is a typesafe
-     * wrapper that only works on {@link java.util.Iterable} and returns
+     * wrapper that only works on {@link java.lang.Iterable} and returns
      * {@link ConfigList} rather than {@link ConfigValue}.
      *
      * @param values
