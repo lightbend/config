@@ -9,7 +9,7 @@
 // Versions and git tags should follow: http://semver.org/
 // except using -SNAPSHOT instead of without hyphen.
 
-version in GlobalScope := "1.0.0-SNAPSHOT"
+version in GlobalScope := "1.0.1"
 
 organization in GlobalScope := "com.typesafe"
 

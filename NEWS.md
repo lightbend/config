@@ -1,3 +1,17 @@
+# 1.0.1: May 19, 2013
+
+ - when an array is requested and an object found, try to convert
+   the object to an array if the object has numeric keys in it.
+   This is intended to support `-Dfoo.0=bar, -Dfoo.1=baz` which
+   would create `foo : { "0" : "bar", "1" : "baz" }`; which in
+   turn could now be treated as if it were `foo :
+   ["bar","baz"]`. This is useful for creating array values on the
+   command line using Java system properties.
+ - fix a ConcurrentModificationException if an app modified
+   system properties while we were trying to parse them.
+ - fix line numbering in error messages for newlines within triple
+   quotes.
+
 # 1.0.0: October 15, 2012
 
  - no changes from 0.6.0. ABI now guaranteed for 1.0.x series.
