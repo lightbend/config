@@ -408,7 +408,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 l.add(n);
             } else {
                 throw new ConfigException.WrongType(v.origin(), path,
-                        "duration string or number of " + unit.name(),
+                        "duration string or number of milliseconds",
                         v.valueType().name());
             }
         }
