@@ -476,17 +476,20 @@ public interface Config extends ConfigMergeable {
     @Deprecated Long getNanoseconds(String path);
 
     /**
-     * Get value as a duration in a specified TimeUnit. Naturally the precision will depend on the configured value.
-     * If the value is already a
-     * number, then it's interpreted to be in Milliseconds and then be converted to the requested TimeUnit;
-     * if it's a string, it's parsed understanding units suffixes like "10m" or "5ns" as documented in the <a
+     * Gets a value as a duration in a specified
+     * {@link java.util.concurrent.TimeUnit TimeUnit}. If the value is already a
+     * number, then it's taken as milliseconds and then converted to the
+     * requested TimeUnit; if it's a string, it's parsed understanding units
+     * suffixes like "10m" or "5ns" as documented in the <a
      * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
      * spec</a>.
-     *
+     * 
+     * @since 1.1
+     * 
      * @param path
      *            path expression
      * @param unit
-     *            The TimeUnit in which the returned long should be
+     *            convert the return value to this time unit
      * @return the duration value at the requested path, in the given TimeUnit
      * @throws ConfigException.Missing
      *             if value is absent or null
@@ -542,6 +545,17 @@ public interface Config extends ConfigMergeable {
      */
     @Deprecated List<Long> getNanosecondsList(String path);
 
+    /**
+     * Gets a list, converting each value in the list to a duration, using the
+     * same rules as {@link #getDuration(String, TimeUnit)}.
+     *
+     * @since 1.1
+     * @param path
+     *            a path expression
+     * @param unit
+     *            time units of the returned values
+     * @return list of durations, in the requested units
+     */
     List<Long> getDurationList(String path, TimeUnit unit);
 
     /**
@@ -589,7 +603,7 @@ public interface Config extends ConfigMergeable {
      * to the given value. Does not modify this instance (since it's immutable).
      * If the path already has a value, that value is replaced. To remove a
      * value, use withoutPath().
-     * 
+     *
      * @param path
      *            path to add
      * @param value
