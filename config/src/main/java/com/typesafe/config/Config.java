@@ -6,6 +6,7 @@ package com.typesafe.config;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * An immutable map from config paths to config values.
@@ -440,6 +441,8 @@ public interface Config extends ConfigMergeable {
      * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
      * spec</a>.
      *
+     * @deprecated  As of release 1.1, replaced by {@link #getDuration(String, TimeUnit)}
+     *
      * @param path
      *            path expression
      * @return the duration value at the requested path, in milliseconds
@@ -450,13 +453,15 @@ public interface Config extends ConfigMergeable {
      * @throws ConfigException.BadValue
      *             if value cannot be parsed as a number of milliseconds
      */
-    Long getMilliseconds(String path);
+    @Deprecated Long getMilliseconds(String path);
 
     /**
      * Get value as a duration in nanoseconds. If the value is already a number
      * it's taken as milliseconds and converted to nanoseconds. If it's a
      * string, it's parsed understanding unit suffixes, as for
-     * {@link #getMilliseconds(String)}.
+     * {@link #getDuration(String, TimeUnit)}.
+     *
+     * @deprecated  As of release 1.1, replaced by {@link #getDuration(String, TimeUnit)}
      *
      * @param path
      *            path expression
@@ -468,7 +473,32 @@ public interface Config extends ConfigMergeable {
      * @throws ConfigException.BadValue
      *             if value cannot be parsed as a number of nanoseconds
      */
-    Long getNanoseconds(String path);
+    @Deprecated Long getNanoseconds(String path);
+
+    /**
+     * Gets a value as a duration in a specified
+     * {@link java.util.concurrent.TimeUnit TimeUnit}. If the value is already a
+     * number, then it's taken as milliseconds and then converted to the
+     * requested TimeUnit; if it's a string, it's parsed understanding units
+     * suffixes like "10m" or "5ns" as documented in the <a
+     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * spec</a>.
+     * 
+     * @since 1.1
+     * 
+     * @param path
+     *            path expression
+     * @param unit
+     *            convert the return value to this time unit
+     * @return the duration value at the requested path, in the given TimeUnit
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a number of the given TimeUnit
+     */
+    Long getDuration(String path, TimeUnit unit);
 
     /**
      * Gets a list value (with any element type) as a {@link ConfigList}, which
@@ -505,9 +535,28 @@ public interface Config extends ConfigMergeable {
 
     List<Long> getBytesList(String path);
 
-    List<Long> getMillisecondsList(String path);
+    /**
+     * @deprecated  As of release 1.1, replaced by {@link #getDurationList(String, TimeUnit)}
+     */
+    @Deprecated List<Long> getMillisecondsList(String path);
 
-    List<Long> getNanosecondsList(String path);
+    /**
+     * @deprecated  As of release 1.1, replaced by {@link #getDurationList(String, TimeUnit)}
+     */
+    @Deprecated List<Long> getNanosecondsList(String path);
+
+    /**
+     * Gets a list, converting each value in the list to a duration, using the
+     * same rules as {@link #getDuration(String, TimeUnit)}.
+     *
+     * @since 1.1
+     * @param path
+     *            a path expression
+     * @param unit
+     *            time units of the returned values
+     * @return list of durations, in the requested units
+     */
+    List<Long> getDurationList(String path, TimeUnit unit);
 
     /**
      * Clone the config with only the given path (and its children) retained;
@@ -554,7 +603,7 @@ public interface Config extends ConfigMergeable {
      * to the given value. Does not modify this instance (since it's immutable).
      * If the path already has a value, that value is replaced. To remove a
      * value, use withoutPath().
-     * 
+     *
      * @param path
      *            path to add
      * @param value

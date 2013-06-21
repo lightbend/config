@@ -13,6 +13,7 @@ import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
 import java.io.File
+import java.util.concurrent.TimeUnit.{ SECONDS, NANOSECONDS, MICROSECONDS, MILLISECONDS, MINUTES, DAYS, HOURS }
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigMergeable
@@ -735,6 +736,28 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(asNanos(1), asNanos(2), asNanos(3), asNanos(4)),
             conf.getNanosecondsList("durations.secondsList").asScala)
         assertEquals(500L, conf.getMilliseconds("durations.halfSecond"))
+
+        def assertDurationAsTimeUnit(unit: TimeUnit): Unit = {
+          def ms2unit(l: Long) = unit.convert(l, MILLISECONDS)
+          def s2unit(i: Int) = unit.convert(i, SECONDS)
+          assertEquals(ms2unit(1000L), conf.getDuration("durations.second", unit))
+          assertEquals(s2unit(1), conf.getDuration("durations.second", unit))
+          assertEquals(ms2unit(1000L), conf.getDuration("durations.secondAsNumber", unit))
+          assertEquals(s2unit(1), conf.getDuration("durations.secondAsNumber", unit))
+          assertEquals(Seq(1000L, 2000L, 3000L, 4000L) map ms2unit,
+            conf.getDurationList("durations.secondsList", unit).asScala)
+          assertEquals(Seq(1, 2, 3, 4) map s2unit,
+            conf.getDurationList("durations.secondsList", unit).asScala)
+          assertEquals(ms2unit(500L), conf.getDuration("durations.halfSecond", unit))
+        }
+
+        assertDurationAsTimeUnit(NANOSECONDS)
+        assertDurationAsTimeUnit(MICROSECONDS)
+        assertDurationAsTimeUnit(MILLISECONDS)
+        assertDurationAsTimeUnit(SECONDS)
+        assertDurationAsTimeUnit(MINUTES)
+        assertDurationAsTimeUnit(HOURS)
+        assertDurationAsTimeUnit(DAYS)
 
         // should get size in bytes
         assertEquals(1024 * 1024L, conf.getBytes("memsizes.meg"))
