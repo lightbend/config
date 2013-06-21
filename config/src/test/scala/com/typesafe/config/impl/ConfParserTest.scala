@@ -614,4 +614,32 @@ class ConfParserTest extends TestUtils {
 
         assertTrue("including basename URL doesn't load anything", conf.isEmpty())
     }
+
+    @Test
+    def acceptBOMStartingFile() {
+        // BOM at start of file should be ignored
+        val conf = ConfigFactory.parseResources("bom.conf")
+        assertEquals("bar", conf.getString("foo"))
+    }
+
+    @Test
+    def acceptBOMStartOfStringConfig() {
+        // BOM at start of file is just whitespace, so ignored
+        val conf = ConfigFactory.parseString("\uFEFFfoo=bar")
+        assertEquals("bar", conf.getString("foo"))
+    }
+
+    @Test
+    def acceptBOMInStringValue() {
+        // BOM inside quotes should be preserved, just as other whitespace would be
+        val conf = ConfigFactory.parseString("foo=\"\uFEFF\uFEFF\"")
+        assertEquals("\uFEFF\uFEFF", conf.getString("foo"))
+    }
+
+    @Test
+    def acceptBOMWhitespace() {
+        // BOM here should be treated like other whitespace (ignored, since no quotes)
+        val conf = ConfigFactory.parseString("foo= \uFEFFbar\uFEFF")
+        assertEquals("bar", conf.getString("foo"))
+    }
 }

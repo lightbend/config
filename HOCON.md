@@ -116,13 +116,14 @@ defined as follows:
  - any Unicode space separator (Zs category), line separator (Zl
    category), or paragraph separator (Zp category), including
    nonbreaking spaces (such as 0x00A0, 0x2007, and 0x202F).
+   The BOM (0xFEFF) must also be treated as whitespace.
  - tab (`\t` 0x0009), newline ('\n' 0x000A), vertical tab ('\v'
    0x000B)`, form feed (`\f' 0x000C), carriage return ('\r'
    0x000D), file separator (0x001C), group separator (0x001D),
    record separator (0x001E), unit separator (0x001F).
 
 In Java, the `isWhitespace()` method covers these characters with
-the exception of nonbreaking spaces.
+the exception of nonbreaking spaces and the BOM.
 
 While all Unicode separators should be treated as whitespace, in
 this spec "newline" refers only and specifically to ASCII newline

@@ -105,6 +105,10 @@ final public class ConfigImplUtil {
         case '\u00A0':
         case '\u2007':
         case '\u202F':
+            // this one is the BOM, see
+            // http://www.unicode.org/faq/utf_bom.html#BOM
+            // we just accept it as a zero-width nonbreaking space.
+        case '\uFEFF':
             return true;
         default:
             return Character.isWhitespace(codepoint);
