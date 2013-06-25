@@ -140,7 +140,7 @@ final class ResolveContext {
     }
 
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
-            ConfigResolveOptions options, Path restrictToChildOrNull) {
+            ConfigResolveOptions options) {
         ResolveContext context = new ResolveContext(root, options, null /* restrictToChild */);
 
         try {
@@ -150,10 +150,5 @@ final class ResolveContext {
             throw new ConfigException.BugOrBroken(
                     "NotPossibleToResolve was thrown from an outermost resolve", e);
         }
-    }
-
-    static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
-            ConfigResolveOptions options) {
-        return resolve(value, root, options, null);
     }
 }
