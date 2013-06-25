@@ -1,7 +1,7 @@
-/.classpath
-/.project
+.classpath
+.project
 /.cache
-/.settings
+.settings
 .idea
 .idea_modules
 /bin
