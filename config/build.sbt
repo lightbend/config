@@ -13,7 +13,7 @@ autoScalaLibrary := false
 
 crossPaths := false
 
-libraryDependencies += "net.liftweb" %% "lift-json" % "2.5-M3" % "test"
+libraryDependencies += "net.liftweb" %% "lift-json" % "2.5" % "test"
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.7" % "test"
 

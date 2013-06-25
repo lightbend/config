@@ -6,6 +6,7 @@ import org.junit._
 import com.typesafe.config._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
+import language.implicitConversions
 
 /**
  * This is to show how the API works and to be sure it's usable

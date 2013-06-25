@@ -23,23 +23,28 @@ import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.Callable
 import com.typesafe.config._
+import scala.reflect.ClassTag
+import scala.reflect.classTag
+import language.implicitConversions
 
 abstract trait TestUtils {
-    protected def intercept[E <: Throwable: Manifest](block: => Unit): E = {
-        val expectedClass = manifest.erasure.asInstanceOf[Class[E]]
+    protected def intercept[E <: Throwable: ClassTag](block: => Any): E = {
+        val expectedClass = classTag[E].runtimeClass
         var thrown: Option[Throwable] = None
-        try {
-            block
+        val result = try {
+            Some(block)
         } catch {
-            case t: Throwable => thrown = Some(t)
+            case t: Throwable =>
+                thrown = Some(t)
+                None
         }
         thrown match {
             case Some(t) if expectedClass.isAssignableFrom(t.getClass) =>
                 t.asInstanceOf[E]
             case Some(t) =>
-                throw new Exception("Expected exception %s was not thrown, got %s".format(expectedClass.getName, t), t)
+                throw new Exception(s"Expected exception ${expectedClass.getName} was not thrown, got $t", t)
             case None =>
-                throw new Exception("Expected exception %s was not thrown, no exception was thrown".format(expectedClass.getName))
+                throw new Exception(s"Expected exception ${expectedClass.getName} was not thrown, no exception was thrown and got result $result")
         }
     }
 
@@ -152,7 +157,7 @@ abstract trait TestUtils {
         copy
     }
 
-    protected def checkSerializationCompat[T: Manifest](expectedHex: String, o: T, changedOK: Boolean = false): Unit = {
+    protected def checkSerializationCompat[T: ClassTag](expectedHex: String, o: T, changedOK: Boolean = false): Unit = {
         // be sure we can still deserialize the old one
         val inStream = new ByteArrayInputStream(decodeLegibleBinary(expectedHex))
         var failure: Option[Exception] = None
@@ -247,7 +252,7 @@ abstract trait TestUtils {
         }
 
         assertTrue("deserialized type " + b.getClass.getSimpleName + " doesn't match serialized type " + a.getClass.getSimpleName,
-            manifest[T].erasure.isAssignableFrom(b.getClass))
+            classTag[T].runtimeClass.isAssignableFrom(b.getClass))
 
         b.asInstanceOf[T]
     }
@@ -310,8 +315,8 @@ abstract trait TestUtils {
         "[",
         "]",
         ",",
-        "10", // value not in array or object
-        "\"foo\"", // value not in array or object
+        ParseTest(true, "10"), // value not in array or object, lift-json now allows this
+        ParseTest(true, "\"foo\""), // value not in array or object, lift-json allows it
         "\"", // single quote by itself
         ParseTest(true, "[,]"), // array with just a comma in it; lift is OK with this
         ParseTest(true, "[,,]"), // array with just two commas in it; lift is cool with this too
@@ -325,8 +330,8 @@ abstract trait TestUtils {
         " \"a\" : 10 ,, ", // two trailing commas for braceless root object
         "{ \"foo\" : }", // no value in object
         "{ : 10 }", // no key in object
-        " \"foo\" : ", // no value in object with no braces
-        " : 10 ", // no key in object with no braces
+        ParseTest(true, " \"foo\" : "), // no value in object with no braces; lift-json thinks this is acceptable
+        ParseTest(true, " : 10 "), // no key in object with no braces; lift-json is cool with this too
         " \"foo\" : 10 } ", // close brace but no open
         " \"foo\" : 10 [ ", // no-braces object with trailing gunk 
         "{ \"foo\" }", // no value or colon
@@ -347,9 +352,9 @@ abstract trait TestUtils {
         "{}x", // trailing invalid token after the root object
         "[]x", // trailing invalid token after the root array
         ParseTest(true, "{}{}"), // trailing token after the root object - lift OK with it
-        "{}true", // trailing token after the root object
+        ParseTest(true, "{}true"), // trailing token after the root object; lift ignores the {}
         ParseTest(true, "[]{}"), // trailing valid token after the root array
-        "[]true", // trailing valid token after the root array
+        ParseTest(true, "[]true"), // trailing valid token after the root array, lift ignores the []
         "[${]", // unclosed substitution
         "[$]", // '$' by itself
         "[$  ]", // '$' by itself with spaces after
@@ -516,7 +521,7 @@ abstract trait TestUtils {
                 val tokens = try {
                     "tokens: " + tokenizeAsList(s)
                 } catch {
-                    case e =>
+                    case e: Throwable =>
                         "tokenizer failed: " + e.getMessage();
                 }
                 // don't use AssertionError because it seems to keep Eclipse

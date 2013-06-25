@@ -50,8 +50,7 @@ class ValidationTest extends TestUtils {
     }
 
     private def checkException(e: ConfigException.ValidationFailed, expecteds: Seq[Problem]) {
-        val problems = e.problems().asScala.toIndexedSeq[ConfigException.ValidationProblem]
-            .sortBy(_.path).sortBy(_.origin.lineNumber)
+        val problems = e.problems().asScala.toIndexedSeq.sortBy(_.path).sortBy(_.origin.lineNumber)
 
         //for (problem <- problems)
         //    System.err.println(problem.origin().description() + ": " + problem.path() + ": " + problem.problem())

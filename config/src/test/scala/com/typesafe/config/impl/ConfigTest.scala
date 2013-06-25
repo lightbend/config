@@ -61,15 +61,15 @@ class ConfigTest extends TestUtils {
                 case n => {
                     val leftSplits = for {
                         i <- (1 until n)
-                        val pair = objects.splitAt(i)
-                        val first = pair._1.reduceLeft(_.withFallback(_))
-                        val second = pair._2.reduceLeft(_.withFallback(_))
+                        pair = objects.splitAt(i)
+                        first = pair._1.reduceLeft(_.withFallback(_))
+                        second = pair._2.reduceLeft(_.withFallback(_))
                     } yield first.withFallback(second)
                     val rightSplits = for {
                         i <- (1 until n)
-                        val pair = objects.splitAt(i)
-                        val first = pair._1.reduceRight(_.withFallback(_))
-                        val second = pair._2.reduceRight(_.withFallback(_))
+                        pair = objects.splitAt(i)
+                        first = pair._1.reduceRight(_.withFallback(_))
+                        second = pair._2.reduceRight(_.withFallback(_))
                     } yield first.withFallback(second)
                     leftSplits.iterator ++ rightSplits.iterator
                 }
@@ -738,17 +738,17 @@ class ConfigTest extends TestUtils {
         assertEquals(500L, conf.getMilliseconds("durations.halfSecond"))
 
         def assertDurationAsTimeUnit(unit: TimeUnit): Unit = {
-          def ms2unit(l: Long) = unit.convert(l, MILLISECONDS)
-          def s2unit(i: Int) = unit.convert(i, SECONDS)
-          assertEquals(ms2unit(1000L), conf.getDuration("durations.second", unit))
-          assertEquals(s2unit(1), conf.getDuration("durations.second", unit))
-          assertEquals(ms2unit(1000L), conf.getDuration("durations.secondAsNumber", unit))
-          assertEquals(s2unit(1), conf.getDuration("durations.secondAsNumber", unit))
-          assertEquals(Seq(1000L, 2000L, 3000L, 4000L) map ms2unit,
-            conf.getDurationList("durations.secondsList", unit).asScala)
-          assertEquals(Seq(1, 2, 3, 4) map s2unit,
-            conf.getDurationList("durations.secondsList", unit).asScala)
-          assertEquals(ms2unit(500L), conf.getDuration("durations.halfSecond", unit))
+            def ms2unit(l: Long) = unit.convert(l, MILLISECONDS)
+            def s2unit(i: Int) = unit.convert(i, SECONDS)
+            assertEquals(ms2unit(1000L), conf.getDuration("durations.second", unit))
+            assertEquals(s2unit(1), conf.getDuration("durations.second", unit))
+            assertEquals(ms2unit(1000L), conf.getDuration("durations.secondAsNumber", unit))
+            assertEquals(s2unit(1), conf.getDuration("durations.secondAsNumber", unit))
+            assertEquals(Seq(1000L, 2000L, 3000L, 4000L) map ms2unit,
+                conf.getDurationList("durations.secondsList", unit).asScala)
+            assertEquals(Seq(1, 2, 3, 4) map s2unit,
+                conf.getDurationList("durations.secondsList", unit).asScala)
+            assertEquals(ms2unit(500L), conf.getDuration("durations.halfSecond", unit))
         }
 
         assertDurationAsTimeUnit(NANOSECONDS)
@@ -1025,7 +1025,7 @@ class ConfigTest extends TestUtils {
                 .setOriginComments(originComments)
                 .setComments(comments)
                 .setJson(json)
-        } toSeq
+        }.toSeq
 
         for (i <- 1 to 10) {
             val numString = i.toString

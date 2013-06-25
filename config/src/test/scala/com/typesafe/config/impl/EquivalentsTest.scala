@@ -74,7 +74,7 @@ class EquivalentsTest extends TestUtils {
                     try {
                         assertEquals(original, value)
                     } catch {
-                        case e =>
+                        case e: Throwable =>
                             showDiff(original, value)
                             throw e
                     }
@@ -88,7 +88,7 @@ class EquivalentsTest extends TestUtils {
                         try {
                             assertEquals(original, parsedAsConf)
                         } catch {
-                            case e =>
+                            case e: Throwable =>
                                 showDiff(original, parsedAsConf)
                                 throw e
                         }

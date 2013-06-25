@@ -13,6 +13,9 @@ version in GlobalScope := "1.1.0-SNAPSHOT"
 
 organization in GlobalScope := "com.typesafe"
 
-scalacOptions in GlobalScope in Compile := Seq("-unchecked", "-deprecation")
+scalacOptions in GlobalScope in Compile := Seq("-unchecked", "-deprecation", "-feature")
 
-scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation")
+scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation", "-feature")
+
+scalaVersion in ThisBuild := "2.10.2"
+
