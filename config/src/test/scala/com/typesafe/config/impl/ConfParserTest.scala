@@ -147,7 +147,7 @@ class ConfParserTest extends TestUtils {
                     parsePath(invalid)
                 }
             } catch {
-                case e =>
+                case e: Throwable =>
                     System.err.println("failed on: '" + invalid + "'");
                     throw e;
             }

@@ -430,11 +430,11 @@ class ConfigValueTest extends TestUtils {
 
         val values = Set(intValue(1), intValue(2), intValue(3))
         assertEquals(values, m.values().asScala.toSet)
-        assertEquals(values, m.entrySet().asScala map { _.getValue() } toSet)
+        assertEquals(values, (m.entrySet().asScala map { _.getValue() }).toSet)
 
         val keys = Set("a", "b", "c")
         assertEquals(keys, m.keySet().asScala.toSet)
-        assertEquals(keys, m.entrySet().asScala map { _.getKey() } toSet)
+        assertEquals(keys, (m.entrySet().asScala map { _.getKey() }).toSet)
 
         unsupported { m.clear() }
         unsupported { m.put("hello", intValue(42)) }

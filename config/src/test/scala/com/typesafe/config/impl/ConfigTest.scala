@@ -60,15 +60,15 @@ class ConfigTest extends TestUtils {
                 case n => {
                     val leftSplits = for {
                         i <- (1 until n)
-                        val pair = objects.splitAt(i)
-                        val first = pair._1.reduceLeft(_.withFallback(_))
-                        val second = pair._2.reduceLeft(_.withFallback(_))
+                        pair = objects.splitAt(i)
+                        first = pair._1.reduceLeft(_.withFallback(_))
+                        second = pair._2.reduceLeft(_.withFallback(_))
                     } yield first.withFallback(second)
                     val rightSplits = for {
                         i <- (1 until n)
-                        val pair = objects.splitAt(i)
-                        val first = pair._1.reduceRight(_.withFallback(_))
-                        val second = pair._2.reduceRight(_.withFallback(_))
+                        pair = objects.splitAt(i)
+                        first = pair._1.reduceRight(_.withFallback(_))
+                        second = pair._2.reduceRight(_.withFallback(_))
                     } yield first.withFallback(second)
                     leftSplits.iterator ++ rightSplits.iterator
                 }
@@ -1002,7 +1002,7 @@ class ConfigTest extends TestUtils {
                 .setOriginComments(originComments)
                 .setComments(comments)
                 .setJson(json)
-        } toSeq
+        }.toSeq
 
         for (i <- 1 to 10) {
             val numString = i.toString

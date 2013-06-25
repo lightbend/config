@@ -6,6 +6,7 @@ package com.typesafe.config.impl
 import org.junit.Assert._
 import org.junit.Test
 import com.typesafe.config.ConfigException
+import language.implicitConversions
 
 class TokenizerTest extends TestUtils {
 
