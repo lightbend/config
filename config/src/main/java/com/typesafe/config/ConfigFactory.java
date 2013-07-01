@@ -60,6 +60,12 @@ public final class ConfigFactory {
      * you want to parse additional files or something then you need to use
      * {@link #load(Config)}.
      *
+     * <p>
+     * To load a standalone resource (without the default reference and default
+     * overrides), use {@link #parseResourcesAnySyntax(String)} rather than this
+     * method. To load only the reference config use {@link #defaultReference()}
+     * and to load only the overrides use {@link #defaultOverrides()}.
+     *
      * @param resourceBasename
      *            name (optionally without extension) of a resource on classpath
      * @return configuration for an application relative to context class loader
@@ -72,7 +78,14 @@ public final class ConfigFactory {
     /**
      * Like {@link #load(String)} but uses the supplied class loader instead of
      * the current thread's context class loader.
-     *
+     * 
+     * <p>
+     * To load a standalone resource (without the default reference and default
+     * overrides), use {@link #parseResourcesAnySyntax(ClassLoader, String)}
+     * rather than this method. To load only the reference config use
+     * {@link #defaultReference(ClassLoader)} and to load only the overrides use
+     * {@link #defaultOverrides(ClassLoader)}.
+     * 
      * @param loader
      * @param resourceBasename
      * @return configuration for an application relative to given class loader
