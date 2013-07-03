@@ -1,3 +1,8 @@
+# 1.0.2: July 3, 2013
+
+ - ignore byte-order mark (BOM), treating it as whitespace
+ - very minor docs/build improvements
+
 # 1.0.1: May 19, 2013
 
  - when an array is requested and an object found, try to convert
