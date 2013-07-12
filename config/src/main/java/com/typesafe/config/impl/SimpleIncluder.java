@@ -221,7 +221,6 @@ class SimpleIncluder implements FullIncluder {
                             + "exceptions should have been logged above.");
                 }
 
-                String failMessage;
                 if (fails.isEmpty()) {
                     // this should not happen
                     throw new ConfigException.BugOrBroken(
@@ -233,10 +232,9 @@ class SimpleIncluder implements FullIncluder {
                         sb.append(", ");
                     }
                     sb.setLength(sb.length() - 2);
-                    failMessage = sb.toString();
+                    throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name), sb.toString(),
+                            fails.get(0));
                 }
-                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name), failMessage,
-                        fails.get(0));
             } else if (!gotSomething) {
                 if (ConfigImpl.traceLoadsEnabled()) {
                     ConfigImpl.trace("Did not find '" + name
