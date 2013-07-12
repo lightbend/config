@@ -173,6 +173,8 @@ public abstract class Parseable implements ConfigParseable {
             if (finalOptions.getAllowMissing()) {
                 return SimpleConfigObject.emptyMissing(origin);
             } else {
+                trace("exception loading " + origin.description() + ": " + e.getClass().getName()
+                        + ": " + e.getMessage());
                 throw new ConfigException.IO(origin, e.getMessage(), e);
             }
         }
