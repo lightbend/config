@@ -175,7 +175,8 @@ public abstract class Parseable implements ConfigParseable {
             } else {
                 trace("exception loading " + origin.description() + ": " + e.getClass().getName()
                         + ": " + e.getMessage());
-                throw new ConfigException.IO(origin, e.getMessage(), e);
+                throw new ConfigException.IO(origin,
+                        e.getClass().getName() + ": " + e.getMessage(), e);
             }
         }
     }
