@@ -175,7 +175,7 @@ class SimpleIncluder implements FullIncluder {
             ConfigParseable jsonHandle = source.nameToParseable(name + ".json", options);
             ConfigParseable propsHandle = source.nameToParseable(name + ".properties", options);
             boolean gotSomething = false;
-            List<String> failMessages = new ArrayList<String>();
+            List<ConfigException.IO> fails = new ArrayList<ConfigException.IO>();
 
             ConfigSyntax syntax = options.getSyntax();
 
@@ -186,7 +186,7 @@ class SimpleIncluder implements FullIncluder {
                             .setSyntax(ConfigSyntax.CONF));
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
-                    failMessages.add(e.getMessage());
+                    fails.add(e);
                 }
             }
 
@@ -197,7 +197,7 @@ class SimpleIncluder implements FullIncluder {
                     obj = obj.withFallback(parsed);
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
-                    failMessages.add(e.getMessage());
+                    fails.add(e);
                 }
             }
 
@@ -208,26 +208,41 @@ class SimpleIncluder implements FullIncluder {
                     obj = obj.withFallback(parsed);
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
-                    failMessages.add(e.getMessage());
+                    fails.add(e);
                 }
             }
 
             if (!options.getAllowMissing() && !gotSomething) {
+                if (ConfigImpl.traceLoadsEnabled()) {
+                    // the individual exceptions should have been logged already
+                    // with tracing enabled
+                    ConfigImpl.trace("Did not find '" + name
+                            + "' with any extension (.conf, .json, .properties); "
+                            + "exceptions should have been logged above.");
+                }
+
                 String failMessage;
-                if (failMessages.isEmpty()) {
+                if (fails.isEmpty()) {
                     // this should not happen
                     throw new ConfigException.BugOrBroken(
                             "should not be reached: nothing found but no exceptions thrown");
                 } else {
                     StringBuilder sb = new StringBuilder();
-                    for (String msg : failMessages) {
-                        sb.append(msg);
+                    for (Throwable t : fails) {
+                        sb.append(t.getMessage());
                         sb.append(", ");
                     }
                     sb.setLength(sb.length() - 2);
                     failMessage = sb.toString();
                 }
-                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name), failMessage);
+                throw new ConfigException.IO(SimpleConfigOrigin.newSimple(name), failMessage,
+                        fails.get(0));
+            } else if (!gotSomething) {
+                if (ConfigImpl.traceLoadsEnabled()) {
+                    ConfigImpl.trace("Did not find '" + name
+                            + "' with any extension (.conf, .json, .properties); but '" + name
+                                    + "' is allowed to be missing. Exceptions from load attempts should have been logged above.");
+                }
             }
         }
 
