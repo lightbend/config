@@ -367,6 +367,10 @@ class ConfParserTest extends TestUtils {
         Parseable.newReader(new StringReader("{}"), options).toString
     }
 
+    private def assertComments(comments: Seq[String], conf: Config) {
+        assertEquals(comments, conf.root().origin().comments().asScala.toSeq)
+    }
+
     private def assertComments(comments: Seq[String], conf: Config, path: String) {
         assertEquals(comments, conf.getValue(path).origin().comments().asScala.toSeq)
     }
@@ -377,17 +381,24 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
-    def trackCommentsForFields() {
-        // comment in front of a field is used
-        val conf1 = parseConfig("""
-                { # Hello
+    def trackCommentsForSingleField() {
+        // no comments
+        val conf0 = parseConfig("""
+                {
                 foo=10 }
                 """)
-        assertComments(Seq(" Hello"), conf1, "foo")
+        assertComments(Seq(), conf0, "foo")
+
+        // comment in front of a field is used
+        val conf1 = parseConfig("""
+                { # Before
+                foo=10 }
+                """)
+        assertComments(Seq(" Before"), conf1, "foo")
 
         // comment with a blank line after is dropped
         val conf2 = parseConfig("""
-                { # Hello
+                { # BlankAfter
 
                 foo=10 }
                 """)
@@ -395,19 +406,175 @@ class ConfParserTest extends TestUtils {
 
         // comment in front of a field is used with no root {}
         val conf3 = parseConfig("""
-                # Hello
+                # BeforeNoBraces
                 foo=10
                 """)
-        assertComments(Seq(" Hello"), conf3, "foo")
+        assertComments(Seq(" BeforeNoBraces"), conf3, "foo")
 
         // comment with a blank line after is dropped with no root {}
         val conf4 = parseConfig("""
-                # Hello
+                # BlankAfterNoBraces
 
                 foo=10
                 """)
         assertComments(Seq(), conf4, "foo")
 
+        // comment same line after field is used
+        val conf5 = parseConfig("""
+                {
+                foo=10 # SameLine
+                }
+                """)
+        assertComments(Seq(" SameLine"), conf5, "foo")
+
+        // comment before field separator is used
+        val conf6 = parseConfig("""
+                {
+                foo # BeforeSep
+                =10
+                }
+                """)
+        assertComments(Seq(" BeforeSep"), conf6, "foo")
+
+        // comment after field separator is used
+        val conf7 = parseConfig("""
+                {
+                foo= # AfterSep
+                10
+                }
+                """)
+        assertComments(Seq(" AfterSep"), conf7, "foo")
+
+        // comment on next line is NOT used
+        val conf8 = parseConfig("""
+                {
+                foo=10
+                # NextLine
+                }
+                """)
+        assertComments(Seq(), conf8, "foo")
+
+        // comment before field separator on new line
+        val conf9 = parseConfig("""
+                {
+                foo
+                # BeforeSepOwnLine
+                =10
+                }
+                """)
+        assertComments(Seq(" BeforeSepOwnLine"), conf9, "foo")
+
+        // comment after field separator on its own line
+        val conf10 = parseConfig("""
+                {
+                foo=
+                # AfterSepOwnLine
+                10
+                }
+                """)
+        assertComments(Seq(" AfterSepOwnLine"), conf10, "foo")
+
+        // comments comments everywhere
+        val conf11 = parseConfig("""
+                {# Before
+                foo
+                # BeforeSep
+                = # AfterSepSameLine
+                # AfterSepNextLine
+                10 # AfterValue
+                # AfterValueNewLine (should NOT be used)
+                }
+                """)
+        assertComments(Seq(" Before", " BeforeSep", " AfterSepSameLine", " AfterSepNextLine", " AfterValue"), conf11, "foo")
+
+        // empty object
+        val conf12 = parseConfig("""# BeforeEmpty
+                {} #AfterEmpty
+                # NewLine
+                """)
+        assertComments(Seq(" BeforeEmpty", "AfterEmpty"), conf12)
+
+        // empty array
+        val conf13 = parseConfig("""
+                foo=
+                # BeforeEmptyArray
+                  [] #AfterEmptyArray
+                # NewLine
+                """)
+        assertComments(Seq(" BeforeEmptyArray", "AfterEmptyArray"), conf13, "foo")
+
+        // array element
+        val conf14 = parseConfig("""
+                foo=[
+                # BeforeElement
+                10 # AfterElement
+                ]
+                """)
+        assertComments(Seq(" BeforeElement", " AfterElement"), conf14, "foo", 0)
+
+        // field with comma after it
+        val conf15 = parseConfig("""
+                foo=10, # AfterCommaField
+                """)
+        assertComments(Seq(" AfterCommaField"), conf15, "foo")
+
+        // element with comma after it
+        val conf16 = parseConfig("""
+                foo=[10, # AfterCommaElement
+                ]
+                """)
+        assertComments(Seq(" AfterCommaElement"), conf16, "foo", 0)
+
+        // field with comma after it but comment isn't on the field's line, so not used
+        val conf17 = parseConfig("""
+                foo=10
+                , # AfterCommaFieldNotUsed
+                """)
+        assertComments(Seq(), conf17, "foo")
+
+        // element with comma after it but comment isn't on the field's line, so not used
+        val conf18 = parseConfig("""
+                foo=[10
+                , # AfterCommaElementNotUsed
+                ]
+                """)
+        assertComments(Seq(), conf18, "foo", 0)
+
+        // comment on new line, before comma, should not be used
+        val conf19 = parseConfig("""
+                foo=10
+                # BeforeCommaFieldNotUsed
+                ,
+                """)
+        assertComments(Seq(), conf19, "foo")
+
+        // comment on new line, before comma, should not be used
+        val conf20 = parseConfig("""
+                foo=[10
+                # BeforeCommaElementNotUsed
+                ,
+                ]
+                """)
+        assertComments(Seq(), conf20, "foo", 0)
+
+        // comment on same line before comma
+        val conf21 = parseConfig("""
+                foo=10 # BeforeCommaFieldSameLine
+                ,
+                """)
+        assertComments(Seq(" BeforeCommaFieldSameLine"), conf21, "foo")
+
+        // comment on same line before comma
+        val conf22 = parseConfig("""
+                foo=[10 # BeforeCommaElementSameLine
+                ,
+                ]
+                """)
+        assertComments(Seq(" BeforeCommaElementSameLine"), conf22, "foo", 0)
+    }
+
+    @Test
+    def trackCommentsForMultipleFields() {
         // nested objects
         val conf5 = parseConfig("""
              # Outside
@@ -418,58 +585,60 @@ class ConfParserTest extends TestUtils {
                 # two lines
                 baz {
                     # Inner
-                    foo=10 # should be ignored
-                    # This should be ignored too
-                } ## not used
+                    foo=10 # AfterInner
+                    # This should be ignored
+                } # AfterMiddle
                 # ignored
-             }
+             } # AfterOutside
              # ignored!
              """)
-        assertComments(Seq(" Inner"), conf5, "bar.baz.foo")
-        assertComments(Seq(" Middle", " two lines"), conf5, "bar.baz")
-        assertComments(Seq(" Outside"), conf5, "bar")
+        assertComments(Seq(" Inner", " AfterInner"), conf5, "bar.baz.foo")
+        assertComments(Seq(" Middle", " two lines", " AfterMiddle"), conf5, "bar.baz")
+        assertComments(Seq(" Outside", " AfterOutside"), conf5, "bar")
 
         // multiple fields
         val conf6 = parseConfig("""{
                 # this is not with a field
-                
+
                 # this is field A
-                a : 10
+                a : 10,
                 # this is field B
-                b : 12 # goes with field C
+                b : 12 # goes with field B which has no comma
                 # this is field C
-                c : 14,
-                
+                c : 14, # goes with field C after comma
+                # not used
                 # this is not used
                 # nor is this
                 # multi-line block
-                
+
                 # this is with field D
                 # this is with field D also
                 d : 16
-                
+
                 # this is after the fields
     }""")
         assertComments(Seq(" this is field A"), conf6, "a")
-        assertComments(Seq(" this is field B"), conf6, "b")
-        assertComments(Seq(" goes with field C", " this is field C"), conf6, "c")
+        assertComments(Seq(" this is field B", " goes with field B which has no comma"), conf6, "b")
+        assertComments(Seq(" this is field C", " goes with field C after comma"), conf6, "c")
         assertComments(Seq(" this is with field D", " this is with field D also"), conf6, "d")
 
         // array
         val conf7 = parseConfig("""
+                # before entire array
                 array = [
                 # goes with 0
                 0,
                 # goes with 1
-                1, # with 2
+                1, # with 1 after comma
                 # goes with 2
-                2
+                2 # no comma after 2
                 # not with anything
-                ]
+                ] # after entire array
                 """)
         assertComments(Seq(" goes with 0"), conf7, "array", 0)
-        assertComments(Seq(" goes with 1"), conf7, "array", 1)
-        assertComments(Seq(" with 2", " goes with 2"), conf7, "array", 2)
+        assertComments(Seq(" goes with 1", " with 1 after comma"), conf7, "array", 1)
+        assertComments(Seq(" goes with 2", " no comma after 2"), conf7, "array", 2)
+        assertComments(Seq(" before entire array", " after entire array"), conf7, "array")
 
         // properties-like syntax
         val conf8 = parseConfig("""
@@ -484,6 +653,7 @@ class ConfParserTest extends TestUtils {
                 # a.b comment
                 a.b = 14
                 a.c = 15
+                a.d = 16 # a.d comment
                 # ignored comment
                 """)
 
@@ -492,6 +662,7 @@ class ConfParserTest extends TestUtils {
         assertComments(Seq(" x.a comment"), conf8, "x.a")
         assertComments(Seq(" a.b comment"), conf8, "a.b")
         assertComments(Seq(), conf8, "a.c")
+        assertComments(Seq(" a.d comment"), conf8, "a.d")
         // here we're concerned that comments apply only to leaf
         // nodes, not to parent objects.
         assertComments(Seq(), conf8, "x")
