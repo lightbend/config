@@ -41,14 +41,26 @@ final class Parser {
         TokenWithComments(Token token, List<Token> comments) {
             this.token = token;
             this.comments = comments;
+
+            if (Tokens.isComment(token))
+                throw new ConfigException.BugOrBroken("tried to annotate a comment with a comment");
         }
 
         TokenWithComments(Token token) {
             this(token, Collections.<Token> emptyList());
         }
 
+        TokenWithComments removeAll() {
+            if (comments.isEmpty())
+                return this;
+            else
+                return new TokenWithComments(token);
+        }
+
         TokenWithComments prepend(List<Token> earlier) {
-            if (this.comments.isEmpty()) {
+            if (earlier.isEmpty()) {
+                return this;
+            } else if (this.comments.isEmpty()) {
                 return new TokenWithComments(token, earlier);
             } else {
                 List<Token> merged = new ArrayList<Token>();
@@ -58,7 +70,18 @@ final class Parser {
             }
         }
 
-        SimpleConfigOrigin setComments(SimpleConfigOrigin origin) {
+        TokenWithComments add(Token after) {
+            if (this.comments.isEmpty()) {
+                return new TokenWithComments(token, Collections.<Token> singletonList(after));
+            } else {
+                List<Token> merged = new ArrayList<Token>();
+                merged.addAll(comments);
+                merged.add(after);
+                return new TokenWithComments(token, merged);
+            }
+        }
+
+        SimpleConfigOrigin prependComments(SimpleConfigOrigin origin) {
             if (comments.isEmpty()) {
                 return origin;
             } else {
@@ -66,7 +89,19 @@ final class Parser {
                 for (Token c : comments) {
                     newComments.add(Tokens.getCommentText(c));
                 }
-                return origin.setComments(newComments);
+                return origin.prependComments(newComments);
+            }
+        }
+
+        SimpleConfigOrigin appendComments(SimpleConfigOrigin origin) {
+            if (comments.isEmpty()) {
+                return origin;
+            } else {
+                List<String> newComments = new ArrayList<String>();
+                for (Token c : comments) {
+                    newComments.add(Tokens.getCommentText(c));
+                }
+                return origin.appendComments(newComments);
             }
         }
 
@@ -105,12 +140,38 @@ final class Parser {
             this.equalsCount = 0;
         }
 
+        static private boolean attractsTrailingComments(Token token) {
+            // END can't have a trailing comment; START, OPEN_CURLY, and
+            // OPEN_SQUARE followed by a comment should behave as if the comment
+            // went with the following field or element. Associating a comment
+            // with a newline would mess up all the logic for comment tracking,
+            // so don't do that either.
+            if (Tokens.isNewline(token) || token == Tokens.START || token == Tokens.OPEN_CURLY
+                    || token == Tokens.OPEN_SQUARE || token == Tokens.END)
+                return false;
+            else
+                return true;
+        }
+
+        static private boolean attractsLeadingComments(Token token) {
+            // a comment just before a close } generally doesn't go with the
+            // value before it, unless it's on the same line as that value
+            if (Tokens.isNewline(token) || token == Tokens.START || token == Tokens.CLOSE_CURLY
+                    || token == Tokens.CLOSE_SQUARE || token == Tokens.END)
+                return false;
+            else
+                return true;
+        }
+
         private void consolidateCommentBlock(Token commentToken) {
             // a comment block "goes with" the following token
             // unless it's separated from it by a blank line.
             // we want to build a list of newline tokens followed
             // by a non-newline non-comment token; with all comments
             // associated with that final non-newline non-comment token.
+            // a comment AFTER a token, without an intervening newline,
+            // also goes with that token, but isn't handled in this method,
+            // instead we handle it later by peeking ahead.
             List<Token> newlines = new ArrayList<Token>();
             List<Token> comments = new ArrayList<Token>();
 
@@ -128,6 +189,11 @@ final class Parser {
                     comments.add(next);
                 } else {
                     // a non-newline non-comment token
+
+                    // comments before a close brace or bracket just get dumped
+                    if (!attractsLeadingComments(next))
+                        comments.clear();
+
                     break;
                 }
 
@@ -146,7 +212,7 @@ final class Parser {
             }
         }
 
-        private TokenWithComments popToken() {
+        private TokenWithComments popTokenWithoutTrailingComment() {
             if (buffer.isEmpty()) {
                 Token t = tokens.next();
                 if (Tokens.isComment(t)) {
@@ -157,6 +223,35 @@ final class Parser {
                 }
             } else {
                 return buffer.pop();
+            }
+        }
+
+        private TokenWithComments popToken() {
+            TokenWithComments withPrecedingComments = popTokenWithoutTrailingComment();
+            // handle a comment AFTER the other token,
+            // but before a newline. If the next token is not
+            // a comment, then any comment later on the line is irrelevant
+            // since it would end up going with that later token, not
+            // this token. Comments are supposed to be processed prior
+            // to adding stuff to the buffer, so they can only be found
+            // in "tokens" not in "buffer" in theory.
+            if (!attractsTrailingComments(withPrecedingComments.token)) {
+                return withPrecedingComments;
+            } else if (buffer.isEmpty()) {
+                Token after = tokens.next();
+                if (Tokens.isComment(after)) {
+                    return withPrecedingComments.add(after);
+                } else {
+                    buffer.push(new TokenWithComments(after));
+                    return withPrecedingComments;
+                }
+            } else {
+                // comments are supposed to get attached to a token,
+                // not put back in the buffer. Assert this as an invariant.
+                if (Tokens.isComment(buffer.peek().token))
+                    throw new ConfigException.BugOrBroken(
+                            "comment token should not have been in buffer: " + buffer);
+                return withPrecedingComments;
             }
         }
 
@@ -192,6 +287,9 @@ final class Parser {
         }
 
         private void putBack(TokenWithComments token) {
+            if (Tokens.isComment(token.token))
+                throw new ConfigException.BugOrBroken(
+                        "comment token should have been stripped before it was available to put back");
             buffer.push(token);
         }
 
@@ -214,6 +312,19 @@ final class Parser {
                 lineNumber = newNumber;
 
             return t;
+        }
+
+        private AbstractConfigValue addAnyCommentsAfterAnyComma(AbstractConfigValue v) {
+            TokenWithComments t = nextToken(); // do NOT skip newlines, we only
+                                               // want same-line comments
+            if (t.token == Tokens.COMMA) {
+                // steal the comments from after the comma
+                putBack(t.removeAll());
+                return v.withOrigin(t.appendComments(v.origin()));
+            } else {
+                putBack(t);
+                return v;
+            }
         }
 
         // In arrays and objects, comma can be omitted
@@ -272,22 +383,14 @@ final class Parser {
 
             // create only if we have value tokens
             List<AbstractConfigValue> values = null;
-            TokenWithComments firstValueWithComments = null;
+
             // ignore a newline up front
             TokenWithComments t = nextTokenIgnoringNewline();
             while (true) {
                 AbstractConfigValue v = null;
-                if (Tokens.isValue(t.token)) {
-                    // if we consolidateValueTokens() multiple times then
-                    // this value could be a concatenation, object, array,
-                    // or substitution already.
-                    v = Tokens.getValue(t.token);
-                } else if (Tokens.isUnquotedText(t.token)) {
-                    v = new ConfigString(t.token.origin(), Tokens.getUnquotedText(t.token));
-                } else if (Tokens.isSubstitution(t.token)) {
-                    v = new ConfigReference(t.token.origin(),
-                            tokenToSubstitutionExpression(t.token));
-                } else if (t.token == Tokens.OPEN_CURLY || t.token == Tokens.OPEN_SQUARE) {
+                if (Tokens.isValue(t.token) || Tokens.isUnquotedText(t.token)
+                        || Tokens.isSubstitution(t.token) || t.token == Tokens.OPEN_CURLY
+                        || t.token == Tokens.OPEN_SQUARE) {
                     // there may be newlines _within_ the objects and arrays
                     v = parseValue(t);
                 } else {
@@ -299,7 +402,6 @@ final class Parser {
 
                 if (values == null) {
                     values = new ArrayList<AbstractConfigValue>();
-                    firstValueWithComments = t;
                 }
                 values.add(v);
 
@@ -313,11 +415,10 @@ final class Parser {
 
             AbstractConfigValue consolidated = ConfigConcatenation.concatenate(values);
 
-            putBack(new TokenWithComments(Tokens.newValue(consolidated),
-                    firstValueWithComments.comments));
+            putBack(new TokenWithComments(Tokens.newValue(consolidated)));
         }
 
-        private ConfigOrigin lineOrigin() {
+        private SimpleConfigOrigin lineOrigin() {
             return ((SimpleConfigOrigin) baseOrigin).setLineNumber(lineNumber);
         }
 
@@ -403,7 +504,14 @@ final class Parser {
             AbstractConfigValue v;
 
             if (Tokens.isValue(t.token)) {
+                // if we consolidateValueTokens() multiple times then
+                // this value could be a concatenation, object, array,
+                // or substitution already.
                 v = Tokens.getValue(t.token);
+            } else if (Tokens.isUnquotedText(t.token)) {
+                v = new ConfigString(t.token.origin(), Tokens.getUnquotedText(t.token));
+            } else if (Tokens.isSubstitution(t.token)) {
+                v = new ConfigReference(t.token.origin(), tokenToSubstitutionExpression(t.token));
             } else if (t.token == Tokens.OPEN_CURLY) {
                 v = parseObject(true);
             } else if (t.token == Tokens.OPEN_SQUARE) {
@@ -413,7 +521,7 @@ final class Parser {
                         "Expecting a value but got wrong token: " + t.token));
             }
 
-            v = v.withOrigin(t.setComments(v.origin()));
+            v = v.withOrigin(t.prependComments(v.origin()));
 
             return v;
         }
@@ -601,7 +709,7 @@ final class Parser {
         private AbstractConfigObject parseObject(boolean hadOpenCurly) {
             // invoked just after the OPEN_CURLY (or START, if !hadOpenCurly)
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
-            ConfigOrigin objectOrigin = lineOrigin();
+            SimpleConfigOrigin objectOrigin = lineOrigin();
             boolean afterComma = false;
             Path lastPath = null;
             boolean lastInsideEquals = false;
@@ -616,6 +724,9 @@ final class Parser {
                         throw parseError(addQuoteSuggestion(t.toString(),
                                 "unbalanced close brace '}' with no open brace"));
                     }
+
+                    objectOrigin = t.appendComments(objectOrigin);
+
                     break;
                 } else if (t.token == Tokens.END && !hadOpenCurly) {
                     putBack(t);
@@ -652,8 +763,11 @@ final class Parser {
 
                         consolidateValueTokens();
                         valueToken = nextTokenIgnoringNewline();
+                        // put comments from separator token on the value token
+                        valueToken = valueToken.prepend(afterKey.comments);
                     }
 
+                    // comments from the key token go to the value token
                     newValue = parseValue(valueToken.prepend(keyToken.comments));
 
                     if (afterKey.token == Tokens.PLUS_EQUALS) {
@@ -666,6 +780,8 @@ final class Parser {
                         concat.add(list);
                         newValue = ConfigConcatenation.concatenate(concat);
                     }
+
+                    newValue = addAnyCommentsAfterAnyComma(newValue);
 
                     lastPath = pathStack.pop();
                     if (insideEquals) {
@@ -722,6 +838,9 @@ final class Parser {
                             throw parseError(addQuoteSuggestion(lastPath, lastInsideEquals,
                                     t.toString(), "unbalanced close brace '}' with no open brace"));
                         }
+
+                        objectOrigin = t.appendComments(objectOrigin);
+
                         break;
                     } else if (hadOpenCurly) {
                         throw parseError(addQuoteSuggestion(lastPath, lastInsideEquals,
@@ -743,7 +862,7 @@ final class Parser {
 
         private SimpleConfigList parseArray() {
             // invoked just after the OPEN_SQUARE
-            ConfigOrigin arrayOrigin = lineOrigin();
+            SimpleConfigOrigin arrayOrigin = lineOrigin();
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
 
             consolidateValueTokens();
@@ -752,11 +871,13 @@ final class Parser {
 
             // special-case the first element
             if (t.token == Tokens.CLOSE_SQUARE) {
-                return new SimpleConfigList(arrayOrigin,
+                return new SimpleConfigList(t.appendComments(arrayOrigin),
                         Collections.<AbstractConfigValue> emptyList());
             } else if (Tokens.isValue(t.token) || t.token == Tokens.OPEN_CURLY
                     || t.token == Tokens.OPEN_SQUARE) {
-                values.add(parseValue(t));
+                AbstractConfigValue v = parseValue(t);
+                v = addAnyCommentsAfterAnyComma(v);
+                values.add(v);
             } else {
                 throw parseError(addKeyName("List should have ] or a first element after the open [, instead had token: "
                         + t
@@ -773,7 +894,7 @@ final class Parser {
                 } else {
                     t = nextTokenIgnoringNewline();
                     if (t.token == Tokens.CLOSE_SQUARE) {
-                        return new SimpleConfigList(arrayOrigin, values);
+                        return new SimpleConfigList(t.appendComments(arrayOrigin), values);
                     } else {
                         throw parseError(addKeyName("List should have ended with ] or had a comma, instead had token: "
                                 + t
@@ -789,7 +910,9 @@ final class Parser {
                 t = nextTokenIgnoringNewline();
                 if (Tokens.isValue(t.token) || t.token == Tokens.OPEN_CURLY
                         || t.token == Tokens.OPEN_SQUARE) {
-                    values.add(parseValue(t));
+                    AbstractConfigValue v = parseValue(t);
+                    v = addAnyCommentsAfterAnyComma(v);
+                    values.add(v);
                 } else if (flavor != ConfigSyntax.JSON && t.token == Tokens.CLOSE_SQUARE) {
                     // we allow one trailing comma
                     putBack(t);
