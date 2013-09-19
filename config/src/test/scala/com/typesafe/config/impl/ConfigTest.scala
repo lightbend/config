@@ -1059,6 +1059,15 @@ class ConfigTest extends TestUtils {
                             throw e
                     }
                 }
+                // rendering repeatedly should not make the file different (e.g. shouldn't make it longer)
+                // unless the debug comments are in there
+                if (!renderOptions.getOriginComments()) {
+                    val renderedAgain = resolvedParsed.root.render(renderOptions)
+                    // TODO the strings should be THE SAME not just the same length,
+                    // but there's a bug right now that sometimes object keys seem to
+                    // be re-ordered. Need to fix.
+                    assertEquals("render changed, resolved options=" + renderOptions, resolvedRender.length, renderedAgain.length)
+                }
             }
         }
     }
