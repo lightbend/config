@@ -93,6 +93,34 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         }
     }
 
+    SimpleConfigOrigin prependComments(List<String> comments) {
+        if (ConfigImplUtil.equalsHandlingNull(comments, this.commentsOrNull) || comments == null) {
+            return this;
+        } else if (this.commentsOrNull == null) {
+            return setComments(comments);
+        } else {
+            List<String> merged = new ArrayList<String>(comments.size()
+                    + this.commentsOrNull.size());
+            merged.addAll(comments);
+            merged.addAll(this.commentsOrNull);
+            return setComments(merged);
+        }
+    }
+
+    SimpleConfigOrigin appendComments(List<String> comments) {
+        if (ConfigImplUtil.equalsHandlingNull(comments, this.commentsOrNull) || comments == null) {
+            return this;
+        } else if (this.commentsOrNull == null) {
+            return setComments(comments);
+        } else {
+            List<String> merged = new ArrayList<String>(comments.size()
+                    + this.commentsOrNull.size());
+            merged.addAll(this.commentsOrNull);
+            merged.addAll(comments);
+            return setComments(merged);
+        }
+    }
+
     @Override
     public String description() {
         // not putting the URL in here for files and resources, because people
