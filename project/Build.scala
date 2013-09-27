@@ -26,7 +26,7 @@ object ConfigBuild extends Build {
 
     lazy val root = Project(id = "root",
                             base = file("."),
-                            settings = Project.defaultSettings ++ unpublished) aggregate(testLib, configLib, simpleLib, simpleApp)
+                            settings = Project.defaultSettings ++ unpublished) aggregate(testLib, configLib, simpleLibScala, simpleAppScala, complexAppScala)
 
     lazy val configLib = Project(id = "config",
                                  base = file("config"),
@@ -44,17 +44,17 @@ object ConfigBuild extends Build {
                                base = file("test-lib"),
                                settings = Project.defaultSettings ++ unpublished)
 
-    lazy val simpleLib = Project(id = "simple-lib",
-                                 base = file("examples/simple-lib"),
-                                 settings = Project.defaultSettings ++ unpublished) dependsOn(configLib)
+    lazy val simpleLibScala = Project(id = "simple-lib",
+                                      base = file("examples/scala/simple-lib"),
+                                      settings = Project.defaultSettings ++ unpublished) dependsOn(configLib)
 
-    lazy val simpleApp = Project(id = "simple-app",
-                                 base = file("examples/simple-app"),
-                                 settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLib)
+    lazy val simpleAppScala = Project(id = "simple-app",
+                                      base = file("examples/scala/simple-app"),
+                                      settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibScala)
 
-    lazy val complexApp = Project(id = "complex-app",
-                                  base = file("examples/complex-app"),
-                                  settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLib)
+    lazy val complexAppScala = Project(id = "complex-app",
+                                       base = file("examples/scala/complex-app"),
+                                       settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibScala)
 }
 
 // from https://raw.github.com/paulp/scala-improving/master/project/PublishToSonatype.scala
