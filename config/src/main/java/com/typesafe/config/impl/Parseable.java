@@ -18,6 +18,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -104,6 +105,10 @@ public abstract class Parseable implements ConfigParseable {
         return null;
     }
 
+    ConfigSyntax contentType() {
+        return null;
+    }
+
     ConfigParseable relativeTo(String filename) {
         // fall back to classpath; we treat the "filename" as absolute
         // (don't add a package name in front),
@@ -186,8 +191,23 @@ public abstract class Parseable implements ConfigParseable {
     protected AbstractConfigValue rawParseValue(ConfigOrigin origin, ConfigParseOptions finalOptions)
             throws IOException {
         Reader reader = reader();
+
+        // after reader() we will have loaded the Content-Type.
+        ConfigSyntax contentType = contentType();
+
+        ConfigParseOptions optionsWithContentType;
+        if (contentType != null) {
+            if (ConfigImpl.traceLoadsEnabled() && finalOptions.getSyntax() != null)
+                trace("Overriding syntax " + finalOptions.getSyntax()
+                        + " with Content-Type which specified " + contentType);
+
+            optionsWithContentType = finalOptions.setSyntax(contentType);
+        } else {
+            optionsWithContentType = finalOptions;
+        }
+
         try {
-            return rawParseValue(reader, origin, finalOptions);
+            return rawParseValue(reader, origin, optionsWithContentType);
         } finally {
             reader.close();
         }
@@ -240,12 +260,16 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     private static Reader readerFromStream(InputStream input) {
+        return readerFromStream(input, "UTF-8");
+    }
+
+    private static Reader readerFromStream(InputStream input, String encoding) {
         try {
             // well, this is messed up. If we aren't going to close
             // the passed-in InputStream then we have no way to
             // close these readers. So maybe we should not have an
             // InputStream version, only a Reader version.
-            Reader reader = new InputStreamReader(input, "UTF-8");
+            Reader reader = new InputStreamReader(input, encoding);
             return new BufferedReader(reader);
         } catch (UnsupportedEncodingException e) {
             throw new ConfigException.BugOrBroken("Java runtime does not support UTF-8", e);
@@ -390,6 +414,7 @@ public abstract class Parseable implements ConfigParseable {
 
     private final static class ParseableURL extends Parseable {
         final private URL input;
+        private String contentType = null;
 
         ParseableURL(URL input, ConfigParseOptions options) {
             this.input = input;
@@ -400,13 +425,47 @@ public abstract class Parseable implements ConfigParseable {
         protected Reader reader() throws IOException {
             if (ConfigImpl.traceLoadsEnabled())
                 trace("Loading config from a URL: " + input.toExternalForm());
-            InputStream stream = input.openStream();
+            URLConnection connection = input.openConnection();
+            connection.connect();
+
+            // save content type for later
+            contentType = connection.getContentType();
+            if (contentType != null) {
+                if (ConfigImpl.traceLoadsEnabled())
+                    trace("URL sets Content-Type: '" + contentType + "'");
+                contentType = contentType.trim();
+                int semi = contentType.indexOf(';');
+                if (semi >= 0)
+                    contentType = contentType.substring(0, semi);
+            }
+
+            InputStream stream = connection.getInputStream();
+
             return readerFromStream(stream);
         }
 
         @Override
         ConfigSyntax guessSyntax() {
             return syntaxFromExtension(input.getPath());
+        }
+
+        @Override
+        ConfigSyntax contentType() {
+            if (contentType != null) {
+                if (contentType.equals("application/json"))
+                    return ConfigSyntax.JSON;
+                else if (contentType.equals("text/x-java-properties"))
+                    return ConfigSyntax.PROPERTIES;
+                else if (contentType.equals("application/hocon"))
+                    return ConfigSyntax.CONF;
+                else {
+                    if (ConfigImpl.traceLoadsEnabled())
+                        trace("'" + contentType + "' isn't a known content type");
+                    return null;
+                }
+            } else {
+                return null;
+            }
         }
 
         @Override

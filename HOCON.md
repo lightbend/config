@@ -1111,6 +1111,10 @@ The details:
    "2" then the resulting array would have indices "0" and "1",
    i.e. missing indices in the object are eliminated.
 
+## MIME Type
+
+Use "application/hocon" for Content-Type.
+
 ## API Recommendations
 
 Implementations of HOCON ideally follow certain conventions and
