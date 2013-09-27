@@ -26,7 +26,9 @@ object ConfigBuild extends Build {
 
     lazy val root = Project(id = "root",
                             base = file("."),
-                            settings = Project.defaultSettings ++ unpublished) aggregate(testLib, configLib, simpleLibScala, simpleAppScala, complexAppScala)
+                            settings = Project.defaultSettings ++ unpublished) aggregate(testLib, configLib,
+                                                                                         simpleLibScala, simpleAppScala, complexAppScala,
+                                                                                         simpleLibJava, simpleAppJava, complexAppJava)
 
     lazy val configLib = Project(id = "config",
                                  base = file("config"),
@@ -40,21 +42,33 @@ object ConfigBuild extends Build {
                                      artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") }
                                    )) dependsOn(testLib % "test->test")
 
-    lazy val testLib = Project(id = "test-lib",
+    lazy val testLib = Project(id = "config-test-lib",
                                base = file("test-lib"),
                                settings = Project.defaultSettings ++ unpublished)
 
-    lazy val simpleLibScala = Project(id = "simple-lib",
+    lazy val simpleLibScala = Project(id = "config-simple-lib-scala",
                                       base = file("examples/scala/simple-lib"),
                                       settings = Project.defaultSettings ++ unpublished) dependsOn(configLib)
 
-    lazy val simpleAppScala = Project(id = "simple-app",
+    lazy val simpleAppScala = Project(id = "config-simple-app-scala",
                                       base = file("examples/scala/simple-app"),
                                       settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibScala)
 
-    lazy val complexAppScala = Project(id = "complex-app",
+    lazy val complexAppScala = Project(id = "config-complex-app-scala",
                                        base = file("examples/scala/complex-app"),
                                        settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibScala)
+
+    lazy val simpleLibJava = Project(id = "config-simple-lib-java",
+                                      base = file("examples/java/simple-lib"),
+                                      settings = Project.defaultSettings ++ unpublished) dependsOn(configLib)
+
+    lazy val simpleAppJava = Project(id = "config-simple-app-java",
+                                      base = file("examples/java/simple-app"),
+                                      settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibJava)
+
+    lazy val complexAppJava = Project(id = "config-complex-app-java",
+                                       base = file("examples/java/complex-app"),
+                                       settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibJava)
 }
 
 // from https://raw.github.com/paulp/scala-improving/master/project/PublishToSonatype.scala

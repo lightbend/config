@@ -2,6 +2,11 @@ package simplelib
 
 import com.typesafe.config._
 
+// Whenever you write a library, allow people to supply a Config but
+// also default to ConfigFactory.load if they don't supply one.
+// Libraries generally have some kind of Context or other object
+// where it's convenient to place the configuration.
+
 // we have a constructor allowing the app to provide a custom Config
 class SimpleLibContext(config: Config) {
 

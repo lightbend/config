@@ -14,7 +14,9 @@ object SimpleApp extends App {
     // use the default config in application.conf ; this is exactly
     // the same as passing in ConfigFactory.load() here, so we could
     // also write "new SimpleLibContext(conf)" and it would be the same.
-    // (simple-lib is a library in this same examples/ directory)
+    // (simple-lib is a library in this same examples/ directory).
+    // The point is that SimpleLibContext defaults to ConfigFactory.load()
+    // but also allows us to pass in our own Config.
     val context = new SimpleLibContext()
     context.printSetting("simple-lib.foo")
     context.printSetting("simple-lib.hello")
