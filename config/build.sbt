@@ -1,5 +1,6 @@
 import de.johoop.findbugs4sbt.FindBugs._
 import de.johoop.findbugs4sbt.ReportType
+import de.johoop.findbugs4sbt.Effort
 import de.johoop.jacoco4sbt._
 import JacocoPlugin._
 
@@ -21,9 +22,13 @@ externalResolvers += "Scala Tools Snapshots" at "http://scala-tools.org/repo-sna
 
 seq(findbugsSettings : _*)
 
-findbugsReportType := ReportType.Html
+findbugsReportType := Some(ReportType.Html)
 
-findbugsReportName := "findbugs.html"
+findbugsReportName := Some("findbugs.html")
+
+findbugsEffort := Effort.High
+
+findbugsMaxMemory := 1000
 
 seq(jacoco.settings : _*)
 
