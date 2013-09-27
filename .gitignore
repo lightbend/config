@@ -1,6 +1,6 @@
 .classpath
 .project
-/.cache
+.cache
 .settings
 .idea
 .idea_modules
