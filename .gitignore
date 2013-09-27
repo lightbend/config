@@ -4,6 +4,6 @@
 .settings
 .idea
 .idea_modules
-/bin
 /bin-test-lib
 target/
+/bin
