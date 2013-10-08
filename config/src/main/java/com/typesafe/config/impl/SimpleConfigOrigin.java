@@ -466,6 +466,10 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     }
 
     static SimpleConfigOrigin fromFields(Map<SerializedField, Object> m) throws IOException {
+        // we represent a null origin as one with no fields at all
+        if (m.isEmpty())
+            return null;
+
         String description = (String) m.get(SerializedField.ORIGIN_DESCRIPTION);
         Integer lineNumber = (Integer) m.get(SerializedField.ORIGIN_LINE_NUMBER);
         Integer endLineNumber = (Integer) m.get(SerializedField.ORIGIN_END_LINE_NUMBER);

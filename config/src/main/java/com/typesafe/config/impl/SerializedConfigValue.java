@@ -14,6 +14,7 @@ import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.io.ObjectStreamException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -199,7 +200,12 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
     // not private because we use it to serialize ConfigException
     static void writeOrigin(DataOutput out, SimpleConfigOrigin origin,
             SimpleConfigOrigin baseOrigin) throws IOException {
-        Map<SerializedField, Object> m = origin.toFieldsDelta(baseOrigin);
+        Map<SerializedField, Object> m;
+        // to serialize a null origin, we write out no fields at all
+        if (origin != null)
+            m = origin.toFieldsDelta(baseOrigin);
+        else
+            m = Collections.emptyMap();
         for (Map.Entry<SerializedField, Object> e : m.entrySet()) {
             FieldOut field = new FieldOut(e.getKey());
             Object v = e.getValue();
