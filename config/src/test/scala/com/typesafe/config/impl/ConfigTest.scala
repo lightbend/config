@@ -19,6 +19,7 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigMergeable
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigSyntax
+import com.typesafe.config.ConfigValueFactory
 
 class ConfigTest extends TestUtils {
 
@@ -519,6 +520,25 @@ class ConfigTest extends TestUtils {
         val conf = parseConfig("a: {b:1}, a: [2,${x}], a:{c:4}, x: 42")
         assertFalse("a.b found in: " + conf, conf.hasPath("a.b"))
         assertTrue("a.c not found in: " + conf, conf.hasPath("a.c"))
+    }
+
+    @Test
+    def testNoMergeLists() {
+        val conf = parseConfig("a: [1,2], a: [3,4]")
+        assertEquals("lists did not merge", Seq(3, 4), conf.getIntList("a").asScala)
+    }
+
+    @Test
+    def testListsWithFallback() {
+        val list1 = ConfigValueFactory.fromIterable(Seq(1, 2, 3).asJava)
+        val list2 = ConfigValueFactory.fromIterable(Seq(4, 5, 6).asJava)
+        val merged1 = list1.withFallback(list2)
+        val merged2 = list2.withFallback(list1)
+        assertEquals("lists did not merge 1", list1, merged1)
+        assertEquals("lists did not merge 2", list2, merged2)
+        assertFalse("equals is working on these", list1 == list2)
+        assertFalse("equals is working on these", list1 == merged2)
+        assertFalse("equals is working on these", list2 == merged1)
     }
 
     @Test
