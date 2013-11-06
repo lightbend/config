@@ -15,8 +15,8 @@ class ValidationTest extends TestUtils {
 
     sealed abstract class Problem(path: String, line: Int) {
         def check(p: ConfigException.ValidationProblem) {
-            assertEquals(path, p.path())
-            assertEquals(line, p.origin().lineNumber())
+            assertEquals("matching path", path, p.path())
+            assertEquals("matching line", line, p.origin().lineNumber())
         }
 
         protected def assertMessage(p: ConfigException.ValidationProblem, re: String) {
@@ -58,7 +58,8 @@ class ValidationTest extends TestUtils {
         for ((problem, expected) <- problems zip expecteds) {
             expected.check(problem)
         }
-        assertEquals(expecteds.size, problems.size)
+        assertEquals("found expected validation problems, got '" + problems + "' and expected '" + expecteds + "'",
+            expecteds.size, problems.size)
     }
 
     @Test
@@ -117,5 +118,60 @@ class ValidationTest extends TestUtils {
         }
         assertTrue("expected different message, got: " + e.getMessage,
             e.getMessage.contains("resolve"))
+    }
+
+    @Test
+    def validationCatchesListOverriddenWithNumber() {
+        val reference = parseConfig("""{ a : [{},{},{}] }""")
+        val conf = parseConfig("""{ a : 42 }""")
+        val e = intercept[ConfigException.ValidationFailed] {
+            conf.checkValid(reference)
+        }
+
+        val expecteds = Seq(WrongType("a", 1, "list", "number"))
+
+        checkException(e, expecteds)
+    }
+
+    @Test
+    def validationCatchesListOverriddenWithDifferentList() {
+        val reference = parseConfig("""{ a : [true,false,false] }""")
+        val conf = parseConfig("""{ a : [42,43] }""")
+        val e = intercept[ConfigException.ValidationFailed] {
+            conf.checkValid(reference)
+        }
+
+        val expecteds = Seq(WrongElementType("a", 1, "boolean", "number"))
+
+        checkException(e, expecteds)
+    }
+
+    @Test
+    def validationAllowsListOverriddenWithSameTypeList() {
+        val reference = parseConfig("""{ a : [1,2,3] }""")
+        val conf = parseConfig("""{ a : [4,5] }""")
+        conf.checkValid(reference)
+    }
+
+    @Test
+    def validationCatchesListOverriddenWithNoIndexesObject() {
+        val reference = parseConfig("""{ a : [1,2,3] }""")
+        val conf = parseConfig("""{ a : { notANumber: foo } }""")
+        val e = intercept[ConfigException.ValidationFailed] {
+            conf.checkValid(reference)
+        }
+
+        val expecteds = Seq(WrongType("a", 1, "list", "object"))
+
+        checkException(e, expecteds)
+    }
+
+    @Test
+    def validationAllowsListOverriddenWithIndexedObject() {
+        val reference = parseConfig("""{ a : [a,b,c] }""")
+        val conf = parseConfig("""{ a : { "0" : x, "1" : y } }""")
+        conf.checkValid(reference)
+        assertEquals("got the sequence from overriding list with indexed object",
+            Seq("x", "y"), conf.getStringList("a").asScala)
     }
 }
