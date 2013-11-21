@@ -148,6 +148,9 @@ The idea is that libraries and frameworks should ship with a
 `application.conf`, or if they want to create multiple
 configurations in a single JVM, they could use
 `ConfigFactory.load("myapp")` to load their own `myapp.conf`.
+(Applications _can_ provide a `reference.conf` also if they want,
+but you may not find it necessary to separate it from
+`application.conf`.)
 
 Libraries and frameworks should default to `ConfigFactory.load()`
 if the application does not provide a custom `Config`
@@ -198,6 +201,89 @@ Then you could code something like:
                          .withFallback(originalConfig)
 
 There are lots of ways to use `withFallback`.
+
+## How to handle defaults
+
+Many other configuration APIs allow you to provide a default to
+the getter methods, like this:
+
+    boolean getBoolean(String path, boolean fallback)
+
+Here, if the path has no setting, the fallback would be
+returned. An API could also return `null` for unset values, so you
+would check for `null`:
+
+    // returns null on unset, check for null and fall back
+    Boolean getBoolean(String path)
+
+The methods on the `Config` interface do NOT do this, for two
+major reasons:
+
+ 1. If you use a config setting in two places, the default
+ fallback value gets cut-and-pasted and typically out of
+ sync. This can result in Very Evil Bugs.
+ 2. If the getter returns `null` (or `None`, in Scala) then every
+ time you get a setting you have to write handling code for
+ `null`/`None` and that code will almost always just throw an
+ exception. Perhaps more commonly, people forget to check for
+ `null` at all, so missing settings result in
+ `NullPointerException`.
+
+For most apps, failure to have a setting is simply a bug to fix
+(in either code or the deployment environment). Therefore, if a
+setting is unset, by default the getters on the `Config` interface
+throw an exception.
+
+If you WANT to allow a setting to be missing from
+`application.conf` then here are some options:
+
+ 1. Set it in a `reference.conf` included in your library or
+ application jar, so there's a default value.
+ 2. Catch and handle `ConfigException.Missing`.
+ 3. Use the `Config.hasPath()` method to check in advance whether
+ the path exists (rather than checking for `null`/`None` after as
+ you might in other APIs).
+ 4. In your initialization code, generate a `Config` with your
+ defaults in it (using something like `ConfigFactory.parseMap()`)
+ then fold that default config into your loaded config using
+ `withFallback()`, and use the combined config in your
+ program. "Inlining" your reference config in the code like this
+ is probably less convenient than using a `reference.conf` file,
+ but there may be reasons to do it.
+ 5. Use `Config.root()` to get the `ConfigObject` for the
+ `Config`; `ConfigObject` implements `java.util.Map<String,?>` and
+ the `get()` method on `Map` returns null for missing keys. See
+ the API docs for more detail on `Config` vs. `ConfigObject`.
+
+The *recommended* path (for most cases, in most apps) is that you
+require all settings to be present in either `reference.conf` or
+`application.conf` and allow `ConfigException.Missing` to be
+thrown if they are not. That's the design intent of the `Config`
+API design.
+
+If you do need a setting to be optional, checking `hasPath()` in
+advance should be the same amount of code (in Java) as checking
+for `null` afterward, without the risk of `NullPointerException`
+when you forget. In Scala, you could write an enrichment class
+like this to use the idiomatic `Option` syntax:
+
+```scala
+implicit class RichConfig(val underlying: Config) extends AnyVal {
+  def getOptionalBoolean(path: String): Option[Boolean] = try {
+     Some(underlying.getBoolean(path))
+  } catch {
+     case e: ConfigException.Missing =>
+         None
+  }
+}
+```
+
+Since this library is a Java library it doesn't come with that out
+of the box, of course.
+
+Whatever you do, please remember not to cut-and-paste default
+values into multiple places in your code. You have been warned!
+:-)
 
 ## JSON Superset
 
