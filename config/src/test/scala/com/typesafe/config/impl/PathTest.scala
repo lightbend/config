@@ -67,6 +67,9 @@ class PathTest extends TestUtils {
             RenderTest("\" foo \"", path(" foo ")),
             // trailing space only
             RenderTest("\"foo \"", path("foo ")))
+            // numbers with decimal points
+            RenderTest("1.2", path("1", "2"))
+            RenderTest("1.2.3.4", path("1", "2", "3", "4"))
 
         for (t <- tests) {
             assertEquals(t.expected, t.path.render())

@@ -441,6 +441,7 @@ number-to-string library function).
    be a two-element path with `foo10` and `0` as the elements.
  - `foo"10.0"` is an unquoted then a quoted string which are
    concatenated, so this is a single-element path.
+ - `1.2.3` is the three-element path with `1`,`2`,`3`
 
 Unlike value concatenations, path expressions are _always_
 converted to a string, even if they are just a single value.

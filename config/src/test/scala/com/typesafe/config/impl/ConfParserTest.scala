@@ -124,6 +124,7 @@ class ConfParserTest extends TestUtils {
         assertEquals(path("a  b"), parsePath(" a  b"))
         assertEquals(path("a", "b.c", "d"), parsePath("a.\"b.c\".d"))
         assertEquals(path("3", "14"), parsePath("3.14"))
+        assertEquals(path("3", "14", "159"), parsePath("3.14.159"))
         assertEquals(path("a3", "14"), parsePath("a3.14"))
         assertEquals(path(""), parsePath("\"\""))
         assertEquals(path("a", "", "b"), parsePath("a.\"\".b"))
@@ -133,6 +134,9 @@ class ConfParserTest extends TestUtils {
         assertEquals(path("a-c"), parsePath("a-c"))
         assertEquals(path("a_c"), parsePath("a_c"))
         assertEquals(path("-"), parsePath("\"-\""))
+        assertEquals(path("-"), parsePath("-"))
+        assertEquals(path("-foo"), parsePath("-foo"))
+        assertEquals(path("-10"), parsePath("-10"))
 
         // here 10.0 is part of an unquoted string
         assertEquals(path("foo10", "0"), parsePath("foo10.0"))
@@ -140,6 +144,8 @@ class ConfParserTest extends TestUtils {
         assertEquals(path("10", "0foo"), parsePath("10.0foo"))
         // just a number
         assertEquals(path("10", "0"), parsePath("10.0"))
+        // multiple-decimal number
+        assertEquals(path("1", "2", "3", "4"), parsePath("1.2.3.4"))
 
         for (invalid <- Seq("", " ", "  \n   \n  ", "a.", ".b", "a..b", "a${b}c", "\"\".", ".\"\"")) {
             try {
@@ -151,11 +157,6 @@ class ConfParserTest extends TestUtils {
                     System.err.println("failed on: '" + invalid + "'");
                     throw e;
             }
-        }
-
-        intercept[ConfigException.Parse] {
-            // this gets parsed as a number since it starts with '-'
-            parsePath("-")
         }
     }
 
@@ -338,11 +339,6 @@ class ConfParserTest extends TestUtils {
         lineNumberTest(1, "\"foo\"")
         lineNumberTest(2, "\n\"foo\"")
         lineNumberTest(3, "\n\n\"foo\"")
-
-        // newline in middle of number uses the line the number was on
-        lineNumberTest(1, "1e\n")
-        lineNumberTest(2, "\n1e\n")
-        lineNumberTest(3, "\n\n1e\n")
 
         // newlines in triple-quoted string should not hose up the numbering
         lineNumberTest(1, "a : \"\"\"foo\"\"\"}")
@@ -812,5 +808,15 @@ class ConfParserTest extends TestUtils {
         // BOM here should be treated like other whitespace (ignored, since no quotes)
         val conf = ConfigFactory.parseString("foo= \uFEFFbar\uFEFF")
         assertEquals("bar", conf.getString("foo"))
+    }
+
+    @Test
+    def acceptMultiPeriodNumericPath() {
+        val conf1 = ConfigFactory.parseString("0.1.2.3=foobar1")
+        assertEquals("foobar1", conf1.getString("0.1.2.3"))
+        val conf2 = ConfigFactory.parseString("0.1.2.3.ABC=foobar2")
+        assertEquals("foobar2", conf2.getString("0.1.2.3.ABC"))
+        val conf3 = ConfigFactory.parseString("ABC.0.1.2.3=foobar3")
+        assertEquals("foobar3", conf3.getString("ABC.0.1.2.3"))
     }
 }
