@@ -908,4 +908,13 @@ class PublicApiTest extends TestUtils {
         assertTrue("stuff gets cached repeatedly sys", sys3 eq sys4)
         assertTrue("stuff gets cached repeatedly conf", conf3 eq conf4)
     }
+
+    @Test
+    def canUseSomeValuesWithoutResolving(): Unit = {
+        val conf = ConfigFactory.parseString("a=42,b=${NOPE}")
+        assertEquals(42, conf.getInt("a"))
+        intercept[ConfigException.NotResolved] {
+            conf.getInt("b")
+        }
+    }
 }
