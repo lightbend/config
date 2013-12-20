@@ -355,7 +355,15 @@ final class Tokenizer {
                     return Tokens.newLong(lineOrigin, Long.parseLong(s), s);
                 }
             } catch (NumberFormatException e) {
-                throw problem(s, "Invalid number: '" + s + "'", true /* suggestQuotes */, e);
+                // not a number after all, see if it's an unquoted string.
+                for (char u : s.toCharArray()) {
+                    if (notInUnquotedText.indexOf(u) >= 0)
+                        throw problem(asString(u), "Reserved character '" + asString(u)
+                                      + "' is not allowed outside quotes", true /* suggestQuotes */);
+                }
+                // no evil chars so we just decide this was a string and
+                // not a number.
+                return Tokens.newUnquotedText(lineOrigin, s);
             }
         }
 

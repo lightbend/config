@@ -342,8 +342,6 @@ abstract trait TestUtils {
         // these two problems are ignored by the lift tokenizer
         "[:\"foo\", \"bar\"]", // colon in an array; lift doesn't throw (tokenizer erases it)
         "[\"foo\" : \"bar\"]", // colon in an array another way, lift ignores (tokenizer erases it)
-        "[ 10e3e3 ]", // two exponents. ideally this might parse to a number plus string "e3" but it's hard to implement.
-        "[ 1-e3 ]", // malformed number but all chars can appear in a number
         "[ \"hello ]", // unterminated string
         ParseTest(true, "{ \"foo\" , true }"), // comma instead of colon, lift is fine with this
         ParseTest(true, "{ \"foo\" : true \"bar\" : false }"), // missing comma between fields, lift fine with this
@@ -380,6 +378,7 @@ abstract trait TestUtils {
         "[ += ]",
         "+= 10",
         "10 +=",
+        "[ 10e+3e ]", // "+" not allowed in unquoted strings, and not a valid number
         ParseTest(true, "[ \"foo\nbar\" ]"), // unescaped newline in quoted string, lift doesn't care
         "[ # comment ]",
         "${ #comment }",
@@ -412,7 +411,8 @@ abstract trait TestUtils {
         "[ \"//comment\" ]", // quoted // comment
         // this long one is mostly to test rendering
         """{ "foo" : { "bar" : "baz", "woo" : "w00t" }, "baz" : { "bar" : "baz", "woo" : [1,2,3,4], "w00t" : true, "a" : false, "b" : 3.14, "c" : null } }""",
-        "{}")
+        "{}",
+        ParseTest(true, "[ 10e+3 ]")) // "+" in a number (lift doesn't handle)
 
     private val validConfInvalidJson = List[ParseTest]("", // empty document
         " ", // empty document single space
@@ -504,7 +504,11 @@ abstract trait TestUtils {
         "a = [], a += b", // += operator with previous init
         "{ a = [], a += 10 }", // += in braces object with previous init
         "a += b", // += operator without previous init
-        "{ a += 10 }") // += in braces object without previous init
+        "{ a += 10 }", // += in braces object without previous init
+        "[ 10e3e3 ]", // two exponents. this should parse to a number plus string "e3"
+        "[ 1-e3 ]", // malformed number should end up as a string instead
+        "[ 1.0.0 ]", // two decimals, should end up as a string
+        "[ 1.0. ]")  // trailing decimal should end up as a string
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
 
