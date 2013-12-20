@@ -339,6 +339,11 @@ public abstract class ConfigException extends RuntimeException implements Serial
         public String problem() {
             return problem;
         }
+
+        @Override
+        public String toString() {
+            return "ValidationProblem(" + path + "," + origin + "," + problem + ")";
+        }
     }
 
     /**

@@ -107,7 +107,9 @@ class PropertiesTest extends TestUtils {
         props.setProperty("a.4", "4")
 
         val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        val reference = ConfigFactory.parseString("{ a : [0,1,2,3,4] }")
         assertEquals(Seq(0, 1, 2, 3, 4), conf.getIntList("a").asScala.toSeq)
+        conf.checkValid(reference)
     }
 
     @Test
@@ -120,7 +122,9 @@ class PropertiesTest extends TestUtils {
         props.setProperty("a.4", "2")
 
         val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        val reference = ConfigFactory.parseString("{ a : [0,1,2] }")
         assertEquals(Seq(0, 1, 2), conf.getIntList("a").asScala.toSeq)
+        conf.checkValid(reference)
     }
 
     @Test
@@ -137,7 +141,9 @@ class PropertiesTest extends TestUtils {
         props.setProperty("a.4", "4")
 
         val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
+        val reference = ConfigFactory.parseString("{ a : [0,1,2,3,4] }")
         assertEquals(Seq(0, 1, 2, 3, 4), conf.getIntList("a").asScala.toSeq)
+        conf.checkValid(reference)
     }
 
     @Test
@@ -173,7 +179,9 @@ class PropertiesTest extends TestUtils {
                 a = [-2, -1] ${a}
                 """)
         val conf = conf2.withFallback(conf1).resolve()
+        val reference = ConfigFactory.parseString("{ a : [-2,-1,0,1,2,3,4,5,6] }")
 
         assertEquals(Seq(-2, -1, 0, 1, 2, 3, 4, 5, 6), conf.getIntList("a").asScala.toSeq)
+        conf.checkValid(reference)
     }
 }

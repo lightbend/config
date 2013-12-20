@@ -728,7 +728,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 return false;
             }
         } else if (reference instanceof SimpleConfigList) {
-            if (value instanceof SimpleConfigList) {
+            // objects may be convertible to lists if they have numeric keys
+            if (value instanceof SimpleConfigList || value instanceof SimpleConfigObject) {
                 return true;
             } else {
                 return false;
@@ -772,6 +773,25 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         }
     }
 
+    private static void checkListCompatibility(Path path, SimpleConfigList listRef,
+            SimpleConfigList listValue, List<ConfigException.ValidationProblem> accumulator) {
+        if (listRef.isEmpty() || listValue.isEmpty()) {
+            // can't verify type, leave alone
+        } else {
+            AbstractConfigValue refElement = listRef.get(0);
+            for (ConfigValue elem : listValue) {
+                AbstractConfigValue e = (AbstractConfigValue) elem;
+                if (!haveCompatibleTypes(refElement, e)) {
+                    addProblem(accumulator, path, e.origin(), "List at '" + path.render()
+                            + "' contains wrong value type, expecting list of "
+                            + getDesc(refElement) + " but got element of type " + getDesc(e));
+                    // don't add a problem for every last array element
+                    break;
+                }
+            }
+        }
+    }
+
     private static void checkValid(Path path, ConfigValue reference, AbstractConfigValue value,
             List<ConfigException.ValidationProblem> accumulator) {
         // Unmergeable is supposed to be impossible to encounter in here
@@ -784,22 +804,16 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             } else if (reference instanceof SimpleConfigList && value instanceof SimpleConfigList) {
                 SimpleConfigList listRef = (SimpleConfigList) reference;
                 SimpleConfigList listValue = (SimpleConfigList) value;
-                if (listRef.isEmpty() || listValue.isEmpty()) {
-                    // can't verify type, leave alone
-                } else {
-                    AbstractConfigValue refElement = listRef.get(0);
-                    for (ConfigValue elem : listValue) {
-                        AbstractConfigValue e = (AbstractConfigValue) elem;
-                        if (!haveCompatibleTypes(refElement, e)) {
-                            addProblem(accumulator, path, e.origin(), "List at '" + path.render()
-                                    + "' contains wrong value type, expecting list of "
-                                    + getDesc(refElement) + " but got element of type "
-                                    + getDesc(e));
-                            // don't add a problem for every last array element
-                            break;
-                        }
-                    }
-                }
+                checkListCompatibility(path, listRef, listValue, accumulator);
+            } else if (reference instanceof SimpleConfigList && value instanceof SimpleConfigObject) {
+                // attempt conversion of indexed object to list
+                SimpleConfigList listRef = (SimpleConfigList) reference;
+                AbstractConfigValue listValue = DefaultTransformer.transform(value,
+                        ConfigValueType.LIST);
+                if (listValue instanceof SimpleConfigList)
+                    checkListCompatibility(path, listRef, (SimpleConfigList) listValue, accumulator);
+                else
+                    addWrongType(accumulator, reference, value, path);
             }
         } else {
             addWrongType(accumulator, reference, value, path);
