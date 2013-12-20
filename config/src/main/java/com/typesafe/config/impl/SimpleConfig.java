@@ -248,15 +248,10 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public Long getDuration(String path, TimeUnit unit) {
-        Long result = null;
-        try {
-            result = unit.convert(getLong(path), TimeUnit.MILLISECONDS);
-        } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING);
-            result = unit.convert(
+        ConfigValue v = find(path, ConfigValueType.STRING);
+        Long result = unit.convert(
                        parseDuration((String) v.unwrapped(), v.origin(), path),
                        TimeUnit.NANOSECONDS);
-        }
         return result;
     }
 

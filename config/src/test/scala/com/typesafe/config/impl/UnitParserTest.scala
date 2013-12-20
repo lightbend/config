@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 class UnitParserTest extends TestUtils {
 
     @Test
-    def parseDuration() {
+    def parseDuration(): Unit = {
         val oneSecs = List("1s", "1 s", "1seconds", "1 seconds", "   1s    ", "   1    s   ",
             "1second",
             "1000", "1000ms", "1000 ms", "1000   milliseconds", "   1000       milliseconds    ",
@@ -40,8 +40,25 @@ class UnitParserTest extends TestUtils {
         assertTrue(e2.getMessage().contains("duration number"))
     }
 
+    // https://github.com/typesafehub/config/issues/117
+    // this broke because "1d" is a valid double for parseDouble
     @Test
-    def parseMemorySizeInBytes() {
+    def parseOneDayAsMilliseconds(): Unit = {
+        val result = SimpleConfig.parseDuration("1d", fakeOrigin(), "test")
+        val dayInNanos = TimeUnit.DAYS.toNanos(1)
+        assertEquals("could parse 1d", dayInNanos, result)
+
+        val conf = parseConfig("foo = 1d")
+        assertEquals("could get 1d from conf as days",
+                     1L, conf.getDuration("foo", TimeUnit.DAYS))
+        assertEquals("could get 1d from conf as nanos",
+                     dayInNanos, conf.getNanoseconds("foo"))
+        assertEquals("could get 1d from conf as millis",
+                     TimeUnit.DAYS.toMillis(1), conf.getMilliseconds("foo"))
+    }
+
+    @Test
+    def parseMemorySizeInBytes(): Unit = {
         def parseMem(s: String) = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
 
         val oneMebis = List("1048576", "1048576b", "1048576bytes", "1048576byte",
