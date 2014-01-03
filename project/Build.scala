@@ -9,6 +9,8 @@ object ConfigBuild extends Build {
         // make-pom has a more specific publishArtifact setting already
         // so needs specific override
         publishArtifact in makePom := false,
+        // no docs to publish
+        publishArtifact in packageDoc := false,
         // can't seem to get rid of ivy files except by no-op'ing the entire publish task
         publish := {},
         publishLocal := {}
@@ -24,11 +26,19 @@ object ConfigBuild extends Build {
 
     override val settings = super.settings ++ Seq(isSnapshot <<= isSnapshot or version(_ endsWith "-SNAPSHOT"))
 
+    lazy val rootSettings: Seq[Setting[_]] =
+      Project.defaultSettings ++
+      unpublished ++
+      Seq(aggregate in doc := false,
+          doc := (doc in (configLib, Compile)).value,
+          aggregate in packageDoc := false,
+          packageDoc := (packageDoc in (configLib, Compile)).value)
+
     lazy val root = Project(id = "root",
                             base = file("."),
-                            settings = Project.defaultSettings ++ unpublished) aggregate(testLib, configLib,
-                                                                                         simpleLibScala, simpleAppScala, complexAppScala,
-                                                                                         simpleLibJava, simpleAppJava, complexAppJava)
+                            settings = rootSettings) aggregate(testLib, configLib,
+                                                               simpleLibScala, simpleAppScala, complexAppScala,
+                                                               simpleLibJava, simpleAppJava, complexAppJava)
 
     lazy val configLib = Project(id = "config",
                                  base = file("config"),
