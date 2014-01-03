@@ -17,20 +17,65 @@ object RenderExample extends App {
             .withFallback(ConfigFactory.parseResourcesAnySyntax(classOf[ConfigFactory], "/" + what))
             .withFallback(ConfigFactory.defaultReference())
 
+        println("=== BEGIN UNRESOLVED toString() " + what)
+        print(conf.root.toString())
+        println("=== END UNRESOLVED toString() " + what)
+
         println("=== BEGIN UNRESOLVED " + what)
-        println(conf.root.render(options))
+        print(conf.root.render(options))
         println("=== END UNRESOLVED " + what)
 
         println("=== BEGIN RESOLVED " + what)
-        println(conf.resolve().root.render(options))
+        print(conf.resolve().root.render(options))
         println("=== END RESOLVED " + what)
-
-        println("=== BEGIN UNRESOLVED toString() " + what)
-        println(conf.root.toString())
-        println("=== END UNRESOLVED toString() " + what)
     }
 
     render("test01")
     render("test06")
     render("test05")
+}
+
+object RenderOptions extends App {
+    val conf = ConfigFactory.parseString(
+        """
+            foo=[1,2,3]
+            # comment1
+            bar {
+                a = 42
+                #comment2
+                b = { c = "hello", d = true }
+                #    comment3
+                e = ${something}
+            }
+""")
+
+    // ah, efficiency
+    def allBooleanLists(length: Int): Seq[Seq[Boolean]] = {
+        if (length == 0) {
+            Seq(Nil)
+        } else {
+            val tails = allBooleanLists(length - 1)
+            (tails map { false +: _ }) ++ (tails map { true +: _ })
+        }
+    }
+
+    val rendered =
+        allBooleanLists(4).foldLeft(0) { (count, values) =>
+            val formatted = values(0)
+            val originComments = values(1)
+            val comments = values(2)
+            val json = values(3)
+
+            val options = ConfigRenderOptions.defaults()
+                .setFormatted(formatted)
+                .setOriginComments(originComments)
+                .setComments(comments)
+                .setJson(json)
+            val renderSpec = options.toString.replace("ConfigRenderOptions", "")
+            println("=== " + count + " RENDER WITH " + renderSpec + "===")
+            print(conf.root.render(options))
+            println("=== " + count + " END RENDER WITH " + renderSpec + "===")
+            count + 1
+        }
+    println("Rendered " + rendered + " option combinations")
 }
