@@ -35,3 +35,7 @@ seq(jacoco.settings : _*)
 javacOptions in (Compile,doc) ++= Seq("-exclude", "com.typesafe.config.impl")
 
 javacOptions in (Compile,compile) ++= Seq("-source", "1.6", "-target", "1.6", "-g")
+
+// because we test some global state such as singleton caches,
+// we have to run tests in serial.
+parallelExecution in Test := false
