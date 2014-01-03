@@ -219,21 +219,22 @@ public final class ConfigFactory {
                     + "', config.url='" + url + "', config.resource='" + resource
                     + "'; don't know which one to use!");
         } else {
+            // the override file/url/resource MUST be present or it's an error
+            ConfigParseOptions overrideOptions = parseOptions.setAllowMissing(false);
             if (resource != null) {
                 if (resource.startsWith("/"))
                     resource = resource.substring(1);
                 // this deliberately does not parseResourcesAnySyntax; if
                 // people want that they can use an include statement.
-                return load(loader, parseResources(loader, resource, parseOptions), resolveOptions);
+                Config parsedResources = parseResources(loader, resource, overrideOptions);
+                return load(loader, parsedResources, resolveOptions);
             } else if (file != null) {
-                return load(
-                        loader,
-                        parseFile(new File(file), parseOptions), resolveOptions);
+                Config parsedFile = parseFile(new File(file), overrideOptions);
+                return load(loader, parsedFile, resolveOptions);
             } else {
                 try {
-                    return load(
-                            loader,
-                            parseURL(new URL(url), parseOptions), resolveOptions);
+                    Config parsedURL = parseURL(new URL(url), overrideOptions);
+                    return load(loader, parsedURL, resolveOptions);
                 } catch (MalformedURLException e) {
                     throw new ConfigException.Generic("Bad URL in config.url system property: '"
                             + url + "': " + e.getMessage(), e);
