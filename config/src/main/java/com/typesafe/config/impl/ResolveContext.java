@@ -121,14 +121,16 @@ final class ResolveContext {
                 memos.put(fullKey, resolved);
             } else {
                 // if we have an unresolved object then either we did a
-                // partial resolve restricted to a certain child, or it's
-                // a bug.
+                // partial resolve restricted to a certain child, or we are
+                // allowing incomplete resolution, or it's a bug.
                 if (isRestrictedToChild()) {
                     if (restrictedKey == null) {
                         throw new ConfigException.BugOrBroken(
                                 "restrictedKey should not be null here");
                     }
                     memos.put(restrictedKey, resolved);
+                } else if (options().getAllowUnresolved()) {
+                    memos.put(fullKey, resolved);
                 } else {
                     throw new ConfigException.BugOrBroken(
                             "resolveSubstitutions() did not give us a resolved object");

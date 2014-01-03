@@ -81,9 +81,13 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
             }
 
             if (v == null && !expr.optional()) {
-                throw new ConfigException.UnresolvedSubstitution(origin(), expr.toString());
+                if (context.options().getAllowUnresolved())
+                    return this;
+                else
+                    throw new ConfigException.UnresolvedSubstitution(origin(), expr.toString());
+            } else {
+                return v;
             }
-            return v;
         } finally {
             context.source().unreplace(this);
         }

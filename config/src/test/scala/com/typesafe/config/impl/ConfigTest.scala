@@ -1103,4 +1103,30 @@ class ConfigTest extends TestUtils {
             checkSerializable(resolved)
         }
     }
+
+    @Test
+    def allowUnresolvedDoesAllowUnresolved() {
+        val values = ConfigFactory.parseString("{ foo = 1, bar = 2, m = 3, n = 4}")
+        val unresolved = ConfigFactory.parseString("a = ${foo}, b = ${bar}, c { x = ${m}, y = ${n} }, alwaysResolveable=${alwaysValue}, alwaysValue=42")
+        // resolve() by default throws with unresolveable substs
+        intercept[ConfigException.UnresolvedSubstitution] {
+            unresolved.resolve(ConfigResolveOptions.defaults())
+        }
+        // we shouldn't be able to get a value without resolving it
+        intercept[ConfigException.NotResolved] {
+            unresolved.getInt("alwaysResolveable")
+        }
+        val allowedUnresolved = unresolved.resolve(ConfigResolveOptions.defaults().setAllowUnresolved(true))
+        // when we partially-resolve we should still resolve what we can
+        assertEquals("we resolved the resolveable", 42, allowedUnresolved.getInt("alwaysResolveable"))
+        // but unresolved should still all throw
+        for (k <- Seq("a", "b", "c.x", "c.y")) {
+            intercept[ConfigException.NotResolved] { allowedUnresolved.getInt(k) }
+        }
+        // and given the values for the resolve, we should be able to
+        val resolved = allowedUnresolved.withFallback(values).resolve()
+        for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
+            assertEquals(kv._2, resolved.getInt(kv._1))
+        }
+    }
 }
