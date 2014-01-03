@@ -185,6 +185,46 @@ public interface Config extends ConfigMergeable {
     boolean isResolved();
 
     /**
+     * Like {@link Config#resolve()} except that substitution values are looked
+     * up in the given source, rather than in this instance. This is a
+     * special-purpose method which doesn't make sense to use in most cases;
+     * it's only needed if you're constructing some sort of app-specific custom
+     * approach to configuration. The more usual approach if you have a source
+     * of substitution values would be to merge that source into your config
+     * stack using {@link Config#withFallback} and then resolve.
+     * <p>
+     * Note that this method does NOT look in this instance for substitution
+     * values. If you want to do that, you could either merge this instance into
+     * your value source using {@link Config#withFallback}, or you could resolve
+     * multiple times with multiple sources (using
+     * {@link ConfigResolveOptions#setAllowUnresolved(boolean)} so the partial
+     * resolves don't fail).
+     * 
+     * @param source
+     *            configuration to pull values from
+     * @return an immutable object with substitutions resolved
+     * @throws ConfigException.UnresolvedSubstitution
+     *             if any substitutions refer to paths which are not in the
+     *             source
+     * @throws ConfigException
+     *             some other config exception if there are other problems
+     */
+    Config resolveWith(Config source);
+
+    /**
+     * Like {@link Config#resolveWith(Config)} but allows you to specify
+     * non-default options.
+     * 
+     * @param source
+     *            source configuration to pull values from
+     * @param options
+     *            resolve options
+     * @return the resolved <code>Config</code> (may be only partially resolved
+     *         if options are set to allow unresolved)
+     */
+    Config resolveWith(Config source, ConfigResolveOptions options);
+
+    /**
      * Validates this config against a reference config, throwing an exception
      * if it is invalid. The purpose of this method is to "fail early" with a
      * comprehensive list of problems; in general, anything this method can find

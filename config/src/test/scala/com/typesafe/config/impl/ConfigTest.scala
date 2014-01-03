@@ -1138,11 +1138,34 @@ class ConfigTest extends TestUtils {
         }
         // and the partially-resolved thing is not resolved
         assertFalse("partially-resolved object is not resolved", allowedUnresolved.isResolved)
-        // and given the values for the resolve, we should be able to
-        val resolved = allowedUnresolved.withFallback(values).resolve()
-        for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
-            assertEquals(kv._2, resolved.getInt(kv._1))
+
+        // scope "val resolved"
+        {
+            // and given the values for the resolve, we should be able to
+            val resolved = allowedUnresolved.withFallback(values).resolve()
+            for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
+                assertEquals(kv._2, resolved.getInt(kv._1))
+            }
+            assertTrue("fully resolved object is resolved", resolved.isResolved)
         }
-        assertTrue("fully resolved object is resolved", resolved.isResolved)
+
+        // we should also be able to use resolveWith
+        {
+            val resolved = allowedUnresolved.resolveWith(values)
+            for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
+                assertEquals(kv._2, resolved.getInt(kv._1))
+            }
+            assertTrue("fully resolved object is resolved", resolved.isResolved)
+        }
+    }
+
+    @Test
+    def resolveWithWorks(): Unit = {
+        // the a=42 is present here to be sure it gets ignored when we resolveWith
+        val unresolved = ConfigFactory.parseString("foo = ${a}, a = 42")
+        assertEquals(42, unresolved.resolve().getInt("foo"))
+        val source = ConfigFactory.parseString("a = 43")
+        val resolved = unresolved.resolveWith(source)
+        assertEquals(43, resolved.getInt("foo"))
     }
 }
