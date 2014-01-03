@@ -218,7 +218,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
     public abstract AbstractConfigValue get(Object key);
 
     @Override
-    protected abstract void render(StringBuilder sb, int indent, ConfigRenderOptions options);
+    protected abstract void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options);
 
     private static UnsupportedOperationException weAreImmutable(String method) {
         return new UnsupportedOperationException("ConfigObject is immutable, you can't call Map."

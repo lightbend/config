@@ -46,6 +46,7 @@ object RenderOptions extends App {
                 b = { c = "hello", d = true }
                 #    comment3
                 e = ${something}
+                f = {}
             }
 """)
 

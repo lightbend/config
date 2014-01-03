@@ -216,12 +216,12 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, String atKey, ConfigRenderOptions options) {
-        render(stack, sb, indent, atKey, options);
+    protected void render(StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
+        render(stack, sb, indent, atRoot, atKey, options);
     }
 
     // static method also used by ConfigDelayedMergeObject.
-    static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, String atKey,
+    static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, boolean atRoot, String atKey,
             ConfigRenderOptions options) {
         boolean commentMerge = options.getComments();
         if (commentMerge) {
@@ -268,7 +268,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                 else
                     sb.append(":");
             }
-            v.render(sb, indent, options);
+            v.render(sb, indent, atRoot, options);
             sb.append(",");
             if (options.getFormatted())
                 sb.append('\n');

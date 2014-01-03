@@ -232,9 +232,9 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
+    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         for (AbstractConfigValue p : pieces) {
-            p.render(sb, indent, options);
+            p.render(sb, indent, atRoot, options);
         }
     }
 

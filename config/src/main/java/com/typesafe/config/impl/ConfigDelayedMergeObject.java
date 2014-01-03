@@ -179,13 +179,13 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, String atKey, ConfigRenderOptions options) {
-        ConfigDelayedMerge.render(stack, sb, indent, atKey, options);
+    protected void render(StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
+        ConfigDelayedMerge.render(stack, sb, indent, atRoot, atKey, options);
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
-        render(sb, indent, null, options);
+    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+        render(sb, indent, atRoot, null, options);
     }
 
     private static ConfigException notResolved() {

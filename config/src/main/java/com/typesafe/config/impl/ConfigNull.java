@@ -42,7 +42,7 @@ final class ConfigNull extends AbstractConfigValue implements Serializable {
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
+    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         sb.append("null");
     }
 
