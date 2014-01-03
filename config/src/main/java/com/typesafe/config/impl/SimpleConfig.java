@@ -816,6 +816,11 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     @Override
+    public boolean isResolved() {
+        return root().resolveStatus() == ResolveStatus.RESOLVED;
+    }
+
+    @Override
     public void checkValid(Config reference, String... restrictToPaths) {
         SimpleConfig ref = (SimpleConfig) reference;
 

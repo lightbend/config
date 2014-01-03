@@ -168,9 +168,21 @@ public interface Config extends ConfigMergeable {
      *
      * @param options
      *            resolve options
-     * @return the resolved <code>Config</code>
+     * @return the resolved <code>Config</code> (may be only partially resolved if options are set to allow unresolved)
      */
     Config resolve(ConfigResolveOptions options);
+
+    /**
+     * Checks whether the config is completely resolved. After a successful call to
+     * {@link Config#resolve()} it will be completely resolved, but after calling
+     * {@link Config#resolve(ConfigResolveOptions)} with <code>allowUnresolved</code> set
+     * in the options, it may or may not be completely resolved. A newly-loaded config
+     * may or may not be completely resolved depending on whether there were substitutions
+     * present in the file.
+     *
+     * @return true if there are no unresolved substitutions remaining in this configuration.
+     */
+    boolean isResolved();
 
     /**
      * Validates this config against a reference config, throwing an exception

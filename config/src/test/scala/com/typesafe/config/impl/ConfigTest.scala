@@ -1105,9 +1105,22 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def isResolvedWorks() {
+        val resolved = ConfigFactory.parseString("foo = 1")
+        assertTrue("config with no substitutions starts as resolved", resolved.isResolved)
+        val unresolved = ConfigFactory.parseString("foo = ${a}, a=42")
+        assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
+        val resolved2 = unresolved.resolve()
+        assertTrue("after resolution, config is now resolved", resolved2.isResolved)
+    }
+
+    @Test
     def allowUnresolvedDoesAllowUnresolved() {
         val values = ConfigFactory.parseString("{ foo = 1, bar = 2, m = 3, n = 4}")
+        assertTrue("config with no substitutions starts as resolved", values.isResolved)
         val unresolved = ConfigFactory.parseString("a = ${foo}, b = ${bar}, c { x = ${m}, y = ${n} }, alwaysResolveable=${alwaysValue}, alwaysValue=42")
+        assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
+
         // resolve() by default throws with unresolveable substs
         intercept[ConfigException.UnresolvedSubstitution] {
             unresolved.resolve(ConfigResolveOptions.defaults())
@@ -1123,10 +1136,13 @@ class ConfigTest extends TestUtils {
         for (k <- Seq("a", "b", "c.x", "c.y")) {
             intercept[ConfigException.NotResolved] { allowedUnresolved.getInt(k) }
         }
+        // and the partially-resolved thing is not resolved
+        assertFalse("partially-resolved object is not resolved", allowedUnresolved.isResolved)
         // and given the values for the resolve, we should be able to
         val resolved = allowedUnresolved.withFallback(values).resolve()
         for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
             assertEquals(kv._2, resolved.getInt(kv._1))
         }
+        assertTrue("fully resolved object is resolved", resolved.isResolved)
     }
 }
