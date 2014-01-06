@@ -57,14 +57,23 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public SimpleConfig resolve(ConfigResolveOptions options) {
-        AbstractConfigValue resolved = ResolveContext.resolve(object, object, options);
+        return resolveWith(this, options);
+    }
+
+    @Override
+    public SimpleConfig resolveWith(Config source) {
+        return resolveWith(source, ConfigResolveOptions.defaults());
+    }
+
+    @Override
+    public SimpleConfig resolveWith(Config source, ConfigResolveOptions options) {
+        AbstractConfigValue resolved = ResolveContext.resolve(object, ((SimpleConfig) source).object, options);
 
         if (resolved == object)
             return this;
         else
             return new SimpleConfig((AbstractConfigObject) resolved);
     }
-
 
     @Override
     public boolean hasPath(String pathExpression) {
@@ -813,6 +822,11 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         } else {
             addWrongType(accumulator, reference, value, path);
         }
+    }
+
+    @Override
+    public boolean isResolved() {
+        return root().resolveStatus() == ResolveStatus.RESOLVED;
     }
 
     @Override
