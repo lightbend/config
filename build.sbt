@@ -1,4 +1,5 @@
 import com.typesafe.sbt.SbtGit
+import com.typesafe.sbt.SbtPgp.PgpKeys.useGpg
 
 // to release, bump major/minor/micro as appropriate,
 // update NEWS, update version in README.md, tag, then
@@ -16,3 +17,5 @@ scalacOptions in GlobalScope in Compile := Seq("-unchecked", "-deprecation", "-f
 scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation", "-feature")
 
 scalaVersion in ThisBuild := "2.10.2"
+
+useGpg in GlobalScope := true

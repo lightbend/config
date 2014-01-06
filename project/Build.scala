@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import com.typesafe.sbt.osgi.SbtOsgi._
+import com.typesafe.sbt.SbtPgp.PgpKeys._
 
 object ConfigBuild extends Build {
     val unpublished = Seq(
@@ -13,7 +14,9 @@ object ConfigBuild extends Build {
         publishArtifact in packageDoc := false,
         // can't seem to get rid of ivy files except by no-op'ing the entire publish task
         publish := {},
-        publishLocal := {}
+        publishLocal := {},
+        publishSigned := {},
+        publishLocalSigned := {}
     )
 
     object sonatype extends PublishToSonatype(ConfigBuild) {
@@ -49,7 +52,9 @@ object ConfigBuild extends Build {
                                    Seq(
                                      OsgiKeys.exportPackage := Seq("com.typesafe.config"),
                                      packagedArtifact in (Compile, packageBin) <<= (artifact in (Compile, packageBin), OsgiKeys.bundle).identityMap,
-                                     artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") }
+                                     artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") },
+                                     publish := { throw new RuntimeException("use publishSigned instead of plain publish") },
+                                     publishLocal := { throw new RuntimeException("use publishLocalSigned instead of plain publishLocal") }
                                    )) dependsOn(testLib % "test->test")
 
     lazy val testLib = Project(id = "config-test-lib",
