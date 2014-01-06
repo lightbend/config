@@ -167,7 +167,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
+    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (value.isEmpty()) {
             sb.append("[]");
         } else {
@@ -191,7 +191,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
                 }
                 indent(sb, indent + 1, options);
 
-                v.render(sb, indent + 1, options);
+                v.render(sb, indent + 1, atRoot, options);
                 sb.append(",");
                 if (options.getFormatted())
                     sb.append('\n');

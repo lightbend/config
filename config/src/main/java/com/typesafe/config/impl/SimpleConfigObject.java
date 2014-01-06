@@ -364,17 +364,22 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
+    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (isEmpty()) {
             sb.append("{}");
         } else {
-            boolean outerBraces = indent > 0 || options.getJson();
+            boolean outerBraces = options.getJson() || !atRoot;
 
-            if (outerBraces)
+            int innerIndent;
+            if (outerBraces) {
+                innerIndent = indent + 1;
                 sb.append("{");
 
-            if (options.getFormatted())
-                sb.append('\n');
+                if (options.getFormatted())
+                    sb.append('\n');
+            } else {
+                innerIndent = indent;
+            }
 
             int separatorCount = 0;
             for (String k : keySet()) {
@@ -382,14 +387,14 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 v = value.get(k);
 
                 if (options.getOriginComments()) {
-                    indent(sb, indent + 1, options);
+                    indent(sb, innerIndent, options);
                     sb.append("# ");
                     sb.append(v.origin().description());
                     sb.append("\n");
                 }
                 if (options.getComments()) {
                     for (String comment : v.origin().comments()) {
-                        indent(sb, indent + 1, options);
+                        indent(sb, innerIndent, options);
                         sb.append("#");
                         if (!comment.startsWith(" "))
                             sb.append(' ');
@@ -397,8 +402,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                         sb.append("\n");
                     }
                 }
-                indent(sb, indent + 1, options);
-                v.render(sb, indent + 1, k, options);
+                indent(sb, innerIndent, options);
+                v.render(sb, innerIndent, false /* atRoot */, k, options);
 
                 if (options.getFormatted()) {
                     if (options.getJson()) {
@@ -415,14 +420,18 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             }
             // chop last commas/newlines
             sb.setLength(sb.length() - separatorCount);
-            if (options.getFormatted()) {
-                sb.append("\n"); // put a newline back
-                indent(sb, indent, options);
-            }
 
-            if (outerBraces)
+            if (outerBraces) {
+                if (options.getFormatted()) {
+                    sb.append('\n'); // put a newline back
+                    if (outerBraces)
+                        indent(sb, indent, options);
+                }
                 sb.append("}");
+            }
         }
+        if (atRoot && options.getFormatted())
+            sb.append('\n');
     }
 
     @Override

@@ -279,7 +279,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
     @Override
     public final String toString() {
         StringBuilder sb = new StringBuilder();
-        render(sb, 0, null /* atKey */, ConfigRenderOptions.concise());
+        render(sb, 0, true /* atRoot */, null /* atKey */, ConfigRenderOptions.concise());
         return getClass().getSimpleName() + "(" + sb.toString() + ")";
     }
 
@@ -293,7 +293,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         }
     }
 
-    protected void render(StringBuilder sb, int indent, String atKey, ConfigRenderOptions options) {
+    protected void render(StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
         if (atKey != null) {
             String renderedKey;
             if (options.getJson())
@@ -318,10 +318,10 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
                 }
             }
         }
-        render(sb, indent, options);
+        render(sb, indent, atRoot, options);
     }
 
-    protected void render(StringBuilder sb, int indent, ConfigRenderOptions options) {
+    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         Object u = unwrapped();
         sb.append(u.toString());
     }
@@ -334,7 +334,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
     @Override
     public final String render(ConfigRenderOptions options) {
         StringBuilder sb = new StringBuilder();
-        render(sb, 0, null, options);
+        render(sb, 0, true, null, options);
         return sb.toString();
     }
 
