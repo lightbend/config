@@ -386,7 +386,13 @@ abstract trait TestUtils {
         "${ // comment }",
         "{ include \"bar\" : 10 }", // include with a value after it
         "{ include foo }", // include with unquoted string
-        "{ include : { \"a\" : 1 } }") // include used as unquoted key
+        "{ include : { \"a\" : 1 } }", // include used as unquoted key
+        "a=", // no value
+        "a:", // no value with colon
+        "a= ", // no value with whitespace after
+        "a.b=", // no value with path
+        "{ a= }", // no value inside braces
+        "{ a: }") // no value with colon inside braces
 
     // We'll automatically try each of these with whitespace modifications
     // so no need to add every possible whitespace variation
@@ -508,7 +514,7 @@ abstract trait TestUtils {
         "[ 10e3e3 ]", // two exponents. this should parse to a number plus string "e3"
         "[ 1-e3 ]", // malformed number should end up as a string instead
         "[ 1.0.0 ]", // two decimals, should end up as a string
-        "[ 1.0. ]")  // trailing decimal should end up as a string
+        "[ 1.0. ]") // trailing decimal should end up as a string
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
 
