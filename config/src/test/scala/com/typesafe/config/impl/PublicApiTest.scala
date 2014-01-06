@@ -828,20 +828,48 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
-    def missingConfFails() {
+    def missingOverrideResourceFails() {
+        assertEquals("config.file is not set", null, System.getProperty("config.file"))
         val old = System.getProperty("config.resource")
-        System.setProperty("config.resource", "donotexists.conf")
-        intercept[ConfigException.IO] {
-            ConfigFactory.load(ConfigParseOptions.defaults().setAllowMissing(false))
+        try {
+            System.setProperty("config.resource", "donotexists.conf")
+            intercept[ConfigException.IO] {
+                ConfigFactory.load()
+            }
+        } finally {
+            // cleanup properties
+            Option(old).map { v =>
+                System.setProperty("config.resource", v)
+                v
+            }.orElse {
+                System.clearProperty("config.resource")
+                None
+            }
+            assertEquals("config.resource restored", old, System.getProperty("config.resource"))
+            ConfigImpl.reloadSystemPropertiesConfig()
         }
+    }
 
-        // cleanup properties
-        Option(old).map { v =>
-            System.setProperty("config.resource", v)
-            v
-        }.orElse {
-            System.clearProperty("config.resource")
-            None
+    @Test
+    def missingOverrideFileFails() {
+        assertEquals("config.resource is not set", null, System.getProperty("config.resource"))
+        val old = System.getProperty("config.file")
+        try {
+            System.setProperty("config.file", "donotexists.conf")
+            intercept[ConfigException.IO] {
+                ConfigFactory.load()
+            }
+        } finally {
+            // cleanup properties
+            Option(old).map { v =>
+                System.setProperty("config.file", v)
+                v
+            }.orElse {
+                System.clearProperty("config.file")
+                None
+            }
+            assertEquals("config.file restored", old, System.getProperty("config.file"))
+            ConfigImpl.reloadSystemPropertiesConfig()
         }
     }
 
