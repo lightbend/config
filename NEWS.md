@@ -1,3 +1,33 @@
+# 1.1.0-9f31d6308e7ebbc3d7904b64ebb9f61f7e22a968: January 6, 2014
+
+ - this is a snapshot/preview with API/ABI additions. *New* API
+   since 1.0.x is NOT guaranteed to remain compatible for now
+   since the purpose of this release is to test it.
+   This release is supposed to be ABI-compatible with 1.0.x
+   however.
+ - snapshots now use the git hash they are based on in the
+   version, instead of SNAPSHOT, so they are a stable reference
+   if you want to test them out.
+ - if -Dconfig.file, -Dconfig.resource, -Dconfig.url refer to
+   a nonexistent file, resource, or url it is now an error rather
+   than silently loading an empty configuration.
+ - new API Config.getDuration() replaces getMilliseconds and
+   getNanoseconds. (should it return `long` instead of `Long` even
+   though it's been in git for a while? weigh in at
+   https://github.com/typesafehub/config/issues/119 )
+ - new API ConfigResolveOptions.setAllowUnresolved lets you
+   partially-resolve a Config
+ - new API Config.isResolved lets you check on resolution status
+ - new API Config.resolveWith lets you source substitutions from
+   somewhere other than the Config itself
+ - compiled with debug symbols
+ - add -Dconfig.trace=loads feature to trace loaded files and
+   failures
+ - improvements to ConfigObject render() formatting so you can
+   print out a config in a prettier way
+ - attempt to honor Content-Type when loading from a URL
+ - a fair list of corner case bugfixes
+
 # 1.0.2: July 3, 2013
 
  - ignore byte-order mark (BOM), treating it as whitespace
