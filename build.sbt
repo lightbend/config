@@ -1,5 +1,5 @@
 import com.typesafe.sbt.SbtGit
-import com.typesafe.sbt.SbtPgp.PgpKeys.useGpg
+import com.typesafe.sbt.SbtPgp.PgpKeys.{ useGpg, publishSigned, publishLocalSigned }
 
 // to release, bump major/minor/micro as appropriate,
 // update NEWS, update version in README.md, tag, then
@@ -19,3 +19,11 @@ scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation", "-feat
 scalaVersion in ThisBuild := "2.10.2"
 
 useGpg in GlobalScope := true
+
+aggregate in publishSigned := false
+
+publishSigned := (publishSigned in configLib).value
+
+aggregate in publishLocalSigned := false
+
+publishLocalSigned := (publishLocalSigned in configLib).value

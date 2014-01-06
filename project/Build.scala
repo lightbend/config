@@ -1,7 +1,6 @@
 import sbt._
 import Keys._
 import com.typesafe.sbt.osgi.SbtOsgi._
-import com.typesafe.sbt.SbtPgp.PgpKeys._
 
 object ConfigBuild extends Build {
     val unpublished = Seq(
@@ -14,9 +13,7 @@ object ConfigBuild extends Build {
         publishArtifact in packageDoc := false,
         // can't seem to get rid of ivy files except by no-op'ing the entire publish task
         publish := {},
-        publishLocal := {},
-        publishSigned := {},
-        publishLocalSigned := {}
+        publishLocal := {}
     )
 
     object sonatype extends PublishToSonatype(ConfigBuild) {
