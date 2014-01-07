@@ -88,6 +88,7 @@ public final class ConfigResolveOptions {
      * @param value
      *            true to silently ignore unresolved substitutions.
      * @return options with requested setting for whether to allow substitutions
+     * @since 1.2.0
      */
     public ConfigResolveOptions setAllowUnresolved(boolean value) {
         return new ConfigResolveOptions(useSystemEnvironment, value);
@@ -98,6 +99,7 @@ public final class ConfigResolveOptions {
      * is mostly used by the config lib internally, not by applications.
      * 
      * @return true if unresolved substitutions are allowed
+     * @since 1.2.0
      */
     public boolean getAllowUnresolved() {
         return allowUnresolved;
