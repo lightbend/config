@@ -39,3 +39,5 @@ javacOptions in (Compile,compile) ++= Seq("-source", "1.6", "-target", "1.6", "-
 // because we test some global state such as singleton caches,
 // we have to run tests in serial.
 parallelExecution in Test := false
+
+sources in (Compile, doc) := (sources in (Compile, doc)).value.filter(_.getParentFile.getName != "impl")
