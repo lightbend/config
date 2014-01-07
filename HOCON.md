@@ -506,7 +506,8 @@ single values that would normally have another type become
 strings.
 
    - `true : 42` is `"true" : 42`
-   - `3.14 : 42` is `"3.14" : 42`
+   - `3 : 42` is `"3" : 42`
+   - `3.14 : 42` is `"3" : { "14" : 42 }`
 
 As a special rule, the unquoted string `include` may not begin a
 path expression in a key, because it has a special interpretation
