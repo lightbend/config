@@ -130,6 +130,28 @@ import java.util.concurrent.TimeUnit;
  * the top).
  * 
  * <p>
+ * <strong>Serialization</strong>
+ * 
+ * <p>
+ * Convert a <code>Config</code> to a JSON or HOCON string by calling
+ * {@link ConfigObject#render()} on the root object,
+ * <code>myConfig.root().render()</code>. There's also a variant
+ * {@link ConfigObject#render(ConfigRenderOptions)} which allows you to control
+ * the format of the rendered string. (See {@link ConfigRenderOptions}.) Note
+ * that <code>Config</code> does not remember the formatting of the original
+ * file, so if you load, modify, and re-save a config file, it will be
+ * substantially reformatted.
+ * 
+ * <p>
+ * As an alternative to {@link ConfigObject#render()}, the
+ * <code>toString()</code> method produces a debug-output-oriented
+ * representation (which is not valid JSON).
+ * 
+ * <p>
+ * Java serialization is supported as well for <code>Config</code> and all
+ * subtypes of <code>ConfigValue</code>.
+ * 
+ * <p>
  * <strong>This is an interface but don't implement it yourself</strong>
  * 
  * <p>
