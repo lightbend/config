@@ -610,7 +610,7 @@ public interface Config extends ConfigMergeable {
      * @throws ConfigException.BadValue
      *             if value cannot be parsed as a number of the given TimeUnit
      */
-    Long getDuration(String path, TimeUnit unit);
+    long getDuration(String path, TimeUnit unit);
 
     /**
      * Gets a list value (with any element type) as a {@link ConfigList}, which
