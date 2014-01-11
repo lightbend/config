@@ -24,7 +24,7 @@ Configuration library for JVM languages.
     - substitutions (`"foo" : ${bar}`, `"foo" : Hello ${who}`)
     - properties-like notation (`a.b=c`)
     - less noisy, more lenient syntax
-    - substitute environment variables
+    - substitute environment variables (`logdir=${HOME}/logs`)
 
 This library limits itself to config files. If you want to load
 config from a database or something, you would need to write some
