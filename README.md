@@ -114,8 +114,9 @@ suggested tools are:
 
  - use the
    [checkValid() method](http://typesafehub.github.com/config/latest/api/com/typesafe/config/Config.html#checkValid%28com.typesafe.config.Config,%20java.lang.String...%29)
- - access your config through a Settings class with a non-lazy
-   field for each setting, and instantiate it on startup
+ - access your config through a Settings class with a field for
+   each setting, and instantiate it on startup (immediately
+   throwing an exception if any settings are missing)
 
 In Scala, a Settings class might look like:
 
@@ -153,11 +154,17 @@ but you may not find it necessary to separate it from
 `application.conf`.)
 
 Libraries and frameworks should default to `ConfigFactory.load()`
-if the application does not provide a custom `Config`
-object. Libraries and frameworks should also allow the application
-to provide a custom `Config` object to be used instead of the
+if the application does not provide a custom `Config` object. This
+way, libraries will see configuration from `application.conf` and
+users can configure the whole app, with its libraries, in a single
+`application.conf` file.
+
+Libraries and frameworks should also allow the application to
+provide a custom `Config` object to be used instead of the
 default, in case the application needs multiple configurations in
-one JVM or wants to load extra config files from somewhere.
+one JVM or wants to load extra config files from somewhere.  The
+library examples in `examples/` show how to accept a custom config
+while defaulting to `ConfigFactory.load()`.
 
 For applications using `application.{conf,json,properties}`,
 system properties can be used to force a different config source:
@@ -234,7 +241,7 @@ For most apps, failure to have a setting is simply a bug to fix
 setting is unset, by default the getters on the `Config` interface
 throw an exception.
 
-If you WANT to allow a setting to be missing from
+If you *want* to allow a setting to be missing from
 `application.conf` then here are some options:
 
  1. Set it in a `reference.conf` included in your library or
@@ -576,3 +583,14 @@ Two alternatives to HOCON syntax could be:
     allow mixing true JSON files into the config but also support
     a nicer format.
 
+## Other APIs
+
+This may not be comprehensive - if you'd like to add mention of
+your wrapper, just send a pull request for this README. We would
+love to know what you're doing with this library or with the HOCON
+format.
+
+ * Scala wrappers for the Java library
+   * Ficus https://github.com/ceedubs/ficus
+   * configz https://github.com/arosien/configz
+   * configs https://github.com/kxbmap/configs
