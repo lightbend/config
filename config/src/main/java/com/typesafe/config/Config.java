@@ -107,7 +107,7 @@ import java.util.concurrent.TimeUnit;
  * <em>Substitutions</em> are the <code>${foo.bar}</code> syntax in config
  * files, described in the <a href=
  * "https://github.com/typesafehub/config/blob/master/HOCON.md#substitutions"
- * >here</a>. Resolving substitutions replaces these references with real
+ * >specification</a>. Resolving substitutions replaces these references with real
  * values.
  * 
  * <p>

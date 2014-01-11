@@ -92,7 +92,7 @@ Scala dependency.
 See the examples in the `examples/` directory.
 
 You can run these from the sbt console with the commands `project
-simple-app` and then `run`.
+config-simple-app-java` and then `run`.
 
 In brief, as shown in the examples:
 
