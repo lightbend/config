@@ -1,3 +1,18 @@
+# 1.2.0: January 15, 2014
+
+ - new stable ABI release (binary compatible with 1.0.x; a few new APIs)
+ - new API ConfigResolveOptions.setAllowUnresolved lets you
+   partially-resolve a Config
+ - new API Config.isResolved lets you check on resolution status
+ - new API Config.resolveWith lets you source substitutions from
+   somewhere other than the Config itself
+ - new API Config.getDuration() replaces getMilliseconds and
+   getNanoseconds
+ - if -Dconfig.file, -Dconfig.resource, -Dconfig.url refer to
+   a nonexistent file, resource, or url it is now an error rather
+   than silently loading an empty configuration.
+ - quite a few bugfixes
+
 # 1.1.0-4dd6c85cab1ef1a4415abb74704d60e57497b7b8: January 8, 2014
 
  - remove junk in POM caused by broken local configuration
