@@ -47,7 +47,7 @@ object ConfigBuild extends Build {
                                    sonatype.settings ++
                                    osgiSettings ++
                                    Seq(
-                                     OsgiKeys.exportPackage := Seq("com.typesafe.config"),
+                                     OsgiKeys.exportPackage := Seq("com.typesafe.config", "com.typesafe.config.impl"),
                                      packagedArtifact in (Compile, packageBin) <<= (artifact in (Compile, packageBin), OsgiKeys.bundle).identityMap,
                                      artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") },
                                      publish := { throw new RuntimeException("use publishSigned instead of plain publish") },
