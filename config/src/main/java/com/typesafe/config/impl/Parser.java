@@ -683,7 +683,9 @@ final class Parser {
             }
 
             if (!pathStack.isEmpty()) {
-                Path prefix = new Path(pathStack);
+                // The stack is in reverse order (most recent first on the
+                // iterator), so build the path from the reversed iterator.
+                Path prefix = new Path(pathStack.descendingIterator());
                 obj = obj.relativized(prefix);
             }
 

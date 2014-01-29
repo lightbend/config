@@ -35,10 +35,14 @@ final class Path {
 
     // append all the paths in the list together into one path
     Path(List<Path> pathsToConcat) {
-        if (pathsToConcat.isEmpty())
+        this(pathsToConcat.iterator());
+    }
+
+    // append all the paths in the iterator together into one path
+    Path(Iterator<Path> i) {
+        if (!i.hasNext())
             throw new ConfigException.BugOrBroken("empty path");
 
-        Iterator<Path> i = pathsToConcat.iterator();
         Path firstPath = i.next();
         this.first = firstPath.first;
 

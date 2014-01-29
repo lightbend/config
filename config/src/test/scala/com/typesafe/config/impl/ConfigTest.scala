@@ -1029,6 +1029,10 @@ class ConfigTest extends TestUtils {
         assertEquals(3, resolved.getInt("foo.a.c"))
         assertEquals(5, resolved.getInt("foo.b"))
         assertEquals(10, resolved.getInt("foo.a.q"))
+
+        assertEquals(3, resolved.getInt("bar.nested.a.c"))
+        assertEquals(5, resolved.getInt("bar.nested.b"))
+        assertEquals(10, resolved.getInt("bar.nested.a.q"))
     }
 
     @Test
