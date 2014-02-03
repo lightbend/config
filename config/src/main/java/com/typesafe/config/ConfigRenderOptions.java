@@ -21,13 +21,15 @@ public final class ConfigRenderOptions {
     private final boolean comments;
     private final boolean formatted;
     private final boolean json;
+    private final boolean sortObjects;
 
     private ConfigRenderOptions(boolean originComments, boolean comments, boolean formatted,
-            boolean json) {
+            boolean json, boolean sortObjects) {
         this.originComments = originComments;
         this.comments = comments;
         this.formatted = formatted;
         this.json = json;
+        this.sortObjects = sortObjects;
     }
 
     /**
@@ -38,7 +40,7 @@ public final class ConfigRenderOptions {
      * @return the default render options
      */
     public static ConfigRenderOptions defaults() {
-        return new ConfigRenderOptions(true, true, true, true);
+        return new ConfigRenderOptions(true, true, true, true, true);
     }
 
     /**
@@ -48,7 +50,7 @@ public final class ConfigRenderOptions {
      * @return the concise render options
      */
     public static ConfigRenderOptions concise() {
-        return new ConfigRenderOptions(false, false, false, true);
+        return new ConfigRenderOptions(false, false, false, true, false);
     }
 
     /**
@@ -64,7 +66,7 @@ public final class ConfigRenderOptions {
         if (value == comments)
             return this;
         else
-            return new ConfigRenderOptions(originComments, value, formatted, json);
+            return new ConfigRenderOptions(originComments, value, formatted, json, sortObjects);
     }
 
     /**
@@ -97,7 +99,7 @@ public final class ConfigRenderOptions {
         if (value == originComments)
             return this;
         else
-            return new ConfigRenderOptions(value, comments, formatted, json);
+            return new ConfigRenderOptions(value, comments, formatted, json, sortObjects);
     }
 
     /**
@@ -122,7 +124,7 @@ public final class ConfigRenderOptions {
         if (value == formatted)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, value, json);
+            return new ConfigRenderOptions(originComments, comments, value, json, sortObjects);
     }
 
     /**
@@ -150,7 +152,7 @@ public final class ConfigRenderOptions {
         if (value == json)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, formatted, value);
+            return new ConfigRenderOptions(originComments, comments, formatted, value, sortObjects);
     }
 
     /**
@@ -161,6 +163,32 @@ public final class ConfigRenderOptions {
      */
     public boolean getJson() {
         return json;
+    }
+
+    /**
+     * Returns options with object sorting enabled. Object sorting means that
+     * child values of object nodes will be processed in order of their key
+     * values, i.e. the keys will be sorted before being iterated over.
+     *
+     * @param value
+     *            true to sort object values in the render
+     * @return options with the requested setting for object sorting
+     */
+    public ConfigRenderOptions setSortObjects(boolean value) {
+        if (value == sortObjects)
+            return this;
+        else
+            return new ConfigRenderOptions(originComments, comments, formatted, json, value);
+    }
+
+    /**
+     * Returns whether the options enable object key sorting. This method is
+     * mostly used by the config lib internally, not by applications.
+     *
+     * @return true if objects should be sorted by their keys.
+     */
+    public boolean getSortObjects() {
+        return sortObjects;
     }
 
     @Override
@@ -174,6 +202,8 @@ public final class ConfigRenderOptions {
             sb.append("formatted,");
         if (json)
             sb.append("json,");
+        if (sortObjects)
+            sb.append("sortObjects,");
         if (sb.charAt(sb.length() - 1) == ',')
             sb.setLength(sb.length() - 1);
         sb.append(")");
