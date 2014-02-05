@@ -7,6 +7,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -382,14 +383,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             }
 
             int separatorCount = 0;
-            Iterable<String> keys;
-            if (options.getSortObjects()) {
-                List<String> list = new ArrayList<String>(keySet());
-                Collections.sort(list);
-                keys = list;
-            } else {
-                keys = keySet();
-            }
+            String[] keys = keySet().toArray(new String[size()]);
+            Arrays.sort(keys);
             for (String k : keys) {
                 AbstractConfigValue v;
                 v = value.get(k);
