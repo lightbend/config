@@ -185,10 +185,15 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
 
         // now need to concat everything
         List<AbstractConfigValue> joined = consolidate(resolved);
-        if (joined.size() != 1)
+        // if unresolved is allowed we can just become another
+        // ConfigConcatenation
+        if (joined.size() > 1 && context.options().getAllowUnresolved())
+            return new ConfigConcatenation(this.origin(), joined);
+        else if (joined.size() != 1)
             throw new ConfigException.BugOrBroken(
                     "Resolved list should always join to exactly one value, not " + joined);
-        return joined.get(0);
+        else
+            return joined.get(0);
     }
 
     @Override
