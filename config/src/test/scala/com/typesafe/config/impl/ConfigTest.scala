@@ -1122,7 +1122,7 @@ class ConfigTest extends TestUtils {
     def allowUnresolvedDoesAllowUnresolved() {
         val values = ConfigFactory.parseString("{ foo = 1, bar = 2, m = 3, n = 4}")
         assertTrue("config with no substitutions starts as resolved", values.isResolved)
-        val unresolved = ConfigFactory.parseString("a = ${foo}, b = ${bar}, c { x = ${m}, y = ${n} }, alwaysResolveable=${alwaysValue}, alwaysValue=42")
+        val unresolved = ConfigFactory.parseString("a = ${foo}, b = ${bar}, c { x = ${m}, y = ${n}, z = foo${m}bar }, alwaysResolveable=${alwaysValue}, alwaysValue=42")
         assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
 
         // resolve() by default throws with unresolveable substs
@@ -1140,6 +1140,8 @@ class ConfigTest extends TestUtils {
         for (k <- Seq("a", "b", "c.x", "c.y")) {
             intercept[ConfigException.NotResolved] { allowedUnresolved.getInt(k) }
         }
+        intercept[ConfigException.NotResolved] { allowedUnresolved.getString("c.z") }
+
         // and the partially-resolved thing is not resolved
         assertFalse("partially-resolved object is not resolved", allowedUnresolved.isResolved)
 
@@ -1150,6 +1152,7 @@ class ConfigTest extends TestUtils {
             for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
                 assertEquals(kv._2, resolved.getInt(kv._1))
             }
+            assertEquals("foo3bar", resolved.getString("c.z"))
             assertTrue("fully resolved object is resolved", resolved.isResolved)
         }
 
@@ -1159,6 +1162,7 @@ class ConfigTest extends TestUtils {
             for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
                 assertEquals(kv._2, resolved.getInt(kv._1))
             }
+            assertEquals("foo3bar", resolved.getString("c.z"))
             assertTrue("fully resolved object is resolved", resolved.isResolved)
         }
     }
