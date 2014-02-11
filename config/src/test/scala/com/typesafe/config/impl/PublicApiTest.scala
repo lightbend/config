@@ -938,6 +938,28 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
+    def invalidateReferenceConfig(): Unit = {
+        val orig = ConfigFactory.defaultReference()
+        val cached = ConfigFactory.defaultReference()
+        assertTrue("reference config was cached", orig eq cached)
+
+        ConfigFactory.invalidateCaches()
+        val changed = ConfigFactory.defaultReference()
+        assertTrue("reference config was invalidated", orig ne changed)
+    }
+
+    @Test
+    def invalidateFullConfig(): Unit = {
+        val orig = ConfigFactory.load()
+        val cached = ConfigFactory.load()
+        assertTrue("full config was cached", orig eq cached)
+
+        ConfigFactory.invalidateCaches()
+        val changed = ConfigFactory.load()
+        assertTrue("full config was invalidated", orig ne changed)
+    }
+
+    @Test
     def canUseSomeValuesWithoutResolving(): Unit = {
         val conf = ConfigFactory.parseString("a=42,b=${NOPE}")
         assertEquals(42, conf.getInt("a"))
