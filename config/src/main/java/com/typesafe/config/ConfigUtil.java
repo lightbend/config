@@ -29,7 +29,10 @@ public final class ConfigUtil {
      * elements as needed and then joining them separated by a period. A path
      * expression is usable with a {@link Config}, while individual path
      * elements are usable with a {@link ConfigObject}.
-     *
+     * <p>
+     * See the overview documentation for {@link Config} for more detail on path
+     * expressions vs. keys.
+     * 
      * @param elements
      *            the keys in the path
      * @return a path expression
@@ -45,7 +48,10 @@ public final class ConfigUtil {
      * elements as needed and then joining them separated by a period. A path
      * expression is usable with a {@link Config}, while individual path
      * elements are usable with a {@link ConfigObject}.
-     *
+     * <p>
+     * See the overview documentation for {@link Config} for more detail on path
+     * expressions vs. keys.
+     * 
      * @param elements
      *            the keys in the path
      * @return a path expression
@@ -61,7 +67,10 @@ public final class ConfigUtil {
      * and unquoting the individual path elements. A path expression is usable
      * with a {@link Config}, while individual path elements are usable with a
      * {@link ConfigObject}.
-     *
+     * <p>
+     * See the overview documentation for {@link Config} for more detail on path
+     * expressions vs. keys.
+     * 
      * @param path
      *            a path expression
      * @return the individual keys in the path

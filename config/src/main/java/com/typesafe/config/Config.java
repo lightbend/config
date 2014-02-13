@@ -396,13 +396,17 @@ public interface Config extends ConfigMergeable {
      * {@link ConfigObject}: it looks for a path expression, not a key; and it
      * returns false for null values, while {@code containsKey()} returns true
      * indicating that the object contains a null value for the key.
-     *
+     * 
      * <p>
      * If a path exists according to {@link #hasPath(String)}, then
      * {@link #getValue(String)} will never throw an exception. However, the
      * typed getters, such as {@link #getInt(String)}, will still throw if the
      * value is not convertible to the requested type.
-     *
+     * 
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
      * @param path
      *            the path expression
      * @return true if a non-null value is present at the path
@@ -424,9 +428,22 @@ public interface Config extends ConfigMergeable {
      * recursing {@link #root() the root object}. Note that this is very
      * different from <code>root().entrySet()</code> which returns the set of
      * immediate-child keys in the root object and includes null values.
-     *
+     * <p>
+     * Entries contain <em>path expressions</em> meaning there may be quoting
+     * and escaping involved. Parse path expressions with
+     * {@link ConfigUtil#splitPath}.
+     * <p>
+     * Because a <code>Config</code> is conceptually a single-level map from
+     * paths to values, there will not be any {@link ConfigObject} values in the
+     * entries (that is, all entries represent leaf nodes). Use
+     * {@link ConfigObject} rather than <code>Config</code> if you want a tree.
+     * (OK, this is a slight lie: <code>Config</code> entries may contain
+     * {@link ConfigList} and the lists may contain objects. But no objects are
+     * directly included as entry values.)
+     * 
      * @return set of paths with non-null values, built up by recursing the
-     *         entire tree of {@link ConfigObject}
+     *         entire tree of {@link ConfigObject} and creating an entry for
+     *         each leaf value.
      */
     Set<Map.Entry<String, ConfigValue>> entrySet();
 
@@ -695,7 +712,10 @@ public interface Config extends ConfigMergeable {
     /**
      * Clone the config with only the given path (and its children) retained;
      * all sibling paths are removed.
-     *
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
      * @param path
      *            path to keep
      * @return a copy of the config minus all paths except the one specified
@@ -704,18 +724,24 @@ public interface Config extends ConfigMergeable {
 
     /**
      * Clone the config with the given path removed.
-     *
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
      * @param path
-     *            path to remove
+     *            path expression to remove
      * @return a copy of the config minus the specified path
      */
     Config withoutPath(String path);
 
     /**
      * Places the config inside another {@code Config} at the given path.
-     *
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
      * @param path
-     *            path to store this config at.
+     *            path expression to store this config at.
      * @return a {@code Config} instance containing this config at the given
      *         path.
      */
@@ -723,8 +749,9 @@ public interface Config extends ConfigMergeable {
 
     /**
      * Places the config inside a {@code Config} at the given key. See also
-     * atPath().
-     *
+     * atPath(). Note that a key is NOT a path expression (see
+     * {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
      * @param key
      *            key to store this config at.
      * @return a {@code Config} instance containing this config at the given
@@ -737,9 +764,12 @@ public interface Config extends ConfigMergeable {
      * to the given value. Does not modify this instance (since it's immutable).
      * If the path already has a value, that value is replaced. To remove a
      * value, use withoutPath().
-     *
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
      * @param path
-     *            path to add
+     *            path expression for the value's new location
      * @param value
      *            value at the new path
      * @return the new instance with the new map entry
