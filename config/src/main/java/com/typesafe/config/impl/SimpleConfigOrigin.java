@@ -221,7 +221,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     @Override
     public List<String> comments() {
         if (commentsOrNull != null) {
-            return commentsOrNull;
+            return Collections.unmodifiableList(commentsOrNull);
         } else {
             return Collections.emptyList();
         }
