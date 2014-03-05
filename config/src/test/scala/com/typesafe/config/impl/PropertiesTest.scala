@@ -5,7 +5,7 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import java.util.Properties
+import java.util.{Date, Properties}
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
@@ -91,5 +91,16 @@ class PropertiesTest extends TestUtils {
         assertEquals(2, conf.root.size())
         assertEquals("foo", conf.getString("a.b"))
         assertEquals("foo", conf.getString("x.y.z"))
+    }
+
+    @Test
+    def refValueInProperties(){
+      val props = new Properties()
+      props.put("a",new ThreadLocal[String]())
+      props.put("b",new Date())
+
+      val conf = ConfigFactory.parseProperties(props)
+
+      assertEquals(0,conf.root().size())
     }
 }
