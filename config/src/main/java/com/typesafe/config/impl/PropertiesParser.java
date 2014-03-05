@@ -142,7 +142,7 @@ final class PropertiesParser {
             Object rawValue = pathMap.get(path);
             AbstractConfigValue value;
             if (convertedFromProperties) {
-                value = new ConfigString(origin, (String) rawValue);
+                value = new ConfigString(origin, rawValue.toString());
             } else {
                 value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
                         FromMapMode.KEYS_ARE_PATHS);
