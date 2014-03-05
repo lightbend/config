@@ -135,7 +135,7 @@ final class PropertiesParser {
         /* Store string values in the associated scope maps */
         for (Path path : valuePaths) {
             Object rawValue = pathMap.get(path);
-            if(rawValue instanceof String || rawValue instanceof Number || rawValue==null) {
+            if(!convertedFromProperties || rawValue instanceof String || rawValue instanceof Number || rawValue==null) {
                 Path parentPath = path.parent();
                 Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
                         .get(parentPath) : root;
