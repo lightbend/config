@@ -5,7 +5,7 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import java.util.Properties
+import java.util.{ Date, Properties }
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
@@ -183,5 +183,16 @@ class PropertiesTest extends TestUtils {
 
         assertEquals(Seq(-2, -1, 0, 1, 2, 3, 4, 5, 6), conf.getIntList("a").asScala.toSeq)
         conf.checkValid(reference)
+    }
+
+    @Test
+    def skipNonStringsInProperties() {
+        val props = new Properties()
+        props.put("a", new ThreadLocal[String]())
+        props.put("b", new Date())
+
+        val conf = ConfigFactory.parseProperties(props)
+
+        assertEquals(0, conf.root().size())
     }
 }
