@@ -594,3 +594,5 @@ format.
    * Ficus https://github.com/ceedubs/ficus
    * configz https://github.com/arosien/configz
    * configs https://github.com/kxbmap/configs
+ * Ruby port:
+   * https://github.com/cprice404/ruby-hocon
