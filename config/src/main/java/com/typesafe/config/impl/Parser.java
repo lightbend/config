@@ -440,15 +440,11 @@ final class Parser {
         }
 
         private Path fullCurrentPath() {
-            Path full = null;
             // pathStack has top of stack at front
-            for (Path p : pathStack) {
-                if (full == null)
-                    full = p;
-                else
-                    full = full.prepend(p);
-            }
-            return full;
+            if (pathStack.isEmpty())
+                throw new ConfigException.BugOrBroken("Bug in parser; tried to get current path when at root");
+            else
+                return new Path(pathStack.descendingIterator());
         }
 
         private String previousFieldName() {
@@ -683,9 +679,7 @@ final class Parser {
             }
 
             if (!pathStack.isEmpty()) {
-                // The stack is in reverse order (most recent first on the
-                // iterator), so build the path from the reversed iterator.
-                Path prefix = new Path(pathStack.descendingIterator());
+                Path prefix = fullCurrentPath();
                 obj = obj.relativized(prefix);
             }
 
