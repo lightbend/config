@@ -320,4 +320,52 @@ class ConcatenationTest extends TestUtils {
         val conf = parseConfig(""" a = ${x}, a += ${y}, x = [1], y = 2 """).resolve()
         assertEquals(Seq(1, 2), conf.getIntList("a").asScala.toList)
     }
+
+    @Test
+    def plusEqualsMultipleTimes() {
+        val conf = parseConfig(""" a += 1, a += 2, a += 3 """).resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("a").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsMultipleTimesNested() {
+        val conf = parseConfig(""" x { a += 1, a += 2, a += 3 } """).resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("x.a").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsAnObjectMultipleTimes() {
+        val conf = parseConfig(""" a += { b: 1 }, a += { b: 2 }, a += { b: 3 } """).resolve()
+        assertEquals(Seq(1, 2, 3), conf.getObjectList("a").asScala.toList.map(_.toConfig.getInt("b")))
+    }
+
+    @Test
+    def plusEqualsAnObjectMultipleTimesNested() {
+        val conf = parseConfig(""" x { a += { b: 1 }, a += { b: 2 }, a += { b: 3 } } """).resolve()
+        assertEquals(Seq(1, 2, 3), conf.getObjectList("x.a").asScala.toList.map(_.toConfig.getInt("b")))
+    }
+
+    // We would ideally make this case NOT throw an exception but we need to do some work
+    // to get there, see https://github.com/typesafehub/config/issues/160
+    @Test
+    def plusEqualsMultipleTimesNestedInArray() {
+        val e = intercept[ConfigException.Parse] {
+            val conf = parseConfig("""x = [ { a += 1, a += 2, a += 3 } ] """).resolve()
+            assertEquals(Seq(1, 2, 3), conf.getObjectList("x").asScala.toVector(0).toConfig.getIntList("a").asScala.toList)
+        }
+        assertTrue(e.getMessage.contains("limitation"))
+    }
+
+    // We would ideally make this case NOT throw an exception but we need to do some work
+    // to get there, see https://github.com/typesafehub/config/issues/160
+    @Test
+    def plusEqualsMultipleTimesNestedInPlusEquals() {
+        System.err.println("==============")
+        val e = intercept[ConfigException.Parse] {
+            val conf = parseConfig("""x += { a += 1, a += 2, a += 3 } """).resolve()
+            assertEquals(Seq(1, 2, 3), conf.getObjectList("x").asScala.toVector(0).toConfig.getIntList("a").asScala.toList)
+        }
+        assertTrue(e.getMessage.contains("limitation"))
+        System.err.println("==============")
+    }
 }

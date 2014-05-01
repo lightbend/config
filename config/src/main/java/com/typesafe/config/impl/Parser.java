@@ -126,6 +126,10 @@ final class Parser {
         // used to modify the error message to reflect that
         // someone may think this is .properties format.
         int equalsCount;
+        // the number of lists we are inside; this is used to detect the "cannot
+        // generate a reference to a list element" problem, and once we fix that
+        // problem we should be able to get rid of this variable.
+        int arrayCount;
 
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin, Iterator<Token> tokens,
                 FullIncluder includer, ConfigIncludeContext includeContext) {
@@ -138,6 +142,7 @@ final class Parser {
             this.includeContext = includeContext;
             this.pathStack = new LinkedList<Path>();
             this.equalsCount = 0;
+            this.arrayCount = 0;
         }
 
         static private boolean attractsTrailingComments(Token token) {
@@ -499,6 +504,9 @@ final class Parser {
         private AbstractConfigValue parseValue(TokenWithComments t) {
             AbstractConfigValue v;
 
+            int startingArrayCount = arrayCount;
+            int startingEqualsCount = equalsCount;
+
             if (Tokens.isValue(t.token)) {
                 // if we consolidateValueTokens() multiple times then
                 // this value could be a concatenation, object, array,
@@ -518,6 +526,11 @@ final class Parser {
             }
 
             v = v.withOrigin(t.prependComments(v.origin()));
+
+            if (arrayCount != startingArrayCount)
+                throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced array count");
+            if (equalsCount != startingEqualsCount)
+                throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced equals count");
 
             return v;
         }
@@ -678,6 +691,14 @@ final class Parser {
                 throw parseError("include keyword is not followed by a quoted string, but by: " + t);
             }
 
+            // we really should make this work, but for now throwing an
+            // exception is better than producing an incorrect result.
+            // See https://github.com/typesafehub/config/issues/160
+            if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
+                throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
+                        + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
+                        + "remove the ${} statements from the included file.");
+
             if (!pathStack.isEmpty()) {
                 Path prefix = fullCurrentPath();
                 obj = obj.relativized(prefix);
@@ -739,6 +760,21 @@ final class Parser {
 
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
+                    if (afterKey.token == Tokens.PLUS_EQUALS) {
+                        // we really should make this work, but for now throwing
+                        // an exception is better than producing an incorrect
+                        // result. See
+                        // https://github.com/typesafehub/config/issues/160
+                        if (arrayCount > 0)
+                            throw parseError("Due to current limitations of the config parser, += does not work nested inside a list. "
+                                    + "+= expands to a ${} substitution and the path in ${} cannot currently refer to list elements. "
+                                    + "You might be able to move the += outside of the list and then refer to it from inside the list with ${}.");
+
+                        // because we will put it in an array after the fact so
+                        // we want this to be incremented during the parseValue
+                        // below in order to throw the above exception.
+                        arrayCount += 1;
+                    }
 
                     TokenWithComments valueToken;
                     AbstractConfigValue newValue;
@@ -767,6 +803,8 @@ final class Parser {
                     newValue = parseValue(valueToken.prepend(keyToken.comments));
 
                     if (afterKey.token == Tokens.PLUS_EQUALS) {
+                        arrayCount -= 1;
+
                         List<AbstractConfigValue> concat = new ArrayList<AbstractConfigValue>(2);
                         AbstractConfigValue previousRef = new ConfigReference(newValue.origin(),
                                 new SubstitutionExpression(fullCurrentPath(), true /* optional */));
@@ -858,6 +896,8 @@ final class Parser {
 
         private SimpleConfigList parseArray() {
             // invoked just after the OPEN_SQUARE
+            arrayCount += 1;
+
             SimpleConfigOrigin arrayOrigin = lineOrigin();
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
 
@@ -867,6 +907,7 @@ final class Parser {
 
             // special-case the first element
             if (t.token == Tokens.CLOSE_SQUARE) {
+                arrayCount -= 1;
                 return new SimpleConfigList(t.appendComments(arrayOrigin),
                         Collections.<AbstractConfigValue> emptyList());
             } else if (Tokens.isValue(t.token) || t.token == Tokens.OPEN_CURLY
@@ -890,6 +931,7 @@ final class Parser {
                 } else {
                     t = nextTokenIgnoringNewline();
                     if (t.token == Tokens.CLOSE_SQUARE) {
+                        arrayCount -= 1;
                         return new SimpleConfigList(t.appendComments(arrayOrigin), values);
                     } else {
                         throw parseError(addKeyName("List should have ended with ] or had a comma, instead had token: "
