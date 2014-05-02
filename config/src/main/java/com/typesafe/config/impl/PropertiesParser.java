@@ -134,22 +134,26 @@ final class PropertiesParser {
 
         /* Store string values in the associated scope maps */
         for (Path path : valuePaths) {
-            Object rawValue = pathMap.get(path);
-            if(!convertedFromProperties || rawValue instanceof String || rawValue instanceof Number || rawValue==null) {
-                Path parentPath = path.parent();
-                Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
-                        .get(parentPath) : root;
+            Path parentPath = path.parent();
+            Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
+                    .get(parentPath) : root;
 
-                String last = path.last();
-                AbstractConfigValue value;
-                if (convertedFromProperties) {
-                    value = new ConfigString(origin, rawValue.toString());
+            String last = path.last();
+            Object rawValue = pathMap.get(path);
+            AbstractConfigValue value;
+            if (convertedFromProperties) {
+                if (rawValue instanceof String) {
+                    value = new ConfigString(origin, (String) rawValue);
                 } else {
-                    value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
-                            FromMapMode.KEYS_ARE_PATHS);
+                    // silently ignore non-string values in Properties
+                    value = null;
                 }
-                parent.put(last, value);
+            } else {
+                value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
+                        FromMapMode.KEYS_ARE_PATHS);
             }
+            if (value != null)
+                parent.put(last, value);
         }
 
         /*
