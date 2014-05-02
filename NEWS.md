@@ -1,3 +1,17 @@
+# 1.2.1: May 2, 2014
+
+- bugfix release, no API additions or changes
+- fix resolving substitutions in include statements nested inside
+  objects
+- when rendering an object to a string, sort the fields
+- handle unresolved substitutions in value concatenations
+- make ConfigOrigin.comments unmodifiable
+- when using '+=' or 'include' inside a list, throw an exception
+  instead of generating a wrong result
+- when context class loader is unset throw a more helpful
+  exception than NullPointerException
+- ignore non-string values in a Properties object
+
 # 1.2.0: January 15, 2014
 
  - new stable ABI release (binary compatible with 1.0.x; a few new APIs)
