@@ -236,13 +236,14 @@ major reasons:
  `null` at all, so missing settings result in
  `NullPointerException`.
 
-For most apps, failure to have a setting is simply a bug to fix
+For most situations, failure to have a setting is simply a bug to fix
 (in either code or the deployment environment). Therefore, if a
 setting is unset, by default the getters on the `Config` interface
 throw an exception.
 
-If you *want* to allow a setting to be missing from
-`application.conf` then here are some options:
+If you want to allow a setting to be missing from
+`application.conf` in a particular case, then here are some
+options:
 
  1. Set it in a `reference.conf` included in your library or
  application jar, so there's a default value.
@@ -287,6 +288,17 @@ implicit class RichConfig(val underlying: Config) extends AnyVal {
 
 Since this library is a Java library it doesn't come with that out
 of the box, of course.
+
+It is understood that sometimes defaults in code make sense. For
+example, if your configuration lets users invent new sections, you
+may not have all paths up front and may be unable to set up
+defaults in `reference.conf` for dynamic paths. The design intent
+of `Config` isn't to *prohibit* inline defaults, but simply to
+recognize that it seems to be the 10% case (rather than the 90%
+case). Even in cases where dynamic defaults are needed, you may
+find that using `withFallback()` to build a complete
+nothing-missing `Config` in one central place in your code keeps
+things tidy.
 
 Whatever you do, please remember not to cut-and-paste default
 values into multiple places in your code. You have been warned!
