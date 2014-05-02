@@ -568,6 +568,9 @@ public abstract class Parseable implements ConfigParseable {
         protected AbstractConfigObject rawParseValue(ConfigOrigin origin,
                 ConfigParseOptions finalOptions) throws IOException {
             ClassLoader loader = finalOptions.getClassLoader();
+            if (loader == null)
+                throw new ConfigException.BugOrBroken(
+                        "null class loader; pass in a class loader or use Thread.currentThread().setContextClassLoader()");
             Enumeration<URL> e = loader.getResources(resource);
             if (!e.hasMoreElements()) {
                 if (ConfigImpl.traceLoadsEnabled())
@@ -693,6 +696,9 @@ public abstract class Parseable implements ConfigParseable {
     }
 
     public static Parseable newResources(String resource, ConfigParseOptions options) {
+        if (options.getClassLoader() == null)
+            throw new ConfigException.BugOrBroken(
+                    "null class loader; pass in a class loader or use Thread.currentThread().setContextClassLoader()");
         return new ParseableResources(resource, options);
     }
 

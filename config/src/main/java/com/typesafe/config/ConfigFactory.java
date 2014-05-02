@@ -109,8 +109,9 @@ public final class ConfigFactory {
      */
     public static Config load(String resourceBasename, ConfigParseOptions parseOptions,
             ConfigResolveOptions resolveOptions) {
-        Config appConfig = ConfigFactory.parseResourcesAnySyntax(resourceBasename, parseOptions);
-        return load(parseOptions.getClassLoader(), appConfig, resolveOptions);
+        ConfigParseOptions withLoader = ensureClassLoader(parseOptions, "load");
+        Config appConfig = ConfigFactory.parseResourcesAnySyntax(resourceBasename, withLoader);
+        return load(withLoader.getClassLoader(), appConfig, resolveOptions);
     }
 
     /**
@@ -135,6 +136,23 @@ public final class ConfigFactory {
         return load(resourceBasename, parseOptions.setClassLoader(loader), resolveOptions);
     }
 
+    private static ClassLoader checkedContextClassLoader(String methodName) {
+        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+        if (loader == null)
+            throw new ConfigException.BugOrBroken("Context class loader is not set for the current thread; "
+                    + "if Thread.currentThread().getContextClassLoader() returns null, you must pass a ClassLoader "
+                    + "explicitly to ConfigFactory." + methodName);
+        else
+            return loader;
+    }
+
+    private static ConfigParseOptions ensureClassLoader(ConfigParseOptions options, String methodName) {
+        if (options.getClassLoader() == null)
+            return options.setClassLoader(checkedContextClassLoader(methodName));
+        else
+            return options;
+    }
+
     /**
      * Assembles a standard configuration using a custom <code>Config</code>
      * object rather than loading "application.conf". The <code>Config</code>
@@ -146,7 +164,7 @@ public final class ConfigFactory {
      * @return resolved configuration with overrides and fallbacks added
      */
     public static Config load(Config config) {
-        return load(Thread.currentThread().getContextClassLoader(), config);
+        return load(checkedContextClassLoader("load"), config);
     }
 
     public static Config load(ClassLoader loader, Config config) {
@@ -164,7 +182,7 @@ public final class ConfigFactory {
      * @return resolved configuration with overrides and fallbacks added
      */
     public static Config load(Config config, ConfigResolveOptions resolveOptions) {
-        return load(Thread.currentThread().getContextClassLoader(), config, resolveOptions);
+        return load(checkedContextClassLoader("load"), config, resolveOptions);
     }
 
     /**
@@ -185,19 +203,13 @@ public final class ConfigFactory {
                 .resolve(resolveOptions);
     }
 
-    private static Config loadDefaultConfig(ClassLoader loader) {
-        return loadDefaultConfig(loader, ConfigParseOptions.defaults());
-    }
+    private static Config loadDefaultConfig(ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
+        ClassLoader loader = parseOptions.getClassLoader();
+        if (loader == null)
+            throw new ConfigException.BugOrBroken(
+                    "ClassLoader should have been set here; bug in ConfigFactory. "
+                            + "(You can probably work around this bug by passing in a class loader or calling currentThread().setContextClassLoader() though.)");
 
-    private static Config loadDefaultConfig(ClassLoader loader, ConfigParseOptions parseOptions) {
-        return loadDefaultConfig(loader, parseOptions, ConfigResolveOptions.defaults());
-    }
-
-    private static Config loadDefaultConfig(ClassLoader loader, ConfigResolveOptions resolveOptions) {
-        return loadDefaultConfig(loader, ConfigParseOptions.defaults(), resolveOptions);
-    }
-
-    private static Config loadDefaultConfig(ClassLoader loader, ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
         int specified = 0;
 
         // override application.conf with config.file, config.resource,
@@ -273,7 +285,7 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load() {
-        return load(Thread.currentThread().getContextClassLoader());
+        return load(ConfigParseOptions.defaults());
     }
 
     /**
@@ -284,7 +296,7 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load(ConfigParseOptions parseOptions) {
-        return load(Thread.currentThread().getContextClassLoader(), parseOptions);
+        return load(parseOptions, ConfigResolveOptions.defaults());
     }
 
     /**
@@ -296,12 +308,7 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load(final ClassLoader loader) {
-        return ConfigImpl.computeCachedConfig(loader, "load", new Callable<Config>() {
-            @Override
-            public Config call() {
-                return loadDefaultConfig(loader);
-            }
-        });
+        return load(ConfigParseOptions.defaults().setClassLoader(loader));
     }
 
     /**
@@ -315,7 +322,7 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load(ClassLoader loader, ConfigParseOptions parseOptions) {
-        return loadDefaultConfig(loader, parseOptions);
+        return load(parseOptions.setClassLoader(loader));
     }
 
     /**
@@ -329,7 +336,7 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load(ClassLoader loader, ConfigResolveOptions resolveOptions) {
-        return loadDefaultConfig(loader, resolveOptions);
+        return load(loader, ConfigParseOptions.defaults(), resolveOptions);
     }
 
 
@@ -346,7 +353,31 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load(ClassLoader loader, ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
-        return loadDefaultConfig(loader, parseOptions, resolveOptions);
+        return load(parseOptions.setClassLoader(loader), resolveOptions);
+    }
+
+    // TODO this is private to avoid adding API in stable release, but no reason
+    // it isn't public in the long run.
+    /**
+     * Like {@link #load()} but allows specifying parse options and resolve
+     * options
+     * 
+     * @param parseOptions
+     *            Options for parsing resources
+     * @param resolveOptions
+     *            options for resolving the assembled config stack
+     * @return configuration for an application
+     * 
+     * @since 1.2.1
+     */
+    private static Config load(ConfigParseOptions parseOptions, final ConfigResolveOptions resolveOptions) {
+        final ConfigParseOptions withLoader = ensureClassLoader(parseOptions, "load");
+        return ConfigImpl.computeCachedConfig(withLoader.getClassLoader(), "load", new Callable<Config>() {
+            @Override
+            public Config call() {
+                return loadDefaultConfig(withLoader, resolveOptions);
+            }
+        });
     }
 
     /**
@@ -354,31 +385,31 @@ public final class ConfigFactory {
      * by merging all resources "reference.conf" found on the classpath and
      * overriding the result with system properties. The returned reference
      * configuration will already have substitutions resolved.
-     *
+     * 
      * <p>
      * Libraries and frameworks should ship with a "reference.conf" in their
      * jar.
-     *
+     * 
      * <p>
      * The reference config must be looked up in the class loader that contains
      * the libraries that you want to use with this config, so the
      * "reference.conf" for each library can be found. Use
      * {@link #defaultReference(ClassLoader)} if the context class loader is not
      * suitable.
-     *
+     * 
      * <p>
      * The {@link #load()} methods merge this configuration for you
      * automatically.
-     *
+     * 
      * <p>
      * Future versions may look for reference configuration in more places. It
      * is not guaranteed that this method <em>only</em> looks at
      * "reference.conf".
-     *
+     * 
      * @return the default reference config for context class loader
      */
     public static Config defaultReference() {
-        return defaultReference(Thread.currentThread().getContextClassLoader());
+        return defaultReference(checkedContextClassLoader("defaultReference"));
     }
 
     /**
@@ -713,7 +744,7 @@ public final class ConfigFactory {
      */
     public static Config parseResources(ClassLoader loader, String resource,
             ConfigParseOptions options) {
-        return Parseable.newResources(resource, options.setClassLoader(loader)).parse().toConfig();
+        return parseResources(resource, options.setClassLoader(loader));
     }
 
     public static Config parseResources(ClassLoader loader, String resource) {
@@ -755,11 +786,12 @@ public final class ConfigFactory {
 
     /**
      * Like {@link #parseResources(ClassLoader,String,ConfigParseOptions)} but
-     * uses thread's current context class loader.
+     * uses thread's current context class loader if none is set in the
+     * ConfigParseOptions.
      */
     public static Config parseResources(String resource, ConfigParseOptions options) {
-        return Parseable.newResources(resource, options)
-                .parse().toConfig();
+        ConfigParseOptions withLoader = ensureClassLoader(options, "parseResources");
+        return Parseable.newResources(resource, withLoader).parse().toConfig();
     }
 
     /**
