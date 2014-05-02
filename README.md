@@ -1,38 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
-
-- [Overview](#overview)
-- [Essential Information](#essential-information)
-  - [License](#license)
-  - [Binary Releases](#binary-releases)
-  - [Release Notes](#release-notes)
-  - [API docs](#api-docs)
-  - [Bugs and Patches](#bugs-and-patches)
-  - [Build](#build)
-- [Using the Library](#using-the-library)
-  - [API Example](#api-example)
-  - [Longer Examples](#longer-examples)
-  - [Schemas and Validation](#schemas-and-validation)
-  - [Standard behavior](#standard-behavior)
-  - [Merging config trees](#merging-config-trees)
-  - [How to handle defaults](#how-to-handle-defaults)
-- [Using HOCON, the JSON Superset](#using-hocon-the-json-superset)
-  - [Features of HOCON](#features-of-hocon)
-  - [Examples of HOCON](#examples-of-hocon)
-  - [Uses of Substitutions](#uses-of-substitutions)
-    - [Factor out common values](#factor-out-common-values)
-    - [Inheritance](#inheritance)
-    - [Optional system or env variable overrides](#optional-system-or-env-variable-overrides)
-  - [Concatenation](#concatenation)
-- [Miscellaneous Notes](#miscellaneous-notes)
-  - [Debugging Your Configuration](#debugging-your-configuration)
-  - [Java version](#java-version)
-  - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
-  - [Other APIs](#other-apis)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 Configuration library for JVM languages.
 
 ## Overview
@@ -66,6 +31,40 @@ config from a database or something, you would need to write some
 custom code. The library has nice support for merging
 configurations so if you build one from a custom source it's easy
 to merge it in.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+- [Essential Information](#essential-information)
+  - [License](#license)
+  - [Binary Releases](#binary-releases)
+  - [Release Notes](#release-notes)
+  - [API docs](#api-docs)
+  - [Bugs and Patches](#bugs-and-patches)
+  - [Build](#build)
+- [Using the Library](#using-the-library)
+  - [API Example](#api-example)
+  - [Longer Examples](#longer-examples)
+  - [Schemas and Validation](#schemas-and-validation)
+  - [Standard behavior](#standard-behavior)
+  - [Merging config trees](#merging-config-trees)
+  - [How to handle defaults](#how-to-handle-defaults)
+- [Using HOCON, the JSON Superset](#using-hocon-the-json-superset)
+  - [Features of HOCON](#features-of-hocon)
+  - [Examples of HOCON](#examples-of-hocon)
+  - [Uses of Substitutions](#uses-of-substitutions)
+    - [Factor out common values](#factor-out-common-values)
+    - [Inheritance](#inheritance)
+    - [Optional system or env variable overrides](#optional-system-or-env-variable-overrides)
+  - [Concatenation](#concatenation)
+- [Miscellaneous Notes](#miscellaneous-notes)
+  - [Debugging Your Configuration](#debugging-your-configuration)
+  - [Java version](#java-version)
+  - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
+  - [Other APIs](#other-apis)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Essential Information
 
