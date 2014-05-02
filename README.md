@@ -1,3 +1,38 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](http://doctoc.herokuapp.com/)*
+
+- [Overview](#overview)
+- [Essential Information](#essential-information)
+  - [License](#license)
+  - [Binary Releases](#binary-releases)
+  - [Release Notes](#release-notes)
+  - [API docs](#api-docs)
+  - [Bugs and Patches](#bugs-and-patches)
+  - [Build](#build)
+- [Using the Library](#using-the-library)
+  - [API Example](#api-example)
+  - [Longer Examples](#longer-examples)
+  - [Schemas and Validation](#schemas-and-validation)
+  - [Standard behavior](#standard-behavior)
+  - [Merging config trees](#merging-config-trees)
+  - [How to handle defaults](#how-to-handle-defaults)
+- [Using HOCON, the JSON Superset](#using-hocon-the-json-superset)
+  - [Features of HOCON](#features-of-hocon)
+  - [Examples of HOCON](#examples-of-hocon)
+  - [Uses of Substitutions](#uses-of-substitutions)
+    - [Factor out common values](#factor-out-common-values)
+    - [Inheritance](#inheritance)
+    - [Optional system or env variable overrides](#optional-system-or-env-variable-overrides)
+  - [Concatenation](#concatenation)
+- [Miscellaneous Notes](#miscellaneous-notes)
+  - [Debugging Your Configuration](#debugging-your-configuration)
+  - [Java version](#java-version)
+  - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
+  - [Other APIs](#other-apis)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 Configuration library for JVM languages.
 
 ## Overview
@@ -32,11 +67,13 @@ custom code. The library has nice support for merging
 configurations so if you build one from a custom source it's easy
 to merge it in.
 
-## License
+## Essential Information
+
+### License
 
 The license is Apache 2.0, see LICENSE-2.0.txt.
 
-## Binary Releases
+### Binary Releases
 
 You can find published releases (compiled for Java 6 and above) on
 Maven Central.
@@ -51,12 +88,12 @@ Obsolete releases are here, but you probably don't want these:
 
  - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
 
-## Release Notes
+### Release Notes
 
 Please see NEWS.md in this directory,
 https://github.com/typesafehub/config/blob/master/NEWS.md
 
-## API docs
+### API docs
 
  - Online: http://typesafehub.github.com/config/latest/api/
  - also published in jar form
@@ -64,7 +101,7 @@ https://github.com/typesafehub/config/blob/master/NEWS.md
  - for questions about the `.conf` file format, read HOCON.md in
    this directory
 
-## Bugs and Patches
+### Bugs and Patches
 
 Report bugs to the GitHub issue tracker. Send patches as pull
 requests on GitHub.
@@ -74,20 +111,22 @@ Typesafe Contributor License Agreement online, using your GitHub
 account - it takes 30 seconds.  You can do this at
 http://www.typesafe.com/contribute/cla
 
-## Build
+### Build
 
 The build uses sbt and the tests are written in Scala; however,
 the library itself is plain Java and the published jar has no
 Scala dependency.
 
-## API Example
+## Using the Library
+
+### API Example
 
     Config conf = ConfigFactory.load();
     int bar1 = conf.getInt("foo.bar");
     Config foo = conf.getConfig("foo");
     int bar2 = foo.getInt("bar");
 
-## Longer Examples
+### Longer Examples
 
 See the examples in the `examples/` directory.
 
@@ -107,7 +146,7 @@ In brief, as shown in the examples:
    format or data source you like with the methods in
    `ConfigValueFactory`.
 
-## Schemas and Validation
+### Schemas and Validation
 
 There isn't a schema language or anything like that. However, two
 suggested tools are:
@@ -132,7 +171,7 @@ In Scala, a Settings class might look like:
 
 See the examples/ directory for a full compilable program.
 
-## Standard behavior
+### Standard behavior
 
 The convenience method `ConfigFactory.load()` loads the following
 (first-listed are higher priority):
@@ -183,7 +222,7 @@ configuration. In the replacement config file, you can use
 file; after the include statement you could go on to override
 certain settings.
 
-## Merging config trees
+### Merging config trees
 
 Any two Config objects can be merged with an associative operation
 called `withFallback`, like `merged = firstConfig.withFallback(secondConfig)`.
@@ -209,7 +248,7 @@ Then you could code something like:
 
 There are lots of ways to use `withFallback`.
 
-## How to handle defaults
+### How to handle defaults
 
 Many other configuration APIs allow you to provide a default to
 the getter methods, like this:
@@ -304,7 +343,7 @@ Whatever you do, please remember not to cut-and-paste default
 values into multiple places in your code. You have been warned!
 :-)
 
-## JSON Superset
+## Using HOCON, the JSON Superset
 
 Tentatively called "Human-Optimized Config Object Notation" or
 HOCON, also called `.conf`, see HOCON.md in this directory for more
@@ -534,7 +573,9 @@ Note: Play/Akka 2.0 have an earlier version that supports string
 concatenation, but not object/array concatenation. `+=` does not
 work in Play/Akka 2.0 either.
 
-## Debugging
+## Miscellaneous Notes
+
+### Debugging Your Configuration
 
 If you have trouble with your configuration, some useful tips.
 
@@ -545,12 +586,12 @@ If you have trouble with your configuration, some useful tips.
  - Use `myConfig.root().render()` to get a `Config` printed out as a
    string with comments showing where each value came from.
 
-## Java version
+### Java version
 
 Currently the library is maintained against Java 6. It does not
 build with Java 5.
 
-## Rationale
+### Rationale for Supported File Formats
 
 (For the curious.)
 
@@ -595,7 +636,7 @@ Two alternatives to HOCON syntax could be:
     allow mixing true JSON files into the config but also support
     a nicer format.
 
-## Other APIs
+### Other APIs
 
 This may not be comprehensive - if you'd like to add mention of
 your wrapper, just send a pull request for this README. We would
