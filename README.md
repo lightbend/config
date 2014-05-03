@@ -3,7 +3,6 @@ Configuration library for JVM languages.
 ## Overview
 
  - implemented in plain Java with no dependencies
- - extensive test coverage
  - supports files in three formats: Java properties, JSON, and a
    human-friendly JSON superset
  - merges multiple files across all formats
@@ -25,6 +24,9 @@ Configuration library for JVM languages.
     - properties-like notation (`a.b=c`)
     - less noisy, more lenient syntax
     - substitute environment variables (`logdir=${HOME}/logs`)
+ - API based on immutable `Config` instances, for thread safety
+   and easy reasoning about config transformations
+ - extensive test coverage
 
 This library limits itself to config files. If you want to load
 config from a database or something, you would need to write some
@@ -46,10 +48,12 @@ to merge it in.
 - [Using the Library](#using-the-library)
   - [API Example](#api-example)
   - [Longer Examples](#longer-examples)
+  - [Immutability](#immutability)
   - [Schemas and Validation](#schemas-and-validation)
   - [Standard behavior](#standard-behavior)
   - [Merging config trees](#merging-config-trees)
   - [How to handle defaults](#how-to-handle-defaults)
+  - [Understanding `Config` and `ConfigObject`](#understanding-config-and-configobject)
 - [Using HOCON, the JSON Superset](#using-hocon-the-json-superset)
   - [Features of HOCON](#features-of-hocon)
   - [Examples of HOCON](#examples-of-hocon)
@@ -60,9 +64,11 @@ to merge it in.
   - [Concatenation](#concatenation)
 - [Miscellaneous Notes](#miscellaneous-notes)
   - [Debugging Your Configuration](#debugging-your-configuration)
-  - [Java version](#java-version)
+  - [Supports Java 6 and Later](#supports-java-6-and-later)
   - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
-  - [Other APIs](#other-apis)
+  - [Other APIs (Wrappers and Ports)](#other-apis-wrappers-and-ports)
+    - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
+    - [Ruby port](#ruby-port)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -97,8 +103,9 @@ https://github.com/typesafehub/config/blob/master/NEWS.md
  - Online: http://typesafehub.github.com/config/latest/api/
  - also published in jar form
  - consider reading this README first for an intro
- - for questions about the `.conf` file format, read HOCON.md in
-   this directory
+ - for questions about the `.conf` file format, read
+   [HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md]
+   in this directory
 
 ### Bugs and Patches
 
@@ -145,6 +152,15 @@ In brief, as shown in the examples:
    format or data source you like with the methods in
    `ConfigValueFactory`.
 
+### Immutability
+
+Objects are immutable, so methods on `Config` which transform the
+configuration return a new `Config`. Other types such as
+`ConfigParseOptions`, `ConfigResolveOptions`, `ConfigObject`,
+etc. are also immutable. See the
+[API docs](http://typesafehub.github.com/config/latest/api/) for
+details of course.
+
 ### Schemas and Validation
 
 There isn't a schema language or anything like that. However, two
@@ -168,7 +184,8 @@ In Scala, a Settings class might look like:
         val bar = config.getInt("simple-lib.bar")
     }
 
-See the examples/ directory for a full compilable program.
+See the examples/ directory for a full compilable program using
+this pattern.
 
 ### Standard behavior
 
@@ -300,6 +317,10 @@ options:
  `Config`; `ConfigObject` implements `java.util.Map<String,?>` and
  the `get()` method on `Map` returns null for missing keys. See
  the API docs for more detail on `Config` vs. `ConfigObject`.
+ 6. Consider the "Settings class" pattern with `checkValid()` to
+ verify that you have all settings when you initialize the
+ app. See the [Schemas and Validation](#schemas-and-validation)
+ section of this README for more details.
 
 The *recommended* path (for most cases, in most apps) is that you
 require all settings to be present in either `reference.conf` or
@@ -342,11 +363,66 @@ Whatever you do, please remember not to cut-and-paste default
 values into multiple places in your code. You have been warned!
 :-)
 
+### Understanding `Config` and `ConfigObject`
+
+To read and modify configuration, you'll use the
+[Config](http://typesafehub.github.io/config/latest/api/com/typesafe/config/Config.html)
+interface. A `Config` looks at a JSON-equivalent data structure as
+a one-level map from paths to values. So if your JSON looks like
+this:
+
+```
+  "foo" : {
+    "bar" : 42
+    "baz" : 43
+  }
+```
+
+Using the `Config` interface, you could write
+`conf.getInt("foo.bar")`. The `foo.bar` string is called a _path
+expression_
+([HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md]
+has the syntax details for these expressions). Iterating over this
+`Config`, you would get two entries; `"foo.bar" : 42` and
+`"foo.baz" : 43`. When iterating a `Config` you will not find
+nested `Config` (because everything gets flattened into one
+level).
+
+When looking at a JSON tree as a `Config`, `null` values are
+treated as if they were missing. Iterating over a `Config` will
+skip `null` values.
+
+You can also look at a `Config` in the way most JSON APIs would,
+through the
+[ConfigObject](http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigObject.html)
+interface. This interface represents an object node in the JSON
+tree. `ConfigObject` instances come in multi-level trees, and the
+keys do not have any syntax (they are just strings, not path
+expressions). Iterating over the above example as a
+`ConfigObject`, you would get one entry `"foo" : { "bar" : 42,
+"baz" : 43 }`, where the value at `"foo"` is another nested
+`ConfigObject`.
+
+In `ConfigObject`, `null` values are visible (distinct from
+missing values), just as they are in JSON.
+
+`ConfigObject` is a subtype of [ConfigValue]((http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
+subtypes are the other JSON types (list, string, number, boolean, null).
+
+`Config` and `ConfigObject` are two ways to look at the same
+internal data structure, and you can convert between them for free
+using
+[Config.root()](http://typesafehub.github.io/config/latest/api/com/typesafe/config/Config.html#root%28%29)
+and
+[ConfigObject.toConfig()](http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig%28%29).
+
+
 ## Using HOCON, the JSON Superset
 
-Tentatively called "Human-Optimized Config Object Notation" or
-HOCON, also called `.conf`, see HOCON.md in this directory for more
-detail.
+The JSON superset is called "Human-Optimized Config Object
+Notation" or HOCON, and files use the suffix `.conf`.  See
+[HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md]
+in this directory for more detail.
 
 After processing a `.conf` file, the result is always just a JSON
 tree that you could have written (less conveniently) in JSON.
@@ -376,7 +452,7 @@ tree that you could have written (less conveniently) in JSON.
     `classpath()` syntax to force the type, or use just `include
     "whatever"` to have the library do what you probably mean
     (Note: `url()`/`file()`/`classpath()` syntax is not supported
-    in Play/Akka 2.0.)
+    in Play/Akka 2.0, only in later releases.)
   - substitutions `foo : ${a.b}` sets key `foo` to the same value
     as the `b` field in the `a` object
   - substitutions concatenate into unquoted strings, `foo : the
@@ -570,7 +646,8 @@ See the spec for full details on concatenation.
 
 Note: Play/Akka 2.0 have an earlier version that supports string
 concatenation, but not object/array concatenation. `+=` does not
-work in Play/Akka 2.0 either.
+work in Play/Akka 2.0 either. Post-2.0 versions support these
+features.
 
 ## Miscellaneous Notes
 
@@ -585,7 +662,7 @@ If you have trouble with your configuration, some useful tips.
  - Use `myConfig.root().render()` to get a `Config` printed out as a
    string with comments showing where each value came from.
 
-### Java version
+### Supports Java 6 and Later
 
 Currently the library is maintained against Java 6. It does not
 build with Java 5.
@@ -635,16 +712,19 @@ Two alternatives to HOCON syntax could be:
     allow mixing true JSON files into the config but also support
     a nicer format.
 
-### Other APIs
+### Other APIs (Wrappers and Ports)
 
 This may not be comprehensive - if you'd like to add mention of
 your wrapper, just send a pull request for this README. We would
 love to know what you're doing with this library or with the HOCON
 format.
 
- * Scala wrappers for the Java library
-   * Ficus https://github.com/ceedubs/ficus
-   * configz https://github.com/arosien/configz
-   * configs https://github.com/kxbmap/configs
- * Ruby port:
+#### Scala wrappers for the Java library
+
+  * Ficus https://github.com/ceedubs/ficus
+  * configz https://github.com/arosien/configz
+  * configs https://github.com/kxbmap/configs
+
+#### Ruby port
+
    * https://github.com/cprice404/ruby-hocon
