@@ -317,18 +317,19 @@ options:
  `Config`; `ConfigObject` implements `java.util.Map<String,?>` and
  the `get()` method on `Map` returns null for missing keys. See
  the API docs for more detail on `Config` vs. `ConfigObject`.
- 6. Consider the "Settings class" pattern with `checkValid()` to
- verify that you have all settings when you initialize the
- app. See the [Schemas and Validation](#schemas-and-validation)
- section of this README for more details.
-
+ 
 The *recommended* path (for most cases, in most apps) is that you
 require all settings to be present in either `reference.conf` or
 `application.conf` and allow `ConfigException.Missing` to be
 thrown if they are not. That's the design intent of the `Config`
 API design.
 
-If you do need a setting to be optional, checking `hasPath()` in
+Consider the "Settings class" pattern with `checkValid()` to
+verify that you have all settings when you initialize the
+app. See the [Schemas and Validation](#schemas-and-validation)
+section of this README for more details on this pattern.
+
+**If you do need a setting to be optional**: checking `hasPath()` in
 advance should be the same amount of code (in Java) as checking
 for `null` afterward, without the risk of `NullPointerException`
 when you forget. In Scala, you could write an enrichment class
