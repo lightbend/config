@@ -104,7 +104,7 @@ https://github.com/typesafehub/config/blob/master/NEWS.md
  - also published in jar form
  - consider reading this README first for an intro
  - for questions about the `.conf` file format, read
-   [HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md]
+   [HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md)
    in this directory
 
 ### Bugs and Patches
@@ -381,7 +381,7 @@ this:
 Using the `Config` interface, you could write
 `conf.getInt("foo.bar")`. The `foo.bar` string is called a _path
 expression_
-([HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md]
+([HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md)
 has the syntax details for these expressions). Iterating over this
 `Config`, you would get two entries; `"foo.bar" : 42` and
 `"foo.baz" : 43`. When iterating a `Config` you will not find
@@ -406,7 +406,7 @@ expressions). Iterating over the above example as a
 In `ConfigObject`, `null` values are visible (distinct from
 missing values), just as they are in JSON.
 
-`ConfigObject` is a subtype of [ConfigValue]((http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
+`ConfigObject` is a subtype of [ConfigValue](http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
 subtypes are the other JSON types (list, string, number, boolean, null).
 
 `Config` and `ConfigObject` are two ways to look at the same
@@ -421,7 +421,7 @@ and
 
 The JSON superset is called "Human-Optimized Config Object
 Notation" or HOCON, and files use the suffix `.conf`.  See
-[HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md]
+[HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md)
 in this directory for more detail.
 
 After processing a `.conf` file, the result is always just a JSON
