@@ -575,12 +575,13 @@ If a substitution with the `${?foo}` syntax is undefined:
    be created. If the field would have overridden a previously-set
    value for the same field, then the previous value remains.
  - if it is an array element then the element should not be added.
- - if it is part of a value concatenation then it should become an
-   empty string.
+ - if it is part of a value concatenation with another string then
+   it should become an empty string; if part of a value
+   concatenation with an object or array it should become an empty
+   object or array.
  - `foo : ${?bar}` would avoid creating field `foo` if `bar` is
-   undefined, but `foo : ${?bar}${?baz}` would be a value
-   concatenation so if `bar` or `baz` are not defined, the result
-   is an empty string.
+   undefined. `foo : ${?bar}${?baz}` would also avoid creating the
+   field if _both_ `bar` and `baz` are undefined.
 
 Substitutions are only allowed in field values and array
 elements (value concatenations), they are not allowed in keys or

@@ -368,4 +368,65 @@ class ConcatenationTest extends TestUtils {
         assertTrue(e.getMessage.contains("limitation"))
         System.err.println("==============")
     }
+
+    @Test
+    def concatUndefinedSubstitutionWithString() {
+        val conf = parseConfig("""a = foo${?bar}""").resolve()
+        assertEquals("foo", conf.getString("a"))
+    }
+
+    @Test
+    def concatDefinedOptionalSubstitutionWithString() {
+        val conf = parseConfig("""bar=bar, a = foo${?bar}""").resolve()
+        assertEquals("foobar", conf.getString("a"))
+    }
+
+    @Test
+    def concatUndefinedSubstitutionWithArray() {
+        val conf = parseConfig("""a = [1] ${?bar}""").resolve()
+        assertEquals(Seq(1), conf.getIntList("a").asScala.toList)
+    }
+
+    @Test
+    def concatDefinedOptionalSubstitutionWithArray() {
+        val conf = parseConfig("""bar=[2], a = [1] ${?bar}""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a").asScala.toList)
+    }
+
+    @Test
+    def concatUndefinedSubstitutionWithObject() {
+        val conf = parseConfig("""a = { x : "foo" } ${?bar}""").resolve()
+        assertEquals("foo", conf.getString("a.x"))
+    }
+
+    @Test
+    def concatDefinedOptionalSubstitutionWithObject() {
+        val conf = parseConfig("""bar={ y : 42 }, a = { x : "foo" } ${?bar}""").resolve()
+        assertEquals("foo", conf.getString("a.x"))
+        assertEquals(42, conf.getInt("a.y"))
+    }
+
+    @Test
+    def concatTwoUndefinedSubstitutions() {
+        val conf = parseConfig("""a = ${?foo}${?bar}""").resolve()
+        assertFalse("no field 'a'", conf.hasPath("a"))
+    }
+
+    @Test
+    def concatSeveralUndefinedSubstitutions() {
+        val conf = parseConfig("""a = ${?foo}${?bar}${?baz}${?woooo}""").resolve()
+        assertFalse("no field 'a'", conf.hasPath("a"))
+    }
+
+    @Test
+    def concatTwoUndefinedSubstitutionsWithASpace() {
+        val conf = parseConfig("""a = ${?foo} ${?bar}""").resolve()
+        assertEquals(" ", conf.getString("a"))
+    }
+
+    @Test
+    def concatTwoUndefinedSubstitutionsWithEmptyString() {
+        val conf = parseConfig("""a = ""${?foo}${?bar}""").resolve()
+        assertEquals("", conf.getString("a"))
+    }
 }

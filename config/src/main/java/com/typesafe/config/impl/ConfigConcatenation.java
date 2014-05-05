@@ -189,11 +189,13 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         // ConfigConcatenation
         if (joined.size() > 1 && context.options().getAllowUnresolved())
             return new ConfigConcatenation(this.origin(), joined);
-        else if (joined.size() != 1)
-            throw new ConfigException.BugOrBroken(
-                    "Resolved list should always join to exactly one value, not " + joined);
-        else
+        else if (joined.isEmpty())
+            return null; // we had just a list of optional references using ${?}
+        else if (joined.size() == 1)
             return joined.get(0);
+        else
+            throw new ConfigException.BugOrBroken("Bug in the library; resolved list was joined to too many values: "
+                    + joined);
     }
 
     @Override
