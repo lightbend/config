@@ -18,6 +18,8 @@ libraryDependencies += "net.liftweb" %% "lift-json" % "2.5" % "test"
 
 libraryDependencies += "com.novocode" % "junit-interface" % "0.10-M4" % "test"
 
+libraryDependencies += "org.yaml" % "snakeyaml" % "1.12"
+
 externalResolvers += "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
 
 seq(findbugsSettings : _*)

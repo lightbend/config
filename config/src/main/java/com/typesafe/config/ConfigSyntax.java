@@ -32,5 +32,10 @@ public enum ConfigSyntax {
      * >Java properties</a> format. Associated with the <code>.properties</code>
      * file extension and <code>text/x-java-properties</code> Content-Type.
      */
-    PROPERTIES;
+    PROPERTIES,
+    /**
+     * Standard <a href="http://www.yaml.org/spec/1.2/spec.html"> YAML 1.2 </a> format. Associated with the
+     * <code>.yml</code> file extension.
+     */
+    YAML;
 }

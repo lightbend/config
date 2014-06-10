@@ -166,7 +166,7 @@ class SimpleIncluder implements FullIncluder {
     // loading app.{conf,json,properties} from the filesystem.
     static ConfigObject fromBasename(NameSource source, String name, ConfigParseOptions options) {
         ConfigObject obj;
-        if (name.endsWith(".conf") || name.endsWith(".json") || name.endsWith(".properties")) {
+        if (name.endsWith(".conf") || name.endsWith(".json") || name.endsWith(".properties") || name.endsWith(".yml")) {
             ConfigParseable p = source.nameToParseable(name, options);
 
             obj = p.parse(p.options().setAllowMissing(options.getAllowMissing()));
@@ -174,6 +174,8 @@ class SimpleIncluder implements FullIncluder {
             ConfigParseable confHandle = source.nameToParseable(name + ".conf", options);
             ConfigParseable jsonHandle = source.nameToParseable(name + ".json", options);
             ConfigParseable propsHandle = source.nameToParseable(name + ".properties", options);
+            ConfigParseable ymlHandle = source.nameToParseable(name + ".yml", options);
+
             boolean gotSomething = false;
             List<ConfigException.IO> fails = new ArrayList<ConfigException.IO>();
 
@@ -200,6 +202,17 @@ class SimpleIncluder implements FullIncluder {
                     fails.add(e);
                 }
             }
+            
+            if (syntax == null || syntax == ConfigSyntax.YAML) {
+                try {
+                    ConfigObject parsed = ymlHandle.parse(jsonHandle.options()
+                            .setAllowMissing(false).setSyntax(ConfigSyntax.YAML));
+                    obj = obj.withFallback(parsed);
+                    gotSomething = true;
+                } catch (ConfigException.IO e) {
+                    fails.add(e);
+                }
+            }
 
             if (syntax == null || syntax == ConfigSyntax.PROPERTIES) {
                 try {
@@ -217,7 +230,7 @@ class SimpleIncluder implements FullIncluder {
                     // the individual exceptions should have been logged already
                     // with tracing enabled
                     ConfigImpl.trace("Did not find '" + name
-                            + "' with any extension (.conf, .json, .properties); "
+                            + "' with any extension (.conf, .json, .properties, .yml); "
                             + "exceptions should have been logged above.");
                 }
 
@@ -238,7 +251,7 @@ class SimpleIncluder implements FullIncluder {
             } else if (!gotSomething) {
                 if (ConfigImpl.traceLoadsEnabled()) {
                     ConfigImpl.trace("Did not find '" + name
-                            + "' with any extension (.conf, .json, .properties); but '" + name
+                            + "' with any extension (.conf, .json, .properties, .yml); but '" + name
                                     + "' is allowed to be missing. Exceptions from load attempts should have been logged above.");
                 }
             }
