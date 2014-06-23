@@ -50,11 +50,11 @@ class UnitParserTest extends TestUtils {
 
         val conf = parseConfig("foo = 1d")
         assertEquals("could get 1d from conf as days",
-                     1L, conf.getDuration("foo", TimeUnit.DAYS))
+            1L, conf.getDuration("foo", TimeUnit.DAYS))
         assertEquals("could get 1d from conf as nanos",
-                     dayInNanos, conf.getNanoseconds("foo"))
+            dayInNanos, conf.getNanoseconds("foo"))
         assertEquals("could get 1d from conf as millis",
-                     TimeUnit.DAYS.toMillis(1), conf.getMilliseconds("foo"))
+            TimeUnit.DAYS.toMillis(1), conf.getMilliseconds("foo"))
     }
 
     @Test
@@ -88,7 +88,7 @@ class UnitParserTest extends TestUtils {
         }
 
         var result = 1024L * 1024 * 1024
-        for (unit <- Seq("tebi", "pebi", "exbi", "zebi", "yobi")) {
+        for (unit <- Seq("tebi", "pebi", "exbi")) {
             val first = unit.substring(0, 1).toUpperCase()
             result = result * 1024;
             assertEquals(result, parseMem("1" + first))
@@ -99,7 +99,7 @@ class UnitParserTest extends TestUtils {
         }
 
         result = 1000L * 1000 * 1000
-        for (unit <- Seq("tera", "peta", "exa", "zetta", "yotta")) {
+        for (unit <- Seq("tera", "peta", "exa")) {
             val first = unit.substring(0, 1).toUpperCase()
             result = result * 1000;
             assertEquals(result, parseMem("1" + first + "B"))
@@ -118,5 +118,41 @@ class UnitParserTest extends TestUtils {
             SimpleConfig.parseBytes("1 00 bytes", fakeOrigin(), "test")
         }
         assertTrue(e2.getMessage().contains("size-in-bytes number"))
+    }
+
+    // later on we'll want to check this with BigInteger version of getBytes
+    @Test
+    def parseHugeMemorySizes(): Unit = {
+        def parseMem(s: String) = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
+        def assertOutOfRange(s: String) = {
+            val fail = intercept[ConfigException.BadValue] {
+                parseMem(s)
+            }
+            assertTrue("number was too big", fail.getMessage.contains("out of range"))
+        }
+        var result = 1024L * 1024 * 1024
+        for (unit <- Seq("zebi", "yobi")) {
+            val first = unit.substring(0, 1).toUpperCase()
+            assertOutOfRange("1" + first)
+            assertOutOfRange("1" + first + "i")
+            assertOutOfRange("1" + first + "iB")
+            assertOutOfRange("1" + unit + "byte")
+            assertOutOfRange("1" + unit + "bytes")
+            assertOutOfRange("1.1" + first)
+            assertOutOfRange("-1" + first)
+        }
+
+        result = 1000L * 1000 * 1000
+        for (unit <- Seq("zetta", "yotta")) {
+            val first = unit.substring(0, 1).toUpperCase()
+            assertOutOfRange("1" + first + "B")
+            assertOutOfRange("1" + unit + "byte")
+            assertOutOfRange("1" + unit + "bytes")
+            assertOutOfRange("1.1" + first + "B")
+            assertOutOfRange("-1" + first + "B")
+        }
+
+        assertOutOfRange("1000 exabytes")
+        assertOutOfRange("10000000 petabytes")
     }
 }

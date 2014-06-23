@@ -1265,6 +1265,13 @@ spec copies that. You can certainly find examples of mapping these
 to powers of ten, though. If you don't like ambiguity, don't use
 the single-letter abbreviations.
 
+Note: any value in zetta/zebi or yotta/yobi will overflow a 64-bit
+integer, and of course large-enough values in any of the units may
+overflow. Most real-world APIs and apps will not support byte
+counts that overflow a 64-bit integer. The huge units are provided
+just to be complete but probably aren't useful in practice. At
+least not in 2014.
+
 ### Config object merging and file merging
 
 It may be useful to offer a method to merge two objects. If such a

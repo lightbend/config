@@ -5,6 +5,8 @@ package com.typesafe.config.impl;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -575,19 +577,13 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         final String prefix;
         final int powerOf;
         final int power;
-        final long bytes;
+        final BigInteger bytes;
 
         MemoryUnit(String prefix, int powerOf, int power) {
             this.prefix = prefix;
             this.powerOf = powerOf;
             this.power = power;
-            int i = power;
-            long bytes = 1;
-            while (i > 0) {
-                bytes *= powerOf;
-                --i;
-            }
-            this.bytes = bytes;
+            this.bytes = BigInteger.valueOf(powerOf).pow(power);
         }
 
         private static Map<String, MemoryUnit> makeUnitsMap() {
@@ -626,6 +622,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         static MemoryUnit parseUnit(String unit) {
             return unitsMap.get(unit);
         }
+    }
+
+    private static boolean isValidLong(BigInteger v) {
+        BigInteger max = BigInteger.valueOf(Long.MAX_VALUE);
+        BigInteger min = BigInteger.valueOf(Long.MIN_VALUE);
+        return max.compareTo(v) >= 0 && min.compareTo(v) <= 0;
     }
 
     /**
@@ -667,13 +669,22 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         }
 
         try {
+            BigInteger result;
             // if the string is purely digits, parse as an integer to avoid
             // possible precision loss; otherwise as a double.
             if (numberString.matches("[0-9]+")) {
-                return Long.parseLong(numberString) * units.bytes;
+                Long v = Long.parseLong(numberString);
+                result = units.bytes.multiply(BigInteger.valueOf(v));
             } else {
-                return (long) (Double.parseDouble(numberString) * units.bytes);
+                Double v = Double.parseDouble(numberString);
+                BigDecimal resultDecimal = (new BigDecimal(units.bytes)).multiply(BigDecimal.valueOf(v));
+                result = resultDecimal.toBigInteger();
             }
+            if (isValidLong(result))
+                return result.longValue();
+            else
+                throw new ConfigException.BadValue(originForException, pathForException,
+                        "size-in-bytes value is out of range for a 64-bit long: '" + input + "'");
         } catch (NumberFormatException e) {
             throw new ConfigException.BadValue(originForException, pathForException,
                     "Could not parse size-in-bytes number '" + numberString + "'");
