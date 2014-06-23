@@ -4,6 +4,7 @@
 package com.typesafe.config.impl;
 
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,22 +29,22 @@ public class ConfigImpl {
 
     private static class LoaderCache {
         private Config currentSystemProperties;
-        private ClassLoader currentLoader;
+        private WeakReference<ClassLoader> currentLoader;
         private Map<String, Config> cache;
 
         LoaderCache() {
             this.currentSystemProperties = null;
-            this.currentLoader = null;
+            this.currentLoader = new WeakReference<ClassLoader>(null);
             this.cache = new HashMap<String, Config>();
         }
 
         // for now, caching as long as the loader remains the same,
         // drop entire cache if it changes.
         synchronized Config getOrElseUpdate(ClassLoader loader, String key, Callable<Config> updater) {
-            if (loader != currentLoader) {
+            if (loader != currentLoader.get()) {
                 // reset the cache if we start using a different loader
                 cache.clear();
-                currentLoader = loader;
+                currentLoader = new WeakReference<ClassLoader>(loader);
             }
 
             Config systemProperties = systemPropertiesAsConfig();
