@@ -624,12 +624,6 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         }
     }
 
-    private static boolean isValidLong(BigInteger v) {
-        BigInteger max = BigInteger.valueOf(Long.MAX_VALUE);
-        BigInteger min = BigInteger.valueOf(Long.MIN_VALUE);
-        return max.compareTo(v) >= 0 && min.compareTo(v) <= 0;
-    }
-
     /**
      * Parses a size-in-bytes string. If no units are specified in the string,
      * it is assumed to be in bytes. The returned value is in bytes. The purpose
@@ -673,14 +667,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             // if the string is purely digits, parse as an integer to avoid
             // possible precision loss; otherwise as a double.
             if (numberString.matches("[0-9]+")) {
-                Long v = Long.parseLong(numberString);
-                result = units.bytes.multiply(BigInteger.valueOf(v));
+                result = units.bytes.multiply(new BigInteger(numberString));
             } else {
-                Double v = Double.parseDouble(numberString);
-                BigDecimal resultDecimal = (new BigDecimal(units.bytes)).multiply(BigDecimal.valueOf(v));
+                BigDecimal resultDecimal = (new BigDecimal(units.bytes)).multiply(new BigDecimal(numberString));
                 result = resultDecimal.toBigInteger();
             }
-            if (isValidLong(result))
+            if (result.bitLength() < 64)
                 return result.longValue();
             else
                 throw new ConfigException.BadValue(originForException, pathForException,

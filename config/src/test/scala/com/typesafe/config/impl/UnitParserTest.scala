@@ -59,7 +59,10 @@ class UnitParserTest extends TestUtils {
 
     @Test
     def parseMemorySizeInBytes(): Unit = {
-        def parseMem(s: String) = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
+        def parseMem(s: String): Long = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
+
+        assertEquals(Long.MaxValue, parseMem(s"${Long.MaxValue} bytes"))
+        assertEquals(Long.MinValue, parseMem(s"${Long.MinValue} bytes"))
 
         val oneMebis = List("1048576", "1048576b", "1048576bytes", "1048576byte",
             "1048576  b", "1048576  bytes",
@@ -123,13 +126,18 @@ class UnitParserTest extends TestUtils {
     // later on we'll want to check this with BigInteger version of getBytes
     @Test
     def parseHugeMemorySizes(): Unit = {
-        def parseMem(s: String) = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
+        def parseMem(s: String): Long = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
         def assertOutOfRange(s: String) = {
             val fail = intercept[ConfigException.BadValue] {
                 parseMem(s)
             }
             assertTrue("number was too big", fail.getMessage.contains("out of range"))
         }
+
+        import java.math.BigInteger
+        assertOutOfRange(s"${BigInteger.valueOf(Long.MaxValue).add(BigInteger.valueOf(1)).toString} bytes")
+        assertOutOfRange(s"${BigInteger.valueOf(Long.MinValue).subtract(BigInteger.valueOf(1)).toString} bytes")
+
         var result = 1024L * 1024 * 1024
         for (unit <- Seq("zebi", "yobi")) {
             val first = unit.substring(0, 1).toUpperCase()
