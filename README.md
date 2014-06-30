@@ -126,6 +126,7 @@ Scala dependency.
 ## Using the Library
 
 ### API Example
+    import com.typesafe.config.ConfigFactory
 
     Config conf = ConfigFactory.load();
     int bar1 = conf.getInt("foo.bar");
@@ -134,7 +135,7 @@ Scala dependency.
 
 ### Longer Examples
 
-See the examples in the `examples/` directory.
+See the examples in the `examples/` [directory](https://github.com/typesafehub/config/tree/master/examples).
 
 You can run these from the sbt console with the commands `project
 config-simple-app-java` and then `run`.
