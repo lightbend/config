@@ -31,8 +31,13 @@ final class ResolveSource {
 
     AbstractConfigValue lookupSubst(ResolveContext context, SubstitutionExpression subst,
             int prefixLength) throws NotPossibleToResolve {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(context.depth(), "searching for " + subst);
+
         context.trace(subst);
         try {
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), subst + " - looking up relative to file it occurred in");
             // First we look up the full path, which means relative to the
             // included file if we were not a root file
             AbstractConfigValue result = findInObject(root, context, subst);
@@ -49,18 +54,29 @@ final class ResolveSource {
                 context.trace(unprefixed);
 
                 if (prefixLength > 0) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(context.depth(), unprefixed + " - looking up relative to parent file");
                     result = findInObject(root, context, unprefixed);
                 }
 
                 if (result == null && context.options().getUseSystemEnvironment()) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(context.depth(), unprefixed + " - looking up in system environment");
                     result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context,
                             unprefixed);
                 }
             }
 
             if (result != null) {
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(context.depth(), "recursively resolving " + result
+                            + " which was the resolution of " + subst);
+
                 result = context.resolve(result);
             }
+
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), "resolved to " + result);
 
             return result;
         } finally {
@@ -87,7 +103,12 @@ final class ResolveSource {
         if (replacer == null) {
             return value;
         } else {
-            return replacer.replace(context);
+            AbstractConfigValue replacement = replacer.replace(context);
+            if (ConfigImpl.traceSubstitutionsEnabled() && value != replacement) {
+                ConfigImpl.trace("  when looking up substitutions " + context.traceString() + " replaced " + value
+                        + " with " + replacement);
+            }
+            return replacement;
         }
     }
 
@@ -103,10 +124,15 @@ final class ResolveSource {
 
         if (replacement != original) {
             // start over, checking if replacement was memoized
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), "for resolution, replaced " + original + " with " + replacement);
             return context.resolve(replacement);
         } else {
             AbstractConfigValue resolved;
 
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), "resolving " + original + " with trace '" + context.traceString()
+                        + "'");
             resolved = original.resolveSubstitutions(context);
 
             return resolved;

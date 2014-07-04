@@ -43,6 +43,8 @@ final class ResolveContext {
         // in error messages if nothing else
         this(new ResolveSource(root), new ResolveMemos(), options, restrictToChild,
                 new ArrayList<SubstitutionExpression>());
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace("ResolveContext at root " + root + " restrict to child " + restrictToChild);
     }
 
     ResolveSource source() {
@@ -73,11 +75,15 @@ final class ResolveContext {
     }
 
     void trace(SubstitutionExpression expr) {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth(), "pushing expression " + expr);
         expressionTrace.add(expr);
     }
 
     void untrace() {
-        expressionTrace.remove(expressionTrace.size() - 1);
+        SubstitutionExpression expr = expressionTrace.remove(expressionTrace.size() - 1);
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth(), "popped expression " + expr);
     }
 
     String traceString() {
@@ -92,7 +98,14 @@ final class ResolveContext {
         return sb.toString();
     }
 
+    int depth() {
+        return expressionTrace.size();
+    }
+
     AbstractConfigValue resolve(AbstractConfigValue original) throws NotPossibleToResolve {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth(), "resolving " + original);
+
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
         final MemoKey fullKey = new MemoKey(original, null);
@@ -109,15 +122,26 @@ final class ResolveContext {
         }
 
         if (cached != null) {
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(depth(), "using cached resolution " + cached + " for " + original);
             return cached;
         } else {
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(depth(), "not found in cache, resolving " + original);
+
             AbstractConfigValue resolved = source.resolveCheckingReplacement(this, original);
+
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(depth(), "resolved to " + resolved + " from " + original);
 
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
                 // if the resolved object is fully resolved by resolving
                 // only the restrictToChildOrNull, then it can be cached
                 // under fullKey since the child we were restricted to
                 // turned out to be the only unresolved thing.
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(depth(), "caching " + fullKey + " result " + resolved);
+
                 memos.put(fullKey, resolved);
             } else {
                 // if we have an unresolved object then either we did a
@@ -128,8 +152,14 @@ final class ResolveContext {
                         throw new ConfigException.BugOrBroken(
                                 "restrictedKey should not be null here");
                     }
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(depth(), "caching " + restrictedKey + " result " + resolved);
+
                     memos.put(restrictedKey, resolved);
                 } else if (options().getAllowUnresolved()) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(depth(), "caching " + fullKey + " result " + resolved);
+
                     memos.put(fullKey, resolved);
                 } else {
                     throw new ConfigException.BugOrBroken(

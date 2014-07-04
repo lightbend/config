@@ -24,6 +24,8 @@ abstract class ResolveReplacer {
         @Override
         protected AbstractConfigValue makeReplacement(ResolveContext context)
                 throws NotPossibleToResolve {
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), "Cycle detected, can't resolve");
             throw new NotPossibleToResolve(context);
         }
     };

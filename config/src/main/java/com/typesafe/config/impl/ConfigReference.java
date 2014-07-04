@@ -72,6 +72,9 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
             try {
                 v = context.source().lookupSubst(context, expr, prefixLength);
             } catch (NotPossibleToResolve e) {
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(context.depth(),
+                            "not possible to resolve " + expr + ", cycle involved: " + e.traceString());
                 if (expr.optional())
                     v = null;
                 else
