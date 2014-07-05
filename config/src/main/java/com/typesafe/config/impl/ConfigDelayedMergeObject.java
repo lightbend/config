@@ -69,6 +69,11 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
                     throws NotPossibleToResolve {
                 return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
             }
+
+            @Override
+            public String toString() {
+                return "ResolveReplacer(ConfigDelayedMergeObject substack skipping=" + skipping + ")";
+            }
         };
     }
 

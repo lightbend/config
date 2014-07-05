@@ -142,6 +142,11 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                     throws NotPossibleToResolve {
                 return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
             }
+
+            @Override
+            public String toString() {
+                return "ResolveReplacer(ConfigDelayedMerge substack skipping=" + skipping + ")";
+            }
         };
     }
 

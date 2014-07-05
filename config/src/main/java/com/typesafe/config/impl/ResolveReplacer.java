@@ -28,5 +28,15 @@ abstract class ResolveReplacer {
                 ConfigImpl.trace(context.depth(), "Cycle detected, can't resolve");
             throw new NotPossibleToResolve(context);
         }
+
+        @Override
+        public String toString() {
+            return "ResolveReplacer(cycle detector)";
+        }
     };
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName() + "(" + replacement + ")";
+    }
 }
