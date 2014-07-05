@@ -29,20 +29,24 @@ final class ResolveContext {
     // resolution fails.
     final private List<SubstitutionExpression> expressionTrace;
 
-    ResolveContext(ResolveSource source, ResolveMemos memos, ConfigResolveOptions options,
-            Path restrictToChild, List<SubstitutionExpression> expressionTrace) {
+    // This is used for tracing and debugging.
+    final private List<AbstractConfigValue> treeStack;
+
+    ResolveContext(ResolveSource source, ResolveMemos memos, ConfigResolveOptions options, Path restrictToChild,
+            List<SubstitutionExpression> expressionTrace, List<AbstractConfigValue> treeStack) {
         this.source = source;
         this.memos = memos;
         this.options = options;
         this.restrictToChild = restrictToChild;
         this.expressionTrace = expressionTrace;
+        this.treeStack = treeStack;
     }
 
     ResolveContext(AbstractConfigObject root, ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
         this(new ResolveSource(root), new ResolveMemos(), options, restrictToChild,
-                new ArrayList<SubstitutionExpression>());
+                new ArrayList<SubstitutionExpression>(), new ArrayList<AbstractConfigValue>());
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace("ResolveContext at root " + root + " restrict to child " + restrictToChild);
     }
@@ -67,7 +71,7 @@ final class ResolveContext {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(source, memos, options, restrictTo, expressionTrace);
+            return new ResolveContext(source, memos, options, restrictTo, expressionTrace, treeStack);
     }
 
     ResolveContext unrestricted() {
@@ -98,14 +102,32 @@ final class ResolveContext {
         return sb.toString();
     }
 
+    void stack(AbstractConfigValue value) {
+        treeStack.add(value);
+    }
+
+    void unstack() {
+        treeStack.remove(treeStack.size() - 1);
+    }
+
     int depth() {
-        return expressionTrace.size();
+        return treeStack.size();
     }
 
     AbstractConfigValue resolve(AbstractConfigValue original) throws NotPossibleToResolve {
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace(depth(), "resolving " + original);
+        AbstractConfigValue resolved;
+        stack(original);
+        try {
+            resolved = realResolve(original);
+        } finally {
+            unstack();
+        }
+        return resolved;
+    }
 
+    private AbstractConfigValue realResolve(AbstractConfigValue original) throws NotPossibleToResolve {
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
         final MemoKey fullKey = new MemoKey(original, null);
