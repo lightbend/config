@@ -127,7 +127,8 @@ final class ResolveContext {
             return cached;
         } else {
             if (ConfigImpl.traceSubstitutionsEnabled())
-                ConfigImpl.trace(depth(), "not found in cache, resolving " + original);
+                ConfigImpl.trace(depth(),
+                        "not found in cache, resolving " + original + "@" + System.identityHashCode(original));
 
             AbstractConfigValue resolved = source.resolveCheckingReplacement(this, original);
 

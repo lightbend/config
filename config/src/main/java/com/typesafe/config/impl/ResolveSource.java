@@ -85,6 +85,8 @@ final class ResolveSource {
     }
 
     void replace(AbstractConfigValue value, ResolveReplacer replacer) {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace("Replacing " + value + "@" + System.identityHashCode(value) + " with " + replacer);
         ResolveReplacer old = replacements.put(value, replacer);
         if (old != null)
             throw new ConfigException.BugOrBroken("should not have replaced the same value twice: "
@@ -95,6 +97,9 @@ final class ResolveSource {
         ResolveReplacer replacer = replacements.remove(value);
         if (replacer == null)
             throw new ConfigException.BugOrBroken("unreplace() without replace(): " + value);
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace("Unreplacing " + value + "@" + System.identityHashCode(value) + " which was replaced by "
+                    + replacer);
     }
 
     private AbstractConfigValue replacement(ResolveContext context, AbstractConfigValue value)
@@ -131,8 +136,8 @@ final class ResolveSource {
             AbstractConfigValue resolved;
 
             if (ConfigImpl.traceSubstitutionsEnabled())
-                ConfigImpl.trace(context.depth(), "resolving " + original + " with trace '" + context.traceString()
-                        + "'");
+                ConfigImpl.trace(context.depth(),
+                        "resolving unreplaced " + original + " with trace '" + context.traceString() + "'");
             resolved = original.resolveSubstitutions(context);
 
             return resolved;
