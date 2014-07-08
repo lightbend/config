@@ -443,6 +443,9 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     private static boolean mapEquals(Map<String, ConfigValue> a, Map<String, ConfigValue> b) {
+        if (a == b)
+            return true;
+
         Set<String> aKeys = a.keySet();
         Set<String> bKeys = b.keySet();
 

@@ -233,7 +233,8 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         // note that "origin" is deliberately NOT part of equality
         if (other instanceof ConfigDelayedMerge) {
             return canEqual(other)
-                    && this.stack.equals(((ConfigDelayedMerge) other).stack);
+                    && (this.stack == ((ConfigDelayedMerge) other).stack || this.stack
+                            .equals(((ConfigDelayedMerge) other).stack));
         } else {
             return false;
         }

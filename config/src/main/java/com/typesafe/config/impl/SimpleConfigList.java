@@ -154,7 +154,8 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         // note that "origin" is deliberately NOT part of equality
         if (other instanceof SimpleConfigList) {
             // optimization to avoid unwrapped() for two ConfigList
-            return canEqual(other) && value.equals(((SimpleConfigList) other).value);
+            return canEqual(other)
+                    && (value == ((SimpleConfigList) other).value || value.equals(((SimpleConfigList) other).value));
         } else {
             return false;
         }
