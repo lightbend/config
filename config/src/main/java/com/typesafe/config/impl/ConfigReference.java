@@ -65,12 +65,28 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     // This way it's impossible for NotPossibleToResolve to "escape" since
     // any failure to resolve has to start with a ConfigReference.
     @Override
-    AbstractConfigValue resolveSubstitutions(ResolveContext context) {
-        context.source().replace(this, ResolveReplacer.cycleResolveReplacer);
+    AbstractConfigValue resolveSubstitutions(ResolveContext context, ResolveSource source) {
+        context.addCycleMarker(this);
         try {
             AbstractConfigValue v;
             try {
-                v = context.source().lookupSubst(context, expr, prefixLength);
+                ResolveSource.ValueWithPath valueWithPath = source.lookupSubst(context, expr, prefixLength);
+
+                if (valueWithPath.value != null) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(context.depth(), "recursively resolving " + valueWithPath
+                                + " which was the resolution of " + expr + " against " + source);
+
+                    ResolveSource recursiveResolveSource = (new ResolveSource(
+                            (AbstractConfigObject) valueWithPath.pathFromRoot.last(), valueWithPath.pathFromRoot));
+
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(context.depth(), "will recursively resolve against " + recursiveResolveSource);
+
+                    v = context.resolve(valueWithPath.value, recursiveResolveSource);
+                } else {
+                    v = null;
+                }
             } catch (NotPossibleToResolve e) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
                     ConfigImpl.trace(context.depth(),
@@ -79,8 +95,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
                     v = null;
                 else
                     throw new ConfigException.UnresolvedSubstitution(origin(), expr
-                            + " was part of a cycle of substitutions involving " + e.traceString(),
-                            e);
+                            + " was part of a cycle of substitutions involving " + e.traceString(), e);
             }
 
             if (v == null && !expr.optional()) {
@@ -92,7 +107,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
                 return v;
             }
         } finally {
-            context.source().unreplace(this);
+            context.removeCycleMarker(this);
         }
     }
 

@@ -199,6 +199,38 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
+    public SimpleConfigObject replaceChild(AbstractConfigValue child, AbstractConfigValue replacement) {
+        HashMap<String, AbstractConfigValue> newChildren = new HashMap<String, AbstractConfigValue>(value);
+        for (Map.Entry<String, AbstractConfigValue> old : newChildren.entrySet()) {
+            if (old.getValue() == child) {
+                if (replacement != null)
+                    old.setValue(replacement);
+                else
+                    newChildren.remove(old.getKey());
+
+                return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
+                        ignoresFallbacks);
+            }
+        }
+        throw new ConfigException.BugOrBroken("SimpleConfigObject.replaceChild did not find " + child + " in " + this);
+    }
+
+    @Override
+    public boolean hasDescendant(AbstractConfigValue descendant) {
+        for (AbstractConfigValue child : value.values()) {
+            if (child == descendant)
+                return true;
+        }
+        // now do the expensive search
+        for (AbstractConfigValue child : value.values()) {
+            if (child instanceof Container && ((Container) child).hasDescendant(descendant))
+                return true;
+        }
+
+        return false;
+    }
+
+    @Override
     protected boolean ignoresFallbacks() {
         return ignoresFallbacks;
     }
@@ -313,9 +345,12 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    AbstractConfigObject resolveSubstitutions(final ResolveContext context) throws NotPossibleToResolve {
+    AbstractConfigObject resolveSubstitutions(final ResolveContext context, ResolveSource source)
+            throws NotPossibleToResolve {
         if (resolveStatus() == ResolveStatus.RESOLVED)
             return this;
+
+        final ResolveSource sourceWithParent = source.pushParent(this);
 
         try {
             return modifyMayThrow(new Modifier() {
@@ -323,11 +358,12 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 @Override
                 public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
                         throws NotPossibleToResolve {
+
                     if (context.isRestrictedToChild()) {
                         if (key.equals(context.restrictToChild().first())) {
                             Path remainder = context.restrictToChild().remainder();
                             if (remainder != null) {
-                                return context.restrict(remainder).resolve(v);
+                                return context.restrict(remainder).resolve(v, sourceWithParent);
                             } else {
                                 // we don't want to resolve the leaf child.
                                 return v;
@@ -338,7 +374,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                         }
                     } else {
                         // no restrictToChild, resolve everything
-                        return context.unrestricted().resolve(v);
+                        return context.unrestricted().resolve(v, sourceWithParent);
                     }
                 }
 

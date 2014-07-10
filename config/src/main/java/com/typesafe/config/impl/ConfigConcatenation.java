@@ -22,7 +22,7 @@ import com.typesafe.config.ConfigValueType;
  * concatenations of objects, but ConfigDelayedMerge should be used for that
  * since a concat of objects really will merge, not concatenate.
  */
-final class ConfigConcatenation extends AbstractConfigValue implements Unmergeable {
+final class ConfigConcatenation extends AbstractConfigValue implements Unmergeable, Container {
 
     final private List<AbstractConfigValue> pieces;
 
@@ -170,7 +170,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(ResolveContext context) throws NotPossibleToResolve {
+    AbstractConfigValue resolveSubstitutions(ResolveContext context, ResolveSource source) throws NotPossibleToResolve {
         if (ConfigImpl.traceSubstitutionsEnabled()) {
             int indent = context.depth() + 2;
             ConfigImpl.trace(indent - 1, "concatenation has " + pieces.size() + " pieces:");
@@ -181,11 +181,16 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             }
         }
 
+        // Right now there's no reason to pushParent here because the
+        // content of ConfigConcatenation should not need to replaceChild,
+        // but if it did we'd have to do this.
+        ResolveSource sourceWithParent = source; // .pushParent(this);
+
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
         for (AbstractConfigValue p : pieces) {
             // to concat into a string we have to do a full resolve,
             // so unrestrict the context
-            AbstractConfigValue r = context.unrestricted().resolve(p);
+            AbstractConfigValue r = context.unrestricted().resolve(p, sourceWithParent);
             if (ConfigImpl.traceSubstitutionsEnabled())
                 ConfigImpl.trace(context.depth(), "resolved concat piece to " + r);
             if (r == null) {
@@ -213,6 +218,20 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     @Override
     ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED;
+    }
+
+    @Override
+    public ConfigConcatenation replaceChild(AbstractConfigValue child, AbstractConfigValue replacement) {
+        List<AbstractConfigValue> newPieces = replaceChildInList(pieces, child, replacement);
+        if (newPieces == null)
+            return null;
+        else
+            return new ConfigConcatenation(origin(), newPieces);
+    }
+
+    @Override
+    public boolean hasDescendant(AbstractConfigValue descendant) {
+        return hasDescendantInList(pieces, descendant);
     }
 
     // when you graft a substitution into another object,

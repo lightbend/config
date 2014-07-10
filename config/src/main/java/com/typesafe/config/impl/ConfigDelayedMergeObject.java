@@ -50,9 +50,8 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    AbstractConfigObject resolveSubstitutions(ResolveContext context)
-            throws NotPossibleToResolve {
-        AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(this, stack, context);
+    AbstractConfigObject resolveSubstitutions(ResolveContext context, ResolveSource source) throws NotPossibleToResolve {
+        AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(this, stack, context, source);
         if (merged instanceof AbstractConfigObject) {
             return (AbstractConfigObject) merged;
         } else {
@@ -62,24 +61,27 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    public ResolveReplacer makeReplacer(final int skipping) {
-        return new ResolveReplacer() {
-            @Override
-            protected AbstractConfigValue makeReplacement(ResolveContext context)
-                    throws NotPossibleToResolve {
-                return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
-            }
-
-            @Override
-            public String toString() {
-                return "ResolveReplacer(ConfigDelayedMergeObject substack skipping=" + skipping + ")";
-            }
-        };
+    public AbstractConfigValue makeReplacement(ResolveContext context, int skipping) {
+        return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
     }
 
     @Override
     ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED;
+    }
+
+    @Override
+    public AbstractConfigValue replaceChild(AbstractConfigValue child, AbstractConfigValue replacement) {
+        List<AbstractConfigValue> newStack = replaceChildInList(stack, child, replacement);
+        if (newStack == null)
+            return null;
+        else
+            return new ConfigDelayedMergeObject(origin(), newStack);
+    }
+
+    @Override
+    public boolean hasDescendant(AbstractConfigValue descendant) {
+        return hasDescendantInList(stack, descendant);
     }
 
     @Override

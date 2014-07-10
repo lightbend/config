@@ -18,7 +18,7 @@ import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
-final class SimpleConfigList extends AbstractConfigValue implements ConfigList, Serializable {
+final class SimpleConfigList extends AbstractConfigValue implements ConfigList, Container, Serializable {
 
     private static final long serialVersionUID = 2L;
 
@@ -59,6 +59,23 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     @Override
     ResolveStatus resolveStatus() {
         return ResolveStatus.fromBoolean(resolved);
+    }
+
+    @Override
+    public SimpleConfigList replaceChild(AbstractConfigValue child, AbstractConfigValue replacement) {
+        List<AbstractConfigValue> newList = replaceChildInList(value, child, replacement);
+        if (newList == null) {
+            return null;
+        } else {
+            // we use the constructor flavor that will recompute the resolve
+            // status
+            return new SimpleConfigList(origin(), newList);
+        }
+    }
+
+    @Override
+    public boolean hasDescendant(AbstractConfigValue descendant) {
+        return hasDescendantInList(value, descendant);
     }
 
     private SimpleConfigList modify(NoExceptionsModifier modifier, ResolveStatus newResolveStatus) {
@@ -105,7 +122,8 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    SimpleConfigList resolveSubstitutions(final ResolveContext context) throws NotPossibleToResolve {
+    SimpleConfigList resolveSubstitutions(final ResolveContext context, ResolveSource source)
+            throws NotPossibleToResolve {
         if (resolved)
             return this;
 
@@ -114,12 +132,13 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
             // so nothing to do.
             return this;
         } else {
+            final ResolveSource sourceWithParent = source.pushParent(this);
             try {
                 return modifyMayThrow(new Modifier() {
                     @Override
                     public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
                             throws NotPossibleToResolve {
-                        return context.resolve(v);
+                        return context.resolve(v, sourceWithParent);
                     }
 
                 }, ResolveStatus.RESOLVED);
