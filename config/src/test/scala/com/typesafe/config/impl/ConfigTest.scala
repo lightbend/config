@@ -1120,9 +1120,10 @@ class ConfigTest extends TestUtils {
 
     @Test
     def allowUnresolvedDoesAllowUnresolved() {
-        val values = ConfigFactory.parseString("{ foo = 1, bar = 2, m = 3, n = 4}")
+        val values = ConfigFactory.parseString("{ foo = 1, bar = 2, m = 3, n = 4, unknown = [someVal]}")
         assertTrue("config with no substitutions starts as resolved", values.isResolved)
-        val unresolved = ConfigFactory.parseString("a = ${foo}, b = ${bar}, c { x = ${m}, y = ${n}, z = foo${m}bar }, alwaysResolveable=${alwaysValue}, alwaysValue=42")
+        val unresolved = ConfigFactory.parseString(
+          "l = [${unknown}[]], l2 = [${unknown}, ${alwaysValue}], a = ${foo}, b = ${bar}, c { x = ${m}, y = ${n}, z = foo${m}bar }, alwaysResolveable=${alwaysValue}, alwaysValue=42")
         assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
 
         // resolve() by default throws with unresolveable substs

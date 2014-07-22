@@ -98,7 +98,11 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         }
 
         if (changed != null) {
-            return new SimpleConfigList(origin(), changed, newResolveStatus);
+            if (newResolveStatus != null) {
+                return new SimpleConfigList(origin(), changed, newResolveStatus);
+            } else {
+                return new SimpleConfigList(origin(), changed);
+            }
         } else {
             return this;
         }
@@ -122,7 +126,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
                         return context.resolve(v);
                     }
 
-                }, ResolveStatus.RESOLVED);
+                }, null /* don't force resolve status -- could be allowing unresolved */);
             } catch (NotPossibleToResolve e) {
                 throw e;
             } catch (RuntimeException e) {
