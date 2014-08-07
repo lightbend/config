@@ -521,11 +521,11 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             units = TimeUnit.NANOSECONDS;
         } else if (unitString.equals("d") || unitString.equals("days")) {
             units = TimeUnit.DAYS;
-        } else if (unitString.equals("h") || unitString.equals("hours")) {
+        } else if (unitString.equals("h") || unitString.equals("hours") || unitString.equals("hr") || unitString.equals("hrs")) {
             units = TimeUnit.HOURS;
-        } else if (unitString.equals("s") || unitString.equals("seconds")) {
+        } else if (unitString.equals("s") || unitString.equals("seconds") || unitString.equals("secs")) {
             units = TimeUnit.SECONDS;
-        } else if (unitString.equals("m") || unitString.equals("minutes")) {
+        } else if (unitString.equals("m") || unitString.equals("minutes") || unitString.equals("mins")) {
             units = TimeUnit.MINUTES;
         } else {
             throw new ConfigException.BadValue(originForException,
