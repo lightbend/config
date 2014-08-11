@@ -771,9 +771,6 @@ class ConfigTest extends TestUtils {
             assertEquals(ms2unit(500L), conf.getDuration("durations.halfSecond", unit))
             assertEquals(ms2unit(1L), conf.getDuration("durations.millis", unit))
             assertEquals(ms2unit(2L), conf.getDuration("durations.micros", unit))
-            assertEquals(ms2unit(2000L), conf.getDuration("durations.secs", unit))
-            assertEquals(ms2unit(60000L), conf.getDuration("durations.mins", unit))
-            assertEquals(ms2unit(3600000L), conf.getDuration("durations.hrs", unit))
         }
 
         assertDurationAsTimeUnit(NANOSECONDS)
