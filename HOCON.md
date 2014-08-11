@@ -1200,9 +1200,9 @@ parsed as a number plus an optional unit string.
 The supported unit strings for duration are case sensitive and
 must be lowercase. Exactly these strings are supported:
 
- - `ns`, `nanosecond`, `nanoseconds`
- - `us`, `microsecond`, `microseconds`
- - `ms`, `millisecond`, `milliseconds`
+ - `ns`, `nano`, `nanos`, `nanosecond`, `nanoseconds`
+ - `us`, `micro`, `micros`, `microsecond`, `microseconds`
+ - `ms`, `milli`, `millis`, `millisecond`, `milliseconds`
  - `s`, `second`, `seconds`
  - `m`, `minute`, `minutes`
  - `h`, `hour`, `hours`
