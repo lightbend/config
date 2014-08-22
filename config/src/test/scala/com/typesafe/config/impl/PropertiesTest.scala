@@ -6,11 +6,9 @@ package com.typesafe.config.impl
 import org.junit.Assert._
 import org.junit._
 import java.util.{ Date, Properties }
-import com.typesafe.config.Config
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigException
-import com.typesafe.config.ConfigResolveOptions
 
 class PropertiesTest extends TestUtils {
     @Test
@@ -148,8 +146,6 @@ class PropertiesTest extends TestUtils {
 
     @Test
     def noNumericKeysAsListFails() {
-        import scala.collection.JavaConverters._
-
         val props = new Properties()
         props.setProperty("a.bar", "0")
 
@@ -194,5 +190,27 @@ class PropertiesTest extends TestUtils {
         val conf = ConfigFactory.parseProperties(props)
 
         assertEquals(0, conf.root().size())
+    }
+
+    @Test
+    def optionalStringGetterWorks() {
+        val conf = parseConfig("a=hi, b=null")
+
+        var a = conf.getString("a")
+        assertEquals(a, "hi")
+        a = conf.getOptionalString("a")
+        assertEquals(a, "hi")
+
+        intercept[ConfigException.Null] {
+            conf.getString("b")
+        }
+        val b = conf.getOptionalString("b")
+        assertNull(b)
+
+        intercept[ConfigException.Missing] {
+            conf.getString("c")
+        }
+        val c = conf.getOptionalString("c")
+        assertNull(c)
     }
 }

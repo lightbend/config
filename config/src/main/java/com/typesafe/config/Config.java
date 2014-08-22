@@ -516,6 +516,20 @@ public interface Config extends ConfigMergeable {
     String getString(String path);
 
     /**
+     * This method is a shortcut for the case where a string property is treated as optional,
+     * meaning it is allowed to be absent with no default value. Unlike
+     * {@link Config#getString(String)}, it returns null when the value
+     * is missing or null, rather than throwing an exception.
+     *
+     * @param path
+     *            path expression
+     * @return the string value at the requested path, or null if it is missing or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a string
+     */
+    String getOptionalString(String path);
+
+    /**
      * @param path
      *            path expression
      * @return the {@link ConfigObject} value at the requested path
