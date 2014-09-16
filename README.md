@@ -89,6 +89,10 @@ Maven Central.
         <version>1.2.1</version>
     </dependency>
 
+sbt dependency:
+
+    libraryDependencies += "com.typesafe" % "config" % "1.2.1"
+
 Obsolete releases are here, but you probably don't want these:
 
  - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
