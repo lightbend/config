@@ -564,6 +564,14 @@ You can take advantage of this for "inheritance":
 Using `include` statements you could split this across multiple
 files, too.
 
+If you put two objects next to each other (close brace of the first
+on the same line with open brace of the second), they are merged, so
+a shorter way to write the above "inheritance" example would be:
+
+    data-center-generic = { cluster-size = 6 }
+    data-center-east = ${data-center-generic} { name = "east" }
+    data-center-west = ${data-center-generic} { name = "west", cluster-size = 8 }
+
 #### Optional system or env variable overrides
 
 In default uses of the library, exact-match system properties
