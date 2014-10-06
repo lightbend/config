@@ -9,10 +9,9 @@ import scala.collection.JavaConverters._
 import com.typesafe.config._
 import java.util.Collections
 import java.util.TreeSet
-import java.io.File
+import java.io.{File, StringReader}
 import scala.collection.mutable
 import equiv03.SomethingInEquiv03
-import java.io.StringReader
 import java.net.URL
 
 class PublicApiTest extends TestUtils {
@@ -231,7 +230,10 @@ class PublicApiTest extends TestUtils {
     }
 
     private def assertNotFound(e: ConfigException) {
-        assertTrue("Message text: " + e.getMessage, e.getMessage.contains("No such") ||
+      val WindowsSignature = "cannot find"
+
+      assertTrue("Message text: " + e.getMessage, e.getMessage.contains("No such") ||
+            e.getMessage.contains(WindowsSignature) ||
             e.getMessage.contains("not found") ||
             e.getMessage.contains("were found"))
     }
