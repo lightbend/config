@@ -1,5 +1,8 @@
 Configuration library for JVM languages.
 
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config)
+
+
 ## Overview
 
  - implemented in plain Java with no dependencies
