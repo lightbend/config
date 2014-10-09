@@ -230,10 +230,8 @@ class PublicApiTest extends TestUtils {
   }
 
   private def assertNotFound(e: ConfigException) {
-    val WindowsSignature = "cannot find"
-
     assertTrue("Message text: " + e.getMessage, e.getMessage.contains("No such") ||
-      e.getMessage.contains(WindowsSignature) ||
+      e.getMessage.contains("cannot find") ||
       e.getMessage.contains("not found") ||
       e.getMessage.contains("were found"))
   }
