@@ -284,15 +284,13 @@ class PublicApiTest extends TestUtils {
     // change that the includes are allowed to be missing.
     // This can break because some options might "propagate" through
     // to includes, but we don't want them all to do so.
-    intercept[Exception] {
-      val conf = ConfigFactory.parseFile(resourceFile("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
-    }
-
-    val conf = ConfigFactory.parseFile(resourceFile("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
-    assertEquals(42, conf.getInt("test01.booleans"))
+    val conf1 = ConfigFactory.parseFile(resourceFile("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
+    assertEquals(42, conf1.getInt("test01.booleans"))
 
     val conf2 = ConfigFactory.parseFile(resourceFile("test03.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
-    assertEquals(conf, conf2)
+    assertEquals(42, conf2.getInt("test01.booleans"))
+
+    assertEquals(conf1, conf2)
 
 
     try {
@@ -302,12 +300,7 @@ class PublicApiTest extends TestUtils {
       case ex: ConfigException =>
     }
 
-    try {
-      ConfigFactory.load("crappyInside.conf", ConfigParseOptions.defaults.setAllowMissing(false), ConfigResolveOptions.defaults())
-      fail("should have failed")
-    } catch {
-      case ex: ConfigException =>
-    }
+    ConfigFactory.load("crappyInside.conf", ConfigParseOptions.defaults.setAllowMissing(false), ConfigResolveOptions.defaults())
 
     ConfigFactory.parseFile(resourceFile("crappy.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
 

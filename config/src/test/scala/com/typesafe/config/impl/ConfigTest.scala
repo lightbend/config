@@ -1051,7 +1051,7 @@ class ConfigTest extends TestUtils {
                 .setJson(json)
         }.toSeq
 
-        for (i <- 1 to 10) {
+        for (i <- 3 to 10) {
             val numString = i.toString
             val name = "/test" + { if (numString.size == 1) "0" else "" } + numString
             val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], name,
