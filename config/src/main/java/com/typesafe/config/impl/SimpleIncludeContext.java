@@ -40,7 +40,6 @@ class SimpleIncludeContext implements ConfigIncludeContext {
     @Override
     public ConfigParseOptions parseOptions() {
         return options.setSyntax(null).setOriginDescription(null);
-        //return SimpleIncluder.clearForInclude(options);
     }
 
     @Override
