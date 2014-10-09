@@ -23,7 +23,7 @@ import com.typesafe.config.ConfigValueFactory
 
 class ConfigTest extends TestUtils {
 
-    private def resolveNoSystem(v: AbstractConfigValue, root: AbstractConfigObject) = {
+    private def  resolveNoSystem(v: AbstractConfigValue, root: AbstractConfigObject) = {
         ResolveContext.resolve(v, root, ConfigResolveOptions.noSystem())
     }
 

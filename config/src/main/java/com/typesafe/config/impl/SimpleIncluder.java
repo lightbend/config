@@ -33,7 +33,7 @@ class SimpleIncluder implements FullIncluder {
     static ConfigParseOptions clearForInclude(ConfigParseOptions options) {
         // the class loader and includer are inherited, but not this other
         // stuff.
-        return options.setSyntax(null).setOriginDescription(null).setAllowMissing(true);
+        return options.setSyntax(null).setOriginDescription(null);
     }
 
     // this is the heuristic includer

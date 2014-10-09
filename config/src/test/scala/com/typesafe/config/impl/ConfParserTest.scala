@@ -639,7 +639,7 @@ class ConfParserTest extends TestUtils {
         // properties-like syntax
         val conf8 = parseConfig("""
                 # ignored comment
-                
+
                 # x.y comment
                 x.y = 10
                 # x.z comment
@@ -761,6 +761,14 @@ class ConfParserTest extends TestUtils {
         assertEquals(42, conf.getInt("ints.fortyTwo"))
         assertEquals(1, conf.getInt("fromJson1"))
         assertEquals("abc", conf.getString("fromProps.abc"))
+    }
+
+    @Test
+    def includeMissing() {
+      val cfg = ConfigParseOptions.defaults().setAllowMissing(true)
+      intercept[Exception] {
+        ConfigFactory.parseString("include classpath( required(\"crappy.conf\") )", cfg)
+      }
     }
 
     @Test
