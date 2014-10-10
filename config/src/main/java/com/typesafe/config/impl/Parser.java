@@ -605,9 +605,25 @@ final class Parser {
         }
 
         private void parseInclude(Map<String, AbstractConfigValue> values) {
+
+
+
             TokenWithComments t = nextTokenIgnoringNewline();
             while (isUnquotedWhitespace(t.token)) {
                 t = nextTokenIgnoringNewline();
+            }
+
+            boolean isStatedRequired = false;
+
+            if (Tokens.isUnquotedText(t.token)) {
+                isStatedRequired = Tokens.getUnquotedText(t.token).equals("required(");
+
+                if (isStatedRequired) {
+                    t = nextTokenIgnoringNewline();
+                    while (isUnquotedWhitespace(t.token)) {
+                        t = nextTokenIgnoringNewline();
+                    }
+                }
             }
 
             AbstractConfigObject obj;
@@ -634,20 +650,6 @@ final class Parser {
                     t = nextTokenIgnoringNewline();
                 }
 
-
-                boolean isStatedRequired = false;
-
-                if (Tokens.isUnquotedText(t.token)) {
-                    isStatedRequired = Tokens.getUnquotedText(t.token).equals("required(");
-
-                    if (isStatedRequired) {
-                        t = nextTokenIgnoringNewline();
-                        while (isUnquotedWhitespace(t.token)) {
-                            t = nextTokenIgnoringNewline();
-                        }
-                    }
-                }
-
                 // quoted string
                 String name;
                 if (Tokens.isValueWithType(t.token, ConfigValueType.STRING)) {
@@ -668,19 +670,6 @@ final class Parser {
                     // OK, close paren
                 } else {
                     throw parseError("expecting a close parentheses ')' here, not: " + t);
-                }
-
-                if (isStatedRequired) {
-                    t = nextTokenIgnoringNewline();
-                    while (isUnquotedWhitespace(t.token)) {
-                        t = nextTokenIgnoringNewline();
-                    }
-
-                    if (Tokens.isUnquotedText(t.token) && Tokens.getUnquotedText(t.token).equals(")")) {
-                        // OK, close paren
-                    } else {
-                        throw parseError("expecting a close parentheses ')' here, not: " + t);
-                    }
                 }
 
                 ConfigIncludeContext ctx = includeContext.setParseOptions(includeContext.parseOptions().setAllowMissing(!isStatedRequired));
@@ -708,6 +697,20 @@ final class Parser {
             } else {
                 throw parseError("include keyword is not followed by a quoted string, but by: " + t);
             }
+
+            if (isStatedRequired) {
+                t = nextTokenIgnoringNewline();
+                while (isUnquotedWhitespace(t.token)) {
+                    t = nextTokenIgnoringNewline();
+                }
+
+                if (Tokens.isUnquotedText(t.token) && Tokens.getUnquotedText(t.token).equals(")")) {
+                    // OK, close paren
+                } else {
+                    throw parseError("expecting a close parentheses ')' here, not: " + t);
+                }
+            }
+
 
             // we really should make this work, but for now throwing an
             // exception is better than producing an incorrect result.
