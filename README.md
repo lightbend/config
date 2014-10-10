@@ -92,9 +92,9 @@ Maven Central.
         <version>1.2.1</version>
     </dependency>
 
-Obsolete releases are here, but you probably don't want these:
+Link for direct download if you don't use a dependency manager:
 
- - http://repo.typesafe.com/typesafe/releases/com/typesafe/config/config/
+ - http://central.maven.org/maven2/com/typesafe/config/
 
 ### Release Notes
 
