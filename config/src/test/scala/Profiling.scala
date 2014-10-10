@@ -3,10 +3,12 @@
  */
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigException
+
 object Util {
-    def time(body: () => Unit, iterations: Int): Long = {
+    def time(body: () => Unit, iterations: Int): Double = {
         // warm up
-        for (i <- 1 to 20) {
+        for (i <- 1 to Math.max(20, iterations / 10)) {
             body()
         }
 
@@ -15,7 +17,7 @@ object Util {
             body()
         }
         val end = System.currentTimeMillis()
-        (end - start) / iterations
+        (end - start).toDouble / iterations
     }
 
     def loop(args: Seq[String], body: () => Unit) {
@@ -54,6 +56,52 @@ object Resolve extends App {
 
     val ms = Util.time(task, 10000)
     println("resolve: " + ms + "ms")
+
+    Util.loop(args, task)
+}
+
+object GetExistingPath extends App {
+    val conf = ConfigFactory.parseString("aaaaa.bbbbb.ccccc.d=42").resolve()
+
+    def task() {
+        if (conf.getInt("aaaaa.bbbbb.ccccc.d") != 42) {
+            throw new Exception("broken get")
+        }
+    }
+
+    val ms = Util.time(task, 100000)
+    println("GetExistingPath: " + ms + "ms")
+
+    Util.loop(args, task)
+}
+
+object HasPathOnMissing extends App {
+    val conf = ConfigFactory.parseString("aaaaa.bbbbb.ccccc.d=42,x=10, y=11, z=12").resolve()
+
+    def task() {
+        if (conf.hasPath("aaaaa.bbbbb.ccccc.e")) {
+            throw new Exception("we shouldn't have this path")
+        }
+    }
+
+    val ms = Util.time(task, 100000)
+    println("HasPathOnMissing: " + ms + "ms")
+
+    Util.loop(args, task)
+}
+
+object CatchExceptionOnMissing extends App {
+    val conf = ConfigFactory.parseString("aaaaa.bbbbb.ccccc.d=42,x=10, y=11, z=12").resolve()
+
+    def task() {
+        try conf.getInt("aaaaa.bbbbb.ccccc.e")
+        catch {
+            case e: ConfigException.Missing =>
+        }
+    }
+
+    val ms = Util.time(task, 100000)
+    println("CatchExceptionOnMissing: " + ms + "ms")
 
     Util.loop(args, task)
 }
