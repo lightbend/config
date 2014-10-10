@@ -689,7 +689,7 @@ class ConfigValueTest extends TestUtils {
         assertTrue(hasFilename.url.toExternalForm.contains("foo"))
         assertNull(noFilename.url)
 
-        assertEquals((new File("/baz")).toURI.toURL, SimpleConfigOrigin.newFile("/baz").url)
+        assertEquals((new File("/baz")).toURI.toURL.toExternalForm, SimpleConfigOrigin.newFile("/baz").url.toExternalForm)
 
         val urlOrigin = SimpleConfigOrigin.newURL(new URL("file:/foo"))
         assertEquals("/foo", urlOrigin.filename)
