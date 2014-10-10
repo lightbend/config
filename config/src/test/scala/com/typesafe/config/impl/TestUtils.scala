@@ -672,11 +672,13 @@ abstract trait TestUtils {
       file.getPath.replaceAll("\\\\", "/")
     }
 
-    protected def resourceFile(filename: String) : String = {
-      unixify(new File(resourceDir, filename))
+    protected def resourceFile(filename: String) : File = {
+      new File(resourceDir, filename)
     }
 
-    protected implicit def toFile(fileName: String) : File = new File(fileName)
+    protected def resourceFilePath(filename: String) : String = {
+      unixify(resourceFile(filename))
+    }
 
     protected class TestClassLoader(parent: ClassLoader, val additions: Map[String, URL]) extends ClassLoader(parent) {
         override def findResources(name: String) = {

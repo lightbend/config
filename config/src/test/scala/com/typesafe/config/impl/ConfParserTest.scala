@@ -667,7 +667,7 @@ class ConfParserTest extends TestUtils {
 
     @Test
     def includeFile() {
-        val conf = ConfigFactory.parseString("include file(\"" + resourceFile("test01") + "\")")
+        val conf = ConfigFactory.parseString("include file(\"" + resourceFilePath("test01") + "\")")
 
         // should have loaded conf, json, properties
         assertEquals(42, conf.getInt("ints.fortyTwo"))
@@ -677,7 +677,7 @@ class ConfParserTest extends TestUtils {
 
     @Test
     def includeFileWithExtension() {
-        val conf = ConfigFactory.parseString("include file(\"" + resourceFile("test01.conf") + "\")")
+        val conf = ConfigFactory.parseString("include file(\"" + resourceFilePath("test01.conf") + "\")")
 
         assertEquals(42, conf.getInt("ints.fortyTwo"))
         assertFalse(conf.hasPath("fromJson1"))
@@ -686,7 +686,7 @@ class ConfParserTest extends TestUtils {
 
     @Test
     def includeFileWhitespaceInsideParens() {
-        val conf = ConfigFactory.parseString("include file(  \n  \"" + resourceFile("test01") + "\"  \n  )")
+        val conf = ConfigFactory.parseString("include file(  \n  \"" + resourceFilePath("test01") + "\"  \n  )")
 
         // should have loaded conf, json, properties
         assertEquals(42, conf.getInt("ints.fortyTwo"))
@@ -697,7 +697,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def includeFileNoWhitespaceOutsideParens() {
         val e = intercept[ConfigException.Parse] {
-            ConfigFactory.parseString("include file (\"" + resourceFile("test01") + "\")")
+            ConfigFactory.parseString("include file (\"" + resourceFilePath("test01") + "\")")
         }
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting include parameter"))
     }
@@ -705,7 +705,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def includeFileNotQuoted() {
         val e = intercept[ConfigException.Parse] {
-            ConfigFactory.parseString("include file(" + resourceFile("test01") + ")")
+            ConfigFactory.parseString("include file(" + resourceFilePath("test01") + ")")
         }
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting include parameter"))
     }
@@ -713,7 +713,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def includeFileNotQuotedAndSpecialChar() {
         val e = intercept[ConfigException.Parse] {
-            ConfigFactory.parseString("include file(:" + resourceFile("test01") + ")")
+            ConfigFactory.parseString("include file(:" + resourceFilePath("test01") + ")")
         }
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a quoted string"))
     }
@@ -721,7 +721,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def includeFileUnclosedParens() {
         val e = intercept[ConfigException.Parse] {
-            ConfigFactory.parseString("include file(\"" + resourceFile("test01") + "\" something")
+            ConfigFactory.parseString("include file(\"" + resourceFilePath("test01") + "\" something")
         }
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close paren"))
     }
