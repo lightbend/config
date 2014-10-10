@@ -290,24 +290,27 @@ class PublicApiTest extends TestUtils {
 
     assertEquals(conf1, conf2)
 
+    ConfigFactory.parseFile(resourceFile("nonexistant"), ConfigParseOptions.defaults().setAllowMissing(true))
 
     try {
-      ConfigFactory.load("crappy.conf", ConfigParseOptions.defaults.setAllowMissing(false), ConfigResolveOptions.defaults())
+      ConfigFactory.parseFile(resourceFile("nonexistant"), ConfigParseOptions.defaults().setAllowMissing(false))
       fail("should have failed")
     } catch {
       case ex: ConfigException =>
     }
 
-    ConfigFactory.load("crappyInside.conf", ConfigParseOptions.defaults.setAllowMissing(false), ConfigResolveOptions.defaults())
+    ConfigFactory.load("test03.conf", ConfigParseOptions.defaults.setAllowMissing(false), ConfigResolveOptions.defaults())
 
-    ConfigFactory.parseFile(resourceFile("crappy.conf"), ConfigParseOptions.defaults().setAllowMissing(true))
+    ConfigFactory.load("nonexistant", ConfigParseOptions.defaults.setAllowMissing(true), ConfigResolveOptions.defaults())
 
     try {
-      ConfigFactory.parseFile(resourceFile("crappy.conf"), ConfigParseOptions.defaults().setAllowMissing(false))
+      ConfigFactory.load("nonexistant", ConfigParseOptions.defaults.setAllowMissing(false), ConfigResolveOptions.defaults())
       fail("should have failed")
     } catch {
       case ex: ConfigException =>
     }
+
+
 
   }
 

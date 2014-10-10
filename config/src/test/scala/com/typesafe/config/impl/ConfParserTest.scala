@@ -767,7 +767,7 @@ class ConfParserTest extends TestUtils {
     def includeMissing() {
         val missing = ConfigParseOptions.defaults().setAllowMissing(true)
       intercept[Exception] {
-        ConfigFactory.parseString("include classpath( required(\"crappy.conf\") )", missing)
+        ConfigFactory.parseString("include classpath( required(\"nonexistant\") )", missing)
       }
     }
 
