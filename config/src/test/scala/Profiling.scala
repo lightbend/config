@@ -112,6 +112,15 @@ object HasPathOnMissing extends App {
 object CatchExceptionOnMissing extends App {
     val conf = ConfigFactory.parseString("aaaaa.bbbbb.ccccc.d=42,x=10, y=11, z=12").resolve()
 
+    def anotherStackFrame(remaining: Int)(body: () => Unit): Int = {
+        if (remaining == 0) {
+            body()
+            123
+        } else {
+            42 + anotherStackFrame(remaining - 1)(body)
+        }
+    }
+
     def task() {
         try conf.getInt("aaaaa.bbbbb.ccccc.e")
         catch {
@@ -119,8 +128,10 @@ object CatchExceptionOnMissing extends App {
         }
     }
 
-    val ms = Util.time(task, 3000000)
-    println("CatchExceptionOnMissing: " + ms + "ms")
+    anotherStackFrame(40) { () =>
+        val ms = Util.time(task, 300000)
+        println("CatchExceptionOnMissing: " + ms + "ms")
 
-    Util.loop(args, task)
+        Util.loop(args, task)
+    }
 }
