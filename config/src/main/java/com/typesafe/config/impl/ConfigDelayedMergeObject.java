@@ -50,14 +50,11 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    AbstractConfigObject resolveSubstitutions(ResolveContext context, ResolveSource source) throws NotPossibleToResolve {
-        AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(this, stack, context, source);
-        if (merged instanceof AbstractConfigObject) {
-            return (AbstractConfigObject) merged;
-        } else {
-            throw new ConfigException.BugOrBroken(
-                    "somehow brokenly merged an object and didn't get an object, got " + merged);
-        }
+    ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context, ResolveSource source)
+            throws NotPossibleToResolve {
+        ResolveResult<? extends AbstractConfigValue> merged = ConfigDelayedMerge.resolveSubstitutions(this, stack,
+                context, source);
+        return merged.asObjectResult();
     }
 
     @Override

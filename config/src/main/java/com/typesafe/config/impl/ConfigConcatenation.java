@@ -170,7 +170,8 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(ResolveContext context, ResolveSource source) throws NotPossibleToResolve {
+    ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
+            throws NotPossibleToResolve {
         if (ConfigImpl.traceSubstitutionsEnabled()) {
             int indent = context.depth() + 2;
             ConfigImpl.trace(indent - 1, "concatenation has " + pieces.size() + " pieces:");
@@ -185,12 +186,17 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         // content of ConfigConcatenation should not need to replaceChild,
         // but if it did we'd have to do this.
         ResolveSource sourceWithParent = source; // .pushParent(this);
+        ResolveContext newContext = context;
 
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
         for (AbstractConfigValue p : pieces) {
             // to concat into a string we have to do a full resolve,
-            // so unrestrict the context
-            AbstractConfigValue r = context.unrestricted().resolve(p, sourceWithParent);
+            // so unrestrict the context, then put restriction back afterward
+            Path restriction = newContext.restrictToChild();
+            ResolveResult<? extends AbstractConfigValue> result = newContext.unrestricted()
+                    .resolve(p, sourceWithParent);
+            AbstractConfigValue r = result.value;
+            newContext = result.context.restrict(restriction);
             if (ConfigImpl.traceSubstitutionsEnabled())
                 ConfigImpl.trace(context.depth(), "resolved concat piece to " + r);
             if (r == null) {
@@ -205,11 +211,12 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         // if unresolved is allowed we can just become another
         // ConfigConcatenation
         if (joined.size() > 1 && context.options().getAllowUnresolved())
-            return new ConfigConcatenation(this.origin(), joined);
+            return ResolveResult.make(newContext, new ConfigConcatenation(this.origin(), joined));
         else if (joined.isEmpty())
-            return null; // we had just a list of optional references using ${?}
+            // we had just a list of optional references using ${?}
+            return ResolveResult.make(newContext, null);
         else if (joined.size() == 1)
-            return joined.get(0);
+            return ResolveResult.make(newContext, joined.get(0));
         else
             throw new ConfigException.BugOrBroken("Bug in the library; resolved list was joined to too many values: "
                     + joined);

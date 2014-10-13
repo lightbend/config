@@ -121,27 +121,38 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         }
     }
 
+    private static class ResolveModifier implements Modifier {
+        ResolveContext context;
+        final ResolveSource source;
+        ResolveModifier(ResolveContext context, ResolveSource source) {
+            this.context = context;
+            this.source = source;
+        }
+
+        @Override
+        public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
+                    throws NotPossibleToResolve {
+            ResolveResult<? extends AbstractConfigValue> result = context.resolve(v, source);
+            context = result.context;
+            return result.value;
+            }
+    }
+
     @Override
-    SimpleConfigList resolveSubstitutions(final ResolveContext context, ResolveSource source)
+    ResolveResult<? extends SimpleConfigList> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
         if (resolved)
-            return this;
+            return ResolveResult.make(context, this);
 
         if (context.isRestrictedToChild()) {
             // if a list restricts to a child path, then it has no child paths,
             // so nothing to do.
-            return this;
+            return ResolveResult.make(context, this);
         } else {
-            final ResolveSource sourceWithParent = source.pushParent(this);
             try {
-                return modifyMayThrow(new Modifier() {
-                    @Override
-                    public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
-                            throws NotPossibleToResolve {
-                        return context.resolve(v, sourceWithParent);
-                    }
-
-                }, ResolveStatus.RESOLVED);
+                ResolveModifier modifier = new ResolveModifier(context, source.pushParent(this));
+                SimpleConfigList value = modifyMayThrow(modifier, ResolveStatus.RESOLVED);
+                return ResolveResult.make(modifier.context, value);
             } catch (NotPossibleToResolve e) {
                 throw e;
             } catch (RuntimeException e) {

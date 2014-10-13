@@ -41,14 +41,18 @@ final class ResolveSource {
     // child being peeked, but NOT the child itself. Caller has to resolve
     // the child itself if needed. ValueWithPath.value can be null but
     // the ValueWithPath instance itself should not be.
-    static private ValueWithPath findInObject(AbstractConfigObject obj, ResolveContext context, Path path)
+    static private ResultWithPath findInObject(AbstractConfigObject obj, ResolveContext context, Path path)
             throws NotPossibleToResolve {
         // resolve ONLY portions of the object which are along our path
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace("*** finding '" + path + "' in " + obj);
-        AbstractConfigValue partiallyResolved = context.restrict(path).resolve(obj, new ResolveSource(obj));
-        if (partiallyResolved instanceof AbstractConfigObject) {
-            return findInObject((AbstractConfigObject) partiallyResolved, path);
+        Path restriction = context.restrictToChild();
+        ResolveResult<? extends AbstractConfigValue> partiallyResolved = context.restrict(path).resolve(obj,
+                new ResolveSource(obj));
+        ResolveContext newContext = partiallyResolved.context.restrict(restriction);
+        if (partiallyResolved.value instanceof AbstractConfigObject) {
+            ValueWithPath pair = findInObject((AbstractConfigObject) partiallyResolved.value, path);
+            return new ResultWithPath(ResolveResult.make(newContext, pair.value), pair.pathFromRoot);
         } else {
             throw new ConfigException.BugOrBroken("resolved object to non-object " + obj + " to " + partiallyResolved);
         }
@@ -83,7 +87,7 @@ final class ResolveSource {
         }
     }
 
-    ValueWithPath lookupSubst(ResolveContext context, SubstitutionExpression subst,
+    ResultWithPath lookupSubst(ResolveContext context, SubstitutionExpression subst,
             int prefixLength)
             throws NotPossibleToResolve {
         if (ConfigImpl.traceSubstitutionsEnabled())
@@ -93,12 +97,9 @@ final class ResolveSource {
             ConfigImpl.trace(context.depth(), subst + " - looking up relative to file it occurred in");
         // First we look up the full path, which means relative to the
         // included file if we were not a root file
-        ValueWithPath result = findInObject(root, context, subst.path());
+        ResultWithPath result = findInObject(root, context, subst.path());
 
-        if (result == null)
-            throw new ConfigException.BugOrBroken("findInObject() returned null");
-
-        if (result.value == null) {
+        if (result.result.value == null) {
             // Then we want to check relative to the root file. We don't
             // want the prefix we were included at to be used when looking
             // up env variables either.
@@ -106,19 +107,20 @@ final class ResolveSource {
 
             if (prefixLength > 0) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(context.depth(), unprefixed + " - looking up relative to parent file");
-                result = findInObject(root, context, unprefixed);
+                    ConfigImpl.trace(result.result.context.depth(), unprefixed
+                            + " - looking up relative to parent file");
+                result = findInObject(root, result.result.context, unprefixed);
             }
 
-            if (result.value == null && context.options().getUseSystemEnvironment()) {
+            if (result.result.value == null && result.result.context.options().getUseSystemEnvironment()) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(context.depth(), unprefixed + " - looking up in system environment");
+                    ConfigImpl.trace(result.result.context.depth(), unprefixed + " - looking up in system environment");
                 result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context, unprefixed);
             }
         }
 
         if (ConfigImpl.traceSubstitutionsEnabled())
-            ConfigImpl.trace(context.depth(), "resolved to " + result);
+            ConfigImpl.trace(result.result.context.depth(), "resolved to " + result);
 
         return result;
     }
@@ -389,6 +391,32 @@ final class ResolveSource {
         @Override
         public String toString() {
             return "ValueWithPath(value=" + value + ", pathFromRoot=" + pathFromRoot + ")";
+        }
+    }
+
+    static final class ResultWithPath {
+        final ResolveResult<? extends AbstractConfigValue> result;
+        final Node<Container> pathFromRoot;
+
+        ResultWithPath(ResolveResult<? extends AbstractConfigValue> result, Node<Container> pathFromRoot) {
+            this.result = result;
+            this.pathFromRoot = pathFromRoot;
+        }
+
+        ResultWithPath(ResolveResult<? extends AbstractConfigValue> result) {
+            this(result, null);
+        }
+
+        ResultWithPath addParent(Container parent) {
+            if (pathFromRoot == null)
+                return new ResultWithPath(result, new Node<Container>(parent));
+            else
+                return new ResultWithPath(result, pathFromRoot.prepend(parent));
+        }
+
+        @Override
+        public String toString() {
+            return "ResultWithPath(result=" + result + ", pathFromRoot=" + pathFromRoot + ")";
         }
     }
 }

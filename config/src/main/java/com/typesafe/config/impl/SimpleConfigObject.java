@@ -344,41 +344,59 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         }
     }
 
+    private static final class ResolveModifier implements Modifier {
+
+        final Path originalRestrict;
+        ResolveContext context;
+        final ResolveSource source;
+
+        ResolveModifier(ResolveContext context, ResolveSource source) {
+            this.context = context;
+            this.source = source;
+            originalRestrict = context.restrictToChild();
+        }
+
+        @Override
+        public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v) throws NotPossibleToResolve {
+            if (context.isRestrictedToChild()) {
+                if (key.equals(context.restrictToChild().first())) {
+                    Path remainder = context.restrictToChild().remainder();
+                    if (remainder != null) {
+                        ResolveResult<? extends AbstractConfigValue> result = context.restrict(remainder).resolve(v,
+                                source);
+                        context = result.context.unrestricted().restrict(originalRestrict);
+                        return result.value;
+                    } else {
+                        // we don't want to resolve the leaf child.
+                        return v;
+                    }
+                } else {
+                    // not in the restrictToChild path
+                    return v;
+                }
+            } else {
+                // no restrictToChild, resolve everything
+                ResolveResult<? extends AbstractConfigValue> result = context.unrestricted().resolve(v, source);
+                context = result.context.unrestricted().restrict(originalRestrict);
+                return result.value;
+            }
+        }
+
+    }
+
     @Override
-    AbstractConfigObject resolveSubstitutions(final ResolveContext context, ResolveSource source)
+    ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
         if (resolveStatus() == ResolveStatus.RESOLVED)
-            return this;
+            return ResolveResult.make(context, this);
 
         final ResolveSource sourceWithParent = source.pushParent(this);
 
         try {
-            return modifyMayThrow(new Modifier() {
+            ResolveModifier modifier = new ResolveModifier(context, sourceWithParent);
 
-                @Override
-                public AbstractConfigValue modifyChildMayThrow(String key, AbstractConfigValue v)
-                        throws NotPossibleToResolve {
-
-                    if (context.isRestrictedToChild()) {
-                        if (key.equals(context.restrictToChild().first())) {
-                            Path remainder = context.restrictToChild().remainder();
-                            if (remainder != null) {
-                                return context.restrict(remainder).resolve(v, sourceWithParent);
-                            } else {
-                                // we don't want to resolve the leaf child.
-                                return v;
-                            }
-                        } else {
-                            // not in the restrictToChild path
-                            return v;
-                        }
-                    } else {
-                        // no restrictToChild, resolve everything
-                        return context.unrestricted().resolve(v, sourceWithParent);
-                    }
-                }
-
-            });
+            AbstractConfigValue value = modifyMayThrow(modifier);
+            return ResolveResult.make(modifier.context, value).asObjectResult();
         } catch (NotPossibleToResolve e) {
             throw e;
         } catch (RuntimeException e) {
