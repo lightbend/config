@@ -306,10 +306,13 @@ options:
 
  1. Set it in a `reference.conf` included in your library or
  application jar, so there's a default value.
- 2. Catch and handle `ConfigException.Missing`.
- 3. Use the `Config.hasPath()` method to check in advance whether
+ 2. Use the `Config.hasPath()` method to check in advance whether
  the path exists (rather than checking for `null`/`None` after as
  you might in other APIs).
+ 3. Catch and handle `ConfigException.Missing`. NOTE: using an
+ exception for control flow like this is much slower than using
+ `Config.hasPath()`; the JVM has to do a lot of work to throw
+ an exception.
  4. In your initialization code, generate a `Config` with your
  defaults in it (using something like `ConfigFactory.parseMap()`)
  then fold that default config into your loaded config using
@@ -321,7 +324,7 @@ options:
  `Config`; `ConfigObject` implements `java.util.Map<String,?>` and
  the `get()` method on `Map` returns null for missing keys. See
  the API docs for more detail on `Config` vs. `ConfigObject`.
- 
+
 The *recommended* path (for most cases, in most apps) is that you
 require all settings to be present in either `reference.conf` or
 `application.conf` and allow `ConfigException.Missing` to be
@@ -341,11 +344,10 @@ like this to use the idiomatic `Option` syntax:
 
 ```scala
 implicit class RichConfig(val underlying: Config) extends AnyVal {
-  def getOptionalBoolean(path: String): Option[Boolean] = try {
+  def getOptionalBoolean(path: String): Option[Boolean] = if (underlying.hasPath(path)) {
      Some(underlying.getBoolean(path))
-  } catch {
-     case e: ConfigException.Missing =>
-         None
+  } else {
+     None
   }
 }
 ```
