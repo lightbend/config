@@ -94,6 +94,23 @@ object GetExistingPath extends App {
     Util.loop(args, task)
 }
 
+object GetSeveralExistingPaths extends App {
+    val conf = ConfigFactory.parseString("aaaaa { bbbbb.ccccc.d=42, qqqqq.rrrrr = 43 }, xxxxx.yyyyy.zzzzz = 44 ").resolve()
+
+    def task() {
+        if (conf.getInt("aaaaa.bbbbb.ccccc.d") != 42 ||
+            conf.getInt("aaaaa.qqqqq.rrrrr") != 43 ||
+            conf.getInt("xxxxx.yyyyy.zzzzz") != 44) {
+            throw new Exception("broken get")
+        }
+    }
+
+    val ms = Util.time(task, 5000000)
+    println("GetSeveralExistingPaths: " + ms + "ms")
+
+    Util.loop(args, task)
+}
+
 object HasPathOnMissing extends App {
     val conf = ConfigFactory.parseString("aaaaa.bbbbb.ccccc.d=42,x=10, y=11, z=12").resolve()
 
