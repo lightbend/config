@@ -115,7 +115,7 @@ public final class ConfigRenderOptions {
      * whitespace, enabling formatting makes things prettier but larger.
      *
      * @param value
-     *            true to include comments in the render
+     *            true to enable formatting
      * @return options with requested setting for formatting
      */
     public ConfigRenderOptions setFormatted(boolean value) {
@@ -129,7 +129,7 @@ public final class ConfigRenderOptions {
      * Returns whether the options enable formatting. This method is mostly used
      * by the config lib internally, not by applications.
      *
-     * @return true if comments should be rendered
+     * @return true if the options enable formatting
      */
     public boolean getFormatted() {
         return formatted;

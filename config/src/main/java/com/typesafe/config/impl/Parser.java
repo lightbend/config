@@ -1138,26 +1138,51 @@ final class Parser {
         }
     }
 
-    // the idea is to see if the string has any chars that might require the
-    // full parser to deal with.
-    private static boolean hasUnsafeChars(String s) {
-        for (int i = 0; i < s.length(); ++i) {
+    // the idea is to see if the string has any chars or features
+    // that might require the full parser to deal with.
+    private static boolean looksUnsafeForFastParser(String s) {
+        boolean lastWasDot = true; // start of path is also a "dot"
+        int len = s.length();
+        if (s.isEmpty())
+            return true;
+        if (s.charAt(0) == '.')
+            return true;
+        if (s.charAt(len - 1) == '.')
+            return true;
+
+        for (int i = 0; i < len; ++i) {
             char c = s.charAt(i);
-            if (Character.isLetter(c) || c == '.')
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_') {
+                lastWasDot = false;
                 continue;
-            else
+            } else if (c == '.') {
+                if (lastWasDot)
+                    return true; // ".." means we need to throw an error
+                lastWasDot = true;
+            } else if (c == '-') {
+                if (lastWasDot)
+                    return true;
+                continue;
+            } else {
                 return true;
+            }
         }
+
+        if (lastWasDot)
+            return true;
+
         return false;
     }
 
-    private static void appendPathString(PathBuilder pb, String s) {
-        int splitAt = s.indexOf('.');
+    private static Path fastPathBuild(Path tail, String s, int end) {
+        // lastIndexOf takes last index it should look at, end - 1 not end
+        int splitAt = s.lastIndexOf('.', end - 1);
+        // this works even if splitAt is -1; then we start the substring at 0
+        Path withOneMoreElement = new Path(s.substring(splitAt + 1, end), tail);
         if (splitAt < 0) {
-            pb.appendKey(s);
+            return withOneMoreElement;
         } else {
-            pb.appendKey(s.substring(0, splitAt));
-            appendPathString(pb, s.substring(splitAt + 1));
+            return fastPathBuild(withOneMoreElement, s, splitAt);
         }
     }
 
@@ -1165,15 +1190,9 @@ final class Parser {
     // we just have something like "foo" or "foo.bar"
     private static Path speculativeFastParsePath(String path) {
         String s = ConfigImplUtil.unicodeTrim(path);
-        if (s.isEmpty())
+        if (looksUnsafeForFastParser(s))
             return null;
-        if (hasUnsafeChars(s))
-            return null;
-        if (s.startsWith(".") || s.endsWith(".") || s.contains(".."))
-            return null; // let the full parser throw the error
 
-        PathBuilder pb = new PathBuilder();
-        appendPathString(pb, s);
-        return pb.result();
+        return fastPathBuild(null, s, s.length());
     }
 }

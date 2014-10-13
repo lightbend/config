@@ -83,7 +83,7 @@ public final class ConfigResolveOptions {
      * default, unresolved substitutions are an error. If unresolved
      * substitutions are allowed, then a future attempt to use the unresolved
      * value may fail, but {@link Config#resolve(ConfigResolveOptions)} itself
-     * will now throw.
+     * will not throw.
      * 
      * @param value
      *            true to silently ignore unresolved substitutions.
