@@ -275,6 +275,23 @@ final class ResolveSource {
         final T value;
         final Node<T> next;
 
+        @Override
+        public int hashCode() {
+            return value.hashCode() + 41 * (41 + next.hashCode());
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof Node<?>) {
+                if (value == ((Node<?>) other).value)
+                    return true;
+                else
+                    return value.equals(((Node<?>) other).value);
+            } else {
+                return false;
+            }
+        }
+
         Node(T value, Node<T> next) {
             this.value = value;
             this.next = next;
