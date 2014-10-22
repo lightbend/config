@@ -116,8 +116,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                 sourceForEnd = sourceForEnd.resetParents();
             } else {
                 if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl
-.trace(newContext.depth(),
+                    ConfigImpl.trace(newContext.depth(),
                             "will resolve end against the original source with parent pushed");
 
                 sourceForEnd = source.pushParent(replaceable);
