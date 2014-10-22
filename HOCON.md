@@ -825,6 +825,15 @@ working with ordered maps rather than unordered maps, which is too
 constraining. Implementations only have to track order for
 duplicate instances of the same field (i.e. merges).
 
+Implementations must set both `a` and `b` to the same value in
+this case, however. In practice this means that all substitutions
+must be memoized (resolved once, with the result
+retained). Memoization should be keyed by the substitution
+"instance" (the specific occurrence of the `${}` expression)
+rather than by the path inside the `${}` expression, because
+substitutions may be resolved differently depending on their
+position in the file.
+
 ### Includes
 
 #### Include syntax
