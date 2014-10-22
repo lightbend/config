@@ -146,7 +146,7 @@ final class ResolveContext {
             throws NotPossibleToResolve {
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
-        final MemoKey fullKey = new MemoKey(source.root, original, null);
+        final MemoKey fullKey = new MemoKey(original, null);
         MemoKey restrictedKey = null;
 
         AbstractConfigValue cached = memos.get(fullKey);
@@ -155,7 +155,7 @@ final class ResolveContext {
         // compute the restrictToChild object so use a more limited
         // memo key
         if (cached == null && isRestrictedToChild()) {
-            restrictedKey = new MemoKey(source.root, original, restrictToChild());
+            restrictedKey = new MemoKey(original, restrictToChild());
             cached = memos.get(restrictedKey);
         }
 
