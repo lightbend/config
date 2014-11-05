@@ -457,23 +457,22 @@ final class Tokenizer {
         private Token pullQuotedString() throws ProblemException {
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
-            int c = '\0'; // value doesn't get used
-            do {
-                c = nextCharRaw();
+            while (true) {
+                int c = nextCharRaw();
                 if (c == -1)
                     throw problem("End of input but string quote was still open");
 
                 if (c == '\\') {
                     pullEscapeSequence(sb);
                 } else if (c == '"') {
-                    // end the loop, done!
+                    break;
                 } else if (Character.isISOControl(c)) {
                     throw problem(asString(c), "JSON does not allow unescaped " + asString(c)
                             + " in quoted strings, use a backslash escape");
                 } else {
                     sb.appendCodePoint(c);
                 }
-            } while (c != '"');
+            }
 
             // maybe switch to triple-quoted string, sort of hacky...
             if (sb.length() == 0) {
