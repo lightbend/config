@@ -854,7 +854,7 @@ usual the comma may be omitted if there's a newline).
 
 If an unquoted `include` at the start of a key is followed by
 anything other than a single quoted string or the
-`url("")`/`file("")/`classpath("")` syntax, it is invalid and an
+`url("")`/`file("")`/`classpath("")` syntax, it is invalid and an
 error should be generated.
 
 There can be any amount of whitespace, including newlines, between
