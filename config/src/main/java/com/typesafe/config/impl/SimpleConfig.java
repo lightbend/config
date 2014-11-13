@@ -208,6 +208,15 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     @Override
+    public String getOptionalString(String path) {
+        try {
+            return getString(path);
+        } catch (ConfigException.Missing ignore) {
+            return null;
+        }
+    }
+
+    @Override
     public ConfigList getList(String path) {
         AbstractConfigValue v = find(path, ConfigValueType.LIST);
         return (ConfigList) v;
