@@ -743,3 +743,7 @@ format.
 #### Ruby port
 
    * https://github.com/cprice404/ruby-hocon
+
+#### Python port
+
+   * pyhocon https://github.com/chimpler/pyhocon
