@@ -591,10 +591,35 @@ public final class ConfigFactory {
         return parseURL(url, ConfigParseOptions.defaults());
     }
 
+    /**
+     * Parses a file into a Config instance. Does not call
+     * {@link Config#resolve} or merge the file with any other
+     * configuration; this method parses a single file and does
+     * nothing else. It does process "include" statements in the
+     * parsed file, and may end up doing other IO due to those
+     * statements.
+     *
+     * @param file
+     *       the file to parse
+     * @param options
+     *       parse options to control how the file is interpreted
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
     public static Config parseFile(File file, ConfigParseOptions options) {
         return Parseable.newFile(file, options).parse().toConfig();
     }
 
+    /**
+     * Parses a file into a Config instance as with
+     * {@link #parseFile(File,ConfigParseOptions)} but always uses the
+     * default parse options.
+     *
+     * @param file
+     *       the file to parse
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
     public static Config parseFile(File file) {
         return parseFile(file, ConfigParseOptions.defaults());
     }
@@ -637,6 +662,14 @@ public final class ConfigFactory {
         return ConfigImpl.parseFileAnySyntax(fileBasename, options).toConfig();
     }
 
+    /**
+     * Like {@link #parseFileAnySyntax(File,ConfigParseOptions)} but always uses
+     * default parse options.
+     *
+     * @param fileBasename
+     *            a filename with or without extension
+     * @return the parsed configuration
+     */
     public static Config parseFileAnySyntax(File fileBasename) {
         return parseFileAnySyntax(fileBasename, ConfigParseOptions.defaults());
     }
