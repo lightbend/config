@@ -1121,6 +1121,15 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def allowUnresolvedDoesAllowUnresolvedArrayElements() {
+        val values = ConfigFactory.parseString("unknown = [someVal], known = 42")
+        val unresolved = ConfigFactory.parseString("concat = [${unknown}[]], sibling = [${unknown}, ${known}]")
+        unresolved.resolve(ConfigResolveOptions.defaults().setAllowUnresolved(true))
+        unresolved.withFallback(values).resolve()
+        unresolved.resolveWith(values)
+    }
+
+    @Test
     def allowUnresolvedDoesAllowUnresolved() {
         val values = ConfigFactory.parseString("{ foo = 1, bar = 2, m = 3, n = 4}")
         assertTrue("config with no substitutions starts as resolved", values.isResolved)
