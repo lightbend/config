@@ -769,6 +769,8 @@ class ConfigTest extends TestUtils {
             assertEquals(Seq(1, 2, 3, 4) map s2unit,
                 conf.getDurationList("durations.secondsList", unit).asScala)
             assertEquals(ms2unit(500L), conf.getDuration("durations.halfSecond", unit))
+            assertEquals(ms2unit(1L), conf.getDuration("durations.millis", unit))
+            assertEquals(ms2unit(2L), conf.getDuration("durations.micros", unit))
         }
 
         assertDurationAsTimeUnit(NANOSECONDS)

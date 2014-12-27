@@ -512,12 +512,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             unitString = unitString + "s";
 
         // note that this is deliberately case-sensitive
-        if (unitString.equals("") || unitString.equals("ms")
+        if (unitString.equals("") || unitString.equals("ms") || unitString.equals("millis")
                 || unitString.equals("milliseconds")) {
             units = TimeUnit.MILLISECONDS;
-        } else if (unitString.equals("us") || unitString.equals("microseconds")) {
+        } else if (unitString.equals("us") || unitString.equals("micros") || unitString.equals("microseconds")) {
             units = TimeUnit.MICROSECONDS;
-        } else if (unitString.equals("ns") || unitString.equals("nanoseconds")) {
+        } else if (unitString.equals("ns") || unitString.equals("nanos") || unitString.equals("nanoseconds")) {
             units = TimeUnit.NANOSECONDS;
         } else if (unitString.equals("d") || unitString.equals("days")) {
             units = TimeUnit.DAYS;
