@@ -432,6 +432,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 }
                 sb.append("}");
             }
+
         }
         if (atRoot && options.getFormatted())
             sb.append('\n');
