@@ -863,7 +863,7 @@ usual the comma may be omitted if there's a newline).
 
 If an unquoted `include` at the start of a key is followed by
 anything other than a single quoted string or the
-`url("")`/`file("")/`classpath("")` syntax, it is invalid and an
+`url("")`/`file("")`/`classpath("")` syntax, it is invalid and an
 error should be generated.
 
 There can be any amount of whitespace, including newlines, between
@@ -1209,9 +1209,9 @@ parsed as a number plus an optional unit string.
 The supported unit strings for duration are case sensitive and
 must be lowercase. Exactly these strings are supported:
 
- - `ns`, `nanosecond`, `nanoseconds`
- - `us`, `microsecond`, `microseconds`
- - `ms`, `millisecond`, `milliseconds`
+ - `ns`, `nano`, `nanos`, `nanosecond`, `nanoseconds`
+ - `us`, `micro`, `micros`, `microsecond`, `microseconds`
+ - `ms`, `milli`, `millis`, `millisecond`, `milliseconds`
  - `s`, `second`, `seconds`
  - `m`, `minute`, `minutes`
  - `h`, `hour`, `hours`
@@ -1273,6 +1273,13 @@ and the GNU tools such as `ls` map these to powers of two, so this
 spec copies that. You can certainly find examples of mapping these
 to powers of ten, though. If you don't like ambiguity, don't use
 the single-letter abbreviations.
+
+Note: any value in zetta/zebi or yotta/yobi will overflow a 64-bit
+integer, and of course large-enough values in any of the units may
+overflow. Most real-world APIs and apps will not support byte
+counts that overflow a 64-bit integer. The huge units are provided
+just to be complete but probably aren't useful in practice. At
+least not in 2014.
 
 ### Config object merging and file merging
 

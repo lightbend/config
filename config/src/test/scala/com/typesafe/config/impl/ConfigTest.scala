@@ -769,6 +769,8 @@ class ConfigTest extends TestUtils {
             assertEquals(Seq(1, 2, 3, 4) map s2unit,
                 conf.getDurationList("durations.secondsList", unit).asScala)
             assertEquals(ms2unit(500L), conf.getDuration("durations.halfSecond", unit))
+            assertEquals(ms2unit(1L), conf.getDuration("durations.millis", unit))
+            assertEquals(ms2unit(2L), conf.getDuration("durations.micros", unit))
         }
 
         assertDurationAsTimeUnit(NANOSECONDS)
@@ -1116,6 +1118,15 @@ class ConfigTest extends TestUtils {
         assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
         val resolved2 = unresolved.resolve()
         assertTrue("after resolution, config is now resolved", resolved2.isResolved)
+    }
+
+    @Test
+    def allowUnresolvedDoesAllowUnresolvedArrayElements() {
+        val values = ConfigFactory.parseString("unknown = [someVal], known = 42")
+        val unresolved = ConfigFactory.parseString("concat = [${unknown}[]], sibling = [${unknown}, ${known}]")
+        unresolved.resolve(ConfigResolveOptions.defaults().setAllowUnresolved(true))
+        unresolved.withFallback(values).resolve()
+        unresolved.resolveWith(values)
     }
 
     @Test

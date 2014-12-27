@@ -115,7 +115,11 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         }
 
         if (changed != null) {
-            return new SimpleConfigList(origin(), changed, newResolveStatus);
+            if (newResolveStatus != null) {
+                return new SimpleConfigList(origin(), changed, newResolveStatus);
+            } else {
+                return new SimpleConfigList(origin(), changed);
+            }
         } else {
             return this;
         }
@@ -151,7 +155,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         } else {
             try {
                 ResolveModifier modifier = new ResolveModifier(context, source.pushParent(this));
-                SimpleConfigList value = modifyMayThrow(modifier, ResolveStatus.RESOLVED);
+                SimpleConfigList value = modifyMayThrow(modifier, context.options().getAllowUnresolved() ? null : ResolveStatus.RESOLVED);
                 return ResolveResult.make(modifier.context, value);
             } catch (NotPossibleToResolve e) {
                 throw e;

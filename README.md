@@ -92,6 +92,10 @@ Maven Central.
         <version>1.2.1</version>
     </dependency>
 
+sbt dependency:
+
+    libraryDependencies += "com.typesafe" % "config" % "1.2.1"
+
 Link for direct download if you don't use a dependency manager:
 
  - http://central.maven.org/maven2/com/typesafe/config/
@@ -743,3 +747,7 @@ format.
 #### Ruby port
 
    * https://github.com/cprice404/ruby-hocon
+
+#### Python port
+
+   * pyhocon https://github.com/chimpler/pyhocon
