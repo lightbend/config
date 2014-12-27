@@ -466,7 +466,8 @@ class ConfigSubstitutionTest extends TestUtils {
     private val delayedMergeObjectResolveProblem5 = {
         parseObject("""
   defaults {
-    a = ${item1.b} // tricky cycle
+    a = ${item1.b} // tricky cycle - we won't see ${defaults}
+                   // as we resolve this
     b = 2
   }
 
@@ -488,7 +489,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
         assertEquals("item1.b", 2, resolved.getInt("item1.b"))
         assertEquals("item2.b", 2, resolved.getInt("item2.b"))
-        assertEquals("defaults.a", 2, resolved.getInt("defaults.a"))
+        assertEquals("defaults.a", 7, resolved.getInt("defaults.a"))
     }
 
     private val delayedMergeObjectResolveProblem6 = {
