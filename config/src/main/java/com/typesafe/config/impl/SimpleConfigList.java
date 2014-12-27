@@ -125,8 +125,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
                             throws NotPossibleToResolve {
                         return context.resolve(v);
                     }
-
-                }, null /* don't force resolve status -- could be allowing unresolved */);
+                }, context.options().getAllowUnresolved() ? null : ResolveStatus.RESOLVED);
             } catch (NotPossibleToResolve e) {
                 throw e;
             } catch (RuntimeException e) {
