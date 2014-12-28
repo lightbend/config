@@ -1,8 +1,5 @@
 package com.typesafe.config.impl;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
-
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 
@@ -161,19 +158,6 @@ final class ResolveSource {
         }
     }
 
-    ResolveSource popParent(Container parent) {
-        if (ConfigImpl.traceSubstitutionsEnabled())
-            ConfigImpl.trace("popping parent " + parent);
-        if (parent == null)
-            throw new ConfigException.BugOrBroken("can't pop null parent");
-        else if (pathFromRoot == null)
-            return this;
-        else if (pathFromRoot.head() != parent)
-            throw new ConfigException.BugOrBroken("parent was not pushed, can't pop: " + parent);
-        else
-            return new ResolveSource(root, pathFromRoot.tail());
-    }
-
     ResolveSource resetParents() {
         if (pathFromRoot == null)
             return this;
@@ -271,26 +255,9 @@ final class ResolveSource {
     }
 
     // a persistent list
-    static final class Node<T> implements Iterable<T> {
+    static final class Node<T> {
         final T value;
         final Node<T> next;
-
-        @Override
-        public int hashCode() {
-            return value.hashCode() + 41 * (41 + next.hashCode());
-        }
-
-        @Override
-        public boolean equals(Object other) {
-            if (other instanceof Node<?>) {
-                if (value == ((Node<?>) other).value)
-                    return true;
-                else
-                    return value.equals(((Node<?>) other).value);
-            } else {
-                return false;
-            }
-        }
 
         Node(T value, Node<T> next) {
             this.value = value;
@@ -334,40 +301,6 @@ final class ResolveSource {
             }
         }
 
-        private static class NodeIterator<T> implements Iterator<T> {
-            Node<T> current;
-
-            NodeIterator(Node<T> current) {
-                this.current = current;
-            }
-
-            @Override
-            public T next() {
-                if (current == null) {
-                    throw new NoSuchElementException();
-                } else {
-                    T result = current.value;
-                    current = current.next;
-                    return result;
-                }
-            }
-
-            @Override
-            public boolean hasNext() {
-                return current != null;
-            }
-
-            @Override
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-        }
-
-        @Override
-        public Iterator<T> iterator() {
-            return new NodeIterator<T>(this);
-        }
-
         @Override
         public String toString() {
             StringBuffer sb = new StringBuffer();
@@ -394,17 +327,6 @@ final class ResolveSource {
             this.pathFromRoot = pathFromRoot;
         }
 
-        ValueWithPath(AbstractConfigValue value) {
-            this(value, null);
-        }
-
-        ValueWithPath addParent(Container parent) {
-            if (pathFromRoot == null)
-                return new ValueWithPath(value, new Node<Container>(parent));
-            else
-                return new ValueWithPath(value, pathFromRoot.prepend(parent));
-        }
-
         @Override
         public String toString() {
             return "ValueWithPath(value=" + value + ", pathFromRoot=" + pathFromRoot + ")";
@@ -418,17 +340,6 @@ final class ResolveSource {
         ResultWithPath(ResolveResult<? extends AbstractConfigValue> result, Node<Container> pathFromRoot) {
             this.result = result;
             this.pathFromRoot = pathFromRoot;
-        }
-
-        ResultWithPath(ResolveResult<? extends AbstractConfigValue> result) {
-            this(result, null);
-        }
-
-        ResultWithPath addParent(Container parent) {
-            if (pathFromRoot == null)
-                return new ResultWithPath(result, new Node<Container>(parent));
-            else
-                return new ResultWithPath(result, pathFromRoot.prepend(parent));
         }
 
         @Override

@@ -282,19 +282,4 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             p.render(sb, indent, atRoot, options);
         }
     }
-
-    static List<AbstractConfigValue> valuesFromPieces(ConfigOrigin origin, List<Object> pieces) {
-        List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>(pieces.size());
-        for (Object p : pieces) {
-            if (p instanceof SubstitutionExpression) {
-                values.add(new ConfigReference(origin, (SubstitutionExpression) p));
-            } else if (p instanceof String) {
-                values.add(new ConfigString(origin, (String) p));
-            } else {
-                throw new ConfigException.BugOrBroken("Unexpected piece " + p);
-            }
-        }
-
-        return values;
-    }
 }
