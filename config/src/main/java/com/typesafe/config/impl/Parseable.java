@@ -423,25 +423,35 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         protected Reader reader() throws IOException {
-            if (ConfigImpl.traceLoadsEnabled())
-                trace("Loading config from a URL: " + input.toExternalForm());
-            URLConnection connection = input.openConnection();
-            connection.connect();
-
-            // save content type for later
-            contentType = connection.getContentType();
-            if (contentType != null) {
+            try{
                 if (ConfigImpl.traceLoadsEnabled())
-                    trace("URL sets Content-Type: '" + contentType + "'");
-                contentType = contentType.trim();
-                int semi = contentType.indexOf(';');
-                if (semi >= 0)
-                    contentType = contentType.substring(0, semi);
+                    trace("Loading config from a URL: " + input.toExternalForm());
+                URLConnection connection = input.openConnection();
+                connection.connect();
+
+                // save content type for later
+                contentType = connection.getContentType();
+                if (contentType != null) {
+                    if (ConfigImpl.traceLoadsEnabled())
+                        trace("URL sets Content-Type: '" + contentType + "'");
+                    contentType = contentType.trim();
+                    int semi = contentType.indexOf(';');
+                    if (semi >= 0)
+                        contentType = contentType.substring(0, semi);
+                }
+
+                InputStream stream = connection.getInputStream();
+
+                return readerFromStream(stream);
+            } catch (FileNotFoundException fnf) {
+                //If the resource is not found (HTTP response code 404 or something alike), then it's fine to
+                //treat it according to the allowMissing setting and "include" spec.
+                //But if we have something like HTTP 503 it seems to be better to fail early, because this may be a sign
+                //of broken environment.
+                throw fnf;
+            } catch (IOException e) {
+                throw new ConfigException.BugOrBroken("Cannot load config from URL: " + input.toExternalForm(), e);
             }
-
-            InputStream stream = connection.getInputStream();
-
-            return readerFromStream(stream);
         }
 
         @Override
