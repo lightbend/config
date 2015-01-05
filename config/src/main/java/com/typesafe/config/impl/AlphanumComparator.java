@@ -29,25 +29,16 @@ import java.util.Comparator;
 /**
  * This is an updated version with enhancements made by Daniel Migowski,
  * Andre Bogus, and David Koelle
- * <p/>
- * To convert to use Templates (Java 1.5+):
- * - Change "implements Comparator" to "implements Comparator<String>"
- * - Change "compare(Object o1, Object o2)" to "compare(String s1, String s2)"
- * - Remove the type checking and casting in compare().
- * <p/>
- * To use this class:
- * Use the static "sort" method from the java.util.Collections class:
- * Collections.sort(your list, new AlphanumComparator());
  */
-public class AlphanumComparator implements Comparator {
-    private final boolean isDigit(char ch) {
+public class AlphanumComparator implements Comparator<String> {
+    private boolean isDigit(char ch) {
         return ch >= 48 && ch <= 57;
     }
 
     /**
      * Length of string is passed in for improved efficiency (only need to calculate it once) *
      */
-    private final String getChunk(String s, int slength, int marker) {
+    private String getChunk(String s, int slength, int marker) {
         StringBuilder chunk = new StringBuilder();
         char c = s.charAt(marker);
         chunk.append(c);
@@ -72,13 +63,7 @@ public class AlphanumComparator implements Comparator {
         return chunk.toString();
     }
 
-    public int compare(Object o1, Object o2) {
-        if (!(o1 instanceof String) || !(o2 instanceof String)) {
-            return 0;
-        }
-        String s1 = (String) o1;
-        String s2 = (String) o2;
-
+    public int compare(String s1, String s2) {
         int thisMarker = 0;
         int thatMarker = 0;
         int s1Length = s1.length();
