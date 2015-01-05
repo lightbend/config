@@ -8,7 +8,7 @@ import com.typesafe.sbt.SbtPgp.PgpKeys.{ useGpg, publishSigned, publishLocalSign
 
 SbtGit.versionWithGit
 
-SbtGit.GitKeys.baseVersion in ThisBuild := "1.1.0"
+SbtGit.GitKeys.baseVersion in ThisBuild := "1.3.0"
 
 organization in GlobalScope := "com.typesafe"
 
