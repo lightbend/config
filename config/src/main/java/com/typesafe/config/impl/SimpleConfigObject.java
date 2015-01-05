@@ -364,74 +364,98 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         });
     }
 
+    protected boolean isList(String[] keys) {
+        int index = 0;
+        if (keys.length == 0) return false;
+        for (String k : keys) {
+            if (!String.valueOf(index).equals(k)) {
+                return false;
+            }
+            index = index + 1;
+        }
+        return true;
+    }
+
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (isEmpty()) {
             sb.append("{}");
         } else {
-            boolean outerBraces = options.getJson() || !atRoot;
-
-            int innerIndent;
-            if (outerBraces) {
-                innerIndent = indent + 1;
-                sb.append("{");
-
-                if (options.getFormatted())
-                    sb.append('\n');
-            } else {
-                innerIndent = indent;
-            }
-
-            int separatorCount = 0;
             String[] keys = keySet().toArray(new String[size()]);
             Arrays.sort(keys, new com.typesafe.config.impl.AlphanumComparator());
-            for (String k : keys) {
-                AbstractConfigValue v;
-                v = value.get(k);
 
-                if (options.getOriginComments()) {
-                    indent(sb, innerIndent, options);
-                    sb.append("# ");
-                    sb.append(v.origin().description());
-                    sb.append("\n");
+            if (isList(keys)) {
+                ArrayList<AbstractConfigValue> list = new ArrayList<>();
+                for (String key : keys) {
+                    list.add(value.get(key));
                 }
-                if (options.getComments()) {
-                    for (String comment : v.origin().comments()) {
+                AbstractConfigValue replacement = new SimpleConfigList(origin(), list);
+                sb.append("=");
+                replacement.render(sb, indent, atRoot, options);
+            } else {
+                boolean outerBraces = options.getJson() || !atRoot;
+
+                int innerIndent;
+                if (outerBraces) {
+                    innerIndent = indent + 1;
+                    sb.append("{");
+
+                    if (options.getFormatted())
+                        sb.append('\n');
+                } else {
+                    innerIndent = indent;
+                }
+
+                int separatorCount = 0;
+                for (String k : keys) {
+                    AbstractConfigValue v;
+                    v = value.get(k);
+
+                    if (options.getOriginComments()) {
                         indent(sb, innerIndent, options);
-                        sb.append("#");
-                        if (!comment.startsWith(" "))
-                            sb.append(' ');
-                        sb.append(comment);
+                        sb.append("# ");
+                        sb.append(v.origin().description());
                         sb.append("\n");
                     }
-                }
-                indent(sb, innerIndent, options);
-                v.render(sb, innerIndent, false /* atRoot */, k, options);
+                    if (options.getComments()) {
+                        for (String comment : v.origin().comments()) {
+                            indent(sb, innerIndent, options);
+                            sb.append("#");
+                            if (!comment.startsWith(" "))
+                                sb.append(' ');
+                            sb.append(comment);
+                            sb.append("\n");
+                        }
+                    }
+                    indent(sb, innerIndent, options);
+                    v.render(sb, innerIndent, false /* atRoot */, k, options);
 
-                if (options.getFormatted()) {
-                    if (options.getJson()) {
-                        sb.append(",");
-                        separatorCount = 2;
+                    if (options.getFormatted()) {
+                        if (options.getJson()) {
+                            sb.append(",");
+                            separatorCount = 2;
+                        } else {
+                            separatorCount = 1;
+                        }
+                        sb.append('\n');
                     } else {
+                        sb.append(",");
                         separatorCount = 1;
                     }
-                    sb.append('\n');
-                } else {
-                    sb.append(",");
-                    separatorCount = 1;
                 }
-            }
-            // chop last commas/newlines
-            sb.setLength(sb.length() - separatorCount);
+                // chop last commas/newlines
+                sb.setLength(sb.length() - separatorCount);
 
-            if (outerBraces) {
-                if (options.getFormatted()) {
-                    sb.append('\n'); // put a newline back
-                    if (outerBraces)
-                        indent(sb, indent, options);
+                if (outerBraces) {
+                    if (options.getFormatted()) {
+                        sb.append('\n'); // put a newline back
+                        if (outerBraces)
+                            indent(sb, indent, options);
+                    }
+                    sb.append("}");
                 }
-                sb.append("}");
             }
+
         }
         if (atRoot && options.getFormatted())
             sb.append('\n');
