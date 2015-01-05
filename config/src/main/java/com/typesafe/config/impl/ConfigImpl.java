@@ -5,13 +5,7 @@ package com.typesafe.config.impl;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import com.typesafe.config.Config;
@@ -202,6 +196,19 @@ public class ConfigImpl {
                 FromMapMode.KEYS_ARE_PATHS);
     }
 
+    static protected boolean isList(String[] keys) {
+        int index = 0;
+        if (keys.length == 0) return false;
+        for (String k : keys) {
+            if (!String.valueOf(index).equals(k)) {
+                return false;
+            }
+            index = index + 1;
+        }
+        return true;
+    }
+
+
     static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
             FromMapMode mapMode) {
         if (origin == null)
@@ -256,7 +263,17 @@ public class ConfigImpl {
                     values.put((String) key, value);
                 }
 
-                return new SimpleConfigObject(origin, values);
+                String[] keys = values.keySet().toArray(new String[values.size()]);
+                Arrays.sort(keys, new com.typesafe.config.impl.AlphanumComparator());
+                if (keys.length > 0 && isList(keys)) {
+                    ArrayList<AbstractConfigValue> list = new ArrayList<>();
+                    for (String key : keys) {
+                        list.add(values.get(key));
+                    }
+                    return new SimpleConfigList(origin, list);
+                } else {
+                    return new SimpleConfigObject(origin, values);
+                }
             } else {
                 return PropertiesParser.fromPathMap(origin, (Map<?, ?>) object);
             }

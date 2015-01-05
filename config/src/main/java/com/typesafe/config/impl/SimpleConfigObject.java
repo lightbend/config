@@ -364,17 +364,6 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         });
     }
 
-    protected boolean isList(String[] keys) {
-        int index = 0;
-        if (keys.length == 0) return false;
-        for (String k : keys) {
-            if (!String.valueOf(index).equals(k)) {
-                return false;
-            }
-            index = index + 1;
-        }
-        return true;
-    }
 
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
@@ -384,76 +373,66 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             String[] keys = keySet().toArray(new String[size()]);
             Arrays.sort(keys, new com.typesafe.config.impl.AlphanumComparator());
 
-            if (isList(keys)) {
-                ArrayList<AbstractConfigValue> list = new ArrayList<>();
-                for (String key : keys) {
-                    list.add(value.get(key));
-                }
-                AbstractConfigValue replacement = new SimpleConfigList(origin(), list);
-                sb.append("=");
-                replacement.render(sb, indent, atRoot, options);
+            boolean outerBraces = options.getJson() || !atRoot;
+
+            int innerIndent;
+            if (outerBraces) {
+                innerIndent = indent + 1;
+                sb.append("{");
+
+                if (options.getFormatted())
+                    sb.append('\n');
             } else {
-                boolean outerBraces = options.getJson() || !atRoot;
+                innerIndent = indent;
+            }
 
-                int innerIndent;
-                if (outerBraces) {
-                    innerIndent = indent + 1;
-                    sb.append("{");
+            int separatorCount = 0;
+            for (String k : keys) {
+                AbstractConfigValue v;
+                v = value.get(k);
 
-                    if (options.getFormatted())
-                        sb.append('\n');
-                } else {
-                    innerIndent = indent;
+                if (options.getOriginComments()) {
+                    indent(sb, innerIndent, options);
+                    sb.append("# ");
+                    sb.append(v.origin().description());
+                    sb.append("\n");
                 }
-
-                int separatorCount = 0;
-                for (String k : keys) {
-                    AbstractConfigValue v;
-                    v = value.get(k);
-
-                    if (options.getOriginComments()) {
+                if (options.getComments()) {
+                    for (String comment : v.origin().comments()) {
                         indent(sb, innerIndent, options);
-                        sb.append("# ");
-                        sb.append(v.origin().description());
+                        sb.append("#");
+                        if (!comment.startsWith(" "))
+                            sb.append(' ');
+                        sb.append(comment);
                         sb.append("\n");
                     }
-                    if (options.getComments()) {
-                        for (String comment : v.origin().comments()) {
-                            indent(sb, innerIndent, options);
-                            sb.append("#");
-                            if (!comment.startsWith(" "))
-                                sb.append(' ');
-                            sb.append(comment);
-                            sb.append("\n");
-                        }
-                    }
-                    indent(sb, innerIndent, options);
-                    v.render(sb, innerIndent, false /* atRoot */, k, options);
+                }
+                indent(sb, innerIndent, options);
+                v.render(sb, innerIndent, false /* atRoot */, k, options);
 
-                    if (options.getFormatted()) {
-                        if (options.getJson()) {
-                            sb.append(",");
-                            separatorCount = 2;
-                        } else {
-                            separatorCount = 1;
-                        }
-                        sb.append('\n');
-                    } else {
+                if (options.getFormatted()) {
+                    if (options.getJson()) {
                         sb.append(",");
+                        separatorCount = 2;
+                    } else {
                         separatorCount = 1;
                     }
+                    sb.append('\n');
+                } else {
+                    sb.append(",");
+                    separatorCount = 1;
                 }
-                // chop last commas/newlines
-                sb.setLength(sb.length() - separatorCount);
+            }
+            // chop last commas/newlines
+            sb.setLength(sb.length() - separatorCount);
 
-                if (outerBraces) {
-                    if (options.getFormatted()) {
-                        sb.append('\n'); // put a newline back
-                        if (outerBraces)
-                            indent(sb, indent, options);
-                    }
-                    sb.append("}");
+            if (outerBraces) {
+                if (options.getFormatted()) {
+                    sb.append('\n'); // put a newline back
+                    if (outerBraces)
+                        indent(sb, indent, options);
                 }
+                sb.append("}");
             }
 
         }
