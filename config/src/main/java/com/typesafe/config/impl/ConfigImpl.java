@@ -196,19 +196,6 @@ public class ConfigImpl {
                 FromMapMode.KEYS_ARE_PATHS);
     }
 
-    static protected boolean isList(String[] keys) {
-        int index = 0;
-        if (keys.length == 0) return false;
-        for (String k : keys) {
-            if (!String.valueOf(index).equals(k)) {
-                return false;
-            }
-            index = index + 1;
-        }
-        return true;
-    }
-
-
     static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
             FromMapMode mapMode) {
         if (origin == null)
@@ -262,18 +249,7 @@ public class ConfigImpl {
                             origin, mapMode);
                     values.put((String) key, value);
                 }
-
-                String[] keys = values.keySet().toArray(new String[values.size()]);
-                Arrays.sort(keys, new com.typesafe.config.impl.AlphanumericComparator());
-                if (keys.length > 0 && isList(keys)) {
-                    ArrayList<AbstractConfigValue> list = new ArrayList<>();
-                    for (String key : keys) {
-                        list.add(values.get(key));
-                    }
-                    return new SimpleConfigList(origin, list);
-                } else {
-                    return new SimpleConfigObject(origin, values);
-                }
+                return PropertiesParser.getConfigValue(origin, values, ResolveStatus.fromValues(values.values()), false);
             } else {
                 return PropertiesParser.fromPathMap(origin, (Map<?, ?>) object);
             }
