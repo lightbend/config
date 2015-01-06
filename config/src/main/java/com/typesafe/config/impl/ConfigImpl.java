@@ -189,11 +189,10 @@ public class ConfigImpl {
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject fromPathMap(
+    public static ConfigValue fromPathMap(
             Map<String, ? extends Object> pathMap, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
-        return (ConfigObject) fromAnyRef(pathMap, origin,
-                FromMapMode.KEYS_ARE_PATHS);
+        return fromAnyRef(pathMap, origin, FromMapMode.KEYS_ARE_PATHS);
     }
 
     static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
