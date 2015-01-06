@@ -371,7 +371,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             sb.append("{}");
         } else {
             String[] keys = keySet().toArray(new String[size()]);
-            Arrays.sort(keys, new com.typesafe.config.impl.AlphanumComparator());
+            Arrays.sort(keys, new com.typesafe.config.impl.AlphanumericComparator());
 
             boolean outerBraces = options.getJson() || !atRoot;
 

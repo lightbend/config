@@ -264,7 +264,7 @@ public class ConfigImpl {
                 }
 
                 String[] keys = values.keySet().toArray(new String[values.size()]);
-                Arrays.sort(keys, new com.typesafe.config.impl.AlphanumComparator());
+                Arrays.sort(keys, new com.typesafe.config.impl.AlphanumericComparator());
                 if (keys.length > 0 && isList(keys)) {
                     ArrayList<AbstractConfigValue> list = new ArrayList<>();
                     for (String key : keys) {
