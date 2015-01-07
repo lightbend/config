@@ -5,25 +5,17 @@ package com.typesafe.config.impl;
 
 import java.io.IOException;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
 final class PropertiesParser {
     static AbstractConfigValue parse(Reader reader,
-            ConfigOrigin origin) throws IOException {
+            ConfigOrigin origin, boolean inferLists) throws IOException {
         Properties props = new Properties();
         props.load(reader);
-        return fromProperties(origin, props);
+        return fromProperties(origin, props, inferLists);
     }
 
     static String lastElement(String path) {
@@ -55,7 +47,7 @@ final class PropertiesParser {
     }
 
     static AbstractConfigValue fromProperties(ConfigOrigin origin,
-            Properties props) {
+            Properties props, boolean inferLists) {
         Map<Path, Object> pathMap = new HashMap<Path, Object>();
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
             Object key = entry.getKey();
@@ -64,11 +56,11 @@ final class PropertiesParser {
                 pathMap.put(path, entry.getValue());
             }
         }
-        return fromPathMap(origin, pathMap, true /* from properties */);
+        return fromPathMap(origin, pathMap, true /* from properties */, inferLists);
     }
 
     static AbstractConfigValue fromPathMap(ConfigOrigin origin,
-            Map<?, ?> pathExpressionMap) {
+            Map<?, ?> pathExpressionMap, boolean inferLists) {
         Map<Path, Object> pathMap = new HashMap<Path, Object>();
         for (Map.Entry<?, ?> entry : pathExpressionMap.entrySet()) {
             Object keyObj = entry.getKey();
@@ -79,11 +71,11 @@ final class PropertiesParser {
             Path path = Path.newPath((String) keyObj);
             pathMap.put(path, entry.getValue());
         }
-        return fromPathMap(origin, pathMap, false /* from properties */);
+        return fromPathMap(origin, pathMap, false /* from properties */, inferLists);
     }
 
     private static AbstractConfigValue fromPathMap(ConfigOrigin origin,
-            Map<Path, Object> pathMap, boolean convertedFromProperties) {
+            Map<Path, Object> pathMap, boolean convertedFromProperties, boolean inferLists) {
         /*
          * First, build a list of paths that will have values, either string or
          * object values.
@@ -150,7 +142,7 @@ final class PropertiesParser {
                 }
             } else {
                 value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
-                        FromMapMode.KEYS_ARE_PATHS);
+                        FromMapMode.KEYS_ARE_PATHS, inferLists);
             }
             if (value != null)
                 parent.put(last, value);

@@ -216,7 +216,7 @@ public abstract class Parseable implements ConfigParseable {
     protected AbstractConfigValue rawParseValue(Reader reader, ConfigOrigin origin,
             ConfigParseOptions finalOptions) throws IOException {
         if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
-            return PropertiesParser.parse(reader, origin);
+            return PropertiesParser.parse(reader, origin, finalOptions.getInferLists());
         } else {
             Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
             return Parser.parse(tokens, origin, finalOptions, includeContext());
@@ -720,7 +720,7 @@ public abstract class Parseable implements ConfigParseable {
                 ConfigParseOptions finalOptions) {
             if (ConfigImpl.traceLoadsEnabled())
                 trace("Loading config from properties " + props);
-            return PropertiesParser.fromProperties(origin, props);
+            return PropertiesParser.fromProperties(origin, props, finalOptions.getInferLists());
         }
 
         @Override

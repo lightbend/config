@@ -191,18 +191,18 @@ public class ConfigImpl {
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigValue fromAnyRef(Object object, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
-        return fromAnyRef(object, origin, FromMapMode.KEYS_ARE_KEYS);
+        return fromAnyRef(object, origin, FromMapMode.KEYS_ARE_KEYS, false);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigValue fromPathMap(
-            Map<String, ? extends Object> pathMap, String originDescription) {
+            Map<String, ? extends Object> pathMap, String originDescription, boolean inferLists) {
         ConfigOrigin origin = valueOrigin(originDescription);
-        return fromAnyRef(pathMap, origin, FromMapMode.KEYS_ARE_PATHS);
+        return fromAnyRef(pathMap, origin, FromMapMode.KEYS_ARE_PATHS, inferLists);
     }
 
     static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
-            FromMapMode mapMode) {
+            FromMapMode mapMode, boolean inferLists) {
         if (origin == null)
             throw new ConfigException.BugOrBroken(
                     "origin not supposed to be null");
@@ -251,12 +251,15 @@ public class ConfigImpl {
                                 "bug in method caller: not valid to create ConfigObject from map with non-String key: "
                                         + key);
                     AbstractConfigValue value = fromAnyRef(entry.getValue(),
-                            origin, mapMode);
+                            origin, mapMode, inferLists);
                     values.put((String) key, value);
                 }
-                return PropertiesParser.getConfigValue(origin, values, ResolveStatus.fromValues(values.values()), false);
+                return inferLists
+                        ? PropertiesParser.getConfigValue(origin, values, ResolveStatus.fromValues(values.values()), false)
+                        : new SimpleConfigObject(origin, values, ResolveStatus.fromValues(values.values()), false);
+
             } else {
-                return PropertiesParser.fromPathMap(origin, (Map<?, ?>) object);
+                return PropertiesParser.fromPathMap(origin, (Map<?, ?>) object, inferLists);
             }
         } else if (object instanceof Iterable) {
             Iterator<?> i = ((Iterable<?>) object).iterator();
@@ -265,7 +268,7 @@ public class ConfigImpl {
 
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
             while (i.hasNext()) {
-                AbstractConfigValue v = fromAnyRef(i.next(), origin, mapMode);
+                AbstractConfigValue v = fromAnyRef(i.next(), origin, mapMode, inferLists);
                 values.add(v);
             }
 
