@@ -19,7 +19,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 
 final class PropertiesParser {
-    static AbstractConfigObject parse(Reader reader,
+    static AbstractConfigValue parse(Reader reader,
             ConfigOrigin origin) throws IOException {
         Properties props = new Properties();
         props.load(reader);
@@ -54,7 +54,7 @@ final class PropertiesParser {
         return path;
     }
 
-    static AbstractConfigObject fromProperties(ConfigOrigin origin,
+    static AbstractConfigValue fromProperties(ConfigOrigin origin,
             Properties props) {
         Map<Path, Object> pathMap = new HashMap<Path, Object>();
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
@@ -67,7 +67,7 @@ final class PropertiesParser {
         return fromPathMap(origin, pathMap, true /* from properties */);
     }
 
-    static AbstractConfigObject fromPathMap(ConfigOrigin origin,
+    static AbstractConfigValue fromPathMap(ConfigOrigin origin,
             Map<?, ?> pathExpressionMap) {
         Map<Path, Object> pathMap = new HashMap<Path, Object>();
         for (Map.Entry<?, ?> entry : pathExpressionMap.entrySet()) {
@@ -82,7 +82,7 @@ final class PropertiesParser {
         return fromPathMap(origin, pathMap, false /* from properties */);
     }
 
-    private static AbstractConfigObject fromPathMap(ConfigOrigin origin,
+    private static AbstractConfigValue fromPathMap(ConfigOrigin origin,
             Map<Path, Object> pathMap, boolean convertedFromProperties) {
         /*
          * First, build a list of paths that will have values, either string or
@@ -185,13 +185,43 @@ final class PropertiesParser {
             Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
                     .get(parentPath) : root;
 
-            AbstractConfigObject o = new SimpleConfigObject(origin, scope,
+            AbstractConfigValue o = getConfigValue(origin, scope,
                     ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
             parent.put(scopePath.last(), o);
         }
 
         // return root config object
-        return new SimpleConfigObject(origin, root, ResolveStatus.RESOLVED,
+        return getConfigValue(origin, root, ResolveStatus.RESOLVED,
                 false /* ignoresFallbacks */);
+    }
+
+    static protected boolean isList(String[] keys) {
+        int index = 0;
+        if (keys.length == 0) return false;
+        for (String k : keys) {
+            if (!String.valueOf(index).equals(k)) {
+                return false;
+            }
+            index = index + 1;
+        }
+        return true;
+    }
+
+    static protected AbstractConfigValue getConfigValue(ConfigOrigin origin,
+                                                        Map<String, AbstractConfigValue> values,
+                                                        ResolveStatus status,
+                                                        boolean ignoresFallbacks) {
+
+        final String[] keys = values.keySet().toArray(new String[values.size()]);
+        Arrays.sort(keys, new com.typesafe.config.impl.AlphanumericComparator());
+        if (keys.length > 0 && isList(keys)) {
+            ArrayList<AbstractConfigValue> list = new ArrayList<AbstractConfigValue>();
+            for (String key : keys) {
+                list.add(values.get(key));
+            }
+            return new SimpleConfigList(origin, list, status);
+        } else {
+            return new SimpleConfigObject(origin, values, status, ignoresFallbacks);
+        }
     }
 }
