@@ -364,11 +364,15 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         });
     }
 
+
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (isEmpty()) {
             sb.append("{}");
         } else {
+            String[] keys = keySet().toArray(new String[size()]);
+            Arrays.sort(keys, new com.typesafe.config.impl.AlphanumericComparator());
+
             boolean outerBraces = options.getJson() || !atRoot;
 
             int innerIndent;
@@ -383,8 +387,6 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             }
 
             int separatorCount = 0;
-            String[] keys = keySet().toArray(new String[size()]);
-            Arrays.sort(keys);
             for (String k : keys) {
                 AbstractConfigValue v;
                 v = value.get(k);
@@ -432,6 +434,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 }
                 sb.append("}");
             }
+
         }
         if (atRoot && options.getFormatted())
             sb.append('\n');
