@@ -207,7 +207,7 @@ final class PropertiesParser {
         final String[] keys = values.keySet().toArray(new String[values.size()]);
         Arrays.sort(keys, new com.typesafe.config.impl.AlphanumericComparator());
         if (keys.length > 0 && isList(keys)) {
-            ArrayList<AbstractConfigValue> list = new ArrayList<>();
+            ArrayList<AbstractConfigValue> list = new ArrayList<AbstractConfigValue>();
             for (String key : keys) {
                 list.add(values.get(key));
             }
