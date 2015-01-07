@@ -716,7 +716,7 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        protected AbstractConfigObject rawParseValue(ConfigOrigin origin,
+        protected AbstractConfigValue rawParseValue(ConfigOrigin origin,
                 ConfigParseOptions finalOptions) {
             if (ConfigImpl.traceLoadsEnabled())
                 trace("Loading config from properties " + props);
