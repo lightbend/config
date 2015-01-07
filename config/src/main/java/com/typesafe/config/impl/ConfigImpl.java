@@ -5,13 +5,7 @@ package com.typesafe.config.impl;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.Callable;
 
 import com.typesafe.config.Config;
@@ -195,11 +189,10 @@ public class ConfigImpl {
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigObject fromPathMap(
+    public static ConfigValue fromPathMap(
             Map<String, ? extends Object> pathMap, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
-        return (ConfigObject) fromAnyRef(pathMap, origin,
-                FromMapMode.KEYS_ARE_PATHS);
+        return fromAnyRef(pathMap, origin, FromMapMode.KEYS_ARE_PATHS);
     }
 
     static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
@@ -255,8 +248,7 @@ public class ConfigImpl {
                             origin, mapMode);
                     values.put((String) key, value);
                 }
-
-                return new SimpleConfigObject(origin, values);
+                return PropertiesParser.getConfigValue(origin, values, ResolveStatus.fromValues(values.values()), false);
             } else {
                 return PropertiesParser.fromPathMap(origin, (Map<?, ?>) object);
             }
