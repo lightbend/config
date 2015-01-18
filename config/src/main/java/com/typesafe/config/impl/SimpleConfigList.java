@@ -222,7 +222,6 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
             int separatorCount = 0;
             boolean lastLineNotFinished = true;
             boolean allInlined = true;
-            boolean isFirst;
             
             for (AbstractConfigValue v : value) {
                 //First check if we can append this entry in the same line
