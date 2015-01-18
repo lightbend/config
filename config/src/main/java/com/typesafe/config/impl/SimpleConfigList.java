@@ -177,6 +177,8 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
             sb.append("[");
             if (options.getFormatted())
                 sb.append('\n');
+            
+            int separatorCount = 0;
             for (AbstractConfigValue v : value) {
                 if (options.getOriginComments()) {
                     indent(sb, indent + 1, options);
@@ -193,15 +195,23 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
                     }
                 }
                 indent(sb, indent + 1, options);
-
                 v.render(sb, indent + 1, atRoot, options);
-                sb.append(",");
-                if (options.getFormatted())
+                
+                if (options.getFormatted()) {
+                    if (options.getJson()) {
+                        separatorCount = 2;
+                        sb.append(',');
+                    } else {
+                        separatorCount = 1;
+                    }
                     sb.append('\n');
+                } else {
+                    separatorCount = 1;
+                    sb.append(',');
+                }
             }
-            sb.setLength(sb.length() - 1); // chop or newline
+            sb.setLength(sb.length() - separatorCount); // chop last commas/newlines
             if (options.getFormatted()) {
-                sb.setLength(sb.length() - 1); // also chop comma
                 sb.append('\n');
                 indent(sb, indent, options);
             }

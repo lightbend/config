@@ -314,7 +314,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
                     if (options.getFormatted())
                         sb.append(' ');
                 } else {
-                    sb.append("=");
+                    sb.append(" = ");
                 }
             }
         }
