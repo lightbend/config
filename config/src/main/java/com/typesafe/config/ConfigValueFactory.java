@@ -16,6 +16,20 @@ public final class ConfigValueFactory {
     private ConfigValueFactory() {
     }
 
+    public static ConfigValue fromAnyRef(Object object, String originDescription, String[] comments) {
+        return ConfigImpl.fromAnyRef(object, originDescription, comments);
+    }
+
+    public static ConfigObject fromMap(Map<String, ? extends Object> values,
+            String originDescription, String[] comments) {
+        return (ConfigObject) fromAnyRef(values, originDescription, comments);
+    }
+
+    public static ConfigList fromIterable(Iterable<? extends Object> values,
+            String originDescription, String[] comments) {
+        return (ConfigList) fromAnyRef(values, originDescription, comments);
+    }
+    
     /**
      * Creates a {@link ConfigValue} from a plain Java boxed value, which may be
      * a <code>Boolean</code>, <code>Number</code>, <code>String</code>,
@@ -63,7 +77,7 @@ public final class ConfigValueFactory {
      * @return a new value
      */
     public static ConfigValue fromAnyRef(Object object, String originDescription) {
-        return ConfigImpl.fromAnyRef(object, originDescription);
+        return ConfigImpl.fromAnyRef(object, originDescription, null);
     }
 
     /**
