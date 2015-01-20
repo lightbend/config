@@ -270,13 +270,10 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
 
             //Now merge sb into listStringBuilder.
             listStringBuilder.append(sb);
-            if (!allInlined) {
+            if (!allInlined && options.getFormatted()) {
                 //Not all in one line, so newline before ']'.
-                listStringBuilder.append(sb);
-                if (options.getFormatted()) {
-                    listStringBuilder.append('\n');
-                    indent(listStringBuilder, indent, options);
-                }
+                listStringBuilder.append('\n');
+                indent(listStringBuilder, indent, options);
             }
             listStringBuilder.append(']');
         }
