@@ -202,8 +202,9 @@ public class ConfigImpl {
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigValue fromAnyRef(Object object, String originDescription, String[] comments) {
         ConfigOrigin valueOrigin = valueOrigin(originDescription, comments);
-        ConfigOrigin origin = (object != null && (object instanceof Map || object instanceof Iterable)) ?
-        		valueOrigin(originDescription) : null;
+        ConfigOrigin origin = valueOrigin(originDescription);
+        if (object != null && object instanceof ConfigValue)
+            object = ((ConfigValue) object).unwrapped();
         return fromAnyRef(object, valueOrigin, origin, FromMapMode.KEYS_ARE_KEYS);
     }
 
@@ -254,11 +255,7 @@ public class ConfigImpl {
                         ((Number) object).doubleValue(), null);
             }
         } else if (object instanceof AbstractConfigValue) {
-            if (origin == null) {
-                return ((AbstractConfigValue) object).newCopy(valueOrigin);
-            } else {
-                return (AbstractConfigValue) object;
-            }
+            return (AbstractConfigValue) object;
         } else if (object instanceof Map) {
             if (((Map<?, ?>) object).isEmpty())
                 return emptyObject(valueOrigin);
