@@ -50,31 +50,35 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    AbstractConfigObject resolveSubstitutions(ResolveContext context)
+    ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
-        AbstractConfigValue merged = ConfigDelayedMerge.resolveSubstitutions(this, stack, context);
-        if (merged instanceof AbstractConfigObject) {
-            return (AbstractConfigObject) merged;
-        } else {
-            throw new ConfigException.BugOrBroken(
-                    "somehow brokenly merged an object and didn't get an object, got " + merged);
-        }
+        ResolveResult<? extends AbstractConfigValue> merged = ConfigDelayedMerge.resolveSubstitutions(this, stack,
+                context, source);
+        return merged.asObjectResult();
     }
 
     @Override
-    public ResolveReplacer makeReplacer(final int skipping) {
-        return new ResolveReplacer() {
-            @Override
-            protected AbstractConfigValue makeReplacement(ResolveContext context)
-                    throws NotPossibleToResolve {
-                return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
-            }
-        };
+    public AbstractConfigValue makeReplacement(ResolveContext context, int skipping) {
+        return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
     }
 
     @Override
     ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED;
+    }
+
+    @Override
+    public AbstractConfigValue replaceChild(AbstractConfigValue child, AbstractConfigValue replacement) {
+        List<AbstractConfigValue> newStack = replaceChildInList(stack, child, replacement);
+        if (newStack == null)
+            return null;
+        else
+            return new ConfigDelayedMergeObject(origin(), newStack);
+    }
+
+    @Override
+    public boolean hasDescendant(AbstractConfigValue descendant) {
+        return hasDescendantInList(stack, descendant);
     }
 
     @Override
@@ -165,8 +169,8 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
         // note that "origin" is deliberately NOT part of equality
         if (other instanceof ConfigDelayedMergeObject) {
             return canEqual(other)
-                    && this.stack
-                            .equals(((ConfigDelayedMergeObject) other).stack);
+                    && (this.stack == ((ConfigDelayedMergeObject) other).stack || this.stack
+                            .equals(((ConfigDelayedMergeObject) other).stack));
         } else {
             return false;
         }

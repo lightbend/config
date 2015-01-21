@@ -68,15 +68,49 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
      *
      * @param context
      *            state of the current resolve
+     * @param source
+     *            where to look up values
      * @return a new value if there were changes, or this if no changes
      */
-    AbstractConfigValue resolveSubstitutions(ResolveContext context)
+    ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
-        return this;
+        return ResolveResult.make(context, this);
     }
 
     ResolveStatus resolveStatus() {
         return ResolveStatus.RESOLVED;
+    }
+
+    protected static List<AbstractConfigValue> replaceChildInList(List<AbstractConfigValue> list,
+            AbstractConfigValue child, AbstractConfigValue replacement) {
+        int i = 0;
+        while (i < list.size() && list.get(i) != child)
+            ++i;
+        if (i == list.size())
+            throw new ConfigException.BugOrBroken("tried to replace " + child + " which is not in " + list);
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>(list);
+        if (replacement != null)
+            newStack.set(i, replacement);
+        else
+            newStack.remove(i);
+
+        if (newStack.isEmpty())
+            return null;
+        else
+            return newStack;
+    }
+
+    protected static boolean hasDescendantInList(List<AbstractConfigValue> list, AbstractConfigValue descendant) {
+        for (AbstractConfigValue v : list) {
+            if (v == descendant)
+                return true;
+        }
+        // now the expensive traversal
+        for (AbstractConfigValue v : list) {
+            if (v instanceof Container && ((Container) v).hasDescendant(descendant))
+                return true;
+        }
+        return false;
     }
 
     /**

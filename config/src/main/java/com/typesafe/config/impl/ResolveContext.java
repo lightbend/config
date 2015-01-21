@@ -1,19 +1,16 @@
 package com.typesafe.config.impl;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigResolveOptions;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 
 final class ResolveContext {
-    // this is unfortunately mutable so should only be shared among
-    // ResolveContext in the same traversal.
-    final private ResolveSource source;
-
-    // this is unfortunately mutable so should only be shared among
-    // ResolveContext in the same traversal.
     final private ResolveMemos memos;
 
     final private ConfigResolveOptions options;
@@ -24,29 +21,57 @@ final class ResolveContext {
     // CAN BE NULL for a full resolve.
     final private Path restrictToChild;
 
-    // another mutable unfortunate. This is
-    // used to make nice error messages when
-    // resolution fails.
-    final private List<SubstitutionExpression> expressionTrace;
+    // This is used for tracing and debugging and nice error messages;
+    // contains every node as we call resolve on it.
+    final private List<AbstractConfigValue> resolveStack;
 
-    ResolveContext(ResolveSource source, ResolveMemos memos, ConfigResolveOptions options,
-            Path restrictToChild, List<SubstitutionExpression> expressionTrace) {
-        this.source = source;
+    final private Set<AbstractConfigValue> cycleMarkers;
+
+    ResolveContext(ResolveMemos memos, ConfigResolveOptions options, Path restrictToChild,
+            List<AbstractConfigValue> resolveStack, Set<AbstractConfigValue> cycleMarkers) {
         this.memos = memos;
         this.options = options;
         this.restrictToChild = restrictToChild;
-        this.expressionTrace = expressionTrace;
+        this.resolveStack = Collections.unmodifiableList(resolveStack);
+        this.cycleMarkers = Collections.unmodifiableSet(cycleMarkers);
     }
 
-    ResolveContext(AbstractConfigObject root, ConfigResolveOptions options, Path restrictToChild) {
+    private static Set<AbstractConfigValue> newCycleMarkers() {
+        return Collections.newSetFromMap(new IdentityHashMap<AbstractConfigValue, Boolean>());
+    }
+
+    ResolveContext(ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
-        this(new ResolveSource(root), new ResolveMemos(), options, restrictToChild,
-                new ArrayList<SubstitutionExpression>());
+        this(new ResolveMemos(), options, restrictToChild, new ArrayList<AbstractConfigValue>(), newCycleMarkers());
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth(), "ResolveContext restrict to child " + restrictToChild);
     }
 
-    ResolveSource source() {
-        return source;
+    ResolveContext addCycleMarker(AbstractConfigValue value) {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth(), "++ Cycle marker " + value + "@" + System.identityHashCode(value));
+        if (cycleMarkers.contains(value))
+            throw new ConfigException.BugOrBroken("Added cycle marker twice " + value);
+        Set<AbstractConfigValue> copy = newCycleMarkers();
+        copy.addAll(cycleMarkers);
+        copy.add(value);
+        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy);
+    }
+
+    ResolveContext removeCycleMarker(AbstractConfigValue value) {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth(), "-- Cycle marker " + value + "@" + System.identityHashCode(value));
+
+        Set<AbstractConfigValue> copy = newCycleMarkers();
+        copy.addAll(cycleMarkers);
+        copy.remove(value);
+        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy);
+    }
+
+    private ResolveContext memoize(MemoKey key, AbstractConfigValue value) {
+        ResolveMemos changed = memos.put(key, value);
+        return new ResolveContext(changed, options, restrictToChild, resolveStack, cycleMarkers);
     }
 
     ConfigResolveOptions options() {
@@ -61,38 +86,64 @@ final class ResolveContext {
         return restrictToChild;
     }
 
+    // restrictTo may be null to unrestrict
     ResolveContext restrict(Path restrictTo) {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(source, memos, options, restrictTo, expressionTrace);
+            return new ResolveContext(memos, options, restrictTo, resolveStack, cycleMarkers);
     }
 
     ResolveContext unrestricted() {
         return restrict(null);
     }
 
-    void trace(SubstitutionExpression expr) {
-        expressionTrace.add(expr);
-    }
-
-    void untrace() {
-        expressionTrace.remove(expressionTrace.size() - 1);
-    }
-
     String traceString() {
         String separator = ", ";
         StringBuilder sb = new StringBuilder();
-        for (SubstitutionExpression expr : expressionTrace) {
-            sb.append(expr.toString());
-            sb.append(separator);
+        for (AbstractConfigValue value : resolveStack) {
+            if (value instanceof ConfigReference) {
+                sb.append(((ConfigReference) value).expression().toString());
+                sb.append(separator);
+            }
         }
         if (sb.length() > 0)
             sb.setLength(sb.length() - separator.length());
         return sb.toString();
     }
 
-    AbstractConfigValue resolve(AbstractConfigValue original) throws NotPossibleToResolve {
+    private ResolveContext pushTrace(AbstractConfigValue value) {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth(), "pushing trace " + value);
+        List<AbstractConfigValue> copy = new ArrayList<AbstractConfigValue>(resolveStack);
+        copy.add(value);
+        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers);
+    }
+
+    ResolveContext popTrace() {
+        List<AbstractConfigValue> copy = new ArrayList<AbstractConfigValue>(resolveStack);
+        AbstractConfigValue old = copy.remove(resolveStack.size() - 1);
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace(depth() - 1, "popped trace " + old);
+        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers);
+    }
+
+    int depth() {
+        if (resolveStack.size() > 30)
+            throw new ConfigException.BugOrBroken("resolve getting too deep");
+        return resolveStack.size();
+    }
+
+    ResolveResult<? extends AbstractConfigValue> resolve(AbstractConfigValue original, ResolveSource source)
+            throws NotPossibleToResolve {
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl
+                    .trace(depth(), "resolving " + original + " restrictToChild=" + restrictToChild + " in " + source);
+        return pushTrace(original).realResolve(original, source).popTrace();
+    }
+
+    private ResolveResult<? extends AbstractConfigValue> realResolve(AbstractConfigValue original, ResolveSource source)
+            throws NotPossibleToResolve {
         // a fully-resolved (no restrictToChild) object can satisfy a
         // request for a restricted object, so always check that first.
         final MemoKey fullKey = new MemoKey(original, null);
@@ -109,16 +160,40 @@ final class ResolveContext {
         }
 
         if (cached != null) {
-            return cached;
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(depth(), "using cached resolution " + cached + " for " + original
+                        + " restrictToChild " + restrictToChild());
+            return ResolveResult.make(this, cached);
         } else {
-            AbstractConfigValue resolved = source.resolveCheckingReplacement(this, original);
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(depth(),
+                        "not found in cache, resolving " + original + "@" + System.identityHashCode(original));
+
+            if (cycleMarkers.contains(original)) {
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(depth(),
+                            "Cycle detected, can't resolve; " + original + "@" + System.identityHashCode(original));
+                throw new NotPossibleToResolve(this);
+            }
+
+            ResolveResult<? extends AbstractConfigValue> result = original.resolveSubstitutions(this, source);
+            AbstractConfigValue resolved = result.value;
+
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(depth(), "resolved to " + resolved + "@" + System.identityHashCode(resolved)
+                        + " from " + original + "@" + System.identityHashCode(resolved));
+
+            ResolveContext withMemo = result.context;
 
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
                 // if the resolved object is fully resolved by resolving
                 // only the restrictToChildOrNull, then it can be cached
                 // under fullKey since the child we were restricted to
                 // turned out to be the only unresolved thing.
-                memos.put(fullKey, resolved);
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(depth(), "caching " + fullKey + " result " + resolved);
+
+                withMemo = withMemo.memoize(fullKey, resolved);
             } else {
                 // if we have an unresolved object then either we did a
                 // partial resolve restricted to a certain child, or we are
@@ -128,25 +203,32 @@ final class ResolveContext {
                         throw new ConfigException.BugOrBroken(
                                 "restrictedKey should not be null here");
                     }
-                    memos.put(restrictedKey, resolved);
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(depth(), "caching " + restrictedKey + " result " + resolved);
+
+                    withMemo = withMemo.memoize(restrictedKey, resolved);
                 } else if (options().getAllowUnresolved()) {
-                    memos.put(fullKey, resolved);
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(depth(), "caching " + fullKey + " result " + resolved);
+
+                    withMemo = withMemo.memoize(fullKey, resolved);
                 } else {
                     throw new ConfigException.BugOrBroken(
                             "resolveSubstitutions() did not give us a resolved object");
                 }
             }
 
-            return resolved;
+            return ResolveResult.make(withMemo, resolved);
         }
     }
 
     static AbstractConfigValue resolve(AbstractConfigValue value, AbstractConfigObject root,
             ConfigResolveOptions options) {
-        ResolveContext context = new ResolveContext(root, options, null /* restrictToChild */);
+        ResolveSource source = new ResolveSource(root);
+        ResolveContext context = new ResolveContext(options, null /* restrictToChild */);
 
         try {
-            return context.resolve(value);
+            return context.resolve(value, source).value;
         } catch (NotPossibleToResolve e) {
             // ConfigReference was supposed to catch NotPossibleToResolve
             throw new ConfigException.BugOrBroken(
