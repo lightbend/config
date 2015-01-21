@@ -22,7 +22,7 @@ import com.typesafe.config.ConfigValueType;
  * concatenations of objects, but ConfigDelayedMerge should be used for that
  * since a concat of objects really will merge, not concatenate.
  */
-final class ConfigConcatenation extends AbstractConfigValue implements Unmergeable {
+final class ConfigConcatenation extends AbstractConfigValue implements Unmergeable, Container {
 
     final private List<AbstractConfigValue> pieces;
 
@@ -170,12 +170,35 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    AbstractConfigValue resolveSubstitutions(ResolveContext context) throws NotPossibleToResolve {
+    ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
+            throws NotPossibleToResolve {
+        if (ConfigImpl.traceSubstitutionsEnabled()) {
+            int indent = context.depth() + 2;
+            ConfigImpl.trace(indent - 1, "concatenation has " + pieces.size() + " pieces:");
+            int count = 0;
+            for (AbstractConfigValue v : pieces) {
+                ConfigImpl.trace(indent, count + ": " + v);
+                count += 1;
+            }
+        }
+
+        // Right now there's no reason to pushParent here because the
+        // content of ConfigConcatenation should not need to replaceChild,
+        // but if it did we'd have to do this.
+        ResolveSource sourceWithParent = source; // .pushParent(this);
+        ResolveContext newContext = context;
+
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
         for (AbstractConfigValue p : pieces) {
             // to concat into a string we have to do a full resolve,
-            // so unrestrict the context
-            AbstractConfigValue r = context.unrestricted().resolve(p);
+            // so unrestrict the context, then put restriction back afterward
+            Path restriction = newContext.restrictToChild();
+            ResolveResult<? extends AbstractConfigValue> result = newContext.unrestricted()
+                    .resolve(p, sourceWithParent);
+            AbstractConfigValue r = result.value;
+            newContext = result.context.restrict(restriction);
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), "resolved concat piece to " + r);
             if (r == null) {
                 // it was optional... omit
             } else {
@@ -188,11 +211,12 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         // if unresolved is allowed we can just become another
         // ConfigConcatenation
         if (joined.size() > 1 && context.options().getAllowUnresolved())
-            return new ConfigConcatenation(this.origin(), joined);
+            return ResolveResult.make(newContext, new ConfigConcatenation(this.origin(), joined));
         else if (joined.isEmpty())
-            return null; // we had just a list of optional references using ${?}
+            // we had just a list of optional references using ${?}
+            return ResolveResult.make(newContext, null);
         else if (joined.size() == 1)
-            return joined.get(0);
+            return ResolveResult.make(newContext, joined.get(0));
         else
             throw new ConfigException.BugOrBroken("Bug in the library; resolved list was joined to too many values: "
                     + joined);
@@ -201,6 +225,20 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     @Override
     ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED;
+    }
+
+    @Override
+    public ConfigConcatenation replaceChild(AbstractConfigValue child, AbstractConfigValue replacement) {
+        List<AbstractConfigValue> newPieces = replaceChildInList(pieces, child, replacement);
+        if (newPieces == null)
+            return null;
+        else
+            return new ConfigConcatenation(origin(), newPieces);
+    }
+
+    @Override
+    public boolean hasDescendant(AbstractConfigValue descendant) {
+        return hasDescendantInList(pieces, descendant);
     }
 
     // when you graft a substitution into another object,
@@ -243,20 +281,5 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         for (AbstractConfigValue p : pieces) {
             p.render(sb, indent, atRoot, options);
         }
-    }
-
-    static List<AbstractConfigValue> valuesFromPieces(ConfigOrigin origin, List<Object> pieces) {
-        List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>(pieces.size());
-        for (Object p : pieces) {
-            if (p instanceof SubstitutionExpression) {
-                values.add(new ConfigReference(origin, (SubstitutionExpression) p));
-            } else if (p instanceof String) {
-                values.add(new ConfigString(origin, (String) p));
-            } else {
-                throw new ConfigException.BugOrBroken("Unexpected piece " + p);
-            }
-        }
-
-        return values;
     }
 }

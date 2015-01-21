@@ -36,4 +36,9 @@ final class MemoKey {
             return false;
         }
     }
+
+    @Override
+    public final String toString() {
+        return "MemoKey(" + value + "@" + System.identityHashCode(value) + "," + restrictToChildOrNull + ")";
+    }
 }

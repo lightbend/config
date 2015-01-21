@@ -65,31 +65,49 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     // This way it's impossible for NotPossibleToResolve to "escape" since
     // any failure to resolve has to start with a ConfigReference.
     @Override
-    AbstractConfigValue resolveSubstitutions(ResolveContext context) {
-        context.source().replace(this, ResolveReplacer.cycleResolveReplacer);
+    ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source) {
+        ResolveContext newContext = context.addCycleMarker(this);
+        AbstractConfigValue v;
         try {
-            AbstractConfigValue v;
-            try {
-                v = context.source().lookupSubst(context, expr, prefixLength);
-            } catch (NotPossibleToResolve e) {
-                if (expr.optional())
-                    v = null;
-                else
-                    throw new ConfigException.UnresolvedSubstitution(origin(), expr
-                            + " was part of a cycle of substitutions involving " + e.traceString(),
-                            e);
-            }
+            ResolveSource.ResultWithPath resultWithPath = source.lookupSubst(newContext, expr, prefixLength);
+            newContext = resultWithPath.result.context;
 
-            if (v == null && !expr.optional()) {
-                if (context.options().getAllowUnresolved())
-                    return this;
-                else
-                    throw new ConfigException.UnresolvedSubstitution(origin(), expr.toString());
+            if (resultWithPath.result.value != null) {
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(newContext.depth(), "recursively resolving " + resultWithPath
+                            + " which was the resolution of " + expr + " against " + source);
+
+                ResolveSource recursiveResolveSource = (new ResolveSource(
+                        (AbstractConfigObject) resultWithPath.pathFromRoot.last(), resultWithPath.pathFromRoot));
+
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(newContext.depth(), "will recursively resolve against " + recursiveResolveSource);
+
+                ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(resultWithPath.result.value,
+                        recursiveResolveSource);
+                v = result.value;
+                newContext = result.context;
             } else {
-                return v;
+                v = null;
             }
-        } finally {
-            context.source().unreplace(this);
+        } catch (NotPossibleToResolve e) {
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(newContext.depth(),
+                        "not possible to resolve " + expr + ", cycle involved: " + e.traceString());
+            if (expr.optional())
+                v = null;
+            else
+                throw new ConfigException.UnresolvedSubstitution(origin(), expr
+                        + " was part of a cycle of substitutions involving " + e.traceString(), e);
+        }
+
+        if (v == null && !expr.optional()) {
+            if (newContext.options().getAllowUnresolved())
+                return ResolveResult.make(newContext.removeCycleMarker(this), this);
+            else
+                throw new ConfigException.UnresolvedSubstitution(origin(), expr.toString());
+        } else {
+            return ResolveResult.make(newContext.removeCycleMarker(this), v);
         }
     }
 

@@ -377,10 +377,12 @@ public class ConfigImpl {
 
     private static class DebugHolder {
         private static String LOADS = "loads";
+        private static String SUBSTITUTIONS = "substitutions";
 
         private static Map<String, Boolean> loadDiagnostics() {
             Map<String, Boolean> result = new HashMap<String, Boolean>();
             result.put(LOADS, false);
+            result.put(SUBSTITUTIONS, false);
 
             // People do -Dconfig.trace=foo,bar to enable tracing of different things
             String s = System.getProperty("config.trace");
@@ -391,6 +393,8 @@ public class ConfigImpl {
                 for (String k : keys) {
                     if (k.equals(LOADS)) {
                         result.put(LOADS, true);
+                    } else if (k.equals(SUBSTITUTIONS)) {
+                        result.put(SUBSTITUTIONS, true);
                     } else {
                         System.err.println("config.trace property contains unknown trace topic '"
                                 + k + "'");
@@ -403,9 +407,14 @@ public class ConfigImpl {
         private static final Map<String, Boolean> diagnostics = loadDiagnostics();
 
         private static final boolean traceLoadsEnabled = diagnostics.get(LOADS);
+        private static final boolean traceSubstitutionsEnabled = diagnostics.get(SUBSTITUTIONS);
 
         static boolean traceLoadsEnabled() {
             return traceLoadsEnabled;
+        }
+
+        static boolean traceSubstitutionsEnabled() {
+            return traceSubstitutionsEnabled;
         }
     }
 
@@ -418,7 +427,23 @@ public class ConfigImpl {
         }
     }
 
+    public static boolean traceSubstitutionsEnabled() {
+        try {
+            return DebugHolder.traceSubstitutionsEnabled();
+        } catch (ExceptionInInitializerError e) {
+            throw ConfigImplUtil.extractInitializerError(e);
+        }
+    }
+
     public static void trace(String message) {
+        System.err.println(message);
+    }
+
+    public static void trace(int indentLevel, String message) {
+        while (indentLevel > 0) {
+            System.err.print("  ");
+            indentLevel -= 1;
+        }
         System.err.println(message);
     }
 
