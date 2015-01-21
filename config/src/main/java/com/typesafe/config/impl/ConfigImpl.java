@@ -213,6 +213,8 @@ public class ConfigImpl {
             Map<String, ? extends Object> pathMap, String originDescription, String[] comments) {
         ConfigOrigin valueOrigin = valueOrigin(originDescription, comments);
         ConfigOrigin origin = valueOrigin(originDescription);
+        if (pathMap != null && pathMap instanceof ConfigValue)
+            pathMap = (Map<String, ? extends Object>) ((ConfigValue) pathMap).unwrapped();
         return (ConfigObject) fromAnyRef(pathMap, valueOrigin, origin,
                 FromMapMode.KEYS_ARE_PATHS);
     }
