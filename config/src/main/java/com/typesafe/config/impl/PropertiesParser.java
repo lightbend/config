@@ -54,7 +54,7 @@ final class PropertiesParser {
         return path;
     }
 
-    static AbstractConfigObject fromProperties(ConfigOrigin origin,
+    static AbstractConfigObject fromProperties(ConfigOrigin valueOrigin, ConfigOrigin origin,
             Properties props) {
         Map<Path, Object> pathMap = new HashMap<Path, Object>();
         for (Map.Entry<Object, Object> entry : props.entrySet()) {
@@ -64,10 +64,15 @@ final class PropertiesParser {
                 pathMap.put(path, entry.getValue());
             }
         }
-        return fromPathMap(origin, pathMap, true /* from properties */);
+        return fromPathMap(valueOrigin, origin, pathMap, true /* from properties */);
+    }
+    
+    static AbstractConfigObject fromProperties(ConfigOrigin origin,
+            Properties props) {
+    	return fromProperties(origin, origin, props);
     }
 
-    static AbstractConfigObject fromPathMap(ConfigOrigin origin,
+    static AbstractConfigObject fromPathMap(ConfigOrigin valueOrigin, ConfigOrigin origin,
             Map<?, ?> pathExpressionMap) {
         Map<Path, Object> pathMap = new HashMap<Path, Object>();
         for (Map.Entry<?, ?> entry : pathExpressionMap.entrySet()) {
@@ -79,10 +84,10 @@ final class PropertiesParser {
             Path path = Path.newPath((String) keyObj);
             pathMap.put(path, entry.getValue());
         }
-        return fromPathMap(origin, pathMap, false /* from properties */);
+        return fromPathMap(valueOrigin, origin, pathMap, false /* from properties */);
     }
 
-    private static AbstractConfigObject fromPathMap(ConfigOrigin origin,
+    private static AbstractConfigObject fromPathMap(ConfigOrigin valueOrigin, ConfigOrigin origin,
             Map<Path, Object> pathMap, boolean convertedFromProperties) {
         /*
          * First, build a list of paths that will have values, either string or
@@ -149,7 +154,7 @@ final class PropertiesParser {
                     value = null;
                 }
             } else {
-                value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
+                value = ConfigImpl.fromAnyRef(pathMap.get(path), origin, origin,
                         FromMapMode.KEYS_ARE_PATHS);
             }
             if (value != null)
@@ -191,7 +196,7 @@ final class PropertiesParser {
         }
 
         // return root config object
-        return new SimpleConfigObject(origin, root, ResolveStatus.RESOLVED,
+        return new SimpleConfigObject(valueOrigin, root, ResolveStatus.RESOLVED,
                 false /* ignoresFallbacks */);
     }
 }

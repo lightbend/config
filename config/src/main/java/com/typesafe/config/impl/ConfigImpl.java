@@ -6,6 +6,7 @@ package com.typesafe.config.impl;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -187,42 +188,58 @@ public class ConfigImpl {
         else
             return SimpleConfigOrigin.newSimple(originDescription);
     }
+    
+    private static ConfigOrigin valueOrigin(String originDescription, String[] comments) {
+    	if (originDescription == null && comments == null) 
+    		return defaultValueOrigin;
+    	if (comments == null)
+            return SimpleConfigOrigin.newSimple(originDescription);
+    	if (originDescription == null)
+    		return ((SimpleConfigOrigin) defaultValueOrigin).setComments(Arrays.asList(comments));
+    	return SimpleConfigOrigin.newSimple(originDescription).setComments(Arrays.asList(comments));
+    }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
-    public static ConfigValue fromAnyRef(Object object, String originDescription) {
+    public static ConfigValue fromAnyRef(Object object, String originDescription, String[] comments) {
+        ConfigOrigin valueOrigin = valueOrigin(originDescription, comments);
         ConfigOrigin origin = valueOrigin(originDescription);
-        return fromAnyRef(object, origin, FromMapMode.KEYS_ARE_KEYS);
+        if (object != null && object instanceof ConfigValue)
+            object = ((ConfigValue) object).unwrapped();
+        return fromAnyRef(object, valueOrigin, origin, FromMapMode.KEYS_ARE_KEYS);
     }
 
     /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject fromPathMap(
-            Map<String, ? extends Object> pathMap, String originDescription) {
+            Map<String, ? extends Object> pathMap, String originDescription, String[] comments) {
+        ConfigOrigin valueOrigin = valueOrigin(originDescription, comments);
         ConfigOrigin origin = valueOrigin(originDescription);
-        return (ConfigObject) fromAnyRef(pathMap, origin,
+        if (pathMap != null && pathMap instanceof ConfigValue)
+            pathMap = (Map<String, ? extends Object>) ((ConfigValue) pathMap).unwrapped();
+        return (ConfigObject) fromAnyRef(pathMap, valueOrigin, origin,
                 FromMapMode.KEYS_ARE_PATHS);
     }
 
-    static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
+    static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin valueOrigin, ConfigOrigin origin,
             FromMapMode mapMode) {
-        if (origin == null)
+        if (valueOrigin == null)
             throw new ConfigException.BugOrBroken(
                     "origin not supposed to be null");
 
         if (object == null) {
-            if (origin != defaultValueOrigin)
-                return new ConfigNull(origin);
+            if (valueOrigin != defaultValueOrigin)
+                return new ConfigNull(valueOrigin);
             else
                 return defaultNullValue;
         } else if (object instanceof Boolean) {
-            if (origin != defaultValueOrigin) {
-                return new ConfigBoolean(origin, (Boolean) object);
+            if (valueOrigin != defaultValueOrigin) {
+                return new ConfigBoolean(valueOrigin, (Boolean) object);
             } else if ((Boolean) object) {
                 return defaultTrueValue;
             } else {
                 return defaultFalseValue;
             }
         } else if (object instanceof String) {
-            return new ConfigString(origin, (String) object);
+            return new ConfigString(valueOrigin, (String) object);
         } else if (object instanceof Number) {
             // here we always keep the same type that was passed to us,
             // rather than figuring out if a Long would fit in an Int
@@ -230,18 +247,20 @@ public class ConfigImpl {
             // not using ConfigNumber.newNumber() when we have a
             // Double, Integer, or Long.
             if (object instanceof Double) {
-                return new ConfigDouble(origin, (Double) object, null);
+                return new ConfigDouble(valueOrigin, (Double) object, null);
             } else if (object instanceof Integer) {
-                return new ConfigInt(origin, (Integer) object, null);
+                return new ConfigInt(valueOrigin, (Integer) object, null);
             } else if (object instanceof Long) {
-                return new ConfigLong(origin, (Long) object, null);
+                return new ConfigLong(valueOrigin, (Long) object, null);
             } else {
-                return ConfigNumber.newNumber(origin,
+                return ConfigNumber.newNumber(valueOrigin,
                         ((Number) object).doubleValue(), null);
             }
+        } else if (object instanceof AbstractConfigValue) {
+            return (AbstractConfigValue) object;
         } else if (object instanceof Map) {
             if (((Map<?, ?>) object).isEmpty())
-                return emptyObject(origin);
+                return emptyObject(valueOrigin);
 
             if (mapMode == FromMapMode.KEYS_ARE_KEYS) {
                 Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
@@ -252,26 +271,26 @@ public class ConfigImpl {
                                 "bug in method caller: not valid to create ConfigObject from map with non-String key: "
                                         + key);
                     AbstractConfigValue value = fromAnyRef(entry.getValue(),
-                            origin, mapMode);
+                    		origin, origin, mapMode);
                     values.put((String) key, value);
                 }
 
-                return new SimpleConfigObject(origin, values);
+                return new SimpleConfigObject(valueOrigin, values);
             } else {
-                return PropertiesParser.fromPathMap(origin, (Map<?, ?>) object);
+                return PropertiesParser.fromPathMap(valueOrigin, origin, (Map<?, ?>) object);
             }
         } else if (object instanceof Iterable) {
             Iterator<?> i = ((Iterable<?>) object).iterator();
             if (!i.hasNext())
-                return emptyList(origin);
+                return emptyList(valueOrigin);
 
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
             while (i.hasNext()) {
-                AbstractConfigValue v = fromAnyRef(i.next(), origin, mapMode);
+                AbstractConfigValue v = fromAnyRef(i.next(), origin, origin, mapMode);
                 values.add(v);
             }
 
-            return new SimpleConfigList(origin, values);
+            return new SimpleConfigList(valueOrigin, values);
         } else {
             throw new ConfigException.BugOrBroken(
                     "bug in method caller: not valid to create ConfigValue from: "

@@ -44,6 +44,11 @@ public final class ConfigValueFactory {
      * where problematic values are coming from.
      * 
      * <p>
+     * The comments will be used on the origin() field on the ConfigValue
+     * created. In case of ConfigObject or ConfigList, the values in them will
+     * not contain any comments.
+     * 
+     * <p>
      * Supplying the result of ConfigValue.unwrapped() to this function is
      * guaranteed to work and should give you back a ConfigValue that matches
      * the one you unwrapped. The re-wrapped ConfigValue will lose some
@@ -60,10 +65,12 @@ public final class ConfigValueFactory {
      *            object to convert to ConfigValue
      * @param originDescription
      *            name of origin file or brief description of what the value is
+     * @param comments
+     *            comments on this ConfigValue used when it's rendered
      * @return a new value
      */
-    public static ConfigValue fromAnyRef(Object object, String originDescription) {
-        return ConfigImpl.fromAnyRef(object, originDescription);
+    public static ConfigValue fromAnyRef(Object object, String originDescription, String[] comments) {
+        return ConfigImpl.fromAnyRef(object, originDescription, comments);
     }
 
     /**
@@ -87,11 +94,12 @@ public final class ConfigValueFactory {
      * 
      * @param values
      * @param originDescription
+     * @param comments
      * @return a new {@link ConfigObject} value
      */
     public static ConfigObject fromMap(Map<String, ? extends Object> values,
-            String originDescription) {
-        return (ConfigObject) fromAnyRef(values, originDescription);
+            String originDescription, String[] comments) {
+        return (ConfigObject) fromAnyRef(values, originDescription, comments);
     }
 
     /**
@@ -101,7 +109,50 @@ public final class ConfigValueFactory {
      * 
      * @param values
      * @param originDescription
+     * @param comments
      * @return a new {@link ConfigList} value
+     */
+    public static ConfigList fromIterable(Iterable<? extends Object> values,
+            String originDescription, String[] comments) {
+        return (ConfigList) fromAnyRef(values, originDescription, comments);
+    }
+
+    /**
+     * See the other overload {@link #fromAnyRef(Object,String,String[])} for details,
+     * this one uses empty comment.
+     *
+     * @param object
+     * @param originDescription
+     * @return a new {@link ConfigValue}
+     */
+    public static ConfigValue fromAnyRef(Object object, String originDescription) {
+        return ConfigImpl.fromAnyRef(object, originDescription, null);
+    }
+
+    /**
+     * See the other overload {@link #fromMap(Map,String,String[])} for details,
+     * this one uses empty comment.
+     *
+     * <p>
+     * See also {@link ConfigFactory#parseMap(Map)} which interprets the keys in
+     * the map as path expressions.
+     *
+     * @param values
+     * @param originDescription
+     * @return a new {@link ConfigObject}
+     */
+    public static ConfigObject fromMap(Map<String, ? extends Object> values,
+            String originDescription) {
+        return (ConfigObject) fromAnyRef(values, originDescription);
+    }
+
+    /**
+     * See the other overload of {@link #fromIterable(Iterable, String, String[])} for
+     * details, this one uses empty comment.
+     *
+     * @param values
+     * @param originDescription
+     * @return a new {@link ConfigList}
      */
     public static ConfigList fromIterable(Iterable<? extends Object> values,
             String originDescription) {
