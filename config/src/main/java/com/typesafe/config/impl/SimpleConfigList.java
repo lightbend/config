@@ -192,7 +192,8 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         if (options.getComments() && !v.origin().comments().isEmpty()) {
             shouldInline = false;
         }
-        if (v.valueType() == ConfigValueType.OBJECT || v.valueType() == ConfigValueType.LIST) {
+        if (v.resolveStatus() == ResolveStatus.UNRESOLVED ||
+        		v.valueType() == ConfigValueType.OBJECT || v.valueType() == ConfigValueType.LIST) {
             shouldInline = false;
         }
         if (shouldInline) {
