@@ -5,6 +5,7 @@ package com.typesafe.config.impl;
 
 import java.io.IOException;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -352,7 +353,11 @@ final class Tokenizer {
                     return Tokens.newDouble(lineOrigin, Double.parseDouble(s), s);
                 } else {
                     // this should throw if the integer is too large for Long
-                    return Tokens.newLong(lineOrigin, Long.parseLong(s), s);
+                    try {
+                      return Tokens.newLong(lineOrigin, Long.parseLong(s), s);
+                    } catch(NumberFormatException ex) {
+                      return Tokens.newBigInteger(lineOrigin, new BigInteger(s), s);
+                    }
                 }
             } catch (NumberFormatException e) {
                 // not a number after all, see if it's an unquoted string.

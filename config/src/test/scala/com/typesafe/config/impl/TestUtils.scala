@@ -8,6 +8,7 @@ import org.junit._
 import com.typesafe.config.ConfigOrigin
 import java.io.Reader
 import java.io.StringReader
+import java.math.BigInteger
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigSyntax
@@ -570,6 +571,7 @@ abstract trait TestUtils {
     // make the test compare public API to itself.
     protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i, null)
     protected def longValue(l: Long) = new ConfigLong(fakeOrigin(), l, null)
+    protected def bigIntegerValue(bi: BigInteger) = new ConfigBigInteger(fakeOrigin(), bi, null)
     protected def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)
     protected def nullValue() = new ConfigNull(fakeOrigin())
     protected def stringValue(s: String) = new ConfigString(fakeOrigin(), s)
@@ -614,6 +616,7 @@ abstract trait TestUtils {
     def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d, null)
     def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, null)
     def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, null)
+    def tokenBigInteger(bi: BigInteger) = Tokens.newBigInteger(fakeOrigin(), bi, null)
     def tokenLine(line: Int) = Tokens.newLine(fakeOrigin.setLineNumber(line))
     def tokenComment(text: String) = Tokens.newComment(fakeOrigin(), text)
 

@@ -5,6 +5,7 @@ package com.typesafe.config.impl;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.math.BigInteger;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
@@ -91,6 +92,11 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
             return new ConfigInt(origin, (int) number, originalText);
         else
             return new ConfigLong(origin, number, originalText);
+    }
+
+    static ConfigNumber newNumber(ConfigOrigin origin, BigInteger number,
+            String originalText) {
+            return new ConfigBigInteger(origin, number, originalText);
     }
 
     static ConfigNumber newNumber(ConfigOrigin origin, double number,
