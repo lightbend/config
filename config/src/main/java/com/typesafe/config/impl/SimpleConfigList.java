@@ -200,44 +200,115 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         // note that "origin" is deliberately NOT part of equality
         return value.hashCode();
     }
-
-    @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
-        if (value.isEmpty()) {
-            sb.append("[]");
+    
+    /**
+     * Try to render the value in the same line.
+     * If the value can not be rendered in the same line, 
+     * this function will finish this line by appending '\n'.
+     * @param sb The StringBuilder object.
+     * @param indent Indent before every new line in this list.
+     * @param lineNotFinished If last entry is inlined.
+     * @param v The value to be rendered.
+     * @param options The render option.
+     * @return Return true if succeeded.
+     */
+    private boolean renderInlineEntry(StringBuilder sb, int indent, boolean lineNotFinished, 
+            AbstractConfigValue v, ConfigRenderOptions options) {
+        boolean shouldInline = true;
+        if (options.getFormatted() == false || options.getJson()) {
+            shouldInline = false;
+        }
+        if (options.getOriginComments()) {
+            shouldInline = false;
+        }
+        if (options.getComments() && !v.origin().comments().isEmpty()) {
+            shouldInline = false;
+        }
+        if (v.resolveStatus() == ResolveStatus.UNRESOLVED ||
+        		v.valueType() == ConfigValueType.OBJECT || v.valueType() == ConfigValueType.LIST) {
+            shouldInline = false;
+        }
+        if (shouldInline) {
+            if (!lineNotFinished) {
+                indent(sb, indent, options);
+            }
+            v.render(sb, indent, false, options);
+            sb.append(options.getFormatted() ? ", " : ",");
+            return true;
         } else {
-            sb.append("[");
-            if (options.getFormatted())
-                sb.append('\n');
-            for (AbstractConfigValue v : value) {
-                if (options.getOriginComments()) {
-                    indent(sb, indent + 1, options);
-                    sb.append("# ");
-                    sb.append(v.origin().description());
-                    sb.append("\n");
-                }
-                if (options.getComments()) {
-                    for (String comment : v.origin().comments()) {
-                        indent(sb, indent + 1, options);
-                        sb.append("# ");
-                        sb.append(comment);
-                        sb.append("\n");
-                    }
-                }
-                indent(sb, indent + 1, options);
-
-                v.render(sb, indent + 1, atRoot, options);
-                sb.append(",");
+            if (lineNotFinished) {
                 if (options.getFormatted())
                     sb.append('\n');
             }
-            sb.setLength(sb.length() - 1); // chop or newline
-            if (options.getFormatted()) {
-                sb.setLength(sb.length() - 1); // also chop comma
-                sb.append('\n');
-                indent(sb, indent, options);
+            return false;
+        }
+    }
+
+    @Override
+    protected void render(StringBuilder listStringBuilder, int indent, boolean atRoot, ConfigRenderOptions options) {
+        if (value.isEmpty()) {
+            listStringBuilder.append("[]");
+        } else {
+            listStringBuilder.append('[');
+            
+            StringBuilder sb = new StringBuilder();
+            int separatorCount = 0;
+            boolean lastLineNotFinished = true;
+            boolean allInlined = true;
+            
+            for (AbstractConfigValue v : value) {
+                //First check if we can append this entry in the same line
+                if (renderInlineEntry(sb, indent + 1, lastLineNotFinished, v, options)) {
+                    lastLineNotFinished = true;
+                    separatorCount = 2; //", "
+                } else {
+                    lastLineNotFinished = false;
+                    if (allInlined) {
+                        //First time it fails, we must generate '\n' in original sb,
+                        //unless it's the very first entry (if and only if sb.length() == 1)
+                        if (options.getFormatted() && sb.length() != 1) {
+                            listStringBuilder.append('\n');
+                            indent(listStringBuilder, indent + 1, options);
+                        }
+                        allInlined = false;
+                    }
+                    
+                    if (options.getOriginComments()) {
+                        indent(sb, indent + 1, options);
+                        sb.append("# ");
+                        sb.append(v.origin().description());
+                        sb.append("\n");
+                        }
+                    if (options.getComments()) {
+                        for (String comment : v.origin().comments()) {
+                            indent(sb, indent + 1, options);
+                            sb.append("# ");
+                            sb.append(comment);
+                            sb.append("\n");
+                        }
+                    }
+                    indent(sb, indent + 1, options);
+                    v.render(sb, indent + 1, atRoot, options);
+                    
+                    if (options.getFormatted()) {
+                        separatorCount = 3;
+                        sb.append(", \n");
+                    } else {
+                        separatorCount = 1;
+                        sb.append(",");
+                    }
+                }
             }
-            sb.append("]");
+            sb.setLength(sb.length() - separatorCount); // chop last commas/newlines
+
+            //Now merge sb into listStringBuilder.
+            listStringBuilder.append(sb);
+            if (!allInlined && options.getFormatted()) {
+                //Not all in one line, so newline before ']'.
+                listStringBuilder.append('\n');
+                indent(listStringBuilder, indent, options);
+            }
+            listStringBuilder.append(']');
         }
     }
 
