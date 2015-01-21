@@ -65,6 +65,8 @@ public final class ConfigValueFactory {
      *            object to convert to ConfigValue
      * @param originDescription
      *            name of origin file or brief description of what the value is
+     * @param comments
+     *            comments on this ConfigValue used when it's rendered
      * @return a new value
      */
     public static ConfigValue fromAnyRef(Object object, String originDescription, String[] comments) {
@@ -92,6 +94,7 @@ public final class ConfigValueFactory {
      * 
      * @param values
      * @param originDescription
+     * @param comments
      * @return a new {@link ConfigObject} value
      */
     public static ConfigObject fromMap(Map<String, ? extends Object> values,
@@ -106,6 +109,7 @@ public final class ConfigValueFactory {
      * 
      * @param values
      * @param originDescription
+     * @param comments
      * @return a new {@link ConfigList} value
      */
     public static ConfigList fromIterable(Iterable<? extends Object> values,
@@ -118,6 +122,7 @@ public final class ConfigValueFactory {
      * this one uses empty comment.
      *
      * @param object
+     * @param originDescription
      * @return a new {@link ConfigValue}
      */
     public static ConfigValue fromAnyRef(Object object, String originDescription) {
@@ -133,6 +138,7 @@ public final class ConfigValueFactory {
      * the map as path expressions.
      *
      * @param values
+     * @param originDescription
      * @return a new {@link ConfigObject}
      */
     public static ConfigObject fromMap(Map<String, ? extends Object> values,
@@ -145,6 +151,7 @@ public final class ConfigValueFactory {
      * details, this one uses empty comment.
      *
      * @param values
+     * @param originDescription
      * @return a new {@link ConfigList}
      */
     public static ConfigList fromIterable(Iterable<? extends Object> values,
