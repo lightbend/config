@@ -79,4 +79,36 @@ public interface ConfigOrigin {
      *         none
      */
     public List<String> comments();
+    
+    /**
+     * Returns a {@code ConfigOrigin} based on this one, but with the given
+     * comments. Does not modify this instance or any {@code ConfigValue}s with
+     * this origin (since they are immutable).  To set the returned origin to a 
+     * {@code ConfigValue}, use {@link ConfigValue#withOrigin}.
+     * 
+     * <p>
+     * Note that when the given comments are equal to the comments on this object,
+     * a new instance may not be created and {@code this} is returned directly.
+     * 
+     * @param comments the comments used on the returned origin
+     * @return the ConfigOrigin with the given comments
+     */
+    public ConfigOrigin withComments(List<String> comments);
+
+    /**
+     * Returns a {@code ConfigOrigin} based on this one, but with the given
+     * line number. This origin must be a FILE, URL or RESOURCE. Does not modify 
+     * this instance or any {@code ConfigValue}s with this origin (since they are
+     * immutable).  To set the returned origin to a  {@code ConfigValue}, use
+     * {@link ConfigValue#withOrigin}. 
+     * 
+     * <p>
+     * Note that when the given lineNumber are equal to the lineNumber on this
+     * object, a new instance may not be created and {@code this} is returned
+     * directly.
+     * 
+     * @param comments the comments used on the returned origin
+     * @return the created ConfigOrigin
+     */
+    public ConfigOrigin withLineNumber(int lineNumber);
 }

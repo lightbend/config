@@ -550,4 +550,18 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         Map<SerializedField, Object> fields = applyFieldsDelta(baseFields, delta);
         return fromFields(fields);
     }
+
+    @Override
+    public ConfigOrigin withComments(List<String> comments) {
+        return this.setComments(comments);
+    }
+
+    @Override
+    public ConfigOrigin withLineNumber(int lineNumber) {
+        if (this.originType == OriginType.GENERIC) {
+            //This type should not have a lineNumber.
+            throw new UnsupportedOperationException();
+        }
+        return this.setLineNumber(lineNumber);
+    }
 }

@@ -129,4 +129,7 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
      * @return the new instance with the new map entry
      */
     ConfigObject withValue(String key, ConfigValue value);
+    
+    @Override
+    ConfigObject withOrigin(ConfigOrigin origin);
 }

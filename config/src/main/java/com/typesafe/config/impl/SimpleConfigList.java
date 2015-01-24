@@ -451,4 +451,9 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     private Object writeReplace() throws ObjectStreamException {
         return new SerializedConfigValue(this);
     }
+
+    @Override
+    public SimpleConfigList withOrigin(ConfigOrigin origin) {
+        return (SimpleConfigList) super.withOrigin(origin);
+    }
 }
