@@ -70,7 +70,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         return newResource(resource, null);
     }
 
-    SimpleConfigOrigin setLineNumber(int lineNumber) {
+    @Override
+    public SimpleConfigOrigin withLineNumber(int lineNumber) {
         if (lineNumber == this.lineNumber && lineNumber == this.endLineNumber) {
             return this;
         } else {
@@ -84,7 +85,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                 this.originType, url != null ? url.toExternalForm() : null, this.commentsOrNull);
     }
 
-    SimpleConfigOrigin setComments(List<String> comments) {
+    @Override
+    public SimpleConfigOrigin withComments(List<String> comments) {
         if (ConfigImplUtil.equalsHandlingNull(comments, this.commentsOrNull)) {
             return this;
         } else {
@@ -97,13 +99,13 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         if (ConfigImplUtil.equalsHandlingNull(comments, this.commentsOrNull) || comments == null) {
             return this;
         } else if (this.commentsOrNull == null) {
-            return setComments(comments);
+            return withComments(comments);
         } else {
             List<String> merged = new ArrayList<String>(comments.size()
                     + this.commentsOrNull.size());
             merged.addAll(comments);
             merged.addAll(this.commentsOrNull);
-            return setComments(merged);
+            return withComments(merged);
         }
     }
 
@@ -111,13 +113,13 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         if (ConfigImplUtil.equalsHandlingNull(comments, this.commentsOrNull) || comments == null) {
             return this;
         } else if (this.commentsOrNull == null) {
-            return setComments(comments);
+            return withComments(comments);
         } else {
             List<String> merged = new ArrayList<String>(comments.size()
                     + this.commentsOrNull.size());
             merged.addAll(this.commentsOrNull);
             merged.addAll(comments);
-            return setComments(merged);
+            return withComments(merged);
         }
     }
 
@@ -549,19 +551,5 @@ final class SimpleConfigOrigin implements ConfigOrigin {
             baseFields = Collections.<SerializedField, Object> emptyMap();
         Map<SerializedField, Object> fields = applyFieldsDelta(baseFields, delta);
         return fromFields(fields);
-    }
-
-    @Override
-    public ConfigOrigin withComments(List<String> comments) {
-        return this.setComments(comments);
-    }
-
-    @Override
-    public ConfigOrigin withLineNumber(int lineNumber) {
-        if (this.originType == OriginType.GENERIC) {
-            //This type should not have a lineNumber.
-            throw new UnsupportedOperationException();
-        }
-        return this.setLineNumber(lineNumber);
     }
 }

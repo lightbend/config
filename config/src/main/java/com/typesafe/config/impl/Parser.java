@@ -424,7 +424,7 @@ final class Parser {
         }
 
         private SimpleConfigOrigin lineOrigin() {
-            return ((SimpleConfigOrigin) baseOrigin).setLineNumber(lineNumber);
+            return ((SimpleConfigOrigin) baseOrigin).withLineNumber(lineNumber);
         }
 
         private ConfigException parseError(String message) {
@@ -559,13 +559,13 @@ final class Parser {
             // "foo.bar" not also to "foo"
             ListIterator<String> i = keys.listIterator(keys.size());
             String deepest = i.previous();
-            AbstractConfigObject o = new SimpleConfigObject(value.origin().setComments(null),
+            AbstractConfigObject o = new SimpleConfigObject(value.origin().withComments(null),
                     Collections.<String, AbstractConfigValue> singletonMap(
                             deepest, value));
             while (i.hasPrevious()) {
                 Map<String, AbstractConfigValue> m = Collections.<String, AbstractConfigValue> singletonMap(
                         i.previous(), o);
-                o = new SimpleConfigObject(value.origin().setComments(null), m);
+                o = new SimpleConfigObject(value.origin().withComments(null), m);
             }
 
             return o;
