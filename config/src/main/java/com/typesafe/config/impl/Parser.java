@@ -553,7 +553,7 @@ final class Parser {
                 }
             }
 
-            // the setComments(null) is to ensure comments are only
+            // the withComments(null) is to ensure comments are only
             // on the exact leaf node they apply to.
             // a comment before "foo.bar" applies to the full setting
             // "foo.bar" not also to "foo"

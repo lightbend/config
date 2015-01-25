@@ -888,7 +888,7 @@ class PublicApiTest extends TestUtils {
     def exceptionSerializable() {
         // ArrayList is a serialization problem so we want to cover it in tests
         val comments = new java.util.ArrayList(List("comment 1", "comment 2").asJava)
-        val e = new ConfigException.WrongType(SimpleConfigOrigin.newSimple("an origin").setComments(comments),
+        val e = new ConfigException.WrongType(SimpleConfigOrigin.newSimple("an origin").withComments(comments),
             "this is a message", new RuntimeException("this is a cause"))
         val eCopy = checkSerializableNoMeaningfulEquals(e)
         assertTrue("messages equal after deserialize", e.getMessage.equals(eCopy.getMessage))
