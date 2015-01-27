@@ -43,4 +43,6 @@ public interface ConfigIncludeContext {
      * @return the parse options
      */
     ConfigParseOptions parseOptions();
+
+    ConfigIncludeContext setParseOptions(ConfigParseOptions options);
 }

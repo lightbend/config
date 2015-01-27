@@ -3,6 +3,8 @@
  */
 package com.typesafe.config.impl
 
+import java.io.File
+
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config.ConfigValue
@@ -686,7 +688,8 @@ class ConfigValueTest extends TestUtils {
         // the filename is made absolute when converting to url
         assertTrue(hasFilename.url.toExternalForm.contains("foo"))
         assertNull(noFilename.url)
-        assertEquals("file:/baz", SimpleConfigOrigin.newFile("/baz").url.toExternalForm)
+
+        assertEquals((new File("/baz")).toURI.toURL.toExternalForm, SimpleConfigOrigin.newFile("/baz").url.toExternalForm)
 
         val urlOrigin = SimpleConfigOrigin.newURL(new URL("file:/foo"))
         assertEquals("/foo", urlOrigin.filename)

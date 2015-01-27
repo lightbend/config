@@ -3,32 +3,19 @@
  */
 package com.typesafe.config.impl;
 
+import com.typesafe.config.*;
+
 import java.io.File;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.Stack;
-
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigIncludeContext;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigParseOptions;
-import com.typesafe.config.ConfigSyntax;
-import com.typesafe.config.ConfigValueType;
+import java.util.*;
 
 final class Parser {
 
     static AbstractConfigValue parse(Iterator<Token> tokens,
-            ConfigOrigin origin, ConfigParseOptions options,
-            ConfigIncludeContext includeContext) {
+                                     ConfigOrigin origin, ConfigParseOptions options,
+                                     ConfigIncludeContext includeContext) {
         ParseContext context = new ParseContext(options.getSyntax(), origin, tokens,
                 SimpleIncluder.makeFull(options.getIncluder()), includeContext);
         return context.parse();
@@ -47,7 +34,7 @@ final class Parser {
         }
 
         TokenWithComments(Token token) {
-            this(token, Collections.<Token> emptyList());
+            this(token, Collections.<Token>emptyList());
         }
 
         TokenWithComments removeAll() {
@@ -72,7 +59,7 @@ final class Parser {
 
         TokenWithComments add(Token after) {
             if (this.comments.isEmpty()) {
-                return new TokenWithComments(token, Collections.<Token> singletonList(after));
+                return new TokenWithComments(token, Collections.<Token>singletonList(after));
             } else {
                 List<Token> merged = new ArrayList<Token>();
                 merged.addAll(comments);
@@ -132,7 +119,7 @@ final class Parser {
         int arrayCount;
 
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin, Iterator<Token> tokens,
-                FullIncluder includer, ConfigIncludeContext includeContext) {
+                     FullIncluder includer, ConfigIncludeContext includeContext) {
             lineNumber = 1;
             buffer = new Stack<TokenWithComments>();
             this.tokens = tokens;
@@ -321,7 +308,7 @@ final class Parser {
 
         private AbstractConfigValue addAnyCommentsAfterAnyComma(AbstractConfigValue v) {
             TokenWithComments t = nextToken(); // do NOT skip newlines, we only
-                                               // want same-line comments
+            // want same-line comments
             if (t.token == Tokens.COMMA) {
                 // steal the comments from after the comma
                 putBack(t.removeAll());
@@ -470,7 +457,7 @@ final class Parser {
         }
 
         private String addQuoteSuggestion(Path lastPath, boolean insideEquals, String badToken,
-                String message) {
+                                          String message) {
             String previousFieldName = previousFieldName(lastPath);
 
             String part;
@@ -536,7 +523,7 @@ final class Parser {
         }
 
         private static AbstractConfigObject createValueUnderPath(Path path,
-                AbstractConfigValue value) {
+                                                                 AbstractConfigValue value) {
             // for path foo.bar, we are creating
             // { "foo" : { "bar" : value } }
             List<String> keys = new ArrayList<String>();
@@ -560,10 +547,10 @@ final class Parser {
             ListIterator<String> i = keys.listIterator(keys.size());
             String deepest = i.previous();
             AbstractConfigObject o = new SimpleConfigObject(value.origin().setComments(null),
-                    Collections.<String, AbstractConfigValue> singletonMap(
+                    Collections.<String, AbstractConfigValue>singletonMap(
                             deepest, value));
             while (i.hasPrevious()) {
-                Map<String, AbstractConfigValue> m = Collections.<String, AbstractConfigValue> singletonMap(
+                Map<String, AbstractConfigValue> m = Collections.<String, AbstractConfigValue>singletonMap(
                         i.previous(), o);
                 o = new SimpleConfigObject(value.origin().setComments(null), m);
             }
@@ -618,9 +605,25 @@ final class Parser {
         }
 
         private void parseInclude(Map<String, AbstractConfigValue> values) {
+
+
+
             TokenWithComments t = nextTokenIgnoringNewline();
             while (isUnquotedWhitespace(t.token)) {
                 t = nextTokenIgnoringNewline();
+            }
+
+            boolean isStatedRequired = false;
+
+            if (Tokens.isUnquotedText(t.token)) {
+                isStatedRequired = Tokens.getUnquotedText(t.token).equals("required(");
+
+                if (isStatedRequired) {
+                    t = nextTokenIgnoringNewline();
+                    while (isUnquotedWhitespace(t.token)) {
+                        t = nextTokenIgnoringNewline();
+                    }
+                }
             }
 
             AbstractConfigObject obj;
@@ -652,20 +655,24 @@ final class Parser {
                 if (Tokens.isValueWithType(t.token, ConfigValueType.STRING)) {
                     name = (String) Tokens.getValue(t.token).unwrapped();
                 } else {
-                    throw parseError("expecting a quoted string inside file(), classpath(), or url(), rather than: "
+                    throw parseError("expecting a quoted string or required(quoted string) inside file(), classpath(), or url(), rather than: "
                             + t);
                 }
+
                 // skip space after string, inside parens
                 t = nextTokenIgnoringNewline();
                 while (isUnquotedWhitespace(t.token)) {
                     t = nextTokenIgnoringNewline();
                 }
 
+
                 if (Tokens.isUnquotedText(t.token) && Tokens.getUnquotedText(t.token).equals(")")) {
                     // OK, close paren
                 } else {
                     throw parseError("expecting a close parentheses ')' here, not: " + t);
                 }
+
+                ConfigIncludeContext ctx = includeContext.setParseOptions(includeContext.parseOptions().setAllowMissing(!isStatedRequired));
 
                 if (kind.equals("url(")) {
                     URL url;
@@ -674,12 +681,12 @@ final class Parser {
                     } catch (MalformedURLException e) {
                         throw parseError("include url() specifies an invalid URL: " + name, e);
                     }
-                    obj = (AbstractConfigObject) includer.includeURL(includeContext, url);
+                    obj = (AbstractConfigObject) includer.includeURL(ctx, url);
                 } else if (kind.equals("file(")) {
-                    obj = (AbstractConfigObject) includer.includeFile(includeContext,
+                    obj = (AbstractConfigObject) includer.includeFile(ctx,
                             new File(name));
                 } else if (kind.equals("classpath(")) {
-                    obj = (AbstractConfigObject) includer.includeResources(includeContext, name);
+                    obj = (AbstractConfigObject) includer.includeResources(ctx, name);
                 } else {
                     throw new ConfigException.BugOrBroken("should not be reached");
                 }
@@ -691,9 +698,24 @@ final class Parser {
                 throw parseError("include keyword is not followed by a quoted string, but by: " + t);
             }
 
+            if (isStatedRequired) {
+                t = nextTokenIgnoringNewline();
+                while (isUnquotedWhitespace(t.token)) {
+                    t = nextTokenIgnoringNewline();
+                }
+
+                if (Tokens.isUnquotedText(t.token) && Tokens.getUnquotedText(t.token).equals(")")) {
+                    // OK, close paren
+                } else {
+                    throw parseError("expecting a close parentheses ')' here, not: " + t);
+                }
+            }
+
+
             // we really should make this work, but for now throwing an
             // exception is better than producing an incorrect result.
             // See https://github.com/typesafehub/config/issues/160
+            System.err.println("RESOLVED " + obj.toString()+ " " + obj.resolveStatus());
             if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
                 throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
                         + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
@@ -836,9 +858,9 @@ final class Parser {
 
                             if (flavor == ConfigSyntax.JSON) {
                                 throw parseError("JSON does not allow duplicate fields: '"
-                                    + key
-                                    + "' was already seen at "
-                                    + existing.origin().description());
+                                        + key
+                                        + "' was already seen at "
+                                        + existing.origin().description());
                             } else {
                                 newValue = newValue.withFallback(existing);
                             }
@@ -909,7 +931,7 @@ final class Parser {
             if (t.token == Tokens.CLOSE_SQUARE) {
                 arrayCount -= 1;
                 return new SimpleConfigList(t.appendComments(arrayOrigin),
-                        Collections.<AbstractConfigValue> emptyList());
+                        Collections.<AbstractConfigValue>emptyList());
             } else if (Tokens.isValue(t.token) || t.token == Tokens.OPEN_CURLY
                     || t.token == Tokens.OPEN_SQUARE) {
                 AbstractConfigValue v = parseValue(t);
@@ -1024,7 +1046,7 @@ final class Parser {
     }
 
     private static void addPathText(List<Element> buf, boolean wasQuoted,
-            String newText) {
+                                    String newText) {
         int i = wasQuoted ? -1 : newText.indexOf('.');
         Element current = buf.get(buf.size() - 1);
         if (i < 0) {
@@ -1045,13 +1067,13 @@ final class Parser {
     }
 
     private static Path parsePathExpression(Iterator<Token> expression,
-            ConfigOrigin origin) {
+                                            ConfigOrigin origin) {
         return parsePathExpression(expression, origin, null);
     }
 
     // originalText may be null if not available
     private static Path parsePathExpression(Iterator<Token> expression,
-            ConfigOrigin origin, String originalText) {
+                                            ConfigOrigin origin, String originalText) {
         // each builder in "buf" is an element in the path.
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
