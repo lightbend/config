@@ -1,6 +1,6 @@
 import sbt._
 import Keys._
-import com.typesafe.sbt.osgi.SbtOsgi._
+import com.typesafe.sbt.osgi.SbtOsgi.{ OsgiKeys, osgiSettings }
 
 object ConfigBuild extends Build {
     val unpublished = Seq(
@@ -16,7 +16,7 @@ object ConfigBuild extends Build {
         publishLocal := {}
     )
 
-    object sonatype extends PublishToSonatype(ConfigBuild) {
+    object sonatype extends PublishToSonatype {
         def projectUrl    = "https://github.com/typesafehub/config"
         def developerId   = "havocp"
         def developerName = "Havoc Pennington"
@@ -27,7 +27,6 @@ object ConfigBuild extends Build {
     override val settings = super.settings ++ Seq(isSnapshot <<= isSnapshot or version(_ endsWith "-SNAPSHOT"))
 
     lazy val rootSettings: Seq[Setting[_]] =
-      Project.defaultSettings ++
       unpublished ++
       Seq(aggregate in doc := false,
           doc := (doc in (configLib, Compile)).value,
@@ -43,51 +42,32 @@ object ConfigBuild extends Build {
     lazy val configLib = Project(id = "config",
                                  base = file("config"),
                                  settings =
-                                   Project.defaultSettings ++
                                    sonatype.settings ++
                                    osgiSettings ++
                                    Seq(
                                      OsgiKeys.exportPackage := Seq("com.typesafe.config", "com.typesafe.config.impl"),
                                      packagedArtifact in (Compile, packageBin) <<= (artifact in (Compile, packageBin), OsgiKeys.bundle).identityMap,
                                      artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") },
-                                     publish := { throw new RuntimeException("use publishSigned instead of plain publish") },
-                                     publishLocal := { throw new RuntimeException("use publishLocalSigned instead of plain publishLocal") }
-                                   )) dependsOn(testLib % "test->test")
+                                     publish := sys.error("use publishSigned instead of plain publish"),
+                                     publishLocal := sys.error("use publishLocalSigned instead of plain publishLocal")
+                                   )) dependsOn testLib % "test->test"
 
-    lazy val testLib = Project(id = "config-test-lib",
-                               base = file("test-lib"),
-                               settings = Project.defaultSettings ++ unpublished)
+    def project(id: String, base: File) = Project(id, base, settings = unpublished)
 
-    lazy val simpleLibScala = Project(id = "config-simple-lib-scala",
-                                      base = file("examples/scala/simple-lib"),
-                                      settings = Project.defaultSettings ++ unpublished) dependsOn(configLib)
+    lazy val testLib = project("config-test-lib", file("test-lib"))
 
-    lazy val simpleAppScala = Project(id = "config-simple-app-scala",
-                                      base = file("examples/scala/simple-app"),
-                                      settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibScala)
+    lazy val simpleLibScala  = project("config-simple-lib-scala",  file("examples/scala/simple-lib"))  dependsOn configLib
+    lazy val simpleAppScala  = project("config-simple-app-scala",  file("examples/scala/simple-app"))  dependsOn simpleLibScala
+    lazy val complexAppScala = project("config-complex-app-scala", file("examples/scala/complex-app")) dependsOn simpleLibScala
 
-    lazy val complexAppScala = Project(id = "config-complex-app-scala",
-                                       base = file("examples/scala/complex-app"),
-                                       settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibScala)
-
-    lazy val simpleLibJava = Project(id = "config-simple-lib-java",
-                                      base = file("examples/java/simple-lib"),
-                                      settings = Project.defaultSettings ++ unpublished) dependsOn(configLib)
-
-    lazy val simpleAppJava = Project(id = "config-simple-app-java",
-                                      base = file("examples/java/simple-app"),
-                                      settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibJava)
-
-    lazy val complexAppJava = Project(id = "config-complex-app-java",
-                                       base = file("examples/java/complex-app"),
-                                       settings = Project.defaultSettings ++ unpublished) dependsOn(simpleLibJava)
+    lazy val simpleLibJava  = project("config-simple-lib-java",  file("examples/java/simple-lib"))  dependsOn configLib
+    lazy val simpleAppJava  = project("config-simple-app-java",  file("examples/java/simple-app"))  dependsOn simpleLibJava
+    lazy val complexAppJava = project("config-complex-app-java", file("examples/java/complex-app")) dependsOn simpleLibJava
 }
 
 // from https://raw.github.com/paulp/scala-improving/master/project/PublishToSonatype.scala
 
-abstract class PublishToSonatype(build: Build) {
-  import build._
-
+abstract class PublishToSonatype {
   val ossSnapshots = "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/"
   val ossStaging   = "Sonatype OSS Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 
@@ -102,7 +82,7 @@ abstract class PublishToSonatype(build: Build) {
   def scmUrl: String
   def scmConnection       = "scm:git:" + scmUrl
 
-  def generatePomExtra(scalaVersion: String): xml.NodeSeq = {
+  def generatePomExtra: xml.NodeSeq = {
     <url>{ projectUrl }</url>
       <licenses>
         <license>
@@ -126,9 +106,9 @@ abstract class PublishToSonatype(build: Build) {
 
   def settings: Seq[Setting[_]] = Seq(
     publishMavenStyle := true,
-    publishTo <<= (isSnapshot) { (snapshot) => Some(if (snapshot) ossSnapshots else ossStaging) },
+    publishTo <<= isSnapshot { (snapshot) => Some(if (snapshot) ossSnapshots else ossStaging) },
     publishArtifact in Test := false,
     pomIncludeRepository := (_ => false),
-    pomExtra <<= (scalaVersion)(generatePomExtra)
+    pomExtra := generatePomExtra
   )
 }
