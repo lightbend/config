@@ -257,6 +257,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         return mergedWithNonObject(Collections.singletonList(this), fallback);
     }
 
+    @Override
     public AbstractConfigValue withOrigin(ConfigOrigin origin) {
         if (this.origin == origin)
             return this;

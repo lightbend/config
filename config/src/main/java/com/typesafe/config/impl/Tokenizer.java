@@ -128,7 +128,7 @@ final class Tokenizer {
             this.allowComments = allowComments;
             this.buffer = new LinkedList<Integer>();
             lineNumber = 1;
-            lineOrigin = this.origin.setLineNumber(lineNumber);
+            lineOrigin = this.origin.withLineNumber(lineNumber);
             tokens = new LinkedList<Token>();
             tokens.add(Tokens.START);
             whitespaceSaver = new WhitespaceSaver();
@@ -254,7 +254,7 @@ final class Tokenizer {
 
         private static ConfigOrigin lineOrigin(ConfigOrigin baseOrigin,
                 int lineNumber) {
-            return ((SimpleConfigOrigin) baseOrigin).setLineNumber(lineNumber);
+            return ((SimpleConfigOrigin) baseOrigin).withLineNumber(lineNumber);
         }
 
         // ONE char has always been consumed, either the # or the first /, but
@@ -446,7 +446,7 @@ final class Tokenizer {
                     else if (c == '\n') {
                         // keep the line number accurate
                         lineNumber += 1;
-                        lineOrigin = origin.setLineNumber(lineNumber);
+                        lineOrigin = origin.withLineNumber(lineNumber);
                     }
                 }
 
@@ -549,7 +549,7 @@ final class Tokenizer {
                 // newline tokens have the just-ended line number
                 Token line = Tokens.newLine(lineOrigin);
                 lineNumber += 1;
-                lineOrigin = origin.setLineNumber(lineNumber);
+                lineOrigin = origin.withLineNumber(lineNumber);
                 return line;
             } else {
                 Token t;

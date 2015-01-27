@@ -41,4 +41,6 @@ public interface ConfigList extends List<ConfigValue>, ConfigValue {
     @Override
     List<Object> unwrapped();
 
+    @Override
+    ConfigList withOrigin(ConfigOrigin origin);
 }

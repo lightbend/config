@@ -663,8 +663,8 @@ class ConfigValueTest extends TestUtils {
     def configOriginFileAndLine() {
         val hasFilename = SimpleConfigOrigin.newFile("foo")
         val noFilename = SimpleConfigOrigin.newSimple("bar")
-        val filenameWithLine = hasFilename.setLineNumber(3)
-        val noFilenameWithLine = noFilename.setLineNumber(4)
+        val filenameWithLine = hasFilename.withLineNumber(3)
+        val noFilenameWithLine = noFilename.withLineNumber(4)
 
         assertEquals("foo", hasFilename.filename())
         assertEquals("foo", filenameWithLine.filename())
@@ -866,10 +866,10 @@ class ConfigValueTest extends TestUtils {
         val combos = bases.flatMap({
             base =>
                 Seq(
-                    (base, base.setComments(Seq("this is a comment", "another one").asJava)),
-                    (base, base.setComments(null)),
-                    (base, base.setLineNumber(41)),
-                    (base, SimpleConfigOrigin.mergeOrigins(base.setLineNumber(10), base.setLineNumber(20))))
+                    (base, base.withComments(Seq("this is a comment", "another one").asJava)),
+                    (base, base.withComments(null)),
+                    (base, base.withLineNumber(41)),
+                    (base, SimpleConfigOrigin.mergeOrigins(base.withLineNumber(10), base.withLineNumber(20))))
         }) ++
             bases.sliding(2).map({ seq => (seq.head, seq.tail.head) }) ++
             bases.sliding(3).map({ seq => (seq.head, seq.tail.tail.head) }) ++

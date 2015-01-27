@@ -5,6 +5,7 @@ package com.typesafe.config.impl;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -461,4 +462,24 @@ public class ConfigImpl {
         else
             return new ConfigException.NotResolved(newMessage, original);
     }
+    
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static ConfigOrigin newSimpleOrigin(String description) {
+        if (description == null) {
+            return defaultValueOrigin;
+        } else {
+            return SimpleConfigOrigin.newSimple(description);
+        }
+    }
+
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static ConfigOrigin newFileOrigin(String filename) {
+        return SimpleConfigOrigin.newFile(filename);
+    }
+    
+    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+    public static ConfigOrigin newURLOrigin(URL url) {
+        return SimpleConfigOrigin.newURL(url);
+    }
+    
 }

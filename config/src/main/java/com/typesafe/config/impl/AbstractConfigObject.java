@@ -18,7 +18,6 @@ import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements ConfigObject, Container {
-
     final private SimpleConfig config;
 
     protected AbstractConfigObject(ConfigOrigin origin) {
@@ -213,5 +212,10 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
     @Override
     public ConfigValue remove(Object arg0) {
         throw weAreImmutable("remove");
+    }
+
+    @Override
+    public AbstractConfigObject withOrigin(ConfigOrigin origin) {
+        return (AbstractConfigObject) super.withOrigin(origin);
     }
 }
