@@ -14,6 +14,9 @@ cache:
 
 language: scala
 
+jdk:
+  - openjdk6
+
 script:
   - sbt ++$TRAVIS_SCALA_VERSION test
 
