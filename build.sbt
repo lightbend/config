@@ -16,7 +16,7 @@ scalacOptions in GlobalScope in Compile := Seq("-unchecked", "-deprecation", "-f
 
 scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation", "-feature")
 
-scalaVersion in ThisBuild := "2.10.2"
+scalaVersion in ThisBuild := "2.10.4"
 
 useGpg in GlobalScope := true
 
