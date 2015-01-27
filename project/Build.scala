@@ -1,6 +1,7 @@
 import sbt._
 import Keys._
 import com.typesafe.sbt.osgi.SbtOsgi.{ OsgiKeys, osgiSettings }
+import com.typesafe.sbt.JavaVersionCheckPlugin.autoImport._
 
 object ConfigBuild extends Build {
     val unpublished = Seq(
@@ -26,8 +27,10 @@ object ConfigBuild extends Build {
 
     override val settings = super.settings ++ Seq(isSnapshot <<= isSnapshot or version(_ endsWith "-SNAPSHOT"))
 
+    lazy val commonSettings: Seq[Setting[_]] = unpublished ++ Seq(javaVersionPrefix in javaVersionCheck := None)
+
     lazy val rootSettings: Seq[Setting[_]] =
-      unpublished ++
+      commonSettings ++
       Seq(aggregate in doc := false,
           doc := (doc in (configLib, Compile)).value,
           aggregate in packageDoc := false,
@@ -52,7 +55,7 @@ object ConfigBuild extends Build {
                                      publishLocal := sys.error("use publishLocalSigned instead of plain publishLocal")
                                    )) dependsOn testLib % "test->test"
 
-    def project(id: String, base: File) = Project(id, base, settings = unpublished)
+    def project(id: String, base: File) = Project(id, base, settings = commonSettings)
 
     lazy val testLib = project("config-test-lib", file("test-lib"))
 

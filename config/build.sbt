@@ -30,4 +30,4 @@ parallelExecution in Test := false
 
 sources in (Compile, doc) ~= (_.filter(_.getParentFile.getName != "impl"))
 
-JavaVersionCheck.javacVersionCheckSettings
+javaVersionPrefix in javaVersionCheck := Some("1.6")
