@@ -533,7 +533,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse time unit '"
                             + originalUnitString
-                            + "' (try ns, us, ms, s, m, d)");
+                            + "' (try ns, us, ms, s, m, h, d)");
         }
 
         try {
