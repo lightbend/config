@@ -24,7 +24,7 @@ public class BeanFactory {
         return createInternal(config, clazz);
     }
 
-    private static final Map<TimeUnit,List<String>> TIME_UNITS = new HashMap<>();
+    private static final Map<TimeUnit,List<String>> TIME_UNITS = new HashMap<TimeUnit,List<String>>();
     static {
         TIME_UNITS.put(TimeUnit.NANOSECONDS, Arrays.asList("ns", "nano", "nanos", "nanosecond", "nanoseconds"));
         TIME_UNITS.put(TimeUnit.MICROSECONDS, Arrays.asList("us", "micro", "micros", "microsecond", "microseconds"));
@@ -38,7 +38,7 @@ public class BeanFactory {
     private static <T> T createInternal(Config config, Class<T> clazz) {
         Map<String, ?> configAsMap = config.root().unwrapped();
         Map<String, Object> configProps = new HashMap<String, Object>();
-        Map<String,String> originalNames = new HashMap<>();
+        Map<String,String> originalNames = new HashMap<String, String>();
         for (Map.Entry<String, ?> configProp : configAsMap.entrySet()) {
             configProps.put(toCamelCase(configProp.getKey()), configProp.getValue());
             originalNames.put(toCamelCase(configProp.getKey()),configProp.getKey());
