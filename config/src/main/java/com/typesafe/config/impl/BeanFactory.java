@@ -16,7 +16,8 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Sent as pull request to config project.
- * https://github.com/typesafehub/config/pull/107
+ * https://github.com/typesafehub/config/pull/107 (original)
+ * https://github.com/typesafehub/config/pull/249 (automatic conversion support)
  */
 public class BeanFactory {
 
@@ -24,6 +25,9 @@ public class BeanFactory {
         return createInternal(config, clazz);
     }
 
+    /**
+     * https://github.com/typesafehub/config/blob/master/HOCON.md#duration-format
+     */
     private static final Map<TimeUnit,List<String>> TIME_UNITS = new HashMap<TimeUnit,List<String>>();
     static {
         TIME_UNITS.put(TimeUnit.NANOSECONDS, Arrays.asList("ns", "nano", "nanos", "nanosecond", "nanoseconds"));
@@ -34,6 +38,7 @@ public class BeanFactory {
         TIME_UNITS.put(TimeUnit.HOURS,Arrays.asList("h", "hour", "hours"));
         TIME_UNITS.put(TimeUnit.DAYS,Arrays.asList("d", "day", "days"));
     }
+
 
     private static <T> T createInternal(Config config, Class<T> clazz) {
         Map<String, ?> configAsMap = config.root().unwrapped();
@@ -78,27 +83,24 @@ public class BeanFactory {
     }
 
     private static Object getValueWithAutoConversion(Class parameterClass, Config config, String configPropName) {
-        if(parameterClass == Boolean.class || parameterClass == boolean.class)  {
+        if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return config.getBoolean(configPropName);
-        } else if(parameterClass == Integer.class || parameterClass == int.class) {
+        } else if (parameterClass == Integer.class || parameterClass == int.class) {
             return config.getInt(configPropName);
-        } else if(parameterClass == Double.class || parameterClass == double.class) {
+        } else if (parameterClass == Double.class || parameterClass == double.class) {
             return config.getDouble(configPropName);
-        } else if(parameterClass == Long.class || parameterClass == long.class) {
+        } else if (parameterClass == Long.class || parameterClass == long.class) {
             String rawVal = config.getString(configPropName);
-            if(isDuration(rawVal)) {
+            if (isDuration(rawVal)) {
                 TimeUnit timeUnit = getTimeUnit(rawVal);
-                return config.getDuration(configPropName,timeUnit);
+                return config.getDuration(configPropName, timeUnit);
+            } else if (isByteValue(rawVal)) {
+                return config.getBytes(configPropName);
             }
             return config.getLong(configPropName);
-        } else if(parameterClass == String.class) {
+        } else if (parameterClass == String.class) {
             return config.getString(configPropName);
         }
-//        } else if(parameterClass == TimeUnit.class) {
-//            //String rawVal = config.getString(configPropName);
-//            //TimeUnit timeUnit = getTimeUnit(rawVal);
-//            return config.getDuration(configPropName,TimeUnit.SECONDS);
-//        }
 
         return config.getAnyRef(configPropName);
     }
@@ -147,4 +149,12 @@ public class BeanFactory {
         return nameBuilder.toString();
     }
 
+    public static boolean isByteValue(String rawVal) {
+        for (String memoryUnitName : SimpleConfig.getMemoryUnitNameVariations()) {
+            if(rawVal.contains(memoryUnitName)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

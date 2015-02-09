@@ -3,28 +3,14 @@
  */
 package com.typesafe.config.impl;
 
+import com.typesafe.config.*;
+
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigMergeable;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.ConfigValueType;
 
 /**
  * One thing to keep in mind in the future: as Collection-like APIs are added
@@ -622,6 +608,10 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         static MemoryUnit parseUnit(String unit) {
             return unitsMap.get(unit);
         }
+    }
+
+    static Set<String> getMemoryUnitNameVariations() {
+        return Collections.unmodifiableSet(MemoryUnit.unitsMap.keySet());
     }
 
     /**

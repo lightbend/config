@@ -61,6 +61,12 @@ class BeanFactoryTest {
     assertNotNull(beanConfig)
   }
 
+  @Test
+  def testCreateBytes() {
+    val beanConfig: BytesConfig = BeanFactory.create(loadConfig().getConfig("bytes"), classOf[BytesConfig])
+    assertNotNull(beanConfig)
+  }
+
   private def loadConfig(): Config = {
     val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
     val config: Config = ConfigFactory.parseReader(new InputStreamReader(configIs),
