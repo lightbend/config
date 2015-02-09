@@ -3,11 +3,9 @@ Configuration library for JVM languages.
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config)
 [![Build Status](https://travis-ci.org/typesafehub/config.svg?branch=master)](https://travis-ci.org/typesafehub/config)
 
-[![Join chat https://gitter.im/typesafehub/config](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/typesafehub/config?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 If you have questions or are working on a pull request or just
-curious, please feel welcome to join the chat room
-https://gitter.im/typesafehub/config .
+curious, please feel welcome to join the chat room:
+[![Join chat https://gitter.im/typesafehub/config](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/typesafehub/config?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Overview
 
