@@ -924,7 +924,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def substSelfReferenceIndirect() {
-        val obj = parseObject("""a=1, b=${a}, a=${b}""")
+        val obj = parseObject("""b=${a}, a=${b}""")
         val e = intercept[ConfigException.UnresolvedSubstitution] {
             resolve(obj)
         }
@@ -933,7 +933,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def substSelfReferenceDoubleIndirect() {
-        val obj = parseObject("""a=1, b=${c}, c=${a}, a=${b}""")
+        val obj = parseObject("""a=${b}, b=${c}, c=${a}""")
         val e = intercept[ConfigException.UnresolvedSubstitution] {
             resolve(obj)
         }
@@ -1003,8 +1003,10 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def substOptionalIndirectSelfReferenceInConcat() {
         val obj = parseObject("""a=${?b}foo,b=${a}""")
-        val resolved = resolve(obj)
-        assertEquals("foo", resolved.getString("a"))
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
     }
 
     @Test
