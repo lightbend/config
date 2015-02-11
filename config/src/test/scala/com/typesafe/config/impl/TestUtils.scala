@@ -157,7 +157,7 @@ abstract trait TestUtils {
         copy
     }
 
-    protected def checkSerializationCompat[T: ClassTag](expectedHex: String, o: T, changedOK: Boolean = false): Unit = {
+    protected def checkSerializationCompat[T: ClassTag](expectedHex: String, o: T, changedOK: Boolean = true): Unit = {
         // be sure we can still deserialize the old one
         val inStream = new ByteArrayInputStream(decodeLegibleBinary(expectedHex))
         var failure: Option[Exception] = None
