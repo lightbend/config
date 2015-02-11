@@ -85,6 +85,10 @@ public class ConfigBeanFactory {
     private static Object getValueWithAutoConversion(Class parameterClass, Config config, String configPropName) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return config.getBoolean(configPropName);
+        } else if (parameterClass == Byte.class || parameterClass == byte.class) {
+            return Integer.valueOf(config.getInt(configPropName)).byteValue();
+        } else if (parameterClass == Short.class || parameterClass == short.class) {
+            return Integer.valueOf(config.getInt(configPropName)).shortValue();
         } else if (parameterClass == Integer.class || parameterClass == int.class) {
             return config.getInt(configPropName);
         } else if (parameterClass == Double.class || parameterClass == double.class) {
