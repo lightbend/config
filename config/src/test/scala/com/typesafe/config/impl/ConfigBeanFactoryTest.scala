@@ -11,19 +11,19 @@ import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyn
 import org.junit.Assert._
 import org.junit._
 
-class BeanFactoryTest {
+class ConfigBeanFactoryTest {
 
   @Test
   def toCamelCase() {
-    assertEquals("configProp", BeanFactory.toCamelCase("config-prop"))
-    assertEquals("fooBar", BeanFactory.toCamelCase("foo-----bar"))
-    assertEquals("foo", BeanFactory.toCamelCase("-foo"))
-    assertEquals("bar", BeanFactory.toCamelCase("bar-"))
+    assertEquals("configProp", ConfigBeanFactory.toCamelCase("config-prop"))
+    assertEquals("fooBar", ConfigBeanFactory.toCamelCase("foo-----bar"))
+    assertEquals("foo", ConfigBeanFactory.toCamelCase("-foo"))
+    assertEquals("bar", ConfigBeanFactory.toCamelCase("bar-"))
   }
 
   @Test
   def getTimeUnit() {
-    assertEquals(TimeUnit.MILLISECONDS, BeanFactory.getTimeUnit("30ms"))
+    assertEquals(TimeUnit.MILLISECONDS, ConfigBeanFactory.getTimeUnit("30ms"))
 
   }
 
@@ -32,38 +32,38 @@ class BeanFactoryTest {
     val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
     val config: Config = ConfigFactory.parseReader(new InputStreamReader(configIs),
       ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)).resolve
-    val beanConfig: TestBeanConfig = BeanFactory.create(config, classOf[TestBeanConfig])
+    val beanConfig: TestBeanConfig = ConfigBeanFactory.create(config, classOf[TestBeanConfig])
     assertNotNull(beanConfig)
   }
 
 
   @Test
   def testCreateBool() {
-    val beanConfig: BooleansConfig = BeanFactory.create(loadConfig().getConfig("booleans"), classOf[BooleansConfig])
+    val beanConfig: BooleansConfig = ConfigBeanFactory.create(loadConfig().getConfig("booleans"), classOf[BooleansConfig])
     assertNotNull(beanConfig)
   }
 
   @Test
   def testCreateNumber() {
-    val beanConfig: NumbersConfig = BeanFactory.create(loadConfig().getConfig("numbers"), classOf[NumbersConfig])
+    val beanConfig: NumbersConfig = ConfigBeanFactory.create(loadConfig().getConfig("numbers"), classOf[NumbersConfig])
     assertNotNull(beanConfig)
   }
 
   @Test
   def testCreateList() {
-    val beanConfig: ArraysConfig = BeanFactory.create(loadConfig().getConfig("arrays"), classOf[ArraysConfig])
+    val beanConfig: ArraysConfig = ConfigBeanFactory.create(loadConfig().getConfig("arrays"), classOf[ArraysConfig])
     assertNotNull(beanConfig)
   }
 
   @Test
   def testCreateDuration() {
-    val beanConfig: DurationsConfig = BeanFactory.create(loadConfig().getConfig("durations"), classOf[DurationsConfig])
+    val beanConfig: DurationsConfig = ConfigBeanFactory.create(loadConfig().getConfig("durations"), classOf[DurationsConfig])
     assertNotNull(beanConfig)
   }
 
   @Test
   def testCreateBytes() {
-    val beanConfig: BytesConfig = BeanFactory.create(loadConfig().getConfig("bytes"), classOf[BytesConfig])
+    val beanConfig: BytesConfig = ConfigBeanFactory.create(loadConfig().getConfig("bytes"), classOf[BytesConfig])
     assertNotNull(beanConfig)
   }
 

@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * https://github.com/typesafehub/config/pull/107 (original)
  * https://github.com/typesafehub/config/pull/249 (automatic conversion support)
  */
-public class BeanFactory {
+public class ConfigBeanFactory {
 
     public static <T> T create(Config config, Class<T> clazz) {
         return createInternal(config, clazz);
