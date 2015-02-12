@@ -7,7 +7,8 @@ import java.io.{InputStream, InputStreamReader}
 import java.util.concurrent.TimeUnit
 
 import beanconfig._
-import com.typesafe.config.{Config, ConfigFactory, ConfigParseOptions, ConfigSyntax}
+import com.typesafe.config.ConfigException.Generic
+import com.typesafe.config._
 import org.junit.Assert._
 import org.junit._
 
@@ -28,6 +29,25 @@ class ConfigBeanFactoryTest {
       ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)).resolve
     val beanConfig: TestBeanConfig = ConfigBeanFactory.create(config, classOf[TestBeanConfig])
     assertNotNull(beanConfig)
+  }
+
+  @Test
+  def testUnknownProp() {
+    val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
+    val config: Config = ConfigFactory.parseReader(new InputStreamReader(configIs),
+      ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)).resolve
+    var expected: ConfigException.Generic = null
+    var beanConfig : NoFoundPropBeanConfig = null
+    try {
+      beanConfig = ConfigBeanFactory.create(config, classOf[NoFoundPropBeanConfig])
+    } catch {
+      case cge : ConfigException.Generic => expected = cge
+      case e: Exception => expected = null
+    }
+    assertNotNull(expected)
+    assertEquals("Could not find property 'propNotListedInConfig' from class 'beanconfig.NoFoundPropBeanConfig' in config.",
+                  expected.getMessage)
+    assertNull(beanConfig)
   }
 
 

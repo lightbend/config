@@ -42,7 +42,7 @@ public class ConfigBeanFactory {
                 Object configValue = configProps.get(beanProp.getName());
                 if (configValue == null) {
                     throw new ConfigException.Generic(
-                            "Could not find " + beanProp.getName() + " from " + clazz.getName() + " in config.");
+                            "Could not find property '" + beanProp.getName() + "' from class '" + clazz.getName() + "' in config.");
                 }
                 if (configValue instanceof Map) {
                     configValue = createInternal(config.getConfig(originalNames.get(beanProp.getDisplayName())), beanProp.getPropertyType());
