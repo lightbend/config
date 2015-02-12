@@ -22,12 +22,6 @@ class ConfigBeanFactoryTest {
   }
 
   @Test
-  def getTimeUnit() {
-    assertEquals(TimeUnit.MILLISECONDS, ConfigBeanFactory.getTimeUnit("30ms"))
-
-  }
-
-  @Test
   def testCreate() {
     val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
     val config: Config = ConfigFactory.parseReader(new InputStreamReader(configIs),

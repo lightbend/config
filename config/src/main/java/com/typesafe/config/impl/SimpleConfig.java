@@ -499,27 +499,17 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         if (unitString.length() > 2 && !unitString.endsWith("s"))
             unitString = unitString + "s";
 
-        // note that this is deliberately case-sensitive
-        if (unitString.equals("") || unitString.equals("ms") || unitString.equals("millis")
-                || unitString.equals("milliseconds")) {
+        if(unitString.equals("")) {
             units = TimeUnit.MILLISECONDS;
-        } else if (unitString.equals("us") || unitString.equals("micros") || unitString.equals("microseconds")) {
-            units = TimeUnit.MICROSECONDS;
-        } else if (unitString.equals("ns") || unitString.equals("nanos") || unitString.equals("nanoseconds")) {
-            units = TimeUnit.NANOSECONDS;
-        } else if (unitString.equals("d") || unitString.equals("days")) {
-            units = TimeUnit.DAYS;
-        } else if (unitString.equals("h") || unitString.equals("hours")) {
-            units = TimeUnit.HOURS;
-        } else if (unitString.equals("s") || unitString.equals("seconds")) {
-            units = TimeUnit.SECONDS;
-        } else if (unitString.equals("m") || unitString.equals("minutes")) {
-            units = TimeUnit.MINUTES;
         } else {
-            throw new ConfigException.BadValue(originForException,
+            DurationUnit durationUnit = DurationUnit.fromString(unitString);
+            units = durationUnit != null ? durationUnit.getTimeUnit() : null;
+            if(units == null) {
+                throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse time unit '"
                             + originalUnitString
                             + "' (try ns, us, ms, s, m, h, d)");
+            }
         }
 
         try {
@@ -538,6 +528,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                             + numberString + "'");
         }
     }
+
+
 
     private static enum MemoryUnit {
         BYTES("", 1024, 0),

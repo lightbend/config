@@ -8,9 +8,7 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -24,21 +22,6 @@ public class ConfigBeanFactory {
     public static <T> T create(Config config, Class<T> clazz) {
         return createInternal(config, clazz);
     }
-
-    /**
-     * https://github.com/typesafehub/config/blob/master/HOCON.md#duration-format
-     */
-    private static final Map<TimeUnit,List<String>> TIME_UNITS = new HashMap<TimeUnit,List<String>>();
-    static {
-        TIME_UNITS.put(TimeUnit.NANOSECONDS, Arrays.asList("ns", "nano", "nanos", "nanosecond", "nanoseconds"));
-        TIME_UNITS.put(TimeUnit.MICROSECONDS, Arrays.asList("us", "micro", "micros", "microsecond", "microseconds"));
-        TIME_UNITS.put(TimeUnit.MILLISECONDS,Arrays.asList("ms", "milli", "millis", "millisecond", "milliseconds"));
-        TIME_UNITS.put(TimeUnit.SECONDS,Arrays.asList("s", "second", "seconds"));
-        TIME_UNITS.put(TimeUnit.MINUTES,Arrays.asList("m", "minute", "minutes"));
-        TIME_UNITS.put(TimeUnit.HOURS,Arrays.asList("h", "hour", "hours"));
-        TIME_UNITS.put(TimeUnit.DAYS,Arrays.asList("d", "day", "days"));
-    }
-
 
     private static <T> T createInternal(Config config, Class<T> clazz) {
         Map<String, ?> configAsMap = config.root().unwrapped();
@@ -95,9 +78,8 @@ public class ConfigBeanFactory {
             return config.getDouble(configPropName);
         } else if (parameterClass == Long.class || parameterClass == long.class) {
             String rawVal = config.getString(configPropName);
-            if (isDuration(rawVal)) {
-                TimeUnit timeUnit = getTimeUnit(rawVal);
-                return config.getDuration(configPropName, timeUnit);
+            if (DurationUnit.containsDurationToken(rawVal)) {
+                return config.getDuration(configPropName, TimeUnit.NANOSECONDS);
             } else if (isByteValue(rawVal)) {
                 return config.getBytes(configPropName);
             }
@@ -108,33 +90,6 @@ public class ConfigBeanFactory {
 
         return config.getAnyRef(configPropName);
     }
-
-    private static boolean isDuration(String rawVal) {
-        for (Map.Entry<TimeUnit, List<String>> timeUnitListEntry : TIME_UNITS.entrySet()) {
-            for (String timeUnitStr : timeUnitListEntry.getValue()) {
-                if(rawVal.contains(timeUnitStr)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-
-    static TimeUnit getTimeUnit(String rawVal) {
-        String unitStr = rawVal.toLowerCase().replaceAll("[^A-Za-z]","");
-        if(unitStr.isEmpty()) {
-            return TimeUnit.MILLISECONDS;
-        }
-        for (TimeUnit timeUnit : TIME_UNITS.keySet()) {
-            if(TIME_UNITS.get(timeUnit).contains(unitStr)) {
-                return timeUnit;
-            }
-        }
-        throw new ConfigException.Generic("Failed to define time unit from " + rawVal);
-    }
-
-
 
     /**
      * Converts from hyphenated name to camel case.
