@@ -3,6 +3,7 @@ package com.typesafe.config.impl;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 
+import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -32,9 +33,16 @@ public class ConfigBeanFactory {
             originalNames.put(toCamelCase(configProp.getKey()),configProp.getKey());
         }
 
+        BeanInfo beanInfo = null;
+        try {
+            beanInfo = Introspector.getBeanInfo(clazz);
+        } catch(IntrospectionException e) {
+            throw new ConfigException.Generic("Could not get bean information for class " + clazz.getName(), e);
+        }
+
         try {
             T bean = clazz.newInstance();
-            for (PropertyDescriptor beanProp : Introspector.getBeanInfo(clazz).getPropertyDescriptors()) {
+            for (PropertyDescriptor beanProp : beanInfo.getPropertyDescriptors()) {
                 if (beanProp.getReadMethod() == null || beanProp.getWriteMethod() == null) {
                     continue;
                 }
@@ -54,8 +62,6 @@ public class ConfigBeanFactory {
 
             }
             return bean;
-        } catch (IntrospectionException e) {
-            throw new ConfigException.Generic("Could not resolve a string method name.", e);
         } catch (InstantiationException e) {
             throw new ConfigException.Generic(clazz + " needs a public no args constructor", e);
         } catch (IllegalAccessException e) {
