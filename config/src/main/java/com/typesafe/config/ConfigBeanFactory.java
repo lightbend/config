@@ -1,7 +1,7 @@
-package com.typesafe.config.impl;
+package com.typesafe.config;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigException;
+import com.typesafe.config.impl.DurationUnit;
+import com.typesafe.config.impl.MemoryUnit;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -14,12 +14,26 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Sent as pull request to config project.
- * https://github.com/typesafehub/config/pull/107 (original)
- * https://github.com/typesafehub/config/pull/249 (automatic conversion support)
+ * Factory for automatic creation of config classes populated with values from config.
+ *
+ * Example usage:
+ *
+ * Config configSource = ConfigFactory.parseReader(new InputStreamReader("converters.conf"));
+ * ConverterConfig config = ConfigBeanFactory.create(configSource,ConverterConfig.class);
+ *
+ * Supports nested configs.
+ * Supports automatic types conversion
+ * (https://github.com/typesafehub/config/blob/master/HOCON.md#automatic-type-conversions).
  */
 public class ConfigBeanFactory {
 
+    /**
+     * Creates instance of class containing configuration info from config source
+     * @param config - source of config information
+     * @param clazz - class to be created
+     * @param <T>
+     * @return - instance of config class populated with data from config source
+     */
     public static <T> T create(Config config, Class<T> clazz) {
         return createInternal(config, clazz);
     }
@@ -86,7 +100,7 @@ public class ConfigBeanFactory {
             String rawVal = config.getString(configPropName);
             if (DurationUnit.containsDurationToken(rawVal)) {
                 return config.getDuration(configPropName, TimeUnit.NANOSECONDS);
-            } else if (isByteValue(rawVal)) {
+            } else if (MemoryUnit.containsMemoryToken(rawVal)) {
                 return config.getBytes(configPropName);
             }
             return config.getLong(configPropName);
@@ -100,7 +114,7 @@ public class ConfigBeanFactory {
     /**
      * Converts from hyphenated name to camel case.
      */
-    public static String toCamelCase(String originalName) {
+    static String toCamelCase(String originalName) {
         String[] words = originalName.split("-+");
         StringBuilder nameBuilder = new StringBuilder(originalName.length());
         for (int i = 0; i < words.length; i++) {
@@ -114,12 +128,4 @@ public class ConfigBeanFactory {
         return nameBuilder.toString();
     }
 
-    public static boolean isByteValue(String rawVal) {
-        for (String memoryUnitName : SimpleConfig.getMemoryUnitNameVariations()) {
-            if(rawVal.contains(memoryUnitName)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }

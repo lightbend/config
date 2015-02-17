@@ -1,11 +1,8 @@
 package beanconfig;
 
 
-import java.util.List;
-
 public class DurationsConfig {
     Long second;
-    List<Long> secondsList;
     Long secondAsNumber;
     Long halfSecond;
 
@@ -16,14 +13,6 @@ public class DurationsConfig {
 
     public void setSecond(Long second) {
         this.second = second;
-    }
-
-    public List<Long> getSecondsList() {
-        return secondsList;
-    }
-
-    public void setSecondsList(List<Long> secondsList) {
-        this.secondsList = secondsList;
     }
 
     public Long getSecondAsNumber() {
