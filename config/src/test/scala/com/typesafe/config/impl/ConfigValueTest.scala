@@ -212,13 +212,47 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
-    def configObjectSerializable() {
+    def java6ConfigObjectSerializable() {
         val expectedSerialization = "" +
             "ACED0005_s_r00_._c_o_m_._t_y_p_e_s_a_f_e_._c_o_n_f_i_g_._i_m_p_l_._S_e_r_i_a_l_i" +
             "_z_e_d_C_o_n_f_i_g_V_a_l_u_e00000000000000010C0000_x_p_w_z02000000_n050000001906" +
             "0000000D000B_f_a_k_e_ _o_r_i_g_i_n0900000001000104000000_J07000000030001_a050000" +
             "000101040000000802000000010001_1010001_c050000000101040000000802000000030001_301" +
             "0001_b050000000101040000000802000000020001_2010103000000010001_x"
+
+        val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
+        val a = new SimpleConfigObject(fakeOrigin(), aMap)
+        val b = checkSerializableOldFormat(expectedSerialization, a)
+        assertEquals(1, b.toConfig.getInt("a"))
+        // check that deserialized Config and ConfigObject refer to each other
+        assertTrue(b.toConfig.root eq b)
+    }
+
+    @Test
+    def java6ConfigConfigSerializable() {
+        val expectedSerialization = "" +
+            "ACED0005_s_r00_._c_o_m_._t_y_p_e_s_a_f_e_._c_o_n_f_i_g_._i_m_p_l_._S_e_r_i_a_l_i" +
+            "_z_e_d_C_o_n_f_i_g_V_a_l_u_e00000000000000010C0000_x_p_w_z02000000_n050000001906" +
+            "0000000D000B_f_a_k_e_ _o_r_i_g_i_n0900000001000104000000_J07000000030001_a050000" +
+            "000101040000000802000000010001_1010001_c050000000101040000000802000000030001_301" +
+            "0001_b050000000101040000000802000000020001_2010103000000010101_x"
+
+        val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
+        val a = new SimpleConfigObject(fakeOrigin(), aMap)
+        val b = checkSerializableOldFormat(expectedSerialization, a.toConfig())
+        assertEquals(1, b.getInt("a"))
+        // check that deserialized Config and ConfigObject refer to each other
+        assertTrue(b.root.toConfig eq b)
+    }
+
+    @Test
+    def configObjectSerializable() {
+        val expectedSerialization = "" +
+            "ACED0005_s_r00_._c_o_m_._t_y_p_e_s_a_f_e_._c_o_n_f_i_g_._i_m_p_l_._S_e_r_i_a_l_i" +
+            "_z_e_d_C_o_n_f_i_g_V_a_l_u_e00000000000000010C0000_x_p_w_z02000000_n050000001906" +
+            "0000000D000B_f_a_k_e_ _o_r_i_g_i_n0900000001000104000000_J07000000030001_a050000" +
+            "000101040000000802000000010001_1010001_b050000000101040000000802000000020001_201" +
+            "0001_c050000000101040000000802000000030001_3010103000000010001_x"
 
         val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val a = new SimpleConfigObject(fakeOrigin(), aMap)
@@ -231,11 +265,11 @@ class ConfigValueTest extends TestUtils {
     @Test
     def configConfigSerializable() {
         val expectedSerialization = "" +
-            "ACED0005_s_r00_._c_o_m_._t_y_p_e_s_a_f_e_._c_o_n_f_i_g_._i_m_p_l_._S_e_r_i_a_l_i" +
-            "_z_e_d_C_o_n_f_i_g_V_a_l_u_e00000000000000010C0000_x_p_w_z02000000_n050000001906" +
-            "0000000D000B_f_a_k_e_ _o_r_i_g_i_n0900000001000104000000_J07000000030001_a050000" +
-            "000101040000000802000000010001_1010001_c050000000101040000000802000000030001_301" +
-            "0001_b050000000101040000000802000000020001_2010103000000010101_x"
+           "ACED0005_s_r00_._c_o_m_._t_y_p_e_s_a_f_e_._c_o_n_f_i_g_._i_m_p_l_._S_e_r_i_a_l_i" +
+           "_z_e_d_C_o_n_f_i_g_V_a_l_u_e00000000000000010C0000_x_p_w_z02000000_n050000001906" +
+           "0000000D000B_f_a_k_e_ _o_r_i_g_i_n0900000001000104000000_J07000000030001_a050000" +
+           "000101040000000802000000010001_1010001_b050000000101040000000802000000020001_201" +
+           "0001_c050000000101040000000802000000030001_3010103000000010101_x"
 
         val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val a = new SimpleConfigObject(fakeOrigin(), aMap)
