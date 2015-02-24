@@ -71,7 +71,7 @@ to merge it in.
   - [Concatenation](#concatenation)
 - [Miscellaneous Notes](#miscellaneous-notes)
   - [Debugging Your Configuration](#debugging-your-configuration)
-  - [Supports Java 6 and Later](#supports-java-6-and-later)
+  - [Supports Java 8 and Later](#supports-java-8-and-later)
   - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
   - [Other APIs (Wrappers and Ports)](#other-apis-wrappers-and-ports)
     - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
@@ -87,7 +87,10 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 
 ### Binary Releases
 
-You can find published releases (compiled for Java 6 and above) on
+Version 1.2.1 and earlier were built for Java 6, while newer
+versions will be built for Java 8.
+
+You can find published releases (compiled for Java 8 and above) on
 Maven Central.
 
     <dependency>
@@ -685,10 +688,10 @@ If you have trouble with your configuration, some useful tips.
  - Use `myConfig.root().render()` to get a `Config` printed out as a
    string with comments showing where each value came from.
 
-### Supports Java 6 and Later
+### Supports Java 8 and Later
 
-Currently the library is maintained against Java 6. It does not
-build with Java 5.
+Currently the library is maintained against Java 8, but
+version 1.2.1 and earlier will work with Java 6.
 
 ### Rationale for Supported File Formats
 
