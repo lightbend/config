@@ -586,6 +586,26 @@ public interface Config extends ConfigMergeable {
     Long getBytes(String path);
 
     /**
+     * Gets a value as an amount of memory (parses special strings like "128M"). If
+     * the value is already a number, then it's left alone; if it's a string,
+     * it's parsed understanding unit suffixes such as "128K", as documented in
+     * the <a
+     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * spec</a>.
+     *
+     * @param path
+     *            path expression
+     * @return the value at the requested path, in bytes
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a size in bytes
+     */
+    ConfigMemorySize getMemorySize(String path);
+
+    /**
      * Get value as a duration in milliseconds. If the value is already a
      * number, then it's left alone; if it's a string, it's parsed understanding
      * units suffixes like "10m" or "5ns" as documented in the <a
@@ -685,6 +705,8 @@ public interface Config extends ConfigMergeable {
     List<? extends Object> getAnyRefList(String path);
 
     List<Long> getBytesList(String path);
+
+    List<ConfigMemorySize> getMemorySizeList(String path);
 
     /**
      * @deprecated  As of release 1.1, replaced by {@link #getDurationList(String, TimeUnit)}
