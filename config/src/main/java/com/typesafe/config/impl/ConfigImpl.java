@@ -18,6 +18,7 @@ import java.util.concurrent.Callable;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigIncluder;
+import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
@@ -273,6 +274,8 @@ public class ConfigImpl {
             }
 
             return new SimpleConfigList(origin, values);
+        } else if (object instanceof ConfigMemorySize) {
+            return new ConfigLong(origin, ((ConfigMemorySize) object).toBytes(), null);
         } else {
             throw new ConfigException.BugOrBroken(
                     "bug in method caller: not valid to create ConfigValue from: "

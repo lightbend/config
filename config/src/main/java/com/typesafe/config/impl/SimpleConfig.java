@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigList;
+import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
@@ -245,6 +246,11 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return size;
     }
 
+    @Override
+    public ConfigMemorySize getMemorySize(String path) {
+        return ConfigMemorySize.ofBytes(getBytes(path));
+    }
+
     @Deprecated
     @Override
     public Long getMilliseconds(String path) {
@@ -394,6 +400,16 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             }
         }
         return l;
+    }
+
+    @Override
+    public List<ConfigMemorySize> getMemorySizeList(String path) {
+        List<Long> list = getBytesList(path);
+        List<ConfigMemorySize> builder = new ArrayList<ConfigMemorySize>();
+        for (Long v : list) {
+            builder.add(ConfigMemorySize.ofBytes(v));
+        }
+        return builder;
     }
 
     @Override
