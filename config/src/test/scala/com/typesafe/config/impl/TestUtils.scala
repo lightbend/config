@@ -668,9 +668,11 @@ abstract trait TestUtils {
         f
     }
 
-    protected def resourceFile(filename: String) = {
+    protected def resourceFile(filename: String): File =
         new File(resourceDir, filename)
-    }
+
+    protected def jsonQuotedResourceFile(filename: String): String =
+        quoteJsonString(resourceFile(filename).toString)
 
     protected class TestClassLoader(parent: ClassLoader, val additions: Map[String, URL]) extends ClassLoader(parent) {
         override def findResources(name: String) = {
@@ -736,4 +738,6 @@ abstract trait TestUtils {
         }
     }
 
+    protected def quoteJsonString(s: String): String =
+        ConfigImplUtil.renderJsonString(s)
 }
