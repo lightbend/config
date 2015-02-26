@@ -167,15 +167,7 @@ final class Path {
         if (length == 0)
             return false;
 
-        // if the path starts with something that could be a number,
-        // we need to quote it because the number could be invalid,
-        // for example it could be a hyphen with no digit afterward
-        // or the exponent "e" notation could be mangled.
-        char first = s.charAt(0);
-        if (!(Character.isLetter(first)))
-            return true;
-
-        for (int i = 1; i < length; ++i) {
+        for (int i = 0; i < length; ++i) {
             char c = s.charAt(i);
 
             if (Character.isLetterOrDigit(c) || c == '-' || c == '_')
