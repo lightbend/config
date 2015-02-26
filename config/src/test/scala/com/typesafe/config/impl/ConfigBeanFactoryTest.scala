@@ -19,7 +19,9 @@ class ConfigBeanFactoryTest extends TestUtils {
     @Test
     def toCamelCase() {
         assertEquals("configProp", ConfigImplUtil.toCamelCase("config-prop"))
+        assertEquals("configProp", ConfigImplUtil.toCamelCase("configProp"))
         assertEquals("fooBar", ConfigImplUtil.toCamelCase("foo-----bar"))
+        assertEquals("fooBar", ConfigImplUtil.toCamelCase("fooBar"))
         assertEquals("foo", ConfigImplUtil.toCamelCase("-foo"))
         assertEquals("bar", ConfigImplUtil.toCamelCase("bar-"))
     }
