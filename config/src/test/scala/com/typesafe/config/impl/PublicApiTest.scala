@@ -95,9 +95,17 @@ class PublicApiTest extends TestUtils {
 
     private def testFromValue(expectedValue: ConfigValue, createFrom: AnyRef) {
         assertEquals(expectedValue, ConfigValueFactory.fromAnyRef(createFrom))
-        assertEquals(defaultValueDesc, ConfigValueFactory.fromAnyRef(createFrom).origin().description())
+
         assertEquals(expectedValue, ConfigValueFactory.fromAnyRef(createFrom, "foo"))
-        assertEquals("foo", ConfigValueFactory.fromAnyRef(createFrom, "foo").origin().description())
+
+        // description is ignored for createFrom that is already a ConfigValue
+        createFrom match {
+            case c: ConfigValue =>
+                assertEquals(c.origin().description(), ConfigValueFactory.fromAnyRef(createFrom).origin().description())
+            case _ =>
+                assertEquals(defaultValueDesc, ConfigValueFactory.fromAnyRef(createFrom).origin().description())
+                assertEquals("foo", ConfigValueFactory.fromAnyRef(createFrom, "foo").origin().description())
+        }
     }
 
     @Test
@@ -178,8 +186,29 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def fromDuration() {
-      testFromValue(longValue(1000), Duration.ofMillis(1000));
-      testFromValue(longValue(1000*60*60*24), Duration.ofDays(1));
+        testFromValue(longValue(1000), Duration.ofMillis(1000));
+        testFromValue(longValue(1000 * 60 * 60 * 24), Duration.ofDays(1));
+    }
+
+    @Test
+    def fromExistingConfigValue() {
+        testFromValue(longValue(1000), longValue(1000));
+        testFromValue(stringValue("foo"), stringValue("foo"));
+
+        val aMapValue = new SimpleConfigObject(fakeOrigin(),
+            Map("a" -> 1, "b" -> 2, "c" -> 3).mapValues(intValue(_): AbstractConfigValue).asJava)
+
+        testFromValue(aMapValue, aMapValue)
+    }
+
+    @Test
+    def fromExistingJavaListOfConfigValue() {
+        // you can mix "unwrapped" List with ConfigValue elements
+        val list = List(longValue(1), longValue(2), longValue(3)).asJava
+        testFromValue(new SimpleConfigList(fakeOrigin(), List(longValue(1): AbstractConfigValue,
+            longValue(2): AbstractConfigValue,
+            longValue(3): AbstractConfigValue).asJava),
+            list);
     }
 
     @Test
