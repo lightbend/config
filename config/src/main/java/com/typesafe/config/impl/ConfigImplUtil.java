@@ -230,4 +230,22 @@ final public class ConfigImplUtil {
         SerializedConfigValue.writeOrigin(new DataOutputStream(out), (SimpleConfigOrigin) origin,
                 null);
     }
+
+    /**
+     * This is public ONLY for use by the "config" package, DO NOT USE this ABI
+     * may change.
+     */
+    public static String toCamelCase(String originalName) {
+        String[] words = originalName.split("-+");
+        StringBuilder nameBuilder = new StringBuilder(originalName.length());
+        for (String word : words) {
+            if (nameBuilder.length() == 0) {
+                nameBuilder.append(word);
+            } else {
+                nameBuilder.append(word.substring(0, 1).toUpperCase());
+                nameBuilder.append(word.substring(1));
+            }
+        }
+        return nameBuilder.toString();
+    }
 }

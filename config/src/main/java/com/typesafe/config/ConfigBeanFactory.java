@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.time.Duration;
+import com.typesafe.config.impl.ConfigImplUtil;
 
 /**
  * Factory for automatic creation of config classes populated with values from config.
@@ -41,8 +42,8 @@ public class ConfigBeanFactory {
         Map<String, Object> configProps = new HashMap<String, Object>();
         Map<String,String> originalNames = new HashMap<String, String>();
         for (Map.Entry<String, ?> configProp : configAsMap.entrySet()) {
-            configProps.put(toCamelCase(configProp.getKey()), configProp.getValue());
-            originalNames.put(toCamelCase(configProp.getKey()),configProp.getKey());
+            configProps.put(ConfigImplUtil.toCamelCase(configProp.getKey()), configProp.getValue());
+            originalNames.put(ConfigImplUtil.toCamelCase(configProp.getKey()),configProp.getKey());
         }
 
         BeanInfo beanInfo = null;
@@ -106,22 +107,4 @@ public class ConfigBeanFactory {
 
         return config.getAnyRef(configPropName);
     }
-
-    /**
-     * Converts from hyphenated name to camel case.
-     */
-    static String toCamelCase(String originalName) {
-        String[] words = originalName.split("-+");
-        StringBuilder nameBuilder = new StringBuilder(originalName.length());
-        for (int i = 0; i < words.length; i++) {
-            if (nameBuilder.length() == 0) {
-                nameBuilder.append(words[i]);
-            } else {
-                nameBuilder.append(words[i].substring(0, 1).toUpperCase());
-                nameBuilder.append(words[i].substring(1));
-            }
-        }
-        return nameBuilder.toString();
-    }
-
 }

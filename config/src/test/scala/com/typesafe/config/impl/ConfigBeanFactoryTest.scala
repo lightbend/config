@@ -1,7 +1,9 @@
 /**
  * Copyright (C) 2013 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config
+package com.typesafe.config.impl
+
+import com.typesafe.config._
 
 import java.io.{ InputStream, InputStreamReader }
 import java.time.Duration;
@@ -12,38 +14,14 @@ import org.junit._
 
 import scala.collection.JavaConverters._
 
-class ConfigBeanFactoryTest {
-
-    // TODO this is here temporarily to avoid moving to impl in this
-    // same commit
-    import scala.reflect.ClassTag
-    import scala.reflect.classTag
-    protected def intercept[E <: Throwable: ClassTag](block: => Any): E = {
-        val expectedClass = classTag[E].runtimeClass
-        var thrown: Option[Throwable] = None
-        val result = try {
-            Some(block)
-        } catch {
-            case t: Throwable =>
-                thrown = Some(t)
-                None
-        }
-        thrown match {
-            case Some(t) if expectedClass.isAssignableFrom(t.getClass) =>
-                t.asInstanceOf[E]
-            case Some(t) =>
-                throw new Exception(s"Expected exception ${expectedClass.getName} was not thrown, got $t", t)
-            case None =>
-                throw new Exception(s"Expected exception ${expectedClass.getName} was not thrown, no exception was thrown and got result $result")
-        }
-    }
+class ConfigBeanFactoryTest extends TestUtils {
 
     @Test
     def toCamelCase() {
-        assertEquals("configProp", ConfigBeanFactory.toCamelCase("config-prop"))
-        assertEquals("fooBar", ConfigBeanFactory.toCamelCase("foo-----bar"))
-        assertEquals("foo", ConfigBeanFactory.toCamelCase("-foo"))
-        assertEquals("bar", ConfigBeanFactory.toCamelCase("bar-"))
+        assertEquals("configProp", ConfigImplUtil.toCamelCase("config-prop"))
+        assertEquals("fooBar", ConfigImplUtil.toCamelCase("foo-----bar"))
+        assertEquals("foo", ConfigImplUtil.toCamelCase("-foo"))
+        assertEquals("bar", ConfigImplUtil.toCamelCase("bar-"))
     }
 
     @Test
