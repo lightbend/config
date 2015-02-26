@@ -3,6 +3,7 @@
  */
 package com.typesafe.config;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -674,6 +675,28 @@ public interface Config extends ConfigMergeable {
     long getDuration(String path, TimeUnit unit);
 
     /**
+     * Gets a value as a java.time.Duration. If the value is
+     * already a number, then it's taken as milliseconds; if it's
+     * a string, it's parsed understanding units suffixes like
+     * "10m" or "5ns" as documented in the <a
+     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * spec</a>. This method never returns null.
+     *
+     * @since 1.3.0
+     *
+     * @param path
+     *            path expression
+     * @return the duration value at the requested path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a number of the given TimeUnit
+     */
+    Duration getDuration(String path);
+
+    /**
      * Gets a list value (with any element type) as a {@link ConfigList}, which
      * implements {@code java.util.List<ConfigValue>}. Throws if the path is
      * unset or null.
@@ -741,6 +764,17 @@ public interface Config extends ConfigMergeable {
      * @return list of durations, in the requested units
      */
     List<Long> getDurationList(String path, TimeUnit unit);
+
+    /**
+     * Gets a list, converting each value in the list to a duration, using the
+     * same rules as {@link #getDuration(String)}.
+     *
+     * @since 1.3.0
+     * @param path
+     *            a path expression
+     * @return list of durations
+     */
+    List<Duration> getDurationList(String path);
 
     /**
      * Clone the config with only the given path (and its children) retained;

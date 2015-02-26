@@ -7,6 +7,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -272,6 +273,13 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return result;
     }
 
+    @Override
+    public Duration getDuration(String path) {
+        ConfigValue v = find(path, ConfigValueType.STRING);
+        long nanos = parseDuration((String) v.unwrapped(), v.origin(), path);
+        return Duration.ofNanos(nanos);
+    }
+
     @SuppressWarnings("unchecked")
     private <T> List<T> getHomogeneousUnwrappedList(String path,
             ConfigValueType expected) {
@@ -435,6 +443,16 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             }
         }
         return l;
+    }
+
+    @Override
+    public List<Duration> getDurationList(String path) {
+        List<Long> l = getDurationList(path, TimeUnit.NANOSECONDS);
+        List<Duration> builder = new ArrayList<Duration>(l.size());
+        for (Long value : l) {
+            builder.add(Duration.ofNanos(value));
+        }
+        return builder;
     }
 
     @Deprecated
