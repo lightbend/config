@@ -6,6 +6,7 @@ package com.typesafe.config.impl;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.net.URL;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -241,6 +242,8 @@ public class ConfigImpl {
                 return ConfigNumber.newNumber(origin,
                         ((Number) object).doubleValue(), null);
             }
+        } else if (object instanceof Duration) {
+            return new ConfigLong(origin, ((Duration) object).toMillis(), null);
         } else if (object instanceof Map) {
             if (((Map<?, ?>) object).isEmpty())
                 return emptyObject(origin);

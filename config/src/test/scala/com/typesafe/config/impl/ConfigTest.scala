@@ -769,6 +769,17 @@ class ConfigTest extends TestUtils {
             conf.getNanosecondsList("durations.secondsList").asScala)
         assertEquals(500L, conf.getMilliseconds("durations.halfSecond"))
 
+        // get durations as java.time.Duration
+        assertEquals(1000L, conf.getDuration("durations.second").toMillis)
+        assertEquals(asNanos(1), conf.getDuration("durations.second").toNanos)
+        assertEquals(1000L, conf.getDuration("durations.secondAsNumber").toMillis)
+        assertEquals(asNanos(1), conf.getDuration("durations.secondAsNumber").toNanos)
+        assertEquals(Seq(1000L, 2000L, 3000L, 4000L),
+            conf.getDurationList("durations.secondsList").asScala.map(_.toMillis))
+        assertEquals(Seq(asNanos(1), asNanos(2), asNanos(3), asNanos(4)),
+            conf.getDurationList("durations.secondsList").asScala.map(_.toNanos))
+        assertEquals(500L, conf.getDuration("durations.halfSecond").toMillis)
+
         def assertDurationAsTimeUnit(unit: TimeUnit): Unit = {
             def ms2unit(l: Long) = unit.convert(l, MILLISECONDS)
             def s2unit(i: Int) = unit.convert(i, SECONDS)

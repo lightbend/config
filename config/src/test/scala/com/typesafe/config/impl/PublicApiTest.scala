@@ -14,6 +14,7 @@ import scala.collection.mutable
 import equiv03.SomethingInEquiv03
 import java.io.StringReader
 import java.net.URL
+import java.time.Duration
 
 class PublicApiTest extends TestUtils {
     @Test
@@ -173,6 +174,12 @@ class PublicApiTest extends TestUtils {
     def fromConfigMemorySize() {
         testFromValue(longValue(1024), ConfigMemorySize.ofBytes(1024));
         testFromValue(longValue(512), ConfigMemorySize.ofBytes(512));
+    }
+
+    @Test
+    def fromDuration() {
+      testFromValue(longValue(1000), Duration.ofMillis(1000));
+      testFromValue(longValue(1000*60*60*24), Duration.ofDays(1));
     }
 
     @Test
