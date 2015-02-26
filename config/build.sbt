@@ -22,7 +22,7 @@ findbugsMaxMemory := 1000
 
 jacoco.settings
 
-javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-g")
+javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.8", "-g")
 
 // because we test some global state such as singleton caches,
 // we have to run tests in serial.
