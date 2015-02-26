@@ -444,10 +444,15 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 v = value.get(k);
 
                 if (options.getOriginComments()) {
-                    indent(sb, innerIndent, options);
-                    sb.append("# ");
-                    sb.append(v.origin().description());
-                    sb.append("\n");
+                    String[] lines = v.origin().description().split("\n");
+                    for (String l : lines) {
+                        indent(sb, indent + 1, options);
+                        sb.append('#');
+                        if (!l.isEmpty())
+                            sb.append(' ');
+                        sb.append(l);
+                        sb.append("\n");
+                    }
                 }
                 if (options.getComments()) {
                     for (String comment : v.origin().comments()) {
