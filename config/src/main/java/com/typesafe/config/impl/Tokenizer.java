@@ -52,6 +52,14 @@ final class Tokenizer {
         return new TokenIterator(origin, input, flavor != ConfigSyntax.JSON);
     }
 
+    static String render(Iterator<Token> tokens) {
+        String renderedText = "";
+        while (tokens.hasNext()) {
+            renderedText += tokens.next().tokenText();
+        }
+        return renderedText;
+    }
+
     private static class TokenIterator implements Iterator<Token> {
 
         private static class WhitespaceSaver {
@@ -66,25 +74,30 @@ final class Tokenizer {
             }
 
             void add(int c) {
-                if (lastTokenWasSimpleValue)
-                    whitespace.appendCodePoint(c);
+                whitespace.appendCodePoint(c);
             }
 
             Token check(Token t, ConfigOrigin baseOrigin, int lineNumber) {
                 if (isSimpleValue(t)) {
                     return nextIsASimpleValue(baseOrigin, lineNumber);
                 } else {
-                    nextIsNotASimpleValue();
-                    return null;
+                    return nextIsNotASimpleValue(baseOrigin, lineNumber);
                 }
             }
 
             // called if the next token is not a simple value;
             // discards any whitespace we were saving between
             // simple values.
-            private void nextIsNotASimpleValue() {
+            private Token nextIsNotASimpleValue(ConfigOrigin baseOrigin, int lineNumber) {
                 lastTokenWasSimpleValue = false;
-                whitespace.setLength(0);
+
+                if (whitespace.length() > 0) {
+                    Token t = Tokens.newIgnoredWhitespace(lineOrigin(baseOrigin, lineNumber),
+                            whitespace.toString());
+                    whitespace.setLength(0);
+                    return t;
+                }
+                return null;
             }
 
             // called if the next token IS a simple value,
@@ -107,7 +120,12 @@ final class Tokenizer {
                     }
                 } else {
                     lastTokenWasSimpleValue = true;
-                    whitespace.setLength(0);
+                    if (whitespace.length() > 0) {
+                        Token t = Tokens.newIgnoredWhitespace(lineOrigin(baseOrigin, lineNumber),
+                                whitespace.toString());
+                        whitespace.setLength(0);
+                        return t;
+                    }
                     return null;
                 }
             }
@@ -367,10 +385,15 @@ final class Tokenizer {
             }
         }
 
-        private void pullEscapeSequence(StringBuilder sb) throws ProblemException {
+        private void pullEscapeSequence(StringBuilder sb, StringBuilder sbOrig) throws ProblemException {
             int escaped = nextCharRaw();
             if (escaped == -1)
                 throw problem("End of input but backslash in string had nothing after it");
+
+            // This is needed so we return the unescaped escape characters back out when rendering
+            // the token
+            sbOrig.appendCodePoint('\\');
+            sbOrig.appendCodePoint(escaped);
 
             switch (escaped) {
             case '"':
@@ -407,6 +430,7 @@ final class Tokenizer {
                     a[i] = (char) c;
                 }
                 String digits = new String(a);
+                sbOrig.append(a);
                 try {
                     sb.appendCodePoint(Integer.parseInt(digits, 16));
                 } catch (NumberFormatException e) {
@@ -424,7 +448,7 @@ final class Tokenizer {
             }
         }
 
-        private void appendTripleQuotedString(StringBuilder sb) throws ProblemException {
+        private void appendTripleQuotedString(StringBuilder sb, StringBuilder sbOrig) throws ProblemException {
             // we are after the opening triple quote and need to consume the
             // close triple
             int consecutiveQuotes = 0;
@@ -451,26 +475,37 @@ final class Tokenizer {
                 }
 
                 sb.appendCodePoint(c);
+                sbOrig.appendCodePoint(c);
             }
         }
 
         private Token pullQuotedString() throws ProblemException {
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
+
+            // We need a second string builder to keep track of escape characters.
+            // We want to return them exactly as they appeared in the original text,
+            // which means we will need a new StringBuilder to escape escape characters
+            // so we can also keep the actual value of the string. This is gross.
+            StringBuilder sbOrig = new StringBuilder();
+            sbOrig.appendCodePoint('"');
+
             while (true) {
                 int c = nextCharRaw();
                 if (c == -1)
                     throw problem("End of input but string quote was still open");
 
                 if (c == '\\') {
-                    pullEscapeSequence(sb);
+                    pullEscapeSequence(sb, sbOrig);
                 } else if (c == '"') {
+                    sbOrig.appendCodePoint(c);
                     break;
                 } else if (Character.isISOControl(c)) {
                     throw problem(asString(c), "JSON does not allow unescaped " + asString(c)
                             + " in quoted strings, use a backslash escape");
                 } else {
                     sb.appendCodePoint(c);
+                    sbOrig.appendCodePoint(c);
                 }
             }
 
@@ -478,13 +513,14 @@ final class Tokenizer {
             if (sb.length() == 0) {
                 int third = nextCharRaw();
                 if (third == '"') {
-                    appendTripleQuotedString(sb);
+                    sbOrig.appendCodePoint(third);
+                    appendTripleQuotedString(sb, sbOrig);
                 } else {
                     putBack(third);
                 }
-            }
 
-            return Tokens.newString(lineOrigin, sb.toString());
+            }
+            return Tokens.newString(lineOrigin, sb.toString(), sbOrig.toString());
         }
 
         private Token pullPlusEquals() throws ProblemException {

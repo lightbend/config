@@ -203,7 +203,7 @@ final class Parser {
                 }
 
                 previous = next;
-                next = tokens.next();
+                next = nextTokenFromIterator();
             }
 
             // put our concluding token in the queue with all the comments
@@ -219,7 +219,7 @@ final class Parser {
 
         private TokenWithComments popTokenWithoutTrailingComment() {
             if (buffer.isEmpty()) {
-                Token t = tokens.next();
+                Token t = nextTokenFromIterator();
                 if (Tokens.isComment(t)) {
                     consolidateCommentBlock(t);
                     return buffer.pop();
@@ -243,7 +243,7 @@ final class Parser {
             if (!attractsTrailingComments(withPrecedingComments.token)) {
                 return withPrecedingComments;
             } else if (buffer.isEmpty()) {
-                Token after = tokens.next();
+                Token after = nextTokenFromIterator();
                 if (Tokens.isComment(after)) {
                     return withPrecedingComments.add(after);
                 } else {
@@ -316,6 +316,16 @@ final class Parser {
             if (newNumber >= 0)
                 lineNumber = newNumber;
 
+            return t;
+        }
+
+        // Grabs the next Token off of the TokenIterator, ignoring
+        // IgnoredWhitespace tokens
+        private Token nextTokenFromIterator() {
+            Token t;
+            do {
+                t = tokens.next();
+            } while (Tokens.isIgnoredWhitespace(t));
             return t;
         }
 
@@ -1063,6 +1073,11 @@ final class Parser {
 
         while (expression.hasNext()) {
             Token t = expression.next();
+
+            // Ignore all IgnoredWhitespace tokens
+            if (Tokens.isIgnoredWhitespace(t))
+                continue;
+
             if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
                 AbstractConfigValue v = Tokens.getValue(t);
                 // this is a quoted string; so any periods

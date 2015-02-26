@@ -16,7 +16,11 @@ final class Tokens {
         final private AbstractConfigValue value;
 
         Value(AbstractConfigValue value) {
-            super(TokenType.VALUE, value.origin());
+            this(value, null);
+        }
+
+        Value(AbstractConfigValue value, String origText) {
+            super(TokenType.VALUE, value.origin(), origText);
             this.value = value;
         }
 
@@ -50,7 +54,7 @@ final class Tokens {
 
     static private class Line extends Token {
         Line(ConfigOrigin origin) {
-            super(TokenType.NEWLINE, origin);
+            super(TokenType.NEWLINE, origin, "\n");
         }
 
         @Override
@@ -79,7 +83,7 @@ final class Tokens {
         final private String value;
 
         UnquotedText(ConfigOrigin origin, String s) {
-            super(TokenType.UNQUOTED_TEXT, origin);
+            super(TokenType.UNQUOTED_TEXT, origin, s);
             this.value = s;
         }
 
@@ -107,6 +111,20 @@ final class Tokens {
         public int hashCode() {
             return 41 * (41 + super.hashCode()) + value.hashCode();
         }
+    }
+
+    static private class IgnoredWhitespace extends Token {
+        final private String value;
+
+        IgnoredWhitespace(ConfigOrigin origin, String s) {
+            super(TokenType.IGNORED_WHITESPACE, origin, s);
+            this.value = s;
+        }
+
+        String value() { return value; }
+
+        @Override
+        public String toString() { return "'" + value + "' (WHITESPACE)"; }
     }
 
     static private class Problem extends Token {
@@ -222,7 +240,8 @@ final class Tokens {
         final private List<Token> value;
 
         Substitution(ConfigOrigin origin, boolean optional, List<Token> expression) {
-            super(TokenType.SUBSTITUTION, origin);
+            super(TokenType.SUBSTITUTION, origin,
+                    "${" + (optional? "?" : "") + Tokenizer.render(expression.iterator()) + "}");
             this.optional = optional;
             this.value = expression;
         }
@@ -344,6 +363,10 @@ final class Tokens {
         }
     }
 
+    static boolean isIgnoredWhitespace(Token token) {
+        return token instanceof IgnoredWhitespace;
+    }
+
     static boolean isSubstitution(Token token) {
         return token instanceof Substitution;
     }
@@ -366,16 +389,16 @@ final class Tokens {
         }
     }
 
-    final static Token START = Token.newWithoutOrigin(TokenType.START, "start of file");
-    final static Token END = Token.newWithoutOrigin(TokenType.END, "end of file");
-    final static Token COMMA = Token.newWithoutOrigin(TokenType.COMMA, "','");
-    final static Token EQUALS = Token.newWithoutOrigin(TokenType.EQUALS, "'='");
-    final static Token COLON = Token.newWithoutOrigin(TokenType.COLON, "':'");
-    final static Token OPEN_CURLY = Token.newWithoutOrigin(TokenType.OPEN_CURLY, "'{'");
-    final static Token CLOSE_CURLY = Token.newWithoutOrigin(TokenType.CLOSE_CURLY, "'}'");
-    final static Token OPEN_SQUARE = Token.newWithoutOrigin(TokenType.OPEN_SQUARE, "'['");
-    final static Token CLOSE_SQUARE = Token.newWithoutOrigin(TokenType.CLOSE_SQUARE, "']'");
-    final static Token PLUS_EQUALS = Token.newWithoutOrigin(TokenType.PLUS_EQUALS, "'+='");
+    final static Token START = Token.newWithoutOrigin(TokenType.START, "start of file", "");
+    final static Token END = Token.newWithoutOrigin(TokenType.END, "end of file", "");
+    final static Token COMMA = Token.newWithoutOrigin(TokenType.COMMA, "','", ",");
+    final static Token EQUALS = Token.newWithoutOrigin(TokenType.EQUALS, "'='", "=");
+    final static Token COLON = Token.newWithoutOrigin(TokenType.COLON, "':'", ":");
+    final static Token OPEN_CURLY = Token.newWithoutOrigin(TokenType.OPEN_CURLY, "'{'", "{");
+    final static Token CLOSE_CURLY = Token.newWithoutOrigin(TokenType.CLOSE_CURLY, "'}'", "}");
+    final static Token OPEN_SQUARE = Token.newWithoutOrigin(TokenType.OPEN_SQUARE, "'['", "[");
+    final static Token CLOSE_SQUARE = Token.newWithoutOrigin(TokenType.CLOSE_SQUARE, "']'", "]");
+    final static Token PLUS_EQUALS = Token.newWithoutOrigin(TokenType.PLUS_EQUALS, "'+='", "+=");
 
     static Token newLine(ConfigOrigin origin) {
         return new Line(origin);
@@ -394,6 +417,10 @@ final class Tokens {
         return new UnquotedText(origin, s);
     }
 
+    static Token newIgnoredWhitespace(ConfigOrigin origin, String s) {
+        return new IgnoredWhitespace(origin, s);
+    }
+
     static Token newSubstitution(ConfigOrigin origin, boolean optional, List<Token> expression) {
         return new Substitution(origin, optional, expression);
     }
@@ -401,32 +428,35 @@ final class Tokens {
     static Token newValue(AbstractConfigValue value) {
         return new Value(value);
     }
-
-    static Token newString(ConfigOrigin origin, String value) {
-        return newValue(new ConfigString.Quoted(origin, value));
+    static Token newValue(AbstractConfigValue value, String origText) {
+        return new Value(value, origText);
     }
 
-    static Token newInt(ConfigOrigin origin, int value, String originalText) {
+    static Token newString(ConfigOrigin origin, String value, String origText) {
+        return newValue(new ConfigString.Quoted(origin, value), origText);
+    }
+
+    static Token newInt(ConfigOrigin origin, int value, String origText) {
         return newValue(ConfigNumber.newNumber(origin, value,
-                originalText));
+                origText), origText);
     }
 
     static Token newDouble(ConfigOrigin origin, double value,
-            String originalText) {
+            String origText) {
         return newValue(ConfigNumber.newNumber(origin, value,
-                originalText));
+                origText), origText);
     }
 
-    static Token newLong(ConfigOrigin origin, long value, String originalText) {
+    static Token newLong(ConfigOrigin origin, long value, String origText) {
         return newValue(ConfigNumber.newNumber(origin, value,
-                originalText));
+                origText), origText);
     }
 
     static Token newNull(ConfigOrigin origin) {
-        return newValue(new ConfigNull(origin));
+        return newValue(new ConfigNull(origin), "null");
     }
 
     static Token newBoolean(ConfigOrigin origin, boolean value) {
-        return newValue(new ConfigBoolean(origin, value));
+        return newValue(new ConfigBoolean(origin, value), "" + value);
     }
 }

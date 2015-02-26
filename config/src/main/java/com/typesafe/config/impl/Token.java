@@ -10,25 +10,33 @@ class Token {
     final private TokenType tokenType;
     final private String debugString;
     final private ConfigOrigin origin;
+    final private String tokenText;
 
     Token(TokenType tokenType, ConfigOrigin origin) {
         this(tokenType, origin, null);
     }
 
-    Token(TokenType tokenType, ConfigOrigin origin, String debugString) {
+    Token(TokenType tokenType, ConfigOrigin origin, String tokenText) {
+        this(tokenType, origin, tokenText, null);
+    }
+
+    Token(TokenType tokenType, ConfigOrigin origin, String tokenText, String debugString) {
         this.tokenType = tokenType;
         this.origin = origin;
         this.debugString = debugString;
+        this.tokenText = tokenText;
     }
 
     // this is used for singleton tokens like COMMA or OPEN_CURLY
-    static Token newWithoutOrigin(TokenType tokenType, String debugString) {
-        return new Token(tokenType, null, debugString);
+    static Token newWithoutOrigin(TokenType tokenType, String debugString, String tokenText) {
+        return new Token(tokenType, null, tokenText, debugString);
     }
 
     final TokenType tokenType() {
         return tokenType;
     }
+
+    final String tokenText() { return tokenText; }
 
     // this is final because we don't always use the origin() accessor,
     // and we don't because it throws if origin is null

@@ -611,12 +611,13 @@ abstract trait TestUtils {
     def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
     def tokenNull = Tokens.newNull(fakeOrigin())
     def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
-    def tokenString(s: String) = Tokens.newString(fakeOrigin(), s)
+    def tokenString(s: String) = Tokens.newString(fakeOrigin(), s, s)
     def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d, null)
     def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, null)
     def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, null)
     def tokenLine(line: Int) = Tokens.newLine(fakeOrigin.withLineNumber(line))
     def tokenComment(text: String) = Tokens.newComment(fakeOrigin(), text)
+    def tokenWhitespace(text: String) = Tokens.newIgnoredWhitespace(fakeOrigin(), text)
 
     private def tokenMaybeOptionalSubstitution(optional: Boolean, expression: Token*) = {
         val l = new java.util.ArrayList[Token]
@@ -655,6 +656,10 @@ abstract trait TestUtils {
     def tokenizeAsList(s: String) = {
         import scala.collection.JavaConverters._
         tokenize(s).asScala.toList
+    }
+
+    def tokenizeAsString(s: String) = {
+        Tokenizer.render(tokenize(s))
     }
 
     // this is importantly NOT using Path.newPath, which relies on
