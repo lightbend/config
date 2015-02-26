@@ -49,7 +49,13 @@ public final class ConfigValueFactory {
      * the one you unwrapped. The re-wrapped ConfigValue will lose some
      * information that was present in the original such as its origin, but it
      * will have matching values.
-     * 
+     *
+     * <p>
+     * If you pass in a <code>ConfigValue</code> to this
+     * function, it will be returned unmodified. (The
+     * <code>originDescription</code> will be ignored in this
+     * case.)
+     *
      * <p>
      * This function throws if you supply a value that cannot be converted to a
      * ConfigValue, but supplying such a value is a bug in your program, so you
