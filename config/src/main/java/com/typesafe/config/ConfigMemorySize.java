@@ -33,6 +33,11 @@ public final class ConfigMemorySize {
     }
 
     @Override
+    public String toString() {
+        return "ConfigMemorySize(" + bytes + ")";
+    }
+
+    @Override
     public boolean equals(Object other) {
         if (other instanceof ConfigMemorySize) {
             return ((ConfigMemorySize)other).bytes == this.bytes;
