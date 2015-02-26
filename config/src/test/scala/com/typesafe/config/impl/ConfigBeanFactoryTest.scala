@@ -96,6 +96,7 @@ class ConfigBeanFactoryTest extends TestUtils {
             List("a", "b", "c").asJava).asJava,
             beanConfig.getOfArray)
         assertEquals(3, beanConfig.getOfObject.size)
+        assertEquals(3, beanConfig.getOfDouble.size)
     }
 
     @Test
