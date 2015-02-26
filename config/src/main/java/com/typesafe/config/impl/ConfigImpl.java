@@ -216,6 +216,8 @@ public class ConfigImpl {
                 return new ConfigNull(origin);
             else
                 return defaultNullValue;
+        } else if(object instanceof AbstractConfigValue) {
+        	return (AbstractConfigValue) object;
         } else if (object instanceof Boolean) {
             if (origin != defaultValueOrigin) {
                 return new ConfigBoolean(origin, (Boolean) object);
