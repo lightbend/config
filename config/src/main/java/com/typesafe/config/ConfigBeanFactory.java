@@ -13,25 +13,33 @@ import java.time.Duration;
 import com.typesafe.config.impl.ConfigImplUtil;
 
 /**
- * Factory for automatic creation of config classes populated with values from config.
+ * Factory for automatically creating a Java class from a {@link Config}.
  *
  * Example usage:
  *
- * Config configSource = ConfigFactory.parseReader(new InputStreamReader("converters.conf"));
- * ConverterConfig config = ConfigBeanFactory.create(configSource,ConverterConfig.class);
+ * <pre>
+ * Config configSource = ConfigFactory.load().getConfig("foo");
+ * FooConfig config = ConfigBeanFactory.create(configSource, FooConfig.class);
+ * </pre>
  *
- * Supports nested configs.
- * Supports automatic types conversion
- * (https://github.com/typesafehub/config/blob/master/HOCON.md#automatic-type-conversions).
+ * The Java class should follow JavaBean conventions. Field types
+ * can be any of the types you can normally get from a {@link
+ * Config}, including <code>java.time.Duration</code> or {@link
+ * ConfigMemorySize}. Fields may also be another JavaBean-style
+ * class.
+ *
+ * Fields are mapped to config by converting the config key to
+ * camel case.  So the key <code>foo-bar</code> becomes JavaBean
+ * setter <code>setFooBar</code>.
  */
 public class ConfigBeanFactory {
 
     /**
-     * Creates instance of class containing configuration info from config source
-     * @param config - source of config information
-     * @param clazz - class to be created
-     * @param <T>
-     * @return - instance of config class populated with data from config source
+     * Creates an instance of a class, initializing its fields from a {@link Config}.
+     * @param config source of config information
+     * @param clazz class to be instantiated
+     * @param <T> the type of the class to be instantiated
+     * @return an instance of the class populated with data from the config
      */
     public static <T> T create(Config config, Class<T> clazz) {
         return createInternal(config, clazz);
