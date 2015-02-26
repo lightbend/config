@@ -1,6 +1,17 @@
 import de.johoop.findbugs4sbt.FindBugs._
 import de.johoop.findbugs4sbt.{ Effort, ReportType }
 import de.johoop.jacoco4sbt.JacocoPlugin.jacoco
+import com.typesafe.sbt.SbtScalariform
+import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import scalariform.formatter.preferences._
+
+SbtScalariform.scalariformSettings
+
+val formatPrefs = FormattingPreferences()
+  .setPreference(IndentSpaces, 4)
+
+ScalariformKeys.preferences in Compile := formatPrefs
+ScalariformKeys.preferences in Test := formatPrefs
 
 fork in test := true
 fork in run := true
