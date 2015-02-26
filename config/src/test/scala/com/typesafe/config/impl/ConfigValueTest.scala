@@ -938,4 +938,25 @@ class ConfigValueTest extends TestUtils {
             assertEquals(bottom(v), bottom(deserialized))
         }
     }
+
+    @Test
+    def renderWithNewlinesInDescription(): Unit = {
+        val v = ConfigValueFactory.fromAnyRef(89, "this is a description\nwith some\nnewlines")
+        val list = new SimpleConfigList(SimpleConfigOrigin.newSimple("\n5\n6\n7\n"),
+            java.util.Collections.singletonList(v.asInstanceOf[AbstractConfigValue]))
+        val conf = ConfigFactory.empty().withValue("bar", list)
+        val rendered = conf.root.render()
+        def assertHas(s: String): Unit =
+            assertTrue(s"has ${s.replace("\n", "\\n")} in it", rendered.contains(s))
+        assertHas("is a description\n")
+        assertHas("with some\n")
+        assertHas("newlines\n")
+        assertHas("#\n")
+        assertHas("5\n")
+        assertHas("6\n")
+        assertHas("7\n")
+        val parsed = ConfigFactory.parseString(rendered)
+
+        assertEquals(conf, parsed)
+    }
 }
