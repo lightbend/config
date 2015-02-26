@@ -1,33 +1,34 @@
 package beanconfig;
 
+import java.time.Duration;
 
 public class DurationsConfig {
-    Long second;
-    Long secondAsNumber;
-    Long halfSecond;
+    Duration second;
+    Duration secondAsNumber;
+    Duration halfSecond;
 
 
-    public Long getSecond() {
+    public Duration getSecond() {
         return second;
     }
 
-    public void setSecond(Long second) {
+    public void setSecond(Duration second) {
         this.second = second;
     }
 
-    public Long getSecondAsNumber() {
+    public Duration getSecondAsNumber() {
         return secondAsNumber;
     }
 
-    public void setSecondAsNumber(Long secondAsNumber) {
+    public void setSecondAsNumber(Duration secondAsNumber) {
         this.secondAsNumber = secondAsNumber;
     }
 
-    public Long getHalfSecond() {
+    public Duration getHalfSecond() {
         return halfSecond;
     }
 
-    public void setHalfSecond(Long halfSecond) {
+    public void setHalfSecond(Duration halfSecond) {
         this.halfSecond = halfSecond;
     }
 }

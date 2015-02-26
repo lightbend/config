@@ -1,8 +1,5 @@
 package com.typesafe.config;
 
-import com.typesafe.config.impl.DurationUnit;
-import com.typesafe.config.impl.MemoryUnit;
-
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -12,6 +9,7 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * Factory for automatic creation of config classes populated with values from config.
@@ -97,15 +95,13 @@ public class ConfigBeanFactory {
         } else if (parameterClass == Double.class || parameterClass == double.class) {
             return config.getDouble(configPropName);
         } else if (parameterClass == Long.class || parameterClass == long.class) {
-            String rawVal = config.getString(configPropName);
-            if (DurationUnit.containsDurationToken(rawVal)) {
-                return config.getDuration(configPropName, TimeUnit.NANOSECONDS);
-            } else if (MemoryUnit.containsMemoryToken(rawVal)) {
-                return config.getBytes(configPropName);
-            }
             return config.getLong(configPropName);
         } else if (parameterClass == String.class) {
             return config.getString(configPropName);
+        } else if (parameterClass == Duration.class) {
+            return config.getDuration(configPropName);
+        } else if (parameterClass == ConfigMemorySize.class) {
+            return config.getMemorySize(configPropName);
         }
 
         return config.getAnyRef(configPropName);

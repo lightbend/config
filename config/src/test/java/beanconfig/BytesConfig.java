@@ -1,32 +1,34 @@
 package beanconfig;
 
+import com.typesafe.config.ConfigMemorySize;
+
 public class BytesConfig {
 
-    private Long kilobyte;
-    private Long kibibyte;
-    private Long thousandBytes;
+    private ConfigMemorySize kilobyte;
+    private ConfigMemorySize kibibyte;
+    private ConfigMemorySize thousandBytes;
 
-    public Long getKilobyte() {
+    public ConfigMemorySize getKilobyte() {
         return kilobyte;
     }
 
-    public void setKilobyte(Long kilobyte) {
+    public void setKilobyte(ConfigMemorySize kilobyte) {
         this.kilobyte = kilobyte;
     }
 
-    public Long getKibibyte() {
+    public ConfigMemorySize getKibibyte() {
         return kibibyte;
     }
 
-    public void setKibibyte(Long kibibyte) {
+    public void setKibibyte(ConfigMemorySize kibibyte) {
         this.kibibyte = kibibyte;
     }
 
-    public Long getThousandBytes() {
+    public ConfigMemorySize getThousandBytes() {
         return thousandBytes;
     }
 
-    public void setThousandBytes(Long thousandBytes) {
+    public void setThousandBytes(ConfigMemorySize thousandBytes) {
         this.thousandBytes = thousandBytes;
     }
 }

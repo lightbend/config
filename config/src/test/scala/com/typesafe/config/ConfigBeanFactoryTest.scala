@@ -4,7 +4,7 @@
 package com.typesafe.config
 
 import java.io.{ InputStream, InputStreamReader }
-import java.util.concurrent.TimeUnit
+import java.time.Duration;
 
 import beanconfig._
 import org.junit.Assert._
@@ -70,18 +70,18 @@ class ConfigBeanFactoryTest {
     def testCreateDuration() {
         val beanConfig: DurationsConfig = ConfigBeanFactory.create(loadConfig().getConfig("durations"), classOf[DurationsConfig])
         assertNotNull(beanConfig)
-        assertEquals(beanConfig.getHalfSecond, TimeUnit.MILLISECONDS.toNanos(500))
-        assertEquals(beanConfig.getSecond, TimeUnit.SECONDS.toNanos(1))
-        assertEquals(beanConfig.getSecondAsNumber, TimeUnit.SECONDS.toNanos(1))
+        assertEquals(beanConfig.getHalfSecond, Duration.ofMillis(500))
+        assertEquals(beanConfig.getSecond, Duration.ofMillis(1000))
+        assertEquals(beanConfig.getSecondAsNumber, Duration.ofMillis(1000))
     }
 
     @Test
     def testCreateBytes() {
         val beanConfig: BytesConfig = ConfigBeanFactory.create(loadConfig().getConfig("bytes"), classOf[BytesConfig])
         assertNotNull(beanConfig)
-        assertEquals(beanConfig.getKibibyte, 1024L)
-        assertEquals(beanConfig.getKilobyte, 1000L)
-        assertEquals(beanConfig.getThousandBytes, 1000L)
+        assertEquals(beanConfig.getKibibyte, ConfigMemorySize.ofBytes(1024))
+        assertEquals(beanConfig.getKilobyte, ConfigMemorySize.ofBytes(1000))
+        assertEquals(beanConfig.getThousandBytes, ConfigMemorySize.ofBytes(1000))
     }
 
     private def loadConfig(): Config = {
