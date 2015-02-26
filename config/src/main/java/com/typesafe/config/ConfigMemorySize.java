@@ -17,14 +17,16 @@ public final class ConfigMemorySize {
         this.bytes = bytes;
     }
 
-    /** Constructs a ConfigMemorySize representing the given
+    /**
+     * Constructs a ConfigMemorySize representing the given
      * number of bytes.
      */
     public static ConfigMemorySize ofBytes(long bytes) {
         return new ConfigMemorySize(bytes);
     }
 
-    /** Gets the size in bytes.
+    /**
+     * Gets the size in bytes.
      */
     public long toBytes() {
         return bytes;
