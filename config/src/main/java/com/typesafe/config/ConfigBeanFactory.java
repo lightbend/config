@@ -40,6 +40,10 @@ public class ConfigBeanFactory {
      * @param clazz class to be instantiated
      * @param <T> the type of the class to be instantiated
      * @return an instance of the class populated with data from the config
+     * @throws ConfigException.BadBean
+     *     If something is wrong with the JavaBean
+     * @throws ConfigException
+     *     Can throw the same exceptions as the getters on <code>Config</code>
      */
     public static <T> T create(Config config, Class<T> clazz) {
         return createInternal(config, clazz);
@@ -57,8 +61,8 @@ public class ConfigBeanFactory {
         BeanInfo beanInfo = null;
         try {
             beanInfo = Introspector.getBeanInfo(clazz);
-        } catch(IntrospectionException e) {
-            throw new ConfigException.Generic("Could not get bean information for class " + clazz.getName(), e);
+        } catch (IntrospectionException e) {
+            throw new ConfigException.BadBean("Could not get bean information for class " + clazz.getName(), e);
         }
 
         try {
@@ -70,8 +74,7 @@ public class ConfigBeanFactory {
                 Method setter = beanProp.getWriteMethod();
                 Object configValue = configProps.get(beanProp.getName());
                 if (configValue == null) {
-                    throw new ConfigException.Generic(
-                            "Could not find property '" + beanProp.getName() + "' from class '" + clazz.getName() + "' in config.");
+                    throw new ConfigException.Missing(beanProp.getName());
                 }
                 if (configValue instanceof Map) {
                     configValue = createInternal(config.getConfig(originalNames.get(beanProp.getDisplayName())), beanProp.getPropertyType());
@@ -84,11 +87,11 @@ public class ConfigBeanFactory {
             }
             return bean;
         } catch (InstantiationException e) {
-            throw new ConfigException.Generic(clazz + " needs a public no args constructor", e);
+            throw new ConfigException.BadBean(clazz.getName() + " needs a public no-args constructor to be used as a bean", e);
         } catch (IllegalAccessException e) {
-            throw new ConfigException.Generic(clazz + " getters and setters are not accessible", e);
+            throw new ConfigException.BadBean(clazz.getName() + " getters and setters are not accessible, they must be for use as a bean", e);
         } catch (InvocationTargetException e) {
-            throw new ConfigException.Generic("Calling bean method caused exception", e);
+            throw new ConfigException.BadBean("Calling bean method on " + clazz.getName() + " caused an exception", e);
         }
     }
 

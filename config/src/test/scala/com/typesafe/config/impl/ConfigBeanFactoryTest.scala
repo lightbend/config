@@ -40,11 +40,11 @@ class ConfigBeanFactoryTest extends TestUtils {
         val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
         val config: Config = ConfigFactory.parseReader(new InputStreamReader(configIs),
             ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)).resolve
-        val expected = intercept[ConfigException.Generic] {
+        val expected = intercept[ConfigException.Missing] {
             ConfigBeanFactory.create(config, classOf[NoFoundPropBeanConfig])
         }
-        assertEquals("Could not find property 'propNotListedInConfig' from class 'beanconfig.NoFoundPropBeanConfig' in config.",
-            expected.getMessage)
+        // TODO this error message should have the config name not the camelcase name
+        assertTrue(expected.getMessage.contains("propNotListedInConfig"))
     }
 
     @Test
