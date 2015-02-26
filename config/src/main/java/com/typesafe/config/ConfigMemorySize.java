@@ -7,6 +7,8 @@ package com.typesafe.config;
  * An immutable class representing an amount of memory.  Use
  * static factory methods such as {@link
  * ConfigMemorySize#ofBytes(long)} to create instances.
+ *
+ * @since 1.3.0
  */
 public final class ConfigMemorySize {
     private final long bytes;
@@ -20,6 +22,7 @@ public final class ConfigMemorySize {
     /**
      * Constructs a ConfigMemorySize representing the given
      * number of bytes.
+     * @since 1.3.0
      */
     public static ConfigMemorySize ofBytes(long bytes) {
         return new ConfigMemorySize(bytes);
@@ -27,6 +30,7 @@ public final class ConfigMemorySize {
 
     /**
      * Gets the size in bytes.
+     * @since 1.3.0
      */
     public long toBytes() {
         return bytes;

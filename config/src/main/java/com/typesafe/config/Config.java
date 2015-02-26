@@ -593,6 +593,8 @@ public interface Config extends ConfigMergeable {
      * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
      * spec</a>.
      *
+     * @since 1.3.0
+     *
      * @param path
      *            path expression
      * @return the value at the requested path, in bytes
@@ -706,6 +708,15 @@ public interface Config extends ConfigMergeable {
 
     List<Long> getBytesList(String path);
 
+    /**
+     * Gets a list, converting each value in the list to a memory size, using the
+     * same rules as {@link #getMemorySize(String)}.
+     *
+     * @since 1.3.0
+     * @param path
+     *            a path expression
+     * @return list of memory sizes
+     */
     List<ConfigMemorySize> getMemorySizeList(String path);
 
     /**
