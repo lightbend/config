@@ -170,6 +170,12 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
+    def fromConfigMemorySize() {
+        testFromValue(longValue(1024), ConfigMemorySize.ofBytes(1024));
+        testFromValue(longValue(512), ConfigMemorySize.ofBytes(512));
+    }
+
+    @Test
     def roundTripUnwrap() {
         val conf = ConfigFactory.load("test01")
         assertTrue(conf.root.size > 4) // "has a lot of stuff in it"
