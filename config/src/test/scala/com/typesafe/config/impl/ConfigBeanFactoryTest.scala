@@ -118,6 +118,15 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertEquals(ConfigMemorySize.ofBytes(1000), beanConfig.getThousandBytes)
     }
 
+    @Test
+    def testPreferCamelNames() {
+        val beanConfig = ConfigBeanFactory.create(loadConfig().getConfig("preferCamelNames"), classOf[PreferCamelNamesConfig])
+        assertNotNull(beanConfig)
+
+        assertEquals("yes", beanConfig.getFooBar)
+        assertEquals("yes", beanConfig.getBazBar)
+    }
+
     private def loadConfig(): Config = {
         val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
         try {

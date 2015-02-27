@@ -33,9 +33,17 @@ public class ConfigBeanImpl {
         Map<String, AbstractConfigValue> configProps = new HashMap<String, AbstractConfigValue>();
         Map<String, String> originalNames = new HashMap<String, String>();
         for (Map.Entry<String, ConfigValue> configProp : config.root().entrySet()) {
-            String camelName = ConfigImplUtil.toCamelCase(configProp.getKey());
-            configProps.put(camelName, (AbstractConfigValue) configProp.getValue());
-            originalNames.put(camelName, configProp.getKey());
+            String originalName = configProp.getKey();
+            String camelName = ConfigImplUtil.toCamelCase(originalName);
+            // if a setting is in there both as some hyphen name and the camel name,
+            // the camel one wins
+            if (originalNames.containsKey(camelName) && originalName != camelName) {
+                // if we aren't a camel name to start with, we lose.
+                // if we are or we are the first matching key, we win.
+            } else {
+                configProps.put(camelName, (AbstractConfigValue) configProp.getValue());
+                originalNames.put(camelName, originalName);
+            }
         }
 
         BeanInfo beanInfo = null;
