@@ -4,10 +4,6 @@ package beanconfig;
 public class NumbersConfig {
 
 
-    private byte byteVal;
-    private Byte byteObj;
-    private short shortVal;
-    private Short shortObj;
     private int intVal;
     private Integer intObj;
     private long longVal;
@@ -62,37 +58,5 @@ public class NumbersConfig {
 
     public void setDoubleObj(Double doubleObj) {
         this.doubleObj = doubleObj;
-    }
-
-    public byte getByteVal() {
-        return byteVal;
-    }
-
-    public void setByteVal(byte byteVal) {
-        this.byteVal = byteVal;
-    }
-
-    public Byte getByteObj() {
-        return byteObj;
-    }
-
-    public void setByteObj(Byte byteObj) {
-        this.byteObj = byteObj;
-    }
-
-    public short getShortVal() {
-        return shortVal;
-    }
-
-    public void setShortVal(short shortVal) {
-        this.shortVal = shortVal;
-    }
-
-    public Short getShortObj() {
-        return shortObj;
-    }
-
-    public void setShortObj(Short shortObj) {
-        this.shortObj = shortObj;
     }
 }

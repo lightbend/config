@@ -74,10 +74,6 @@ class ConfigBeanFactoryTest extends TestUtils {
     def testCreateNumber() {
         val beanConfig: NumbersConfig = ConfigBeanFactory.create(loadConfig().getConfig("numbers"), classOf[NumbersConfig])
         assertNotNull(beanConfig)
-        assertEquals(1: Byte, beanConfig.getByteVal)
-        assertEquals(1: Byte, beanConfig.getByteObj)
-        assertEquals(2: Short, beanConfig.getShortVal)
-        assertEquals(2: Short, beanConfig.getShortObj)
 
         assertEquals(3, beanConfig.getIntVal)
         assertEquals(3, beanConfig.getIntObj)
