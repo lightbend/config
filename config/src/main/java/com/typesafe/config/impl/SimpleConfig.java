@@ -726,31 +726,54 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         accumulator.add(new ConfigException.ValidationProblem(path.render(), origin, problem));
     }
 
+    private static String getDesc(ConfigValueType type) {
+        return type.name().toLowerCase();
+    }
+
     private static String getDesc(ConfigValue refValue) {
         if (refValue instanceof AbstractConfigObject) {
             AbstractConfigObject obj = (AbstractConfigObject) refValue;
-            if (obj.isEmpty())
-                return "object";
-            else
+            if (!obj.isEmpty())
                 return "object with keys " + obj.keySet();
-        } else if (refValue instanceof SimpleConfigList) {
-            return "list";
+            else
+                return getDesc(refValue.valueType());
         } else {
-            return refValue.valueType().name().toLowerCase();
+            return getDesc(refValue.valueType());
         }
     }
 
     private static void addMissing(List<ConfigException.ValidationProblem> accumulator,
-            ConfigValue refValue, Path path, ConfigOrigin origin) {
+                                   String refDesc, Path path, ConfigOrigin origin) {
         addProblem(accumulator, path, origin, "No setting at '" + path.render() + "', expecting: "
-                + getDesc(refValue));
+                   + refDesc);
+    }
+
+    private static void addMissing(List<ConfigException.ValidationProblem> accumulator,
+            ConfigValue refValue, Path path, ConfigOrigin origin) {
+        addMissing(accumulator, getDesc(refValue), path, origin);
+    }
+
+    // JavaBean stuff uses this
+    static void addMissing(List<ConfigException.ValidationProblem> accumulator,
+            ConfigValueType refType, Path path, ConfigOrigin origin) {
+        addMissing(accumulator, getDesc(refType), path, origin);
+    }
+
+    private static void addWrongType(List<ConfigException.ValidationProblem> accumulator,
+            String refDesc, AbstractConfigValue actual, Path path) {
+        addProblem(accumulator, path, actual.origin(), "Wrong value type at '" + path.render()
+                   + "', expecting: " + refDesc + " but got: "
+                   + getDesc(actual));
     }
 
     private static void addWrongType(List<ConfigException.ValidationProblem> accumulator,
             ConfigValue refValue, AbstractConfigValue actual, Path path) {
-        addProblem(accumulator, path, actual.origin(), "Wrong value type at '" + path.render()
-                + "', expecting: " + getDesc(refValue) + " but got: "
-                        + getDesc(actual));
+        addWrongType(accumulator, getDesc(refValue), actual, path);
+    }
+
+    private static void addWrongType(List<ConfigException.ValidationProblem> accumulator,
+            ConfigValueType refType, AbstractConfigValue actual, Path path) {
+        addWrongType(accumulator, getDesc(refType), actual, path);
     }
 
     private static boolean couldBeNull(AbstractConfigValue v) {
@@ -759,23 +782,32 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     private static boolean haveCompatibleTypes(ConfigValue reference, AbstractConfigValue value) {
-        if (couldBeNull((AbstractConfigValue) reference) || couldBeNull(value)) {
+        if (couldBeNull((AbstractConfigValue) reference)) {
             // we allow any setting to be null
             return true;
-        } else if (reference instanceof AbstractConfigObject) {
+        } else {
+            return haveCompatibleTypes(reference.valueType(), value);
+        }
+    }
+
+    private static boolean haveCompatibleTypes(ConfigValueType referenceType, AbstractConfigValue value) {
+        if (referenceType == ConfigValueType.NULL || couldBeNull(value)) {
+            // we allow any setting to be null
+            return true;
+        } else if (referenceType == ConfigValueType.OBJECT) {
             if (value instanceof AbstractConfigObject) {
                 return true;
             } else {
                 return false;
             }
-        } else if (reference instanceof SimpleConfigList) {
+        } else if (referenceType == ConfigValueType.LIST) {
             // objects may be convertible to lists if they have numeric keys
             if (value instanceof SimpleConfigList || value instanceof SimpleConfigObject) {
                 return true;
             } else {
                 return false;
             }
-        } else if (reference instanceof ConfigString) {
+        } else if (referenceType == ConfigValueType.STRING) {
             // assume a string could be gotten as any non-collection type;
             // allows things like getMilliseconds including domain-specific
             // interpretations of strings
@@ -784,7 +816,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             // assume a string could be gotten as any non-collection type
             return true;
         } else {
-            if (reference.valueType() == value.valueType()) {
+            if (referenceType == value.valueType()) {
                 return true;
             } else {
                 return false;
@@ -830,6 +862,22 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                     break;
                 }
             }
+        }
+    }
+
+    // Used by the JavaBean-based validator
+    static void checkValid(Path path, ConfigValueType referenceType, AbstractConfigValue value,
+            List<ConfigException.ValidationProblem> accumulator) {
+        if (haveCompatibleTypes(referenceType, value)) {
+            if (referenceType == ConfigValueType.LIST && value instanceof SimpleConfigObject) {
+                // attempt conversion of indexed object to list
+                AbstractConfigValue listValue = DefaultTransformer.transform(value,
+                        ConfigValueType.LIST);
+                if (!(listValue instanceof SimpleConfigList))
+                    addWrongType(accumulator, referenceType, value, path);
+            }
+        } else {
+            addWrongType(accumulator, referenceType, value, path);
         }
     }
 

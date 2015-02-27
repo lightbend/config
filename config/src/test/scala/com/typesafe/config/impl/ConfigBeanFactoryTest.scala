@@ -38,15 +38,20 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
-    def testUnknownProp() {
+    def testValidation() {
         val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
         val config: Config = ConfigFactory.parseReader(new InputStreamReader(configIs),
-            ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)).resolve
-        val expected = intercept[ConfigException.Missing] {
-            ConfigBeanFactory.create(config, classOf[NoFoundPropBeanConfig])
+            ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)).resolve.getConfig("validation")
+        val e = intercept[ConfigException.ValidationFailed] {
+            ConfigBeanFactory.create(config, classOf[ValidationBeanConfig])
         }
-        // TODO this error message should have the config name not the camelcase name
-        assertTrue(expected.getMessage.contains("propNotListedInConfig"))
+
+        val expecteds = Seq(Missing("propNotListedInConfig", 61, "string"),
+            WrongType("shouldBeInt", 62, "number", "boolean"),
+            WrongType("should-be-boolean", 63, "boolean", "number"),
+            WrongType("should-be-list", 64, "list", "string"))
+
+        checkValidationException(e, expecteds)
     }
 
     @Test

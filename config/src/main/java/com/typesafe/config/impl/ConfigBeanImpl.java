@@ -6,7 +6,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.time.Duration;
@@ -14,6 +16,8 @@ import java.time.Duration;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMemorySize;
+import com.typesafe.config.ConfigValue;
+import com.typesafe.config.ConfigValueType;
 
 public class ConfigBeanImpl {
 
@@ -22,12 +26,16 @@ public class ConfigBeanImpl {
      * may change.
      */
     public static <T> T createInternal(Config config, Class<T> clazz) {
-        Map<String, ?> configAsMap = config.root().unwrapped();
-        Map<String, Object> configProps = new HashMap<String, Object>();
-        Map<String,String> originalNames = new HashMap<String, String>();
-        for (Map.Entry<String, ?> configProp : configAsMap.entrySet()) {
-            configProps.put(ConfigImplUtil.toCamelCase(configProp.getKey()), configProp.getValue());
-            originalNames.put(ConfigImplUtil.toCamelCase(configProp.getKey()),configProp.getKey());
+        if (((SimpleConfig)config).root().resolveStatus() != ResolveStatus.RESOLVED)
+            throw new ConfigException.NotResolved(
+                    "need to Config#resolve() a config before using it to initialize a bean, see the API docs for Config#resolve()");
+
+        Map<String, AbstractConfigValue> configProps = new HashMap<String, AbstractConfigValue>();
+        Map<String, String> originalNames = new HashMap<String, String>();
+        for (Map.Entry<String, ConfigValue> configProp : config.root().entrySet()) {
+            String camelName = ConfigImplUtil.toCamelCase(configProp.getKey());
+            configProps.put(camelName, (AbstractConfigValue) configProp.getValue());
+            originalNames.put(camelName, configProp.getKey());
         }
 
         BeanInfo beanInfo = null;
@@ -38,24 +46,55 @@ public class ConfigBeanImpl {
         }
 
         try {
-            T bean = clazz.newInstance();
+            List<PropertyDescriptor> beanProps = new ArrayList<PropertyDescriptor>();
             for (PropertyDescriptor beanProp : beanInfo.getPropertyDescriptors()) {
                 if (beanProp.getReadMethod() == null || beanProp.getWriteMethod() == null) {
                     continue;
                 }
+                beanProps.add(beanProp);
+            }
+
+            // Try to throw all validation issues at once (this does not comprehensively
+            // find every issue, but it should find common ones).
+            List<ConfigException.ValidationProblem> problems = new ArrayList<ConfigException.ValidationProblem>();
+            for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
-                Object configValue = configProps.get(beanProp.getName());
+                Class parameterClass = setter.getParameterTypes()[0];
+                ConfigValueType expectedType = getValueTypeOrNull(parameterClass);
+                if (expectedType != null) {
+                    String name = originalNames.get(beanProp.getName());
+                    if (name == null)
+                        name = beanProp.getName();
+                    Path path = Path.newKey(name);
+                    AbstractConfigValue configValue = configProps.get(beanProp.getName());
+                    if (configValue != null) {
+                        SimpleConfig.checkValid(path, expectedType, configValue, problems);
+                    } else {
+                        SimpleConfig.addMissing(problems, expectedType, path, config.origin());
+                    }
+                }
+            }
+
+            if (!problems.isEmpty()) {
+                throw new ConfigException.ValidationFailed(problems);
+            }
+
+            // Fill in the bean instance
+            T bean = clazz.newInstance();
+            for (PropertyDescriptor beanProp : beanProps) {
+                Method setter = beanProp.getWriteMethod();
+                ConfigValue configValue = configProps.get(beanProp.getName());
+                Object unwrapped;
                 if (configValue == null) {
                     throw new ConfigException.Missing(beanProp.getName());
                 }
-                if (configValue instanceof Map) {
-                    configValue = createInternal(config.getConfig(originalNames.get(beanProp.getDisplayName())), beanProp.getPropertyType());
+                if (configValue instanceof SimpleConfigObject) {
+                    unwrapped = createInternal(config.getConfig(originalNames.get(beanProp.getDisplayName())), beanProp.getPropertyType());
                 } else {
                     Class parameterClass = setter.getParameterTypes()[0];
-                    configValue = getValueWithAutoConversion(parameterClass, config, originalNames.get(beanProp.getDisplayName()));
+                    unwrapped = getValueWithAutoConversion(parameterClass, config, originalNames.get(beanProp.getDisplayName()));
                 }
-                setter.invoke(bean, configValue);
-
+                setter.invoke(bean, unwrapped);
             }
             return bean;
         } catch (InstantiationException e) {
@@ -89,5 +128,34 @@ public class ConfigBeanImpl {
         }
 
         return config.getAnyRef(configPropName);
+    }
+
+    // null if we can't easily say
+    private static ConfigValueType getValueTypeOrNull(Class<?> parameterClass) {
+        if (parameterClass == Boolean.class || parameterClass == boolean.class) {
+            return ConfigValueType.BOOLEAN;
+        } else if (parameterClass == Byte.class || parameterClass == byte.class) {
+            return ConfigValueType.NUMBER;
+        } else if (parameterClass == Short.class || parameterClass == short.class) {
+            return ConfigValueType.NUMBER;
+        } else if (parameterClass == Integer.class || parameterClass == int.class) {
+            return ConfigValueType.NUMBER;
+        } else if (parameterClass == Double.class || parameterClass == double.class) {
+            return ConfigValueType.NUMBER;
+        } else if (parameterClass == Long.class || parameterClass == long.class) {
+            return ConfigValueType.NUMBER;
+        } else if (parameterClass == String.class) {
+            return ConfigValueType.STRING;
+        } else if (parameterClass == Duration.class) {
+            return null;
+        } else if (parameterClass == ConfigMemorySize.class) {
+            return null;
+        } else if (parameterClass.isAssignableFrom(List.class)) {
+            return ConfigValueType.LIST;
+        } else if (parameterClass.isAssignableFrom(Map.class)) {
+            return ConfigValueType.OBJECT;
+        } else {
+            return null;
+        }
     }
 }

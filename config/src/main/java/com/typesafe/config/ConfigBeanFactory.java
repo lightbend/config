@@ -32,6 +32,8 @@ public class ConfigBeanFactory {
      * @return an instance of the class populated with data from the config
      * @throws ConfigException.BadBean
      *     If something is wrong with the JavaBean
+     * @throws ConfigException.ValidationFailed
+     *     If the config doesn't conform to the bean's implied schema
      * @throws ConfigException
      *     Can throw the same exceptions as the getters on <code>Config</code>
      */
