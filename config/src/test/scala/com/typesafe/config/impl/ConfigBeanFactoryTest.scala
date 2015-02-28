@@ -46,10 +46,10 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigBeanFactory.create(config, classOf[ValidationBeanConfig])
         }
 
-        val expecteds = Seq(Missing("propNotListedInConfig", 61, "string"),
-            WrongType("shouldBeInt", 62, "number", "boolean"),
-            WrongType("should-be-boolean", 63, "boolean", "number"),
-            WrongType("should-be-list", 64, "list", "string"))
+        val expecteds = Seq(Missing("propNotListedInConfig", 67, "string"),
+            WrongType("shouldBeInt", 68, "number", "boolean"),
+            WrongType("should-be-boolean", 69, "boolean", "number"),
+            WrongType("should-be-list", 70, "list", "string"))
 
         checkValidationException(e, expecteds)
     }
@@ -91,13 +91,26 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertNotNull(beanConfig)
         assertEquals(List().asJava, beanConfig.getEmpty)
         assertEquals(List(1, 2, 3).asJava, beanConfig.getOfInt)
+        assertEquals(List(32L, 42L, 52L).asJava, beanConfig.getOfLong)
         assertEquals(List("a", "b", "c").asJava, beanConfig.getOfString)
-        assertEquals(List(List("a", "b", "c").asJava,
-            List("a", "b", "c").asJava,
-            List("a", "b", "c").asJava).asJava,
-            beanConfig.getOfArray)
+        //assertEquals(List(List("a", "b", "c").asJava,
+        //    List("a", "b", "c").asJava,
+        //    List("a", "b", "c").asJava).asJava,
+        //    beanConfig.getOfArray)
         assertEquals(3, beanConfig.getOfObject.size)
         assertEquals(3, beanConfig.getOfDouble.size)
+        assertEquals(3, beanConfig.getOfConfig.size)
+        assertTrue(beanConfig.getOfConfig.get(0).isInstanceOf[Config])
+        assertEquals(3, beanConfig.getOfConfigObject.size)
+        assertTrue(beanConfig.getOfConfigObject.get(0).isInstanceOf[ConfigObject])
+        assertEquals(List(intValue(1), intValue(2), stringValue("a")),
+            beanConfig.getOfConfigValue.asScala)
+        assertEquals(List(Duration.ofMillis(1), Duration.ofHours(2), Duration.ofDays(3)),
+            beanConfig.getOfDuration.asScala)
+        assertEquals(List(ConfigMemorySize.ofBytes(1024),
+            ConfigMemorySize.ofBytes(1048576),
+            ConfigMemorySize.ofBytes(1073741824)),
+            beanConfig.getOfMemorySize.asScala)
     }
 
     @Test
@@ -125,6 +138,55 @@ class ConfigBeanFactoryTest extends TestUtils {
 
         assertEquals("yes", beanConfig.getFooBar)
         assertEquals("yes", beanConfig.getBazBar)
+    }
+
+    @Test
+    def testValues() {
+        val beanConfig = ConfigBeanFactory.create(loadConfig().getConfig("values"), classOf[ValuesConfig])
+        assertNotNull(beanConfig)
+        assertEquals(42, beanConfig.getObj())
+        assertEquals("abcd", beanConfig.getConfig.getString("abcd"))
+        assertEquals(3, beanConfig.getConfigObj.toConfig.getInt("intVal"))
+        assertEquals(stringValue("hello world"), beanConfig.getConfigValue)
+        assertEquals(List(1, 2, 3).map(intValue(_)), beanConfig.getList.asScala)
+        assertEquals(true, beanConfig.getUnwrappedMap.get("shouldBeInt"))
+        assertEquals(42, beanConfig.getUnwrappedMap.get("should-be-boolean"))
+    }
+
+    @Test
+    def testNotABeanField() {
+        val e = intercept[ConfigException.BadBean] {
+            ConfigBeanFactory.create(parseConfig("notBean=42"), classOf[NotABeanFieldConfig])
+        }
+        assertTrue("unsupported type error", e.getMessage.contains("unsupported type"))
+        assertTrue("error about the right property", e.getMessage.contains("notBean"))
+    }
+
+    @Test
+    def testUnsupportedListElement() {
+        val e = intercept[ConfigException.BadBean] {
+            ConfigBeanFactory.create(parseConfig("uri=[42]"), classOf[UnsupportedListElementConfig])
+        }
+        assertTrue("unsupported element type error", e.getMessage.contains("unsupported list element type"))
+        assertTrue("error about the right property", e.getMessage.contains("uri"))
+    }
+
+    @Test
+    def testUnsupportedMapKey() {
+        val e = intercept[ConfigException.BadBean] {
+            ConfigBeanFactory.create(parseConfig("map={}"), classOf[UnsupportedMapKeyConfig])
+        }
+        assertTrue("unsupported map type error", e.getMessage.contains("unsupported Map"))
+        assertTrue("error about the right property", e.getMessage.contains("'map'"))
+    }
+
+    @Test
+    def testUnsupportedMapValue() {
+        val e = intercept[ConfigException.BadBean] {
+            ConfigBeanFactory.create(parseConfig("map={}"), classOf[UnsupportedMapValueConfig])
+        }
+        assertTrue("unsupported map type error", e.getMessage.contains("unsupported Map"))
+        assertTrue("error about the right property", e.getMessage.contains("'map'"))
     }
 
     private def loadConfig(): Config = {

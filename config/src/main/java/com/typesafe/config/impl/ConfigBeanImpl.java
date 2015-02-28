@@ -6,6 +6,8 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 import java.time.Duration;
 
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigValue;
@@ -68,6 +72,7 @@ public class ConfigBeanImpl {
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
                 Class parameterClass = setter.getParameterTypes()[0];
+
                 ConfigValueType expectedType = getValueTypeOrNull(parameterClass);
                 if (expectedType != null) {
                     String name = originalNames.get(beanProp.getName());
@@ -91,17 +96,9 @@ public class ConfigBeanImpl {
             T bean = clazz.newInstance();
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
-                ConfigValue configValue = configProps.get(beanProp.getName());
-                Object unwrapped;
-                if (configValue == null) {
-                    throw new ConfigException.Missing(beanProp.getName());
-                }
-                if (configValue instanceof SimpleConfigObject) {
-                    unwrapped = createInternal(config.getConfig(originalNames.get(beanProp.getDisplayName())), beanProp.getPropertyType());
-                } else {
-                    Class parameterClass = setter.getParameterTypes()[0];
-                    unwrapped = getValueWithAutoConversion(parameterClass, config, originalNames.get(beanProp.getDisplayName()));
-                }
+                Type parameterType = setter.getGenericParameterTypes()[0];
+                Class parameterClass = setter.getParameterTypes()[0];
+                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, originalNames.get(beanProp.getName()));
                 setter.invoke(bean, unwrapped);
             }
             return bean;
@@ -114,7 +111,15 @@ public class ConfigBeanImpl {
         }
     }
 
-    private static Object getValueWithAutoConversion(Class parameterClass, Config config, String configPropName) {
+    // we could magically make this work in many cases by doing
+    // getAnyRef() (or getValue().unwrapped()), but anytime we
+    // rely on that, we aren't doing the type conversions Config
+    // usually does, and we will throw ClassCastException instead
+    // of a nicer error message giving the name of the bad
+    // setting. So, instead, we only support a limited number of
+    // types plus you can always use Object, ConfigValue, Config,
+    // ConfigObject, etc.  as an escape hatch.
+    private static Object getValue(Class beanClass, Type parameterType, Class parameterClass, Config config, String configPropName) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return config.getBoolean(configPropName);
         } else if (parameterClass == Integer.class || parameterClass == int.class) {
@@ -129,12 +134,59 @@ public class ConfigBeanImpl {
             return config.getDuration(configPropName);
         } else if (parameterClass == ConfigMemorySize.class) {
             return config.getMemorySize(configPropName);
-        }
+        } else if (parameterClass == Object.class) {
+            return config.getAnyRef(configPropName);
+        } else if (parameterClass == List.class) {
+            Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
 
-        return config.getAnyRef(configPropName);
+            if (elementType == Boolean.class) {
+                return config.getBooleanList(configPropName);
+            } else if (elementType == Integer.class) {
+                return config.getIntList(configPropName);
+            } else if (elementType == Double.class) {
+                return config.getDoubleList(configPropName);
+            } else if (elementType == Long.class) {
+                return config.getLongList(configPropName);
+            } else if (elementType == String.class) {
+                return config.getStringList(configPropName);
+            } else if (elementType == Duration.class) {
+                return config.getDurationList(configPropName);
+            } else if (elementType == ConfigMemorySize.class) {
+                return config.getMemorySizeList(configPropName);
+            } else if (elementType == Object.class) {
+                return config.getAnyRefList(configPropName);
+            } else if (elementType == Config.class) {
+                return config.getConfigList(configPropName);
+            } else if (elementType == ConfigObject.class) {
+                return config.getObjectList(configPropName);
+            } else if (elementType == ConfigValue.class) {
+                return config.getList(configPropName);
+            } else {
+                throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported list element type " + elementType);
+            }
+        } else if (parameterClass == Map.class) {
+            // we could do better here, but right now we don't.
+            Type[] typeArgs = ((ParameterizedType)parameterType).getActualTypeArguments();
+            if (typeArgs[0] != String.class || typeArgs[1] != Object.class) {
+                throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported Map<" + typeArgs[0] + "," + typeArgs[1] + ">, only Map<String,Object> is supported right now");
+            }
+            return config.getObject(configPropName).unwrapped();
+        } else if (parameterClass == Config.class) {
+            return config.getConfig(configPropName);
+        } else if (parameterClass == ConfigObject.class) {
+            return config.getObject(configPropName);
+        } else if (parameterClass == ConfigValue.class) {
+            return config.getValue(configPropName);
+        } else if (parameterClass == ConfigList.class) {
+            return config.getList(configPropName);
+        } else if (hasAtLeastOneBeanProperty(parameterClass)) {
+            return createInternal(config.getConfig(configPropName), parameterClass);
+        } else {
+            throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
+        }
     }
 
-    // null if we can't easily say
+    // null if we can't easily say; this is heuristic/best-effort
     private static ConfigValueType getValueTypeOrNull(Class<?> parameterClass) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return ConfigValueType.BOOLEAN;
@@ -150,12 +202,35 @@ public class ConfigBeanImpl {
             return null;
         } else if (parameterClass == ConfigMemorySize.class) {
             return null;
-        } else if (parameterClass.isAssignableFrom(List.class)) {
+        } else if (parameterClass == List.class) {
             return ConfigValueType.LIST;
-        } else if (parameterClass.isAssignableFrom(Map.class)) {
+        } else if (parameterClass == Map.class) {
             return ConfigValueType.OBJECT;
+        } else if (parameterClass == Config.class) {
+            return ConfigValueType.OBJECT;
+        } else if (parameterClass == ConfigObject.class) {
+            return ConfigValueType.OBJECT;
+        } else if (parameterClass == ConfigList.class) {
+            return ConfigValueType.LIST;
         } else {
             return null;
         }
+    }
+
+    private static boolean hasAtLeastOneBeanProperty(Class<?> clazz) {
+        BeanInfo beanInfo = null;
+        try {
+            beanInfo = Introspector.getBeanInfo(clazz);
+        } catch (IntrospectionException e) {
+            return false;
+        }
+
+        for (PropertyDescriptor beanProp : beanInfo.getPropertyDescriptors()) {
+            if (beanProp.getReadMethod() != null && beanProp.getWriteMethod() != null) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

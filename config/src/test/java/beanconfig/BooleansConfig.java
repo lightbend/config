@@ -7,7 +7,7 @@ public class BooleansConfig {
     Boolean falseVal;
     Boolean falseValAgain;
     Boolean on;
-    Boolean off;
+    boolean off;
 
     public Boolean getTrueVal() {
         return trueVal;
@@ -49,11 +49,11 @@ public class BooleansConfig {
         this.on = on;
     }
 
-    public Boolean getOff() {
+    public boolean getOff() {
         return off;
     }
 
-    public void setOff(Boolean off) {
+    public void setOff(boolean off) {
         this.off = off;
     }
 }
