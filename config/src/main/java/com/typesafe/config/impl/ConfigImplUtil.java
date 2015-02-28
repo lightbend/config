@@ -231,11 +231,7 @@ final public class ConfigImplUtil {
                 null);
     }
 
-    /**
-     * This is public ONLY for use by the "config" package, DO NOT USE this ABI
-     * may change.
-     */
-    public static String toCamelCase(String originalName) {
+    static String toCamelCase(String originalName) {
         String[] words = originalName.split("-+");
         StringBuilder nameBuilder = new StringBuilder(originalName.length());
         for (String word : words) {
