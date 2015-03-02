@@ -9,6 +9,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -104,6 +105,21 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             joined = right.withFallback(left);
         } else if (left instanceof SimpleConfigList && right instanceof SimpleConfigList) {
             joined = ((SimpleConfigList)left).concatenate((SimpleConfigList)right);
+        } else if (left instanceof SimpleConfigList && right instanceof AbstractConfigObject) {
+
+            // experimental
+            // https://github.com/typesafehub/config/issues/24
+
+        	SimpleConfigList source = (SimpleConfigList) left;
+        	
+        	List<AbstractConfigValue> target = new ArrayList<AbstractConfigValue>(source.size());
+        	
+            for( ConfigValue value: source ) {
+            	target.add(((AbstractConfigObject) value).withFallback(right));
+            }
+            
+            joined = new SimpleConfigList(source.origin(), target);
+            
         } else if (left instanceof ConfigConcatenation || right instanceof ConfigConcatenation) {
             throw new ConfigException.BugOrBroken("unflattened ConfigConcatenation");
         } else if (left instanceof Unmergeable || right instanceof Unmergeable) {

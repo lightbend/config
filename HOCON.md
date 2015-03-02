@@ -250,7 +250,7 @@ of at least three quotes ends the multi-line string, and any
 ### Value concatenation
 
 The value of an object field or array element may consist of
-multiple values which are combined. There are three kinds of value
+multiple values which are combined. There are 4 kinds of value
 concatenation:
 
  - if all the values are simple values (neither objects nor
@@ -259,6 +259,7 @@ concatenation:
    one array.
  - if all the values are objects, they are merged (as with
    duplicate keys) into one object.
+ - array can use a fall back object for each of its elements
 
 String value concatenation is allowed in field keys, in addition
 to field values and array elements. Objects and arrays do not make
@@ -333,7 +334,7 @@ concatenation and converted to a string.
 #### Array and object concatenation
 
 Arrays can be concatenated with arrays, and objects with objects,
-but it is an error if they are mixed.
+but it is an error if they are mixed, (except for ```[]{}``` construct, see below)
 
 For purposes of concatenation, "array" also means "substitution
 that resolves to an array" and "object" also means "substitution
@@ -382,6 +383,23 @@ A common use of array concatenation is to add to paths:
 
     path = [ /bin ]
     path = ${path} [ /usr/bin ]
+
+#### Array with element fall back object concatenation
+
+the ```[]{}``` construct is permitted and means:
+"apply object as a fall back to each array element"
+
+for example 
+
+    list = [ {a:1}, {b:2}, {c:3} ] { a:-1, b:-2, c:-3 }
+
+is equivalent to
+
+    list = [ 
+    	{ a: 1, b:-2, c:-3 }
+    	{ a:-1, b: 2, c:-3 }
+    	{ a:-1, b:-2, c: 3 }
+    ]
 
 #### Note: Arrays without commas or newlines
 
