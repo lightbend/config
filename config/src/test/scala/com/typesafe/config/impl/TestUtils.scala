@@ -25,6 +25,7 @@ import java.util.concurrent.Callable
 import com.typesafe.config._
 import scala.reflect.ClassTag
 import scala.reflect.classTag
+import scala.collection.JavaConverters._
 import language.implicitConversions
 
 abstract trait TestUtils {
@@ -740,4 +741,53 @@ abstract trait TestUtils {
 
     protected def quoteJsonString(s: String): String =
         ConfigImplUtil.renderJsonString(s)
+
+    sealed abstract class Problem(path: String, line: Int) {
+        def check(p: ConfigException.ValidationProblem) {
+            assertEquals("matching path", path, p.path())
+            assertEquals("matching line for " + path, line, p.origin().lineNumber())
+        }
+
+        protected def assertMessage(p: ConfigException.ValidationProblem, re: String) {
+            assertTrue("didn't get expected message for " + path + ": got '" + p.problem() + "'",
+                p.problem().matches(re))
+        }
+    }
+
+    case class Missing(path: String, line: Int, expected: String) extends Problem(path, line) {
+        override def check(p: ConfigException.ValidationProblem) {
+            super.check(p)
+            val re = "No setting.*" + path + ".*expecting.*" + expected + ".*"
+            assertMessage(p, re)
+        }
+    }
+
+    case class WrongType(path: String, line: Int, expected: String, got: String) extends Problem(path, line) {
+        override def check(p: ConfigException.ValidationProblem) {
+            super.check(p)
+            val re = "Wrong value type.*" + path + ".*expecting.*" + expected + ".*got.*" + got + ".*"
+            assertMessage(p, re)
+        }
+    }
+
+    case class WrongElementType(path: String, line: Int, expected: String, got: String) extends Problem(path, line) {
+        override def check(p: ConfigException.ValidationProblem) {
+            super.check(p)
+            val re = "List at.*" + path + ".*wrong value type.*expecting.*" + expected + ".*got.*element of.*" + got + ".*"
+            assertMessage(p, re)
+        }
+    }
+
+    protected def checkValidationException(e: ConfigException.ValidationFailed, expecteds: Seq[Problem]) {
+        val problems = e.problems().asScala.toIndexedSeq.sortBy(_.path).sortBy(_.origin.lineNumber)
+
+        //for (problem <- problems)
+        //    System.err.println(problem.origin().description() + ": " + problem.path() + ": " + problem.problem())
+
+        for ((problem, expected) <- problems zip expecteds) {
+            expected.check(problem)
+        }
+        assertEquals("found expected validation problems, got '" + problems + "' and expected '" + expecteds + "'",
+            expecteds.size, problems.size)
+    }
 }

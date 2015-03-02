@@ -13,55 +13,6 @@ import scala.io.Source
 
 class ValidationTest extends TestUtils {
 
-    sealed abstract class Problem(path: String, line: Int) {
-        def check(p: ConfigException.ValidationProblem) {
-            assertEquals("matching path", path, p.path())
-            assertEquals("matching line", line, p.origin().lineNumber())
-        }
-
-        protected def assertMessage(p: ConfigException.ValidationProblem, re: String) {
-            assertTrue("didn't get expected message for " + path + ": got '" + p.problem() + "'",
-                p.problem().matches(re))
-        }
-    }
-
-    case class Missing(path: String, line: Int, expected: String) extends Problem(path, line) {
-        override def check(p: ConfigException.ValidationProblem) {
-            super.check(p)
-            val re = "No setting.*" + path + ".*expecting.*" + expected + ".*"
-            assertMessage(p, re)
-        }
-    }
-
-    case class WrongType(path: String, line: Int, expected: String, got: String) extends Problem(path, line) {
-        override def check(p: ConfigException.ValidationProblem) {
-            super.check(p)
-            val re = "Wrong value type.*" + path + ".*expecting.*" + expected + ".*got.*" + got + ".*"
-            assertMessage(p, re)
-        }
-    }
-
-    case class WrongElementType(path: String, line: Int, expected: String, got: String) extends Problem(path, line) {
-        override def check(p: ConfigException.ValidationProblem) {
-            super.check(p)
-            val re = "List at.*" + path + ".*wrong value type.*expecting.*" + expected + ".*got.*element of.*" + got + ".*"
-            assertMessage(p, re)
-        }
-    }
-
-    private def checkException(e: ConfigException.ValidationFailed, expecteds: Seq[Problem]) {
-        val problems = e.problems().asScala.toIndexedSeq.sortBy(_.path).sortBy(_.origin.lineNumber)
-
-        //for (problem <- problems)
-        //    System.err.println(problem.origin().description() + ": " + problem.path() + ": " + problem.problem())
-
-        for ((problem, expected) <- problems zip expecteds) {
-            expected.check(problem)
-        }
-        assertEquals("found expected validation problems, got '" + problems + "' and expected '" + expecteds + "'",
-            expecteds.size, problems.size)
-    }
-
     @Test
     def validation() {
         val reference = ConfigFactory.parseFile(resourceFile("validate-reference.conf"), ConfigParseOptions.defaults())
@@ -87,7 +38,7 @@ class ValidationTest extends TestUtils {
             Missing("a.b.c.d.e.f.j", 28, "boolean"),
             WrongType("a.b.c.d.e.f.i", 30, "boolean", "list"))
 
-        checkException(e, expecteds)
+        checkValidationException(e, expecteds)
     }
 
     @Test
@@ -106,7 +57,7 @@ class ValidationTest extends TestUtils {
             Missing("a.b.c.d.e.f.j", 28, "boolean"),
             WrongType("a.b.c.d.e.f.i", 30, "boolean", "list"))
 
-        checkException(e, expecteds)
+        checkValidationException(e, expecteds)
     }
 
     @Test
@@ -130,7 +81,7 @@ class ValidationTest extends TestUtils {
 
         val expecteds = Seq(WrongType("a", 1, "list", "number"))
 
-        checkException(e, expecteds)
+        checkValidationException(e, expecteds)
     }
 
     @Test
@@ -143,7 +94,7 @@ class ValidationTest extends TestUtils {
 
         val expecteds = Seq(WrongElementType("a", 1, "boolean", "number"))
 
-        checkException(e, expecteds)
+        checkValidationException(e, expecteds)
     }
 
     @Test
@@ -163,7 +114,7 @@ class ValidationTest extends TestUtils {
 
         val expecteds = Seq(WrongType("a", 1, "list", "object"))
 
-        checkException(e, expecteds)
+        checkValidationException(e, expecteds)
     }
 
     @Test

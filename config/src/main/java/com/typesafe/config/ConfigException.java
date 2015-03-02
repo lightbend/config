@@ -386,6 +386,21 @@ public abstract class ConfigException extends RuntimeException implements Serial
     }
 
     /**
+     * Some problem with a JavaBean we are trying to initialize.
+     */
+    public static class BadBean extends BugOrBroken {
+        private static final long serialVersionUID = 1L;
+
+        public BadBean(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public BadBean(String message) {
+            this(message, null);
+        }
+    }
+
+    /**
      * Exception that doesn't fall into any other category.
      */
     public static class Generic extends ConfigException {
