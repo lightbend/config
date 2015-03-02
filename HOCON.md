@@ -383,6 +383,15 @@ A common use of array concatenation is to add to paths:
     path = [ /bin ]
     path = ${path} [ /usr/bin ]
 
+#### Note: Concatenation with whitespace and substitutions
+
+When concatenating substitutions such as `${foo} ${bar}`, the
+substitutions may turn out to be strings (which makes the
+whitespace between them significant) or may turn out to be objects
+or lists (which makes it irrelevant). Unquoted whitespace must be
+ignored in between substitutions which resolve to objects or
+lists. Quoted whitespace should be an error.
+
 #### Note: Arrays without commas or newlines
 
 Arrays allow you to use newlines instead of commas, but not

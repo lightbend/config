@@ -513,7 +513,7 @@ final class Parser {
                 // or substitution already.
                 v = Tokens.getValue(t.token);
             } else if (Tokens.isUnquotedText(t.token)) {
-                v = new ConfigString(t.token.origin(), Tokens.getUnquotedText(t.token));
+                v = new ConfigString.Unquoted(t.token.origin(), Tokens.getUnquotedText(t.token));
             } else if (Tokens.isSubstitution(t.token)) {
                 v = new ConfigReference(t.token.origin(), tokenToSubstitutionExpression(t.token));
             } else if (t.token == Tokens.OPEN_CURLY) {

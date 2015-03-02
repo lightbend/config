@@ -136,7 +136,7 @@ class TokenizerTest extends TestUtils {
     @Test
     def tokenizerUnescapeStrings(): Unit = {
         case class UnescapeTest(escaped: String, result: ConfigString)
-        implicit def pair2unescapetest(pair: (String, String)): UnescapeTest = UnescapeTest(pair._1, new ConfigString(fakeOrigin(), pair._2))
+        implicit def pair2unescapetest(pair: (String, String)): UnescapeTest = UnescapeTest(pair._1, new ConfigString.Quoted(fakeOrigin(), pair._2))
 
         // getting the actual 6 chars we want in a string is a little pesky.
         // \u005C is backslash. Just prove we're doing it right here.

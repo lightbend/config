@@ -403,7 +403,7 @@ final class Tokens {
     }
 
     static Token newString(ConfigOrigin origin, String value) {
-        return newValue(new ConfigString(origin, value));
+        return newValue(new ConfigString.Quoted(origin, value));
     }
 
     static Token newInt(ConfigOrigin origin, int value, String originalText) {

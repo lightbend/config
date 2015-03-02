@@ -64,7 +64,7 @@ final class DefaultTransformer {
             switch (value.valueType()) {
             case NUMBER: // FALL THROUGH
             case BOOLEAN:
-                return new ConfigString(value.origin(),
+                return new ConfigString.Quoted(value.origin(),
                         value.transformToString());
             case NULL:
                 // want to be sure this throws instead of returning "null" as a

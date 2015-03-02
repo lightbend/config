@@ -70,7 +70,7 @@ class JsonTest extends TestUtils {
             case lift.JDouble(d) =>
                 doubleValue(d)
             case lift.JString(s) =>
-                new ConfigString(fakeOrigin(), s)
+                new ConfigString.Quoted(fakeOrigin(), s)
             case lift.JNull =>
                 new ConfigNull(fakeOrigin())
             case lift.JNothing =>

@@ -455,8 +455,52 @@ class ConcatenationTest extends TestUtils {
     }
 
     @Test
+    def concatTwoDefinedSubstitutionsWithASpace() {
+        val conf = parseConfig("""foo=abc, bar=def, a = ${foo} ${bar}""").resolve()
+        assertEquals("abc def", conf.getString("a"))
+    }
+
+    @Test
     def concatTwoUndefinedSubstitutionsWithEmptyString() {
         val conf = parseConfig("""a = ""${?foo}${?bar}""").resolve()
         assertEquals("", conf.getString("a"))
+    }
+
+    @Test
+    def concatSubstitutionsThatAreObjectsWithNoSpace() {
+        val conf = parseConfig("""foo = { a : 1}, bar = { b : 2 }, x = ${foo}${bar}""").resolve()
+        assertEquals(1, conf.getInt("x.a"))
+        assertEquals(2, conf.getInt("x.b"))
+    }
+
+    // whitespace is insignificant if substitutions don't turn out to be a string
+    @Test
+    def concatSubstitutionsThatAreObjectsWithSpace() {
+        val conf = parseConfig("""foo = { a : 1}, bar = { b : 2 }, x = ${foo} ${bar}""").resolve()
+        assertEquals(1, conf.getInt("x.a"))
+        assertEquals(2, conf.getInt("x.b"))
+    }
+
+    // whitespace is insignificant if substitutions don't turn out to be a string
+    @Test
+    def concatSubstitutionsThatAreListsWithSpace() {
+        val conf = parseConfig("""foo = [1], bar = [2], x = ${foo} ${bar}""").resolve()
+        assertEquals(List(1, 2), conf.getIntList("x").asScala)
+    }
+
+    // but quoted whitespace should be an error
+    @Test
+    def concatSubstitutionsThatAreObjectsWithQuotedSpace() {
+        val e = intercept[ConfigException.WrongType] {
+            parseConfig("""foo = { a : 1}, bar = { b : 2 }, x = ${foo}"  "${bar}""").resolve()
+        }
+    }
+
+    // but quoted whitespace should be an error
+    @Test
+    def concatSubstitutionsThatAreListsWithQuotedSpace() {
+        val e = intercept[ConfigException.WrongType] {
+            parseConfig("""foo = [1], bar = [2], x = ${foo}"  "${bar}""").resolve()
+        }
     }
 }
