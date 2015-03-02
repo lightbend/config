@@ -616,7 +616,7 @@ abstract trait TestUtils {
     def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, null)
     def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, null)
     def tokenLine(line: Int) = Tokens.newLine(fakeOrigin.withLineNumber(line))
-    def tokenComment(text: String) = Tokens.newComment(fakeOrigin(), text)
+    def tokenComment(text: String, doubleSlash : Boolean) = Tokens.newComment(fakeOrigin(), text, doubleSlash)
     def tokenWhitespace(text: String) = Tokens.newIgnoredWhitespace(fakeOrigin(), text)
 
     private def tokenMaybeOptionalSubstitution(optional: Boolean, expression: Token*) = {

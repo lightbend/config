@@ -278,10 +278,12 @@ final class Tokenizer {
         // ONE char has always been consumed, either the # or the first /, but
         // not both slashes
         private Token pullComment(int firstChar) {
+            boolean doubleSlash = false;
             if (firstChar == '/') {
                 int discard = nextCharRaw();
                 if (discard != '/')
                     throw new ConfigException.BugOrBroken("called pullComment but // not seen");
+                doubleSlash = true;
             }
 
             StringBuilder sb = new StringBuilder();
@@ -289,7 +291,7 @@ final class Tokenizer {
                 int c = nextCharRaw();
                 if (c == -1 || c == '\n') {
                     putBack(c);
-                    return Tokens.newComment(lineOrigin, sb.toString());
+                    return Tokens.newComment(lineOrigin, sb.toString(), doubleSlash);
                 } else {
                     sb.appendCodePoint(c);
                 }

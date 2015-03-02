@@ -198,8 +198,8 @@ final class Tokens {
     static private class Comment extends Token {
         final private String text;
 
-        Comment(ConfigOrigin origin, String text) {
-            super(TokenType.COMMENT, origin);
+        Comment(ConfigOrigin origin, String text, boolean doubleSlash) {
+            super(TokenType.COMMENT, origin, (doubleSlash? "//" : "#") + text);
             this.text = text;
         }
 
@@ -409,8 +409,8 @@ final class Tokens {
         return new Problem(origin, what, message, suggestQuotes, cause);
     }
 
-    static Token newComment(ConfigOrigin origin, String text) {
-        return new Comment(origin, text);
+    static Token newComment(ConfigOrigin origin, String text, boolean doubleSlash) {
+        return new Comment(origin, text, doubleSlash);
     }
 
     static Token newUnquotedText(ConfigOrigin origin, String s) {

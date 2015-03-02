@@ -134,7 +134,7 @@ class TokenizerTest extends TestUtils {
         tokenizerTest(List(tokenUnquoted("a/b/c/")), "a/b/c/")
         tokenizerTest(List(tokenUnquoted("/")), "/")
         tokenizerTest(List(tokenUnquoted("/"), tokenUnquoted(" "), tokenUnquoted("/")), "/ /")
-        //tokenizerTest(List(tokenComment("")), "//")
+        tokenizerTest(List(tokenComment("", true)), "//")
     }
 
     @Test
@@ -283,17 +283,22 @@ class TokenizerTest extends TestUtils {
 
     @Test
     def commentsHandledInVariousContexts() {
-        //        tokenizerTest(List(tokenString("//bar")), "\"//bar\"")
-        //        tokenizerTest(List(tokenString("#bar")), "\"#bar\"")
-        //        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment")), "bar//comment")
-        //        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment")), "bar#comment")
-        //        tokenizerTest(List(tokenInt(10), tokenComment("comment")), "10//comment")
-        //        tokenizerTest(List(tokenInt(10), tokenComment("comment")), "10#comment")
-        //        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment")), "3.14//comment")
-        //        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment")), "3.14#comment")
-        //        // be sure we keep the newline
-        //        tokenizerTest(List(tokenInt(10), tokenComment("comment"), tokenLine(1), tokenInt(12)), "10//comment\n12")
-        //        tokenizerTest(List(tokenInt(10), tokenComment("comment"), tokenLine(1), tokenInt(12)), "10#comment\n12")
+        tokenizerTest(List(tokenString("//bar")), "\"//bar\"")
+        tokenizerTest(List(tokenString("#bar")), "\"#bar\"")
+        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment", true)), "bar//comment")
+        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment", false)), "bar#comment")
+        tokenizerTest(List(tokenInt(10), tokenComment("comment", true)), "10//comment")
+        tokenizerTest(List(tokenInt(10), tokenComment("comment", false)), "10#comment")
+        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment", true)), "3.14//comment")
+        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment", false)), "3.14#comment")
+        // be sure we keep the newline
+        tokenizerTest(List(tokenInt(10), tokenComment("comment", true), tokenLine(1), tokenInt(12)), "10//comment\n12")
+        tokenizerTest(List(tokenInt(10), tokenComment("comment", false), tokenLine(1), tokenInt(12)), "10#comment\n12")
+        // be sure we handle multi-line comments
+        tokenizerTest(List(tokenComment("comment", true), tokenLine(1), tokenComment("comment2", true)),
+                      "//comment\n//comment2")
+        tokenizerTest(List(tokenComment("comment", false), tokenLine(1), tokenComment("comment2", false)),
+                      "#comment\n#comment2")
     }
 
     @Test
