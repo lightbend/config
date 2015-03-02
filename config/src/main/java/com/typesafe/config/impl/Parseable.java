@@ -417,6 +417,10 @@ public abstract class Parseable implements ConfigParseable {
         return new ParseableString(input, options);
     }
 
+    private static final String jsonContentType = "application/json";
+    private static final String propertiesContentType = "text/x-java-properties";
+    private static final String hoconContentType = "application/hocon";
+
     private static class ParseableURL extends Parseable {
         final protected URL input;
         private String contentType = null;
@@ -462,11 +466,11 @@ public abstract class Parseable implements ConfigParseable {
         @Override
         ConfigSyntax contentType() {
             if (contentType != null) {
-                if (contentType.equals("application/json"))
+                if (contentType.equals(jsonContentType))
                     return ConfigSyntax.JSON;
-                else if (contentType.equals("text/x-java-properties"))
+                else if (contentType.equals(propertiesContentType))
                     return ConfigSyntax.PROPERTIES;
-                else if (contentType.equals("application/hocon"))
+                else if (contentType.equals(hoconContentType))
                     return ConfigSyntax.CONF;
                 else {
                     if (ConfigImpl.traceLoadsEnabled())
