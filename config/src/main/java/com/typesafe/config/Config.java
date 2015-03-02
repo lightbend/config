@@ -472,6 +472,12 @@ public interface Config extends ConfigMergeable {
     Number getNumber(String path);
 
     /**
+     * Gets the integer at the given path. If the value at the
+     * path has a fractional (floating point) component, it
+     * will be discarded and only the integer part will be
+     * returned (it works like a "narrowing primitive conversion"
+     * in the Java language specification).
+     *
      * @param path
      *            path expression
      * @return the 32-bit integer value at the requested path
@@ -484,6 +490,12 @@ public interface Config extends ConfigMergeable {
     int getInt(String path);
 
     /**
+     * Gets the long integer at the given path.  If the value at
+     * the path has a fractional (floating point) component, it
+     * will be discarded and only the integer part will be
+     * returned (it works like a "narrowing primitive conversion"
+     * in the Java language specification).
+     *
      * @param path
      *            path expression
      * @return the 64-bit long value at the requested path
