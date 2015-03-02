@@ -437,12 +437,13 @@ and
 
 ### ConfigBeanFactory
 
-If you have a Java object that follows JavaBean conventions
-(zero-args constructor, getters and setters), you can
-automatically initialize it from a `Config`.
+As of version 1.3.0, if you have a Java object that follows
+JavaBean conventions (zero-args constructor, getters and setters),
+you can automatically initialize it from a `Config`.
 
-Use `ConfigBeanFactory.create(MyBean.class,
-config.getConfig("subtree-that-matches-bean"))` to do this.
+Use
+`ConfigBeanFactory.create(config.getConfig("subtree-that-matches-bean"),
+MyBean.class)` to do this.
 
 Creating a bean from a `Config` automatically validates that the
 config matches the bean's implied schema. Bean fields can be
