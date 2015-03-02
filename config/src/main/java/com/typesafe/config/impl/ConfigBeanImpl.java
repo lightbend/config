@@ -137,33 +137,7 @@ public class ConfigBeanImpl {
         } else if (parameterClass == Object.class) {
             return config.getAnyRef(configPropName);
         } else if (parameterClass == List.class) {
-            Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
-
-            if (elementType == Boolean.class) {
-                return config.getBooleanList(configPropName);
-            } else if (elementType == Integer.class) {
-                return config.getIntList(configPropName);
-            } else if (elementType == Double.class) {
-                return config.getDoubleList(configPropName);
-            } else if (elementType == Long.class) {
-                return config.getLongList(configPropName);
-            } else if (elementType == String.class) {
-                return config.getStringList(configPropName);
-            } else if (elementType == Duration.class) {
-                return config.getDurationList(configPropName);
-            } else if (elementType == ConfigMemorySize.class) {
-                return config.getMemorySizeList(configPropName);
-            } else if (elementType == Object.class) {
-                return config.getAnyRefList(configPropName);
-            } else if (elementType == Config.class) {
-                return config.getConfigList(configPropName);
-            } else if (elementType == ConfigObject.class) {
-                return config.getObjectList(configPropName);
-            } else if (elementType == ConfigValue.class) {
-                return config.getList(configPropName);
-            } else {
-                throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported list element type " + elementType);
-            }
+            return getListValue(beanClass, parameterType, parameterClass, config, configPropName);
         } else if (parameterClass == Map.class) {
             // we could do better here, but right now we don't.
             Type[] typeArgs = ((ParameterizedType)parameterType).getActualTypeArguments();
@@ -183,6 +157,36 @@ public class ConfigBeanImpl {
             return createInternal(config.getConfig(configPropName), parameterClass);
         } else {
             throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
+        }
+    }
+
+    private static Object getListValue(Class beanClass, Type parameterType, Class parameterClass, Config config, String configPropName) {
+        Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
+
+        if (elementType == Boolean.class) {
+            return config.getBooleanList(configPropName);
+        } else if (elementType == Integer.class) {
+            return config.getIntList(configPropName);
+        } else if (elementType == Double.class) {
+            return config.getDoubleList(configPropName);
+        } else if (elementType == Long.class) {
+            return config.getLongList(configPropName);
+        } else if (elementType == String.class) {
+            return config.getStringList(configPropName);
+        } else if (elementType == Duration.class) {
+            return config.getDurationList(configPropName);
+        } else if (elementType == ConfigMemorySize.class) {
+            return config.getMemorySizeList(configPropName);
+        } else if (elementType == Object.class) {
+            return config.getAnyRefList(configPropName);
+        } else if (elementType == Config.class) {
+            return config.getConfigList(configPropName);
+        } else if (elementType == ConfigObject.class) {
+            return config.getObjectList(configPropName);
+        } else if (elementType == ConfigValue.class) {
+            return config.getList(configPropName);
+        } else {
+            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported list element type " + elementType);
         }
     }
 
