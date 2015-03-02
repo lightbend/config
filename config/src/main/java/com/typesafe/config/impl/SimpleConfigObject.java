@@ -438,7 +438,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
             int separatorCount = 0;
             String[] keys = keySet().toArray(new String[size()]);
-            Arrays.sort(keys);
+            Arrays.sort(keys, new com.typesafe.config.impl.AlphanumericComparator());
             for (String k : keys) {
                 AbstractConfigValue v;
                 v = value.get(k);
@@ -491,6 +491,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 }
                 sb.append("}");
             }
+
         }
         if (atRoot && options.getFormatted())
             sb.append('\n');
