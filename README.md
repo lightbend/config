@@ -61,6 +61,7 @@ to merge it in.
   - [Merging config trees](#merging-config-trees)
   - [How to handle defaults](#how-to-handle-defaults)
   - [Understanding `Config` and `ConfigObject`](#understanding-config-and-configobject)
+  - [ConfigBeanFactory](#configbeanfactory)
 - [Using HOCON, the JSON Superset](#using-hocon-the-json-superset)
   - [Features of HOCON](#features-of-hocon)
   - [Examples of HOCON](#examples-of-hocon)
@@ -434,6 +435,21 @@ using
 and
 [ConfigObject.toConfig()](http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig%28%29).
 
+### ConfigBeanFactory
+
+If you have a Java object that follows JavaBean conventions
+(zero-args constructor, getters and setters), you can
+automatically initialize it from a `Config`.
+
+Use `ConfigBeanFactory.create(MyBean.class,
+config.getConfig("subtree-that-matches-bean"))` to do this.
+
+Creating a bean from a `Config` automatically validates that the
+config matches the bean's implied schema. Bean fields can be
+primitive types, typed lists such as `List<Integer>`,
+`java.time.Duration`, `ConfigMemorySize`, or even a raw `Config`,
+`ConfigObject`, or `ConfigValue` (if you'd like to deal with a
+particular value manually).
 
 ## Using HOCON, the JSON Superset
 
