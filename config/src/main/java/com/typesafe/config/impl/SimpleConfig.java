@@ -547,27 +547,17 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         if (unitString.length() > 2 && !unitString.endsWith("s"))
             unitString = unitString + "s";
 
-        // note that this is deliberately case-sensitive
-        if (unitString.equals("") || unitString.equals("ms") || unitString.equals("millis")
-                || unitString.equals("milliseconds")) {
+        if(unitString.equals("")) {
             units = TimeUnit.MILLISECONDS;
-        } else if (unitString.equals("us") || unitString.equals("micros") || unitString.equals("microseconds")) {
-            units = TimeUnit.MICROSECONDS;
-        } else if (unitString.equals("ns") || unitString.equals("nanos") || unitString.equals("nanoseconds")) {
-            units = TimeUnit.NANOSECONDS;
-        } else if (unitString.equals("d") || unitString.equals("days")) {
-            units = TimeUnit.DAYS;
-        } else if (unitString.equals("h") || unitString.equals("hours")) {
-            units = TimeUnit.HOURS;
-        } else if (unitString.equals("s") || unitString.equals("seconds")) {
-            units = TimeUnit.SECONDS;
-        } else if (unitString.equals("m") || unitString.equals("minutes")) {
-            units = TimeUnit.MINUTES;
         } else {
-            throw new ConfigException.BadValue(originForException,
+            DurationUnit durationUnit = DurationUnit.fromString(unitString);
+            units = durationUnit != null ? durationUnit.getTimeUnit() : null;
+            if(units == null) {
+                throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse time unit '"
                             + originalUnitString
                             + "' (try ns, us, ms, s, m, h, d)");
+            }
         }
 
         try {
@@ -584,77 +574,6 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             throw new ConfigException.BadValue(originForException,
                     pathForException, "Could not parse duration number '"
                             + numberString + "'");
-        }
-    }
-
-    private static enum MemoryUnit {
-        BYTES("", 1024, 0),
-
-        KILOBYTES("kilo", 1000, 1),
-        MEGABYTES("mega", 1000, 2),
-        GIGABYTES("giga", 1000, 3),
-        TERABYTES("tera", 1000, 4),
-        PETABYTES("peta", 1000, 5),
-        EXABYTES("exa", 1000, 6),
-        ZETTABYTES("zetta", 1000, 7),
-        YOTTABYTES("yotta", 1000, 8),
-
-        KIBIBYTES("kibi", 1024, 1),
-        MEBIBYTES("mebi", 1024, 2),
-        GIBIBYTES("gibi", 1024, 3),
-        TEBIBYTES("tebi", 1024, 4),
-        PEBIBYTES("pebi", 1024, 5),
-        EXBIBYTES("exbi", 1024, 6),
-        ZEBIBYTES("zebi", 1024, 7),
-        YOBIBYTES("yobi", 1024, 8);
-
-        final String prefix;
-        final int powerOf;
-        final int power;
-        final BigInteger bytes;
-
-        MemoryUnit(String prefix, int powerOf, int power) {
-            this.prefix = prefix;
-            this.powerOf = powerOf;
-            this.power = power;
-            this.bytes = BigInteger.valueOf(powerOf).pow(power);
-        }
-
-        private static Map<String, MemoryUnit> makeUnitsMap() {
-            Map<String, MemoryUnit> map = new HashMap<String, MemoryUnit>();
-            for (MemoryUnit unit : MemoryUnit.values()) {
-                map.put(unit.prefix + "byte", unit);
-                map.put(unit.prefix + "bytes", unit);
-                if (unit.prefix.length() == 0) {
-                    map.put("b", unit);
-                    map.put("B", unit);
-                    map.put("", unit); // no unit specified means bytes
-                } else {
-                    String first = unit.prefix.substring(0, 1);
-                    String firstUpper = first.toUpperCase();
-                    if (unit.powerOf == 1024) {
-                        map.put(first, unit);             // 512m
-                        map.put(firstUpper, unit);        // 512M
-                        map.put(firstUpper + "i", unit);  // 512Mi
-                        map.put(firstUpper + "iB", unit); // 512MiB
-                    } else if (unit.powerOf == 1000) {
-                        if (unit.power == 1) {
-                            map.put(first + "B", unit);      // 512kB
-                        } else {
-                            map.put(firstUpper + "B", unit); // 512MB
-                        }
-                    } else {
-                        throw new RuntimeException("broken MemoryUnit enum");
-                    }
-                }
-            }
-            return map;
-        }
-
-        private static Map<String, MemoryUnit> unitsMap = makeUnitsMap();
-
-        static MemoryUnit parseUnit(String unit) {
-            return unitsMap.get(unit);
         }
     }
 
