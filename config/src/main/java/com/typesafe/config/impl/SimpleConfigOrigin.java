@@ -28,10 +28,11 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     final private int endLineNumber;
     final private OriginType originType;
     final private String urlOrNull;
+    final private String resourceOrNull;
     final private List<String> commentsOrNull;
 
-    protected SimpleConfigOrigin(String description, int lineNumber, int endLineNumber,
-            OriginType originType, String urlOrNull, List<String> commentsOrNull) {
+    protected SimpleConfigOrigin(String description, int lineNumber, int endLineNumber, OriginType originType,
+            String urlOrNull, String resourceOrNull, List<String> commentsOrNull) {
         if (description == null)
             throw new ConfigException.BugOrBroken("description may not be null");
         this.description = description;
@@ -39,11 +40,12 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         this.endLineNumber = endLineNumber;
         this.originType = originType;
         this.urlOrNull = urlOrNull;
+        this.resourceOrNull = resourceOrNull;
         this.commentsOrNull = commentsOrNull;
     }
 
     static SimpleConfigOrigin newSimple(String description) {
-        return new SimpleConfigOrigin(description, -1, -1, OriginType.GENERIC, null, null);
+        return new SimpleConfigOrigin(description, -1, -1, OriginType.GENERIC, null, null, null);
     }
 
     static SimpleConfigOrigin newFile(String filename) {
@@ -53,17 +55,22 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         } catch (MalformedURLException e) {
             url = null;
         }
-        return new SimpleConfigOrigin(filename, -1, -1, OriginType.FILE, url, null);
+        return new SimpleConfigOrigin(filename, -1, -1, OriginType.FILE, url, null, null);
     }
 
     static SimpleConfigOrigin newURL(URL url) {
         String u = url.toExternalForm();
-        return new SimpleConfigOrigin(u, -1, -1, OriginType.URL, u, null);
+        return new SimpleConfigOrigin(u, -1, -1, OriginType.URL, u, null, null);
     }
 
     static SimpleConfigOrigin newResource(String resource, URL url) {
-        return new SimpleConfigOrigin(resource, -1, -1, OriginType.RESOURCE,
-                url != null ? url.toExternalForm() : null, null);
+        String desc;
+        if (url != null)
+            desc = resource + " @ " + url.toExternalForm();
+        else
+            desc = resource;
+        return new SimpleConfigOrigin(desc, -1, -1, OriginType.RESOURCE, url != null ? url.toExternalForm() : null,
+                resource, null);
     }
 
     static SimpleConfigOrigin newResource(String resource) {
@@ -75,14 +82,14 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         if (lineNumber == this.lineNumber && lineNumber == this.endLineNumber) {
             return this;
         } else {
-            return new SimpleConfigOrigin(this.description, lineNumber, lineNumber,
-                    this.originType, this.urlOrNull, this.commentsOrNull);
+            return new SimpleConfigOrigin(this.description, lineNumber, lineNumber, this.originType, this.urlOrNull,
+                    this.resourceOrNull, this.commentsOrNull);
         }
     }
 
     SimpleConfigOrigin addURL(URL url) {
-        return new SimpleConfigOrigin(this.description, this.lineNumber, this.endLineNumber,
-                this.originType, url != null ? url.toExternalForm() : null, this.commentsOrNull);
+        return new SimpleConfigOrigin(this.description, this.lineNumber, this.endLineNumber, this.originType,
+                url != null ? url.toExternalForm() : null, this.resourceOrNull, this.commentsOrNull);
     }
 
     @Override
@@ -90,8 +97,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         if (ConfigImplUtil.equalsHandlingNull(comments, this.commentsOrNull)) {
             return this;
         } else {
-            return new SimpleConfigOrigin(this.description, this.lineNumber, this.endLineNumber,
-                    this.originType, this.urlOrNull, comments);
+            return new SimpleConfigOrigin(this.description, this.lineNumber, this.endLineNumber, this.originType,
+                    this.urlOrNull, this.resourceOrNull, comments);
         }
     }
 
@@ -101,8 +108,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         } else if (this.commentsOrNull == null) {
             return withComments(comments);
         } else {
-            List<String> merged = new ArrayList<String>(comments.size()
-                    + this.commentsOrNull.size());
+            List<String> merged = new ArrayList<String>(comments.size() + this.commentsOrNull.size());
             merged.addAll(comments);
             merged.addAll(this.commentsOrNull);
             return withComments(merged);
@@ -115,8 +121,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         } else if (this.commentsOrNull == null) {
             return withComments(comments);
         } else {
-            List<String> merged = new ArrayList<String>(comments.size()
-                    + this.commentsOrNull.size());
+            List<String> merged = new ArrayList<String>(comments.size() + this.commentsOrNull.size());
             merged.addAll(this.commentsOrNull);
             merged.addAll(comments);
             return withComments(merged);
@@ -125,8 +130,6 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
     @Override
     public String description() {
-        // not putting the URL in here for files and resources, because people
-        // parsing "file: line" syntax would hit the ":" in the URL.
         if (lineNumber < 0) {
             return description;
         } else if (endLineNumber == lineNumber) {
@@ -141,11 +144,10 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         if (other instanceof SimpleConfigOrigin) {
             SimpleConfigOrigin otherOrigin = (SimpleConfigOrigin) other;
 
-            return this.description.equals(otherOrigin.description)
-                    && this.lineNumber == otherOrigin.lineNumber
-                    && this.endLineNumber == otherOrigin.endLineNumber
-                    && this.originType == otherOrigin.originType
-                    && ConfigImplUtil.equalsHandlingNull(this.urlOrNull, otherOrigin.urlOrNull);
+            return this.description.equals(otherOrigin.description) && this.lineNumber == otherOrigin.lineNumber
+                    && this.endLineNumber == otherOrigin.endLineNumber && this.originType == otherOrigin.originType
+                    && ConfigImplUtil.equalsHandlingNull(this.urlOrNull, otherOrigin.urlOrNull)
+                    && ConfigImplUtil.equalsHandlingNull(this.resourceOrNull, otherOrigin.resourceOrNull);
         } else {
             return false;
         }
@@ -159,17 +161,14 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         h = 41 * (h + originType.hashCode());
         if (urlOrNull != null)
             h = 41 * (h + urlOrNull.hashCode());
+        if (resourceOrNull != null)
+            h = 41 * (h + resourceOrNull.hashCode());
         return h;
     }
 
     @Override
     public String toString() {
-        // the url is only really useful on top of description for resources
-        if (originType == OriginType.RESOURCE && urlOrNull != null) {
-            return "ConfigOrigin(" + description + "," + urlOrNull + ")";
-        } else {
-            return "ConfigOrigin(" + description + ")";
-        }
+        return "ConfigOrigin(" + description + ")";
     }
 
     @Override
@@ -208,11 +207,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
     @Override
     public String resource() {
-        if (originType == OriginType.RESOURCE) {
-            return description;
-        } else {
-            return null;
-        }
+        return resourceOrNull;
     }
 
     @Override
@@ -291,6 +286,13 @@ final class SimpleConfigOrigin implements ConfigOrigin {
             mergedURL = null;
         }
 
+        String mergedResource;
+        if (ConfigImplUtil.equalsHandlingNull(a.resourceOrNull, b.resourceOrNull)) {
+            mergedResource = a.resourceOrNull;
+        } else {
+            mergedResource = null;
+        }
+
         if (ConfigImplUtil.equalsHandlingNull(a.commentsOrNull, b.commentsOrNull)) {
             mergedComments = a.commentsOrNull;
         } else {
@@ -301,8 +303,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                 mergedComments.addAll(b.commentsOrNull);
         }
 
-        return new SimpleConfigOrigin(mergedDesc, mergedStartLine, mergedEndLine, mergedType,
-                mergedURL, mergedComments);
+        return new SimpleConfigOrigin(mergedDesc, mergedStartLine, mergedEndLine, mergedType, mergedURL,
+                mergedResource, mergedComments);
     }
 
     private static int similarity(SimpleConfigOrigin a, SimpleConfigOrigin b) {
@@ -322,6 +324,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                 count += 1;
             if (ConfigImplUtil.equalsHandlingNull(a.urlOrNull, b.urlOrNull))
                 count += 1;
+            if (ConfigImplUtil.equalsHandlingNull(a.resourceOrNull, b.resourceOrNull))
+                count += 1;
         }
 
         return count;
@@ -331,8 +335,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     // common. we want to merge two lines in the same file rather than something
     // else with one of the lines; because two lines in the same file can be
     // better consolidated.
-    private static SimpleConfigOrigin mergeThree(SimpleConfigOrigin a, SimpleConfigOrigin b,
-            SimpleConfigOrigin c) {
+    private static SimpleConfigOrigin mergeThree(SimpleConfigOrigin a, SimpleConfigOrigin b, SimpleConfigOrigin c) {
         if (similarity(a, b) >= similarity(b, c)) {
             return mergeTwo(mergeTwo(a, b), c);
         } else {
@@ -397,6 +400,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
         if (urlOrNull != null)
             m.put(SerializedField.ORIGIN_URL, urlOrNull);
+        if (resourceOrNull != null)
+            m.put(SerializedField.ORIGIN_RESOURCE, resourceOrNull);
         if (commentsOrNull != null)
             m.put(SerializedField.ORIGIN_COMMENTS, commentsOrNull);
 
@@ -422,16 +427,14 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
         for (Map.Entry<SerializedField, Object> baseEntry : base.entrySet()) {
             SerializedField f = baseEntry.getKey();
-            if (m.containsKey(f)
-                    && ConfigImplUtil.equalsHandlingNull(baseEntry.getValue(), m.get(f))) {
+            if (m.containsKey(f) && ConfigImplUtil.equalsHandlingNull(baseEntry.getValue(), m.get(f))) {
                 // if field is unchanged, just remove it so we inherit
                 m.remove(f);
             } else if (!m.containsKey(f)) {
                 // if field has been removed, we have to add a deletion entry
                 switch (f) {
                 case ORIGIN_DESCRIPTION:
-                    throw new ConfigException.BugOrBroken("origin missing description field? "
-                            + child);
+                    throw new ConfigException.BugOrBroken("origin missing description field? " + child);
                 case ORIGIN_LINE_NUMBER:
                     m.put(SerializedField.ORIGIN_LINE_NUMBER, -1);
                     break;
@@ -443,14 +446,17 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                 case ORIGIN_URL:
                     m.put(SerializedField.ORIGIN_NULL_URL, "");
                     break;
+                case ORIGIN_RESOURCE:
+                    m.put(SerializedField.ORIGIN_NULL_RESOURCE, "");
+                    break;
                 case ORIGIN_COMMENTS:
                     m.put(SerializedField.ORIGIN_NULL_COMMENTS, "");
                     break;
                 case ORIGIN_NULL_URL: // FALL THRU
+                case ORIGIN_NULL_RESOURCE: // FALL THRU
                 case ORIGIN_NULL_COMMENTS:
-                    throw new ConfigException.BugOrBroken(
-                            "computing delta, base object should not contain " + f
-                            + " " + base);
+                    throw new ConfigException.BugOrBroken("computing delta, base object should not contain " + f + " "
+                            + base);
                 case END_MARKER:
                 case ROOT_VALUE:
                 case ROOT_WAS_CONFIG:
@@ -480,10 +486,16 @@ final class SimpleConfigOrigin implements ConfigOrigin {
             throw new IOException("Missing ORIGIN_TYPE field");
         OriginType originType = OriginType.values()[originTypeOrdinal.byteValue()];
         String urlOrNull = (String) m.get(SerializedField.ORIGIN_URL);
+        String resourceOrNull = (String) m.get(SerializedField.ORIGIN_RESOURCE);
         @SuppressWarnings("unchecked")
         List<String> commentsOrNull = (List<String>) m.get(SerializedField.ORIGIN_COMMENTS);
+        // Older versions did not have a resource field, they stuffed it into
+        // the description.
+        if (originType == OriginType.RESOURCE && resourceOrNull == null) {
+            resourceOrNull = description;
+        }
         return new SimpleConfigOrigin(description, lineNumber != null ? lineNumber : -1,
-                endLineNumber != null ? endLineNumber : -1, originType, urlOrNull, commentsOrNull);
+                endLineNumber != null ? endLineNumber : -1, originType, urlOrNull, resourceOrNull, commentsOrNull);
     }
 
     static Map<SerializedField, Object> applyFieldsDelta(Map<SerializedField, Object> base,
@@ -510,6 +522,13 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                         m.put(f, base.get(f));
                     }
                     break;
+                case ORIGIN_RESOURCE:
+                    if (delta.containsKey(SerializedField.ORIGIN_NULL_RESOURCE)) {
+                        m.remove(SerializedField.ORIGIN_NULL_RESOURCE);
+                    } else {
+                        m.put(f, base.get(f));
+                    }
+                    break;
                 case ORIGIN_COMMENTS:
                     if (delta.containsKey(SerializedField.ORIGIN_NULL_COMMENTS)) {
                         m.remove(SerializedField.ORIGIN_NULL_COMMENTS);
@@ -518,11 +537,12 @@ final class SimpleConfigOrigin implements ConfigOrigin {
                     }
                     break;
                 case ORIGIN_NULL_URL: // FALL THRU
+                case ORIGIN_NULL_RESOURCE: // FALL THRU
                 case ORIGIN_NULL_COMMENTS: // FALL THRU
                     // base objects shouldn't contain these, should just
                     // lack the field. these are only in deltas.
-                    throw new ConfigException.BugOrBroken(
-                            "applying fields, base object should not contain " + f + " " + base);
+                    throw new ConfigException.BugOrBroken("applying fields, base object should not contain " + f + " "
+                            + base);
                 case ORIGIN_END_LINE_NUMBER: // FALL THRU
                 case ORIGIN_LINE_NUMBER: // FALL THRU
                 case ORIGIN_TYPE:
@@ -542,8 +562,8 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         return m;
     }
 
-    static SimpleConfigOrigin fromBase(SimpleConfigOrigin baseOrigin,
-            Map<SerializedField, Object> delta) throws IOException {
+    static SimpleConfigOrigin fromBase(SimpleConfigOrigin baseOrigin, Map<SerializedField, Object> delta)
+            throws IOException {
         Map<SerializedField, Object> baseFields;
         if (baseOrigin != null)
             baseFields = baseOrigin.toFields();

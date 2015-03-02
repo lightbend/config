@@ -45,6 +45,11 @@ public abstract class Parseable implements ConfigParseable {
     private ConfigParseOptions initialOptions;
     private ConfigOrigin initialOrigin;
 
+
+    protected interface Relativizer {
+        ConfigParseable relativeTo(String filename);
+    }
+
     private static final ThreadLocal<LinkedList<Parseable>> parseStack = new ThreadLocal<LinkedList<Parseable>>() {
         @Override
         protected LinkedList<Parseable> initialValue() {
@@ -213,7 +218,7 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    protected AbstractConfigValue rawParseValue(Reader reader, ConfigOrigin origin,
+    private AbstractConfigValue rawParseValue(Reader reader, ConfigOrigin origin,
             ConfigParseOptions finalOptions) throws IOException {
         if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
             return PropertiesParser.parse(reader, origin);
@@ -412,12 +417,17 @@ public abstract class Parseable implements ConfigParseable {
         return new ParseableString(input, options);
     }
 
-    private final static class ParseableURL extends Parseable {
-        final private URL input;
+    private static class ParseableURL extends Parseable {
+        final protected URL input;
         private String contentType = null;
 
-        ParseableURL(URL input, ConfigParseOptions options) {
+        protected ParseableURL(URL input) {
             this.input = input;
+            // does not postConstruct (subclass does it)
+        }
+
+        ParseableURL(URL input, ConfigParseOptions options) {
+            this(input);
             postConstruct(options);
         }
 
@@ -551,7 +561,35 @@ public abstract class Parseable implements ConfigParseable {
         return new ParseableFile(input, options);
     }
 
-    private final static class ParseableResources extends Parseable {
+
+    private final static class ParseableResourceURL extends ParseableURL {
+
+        private final Relativizer relativizer;
+        private final String resource;
+
+        ParseableResourceURL(URL input, ConfigParseOptions options, String resource, Relativizer relativizer) {
+            super(input);
+            this.relativizer = relativizer;
+            this.resource = resource;
+            postConstruct(options);
+        }
+
+        @Override
+        protected ConfigOrigin createOrigin() {
+            return SimpleConfigOrigin.newResource(resource, input);
+        }
+
+        @Override
+        ConfigParseable relativeTo(String filename) {
+            return relativizer.relativeTo(filename);
+        }
+    }
+
+    private static Parseable newResourceURL(URL input, ConfigParseOptions options, String resource, Relativizer relativizer) {
+        return new ParseableResourceURL(input, options, resource, relativizer);
+    }
+
+    private final static class ParseableResources extends Parseable implements Relativizer {
         final private String resource;
 
         ParseableResources(String resource, ConfigParseOptions options) {
@@ -583,31 +621,12 @@ public abstract class Parseable implements ConfigParseable {
                 URL url = e.nextElement();
 
                 if (ConfigImpl.traceLoadsEnabled())
-                    trace("Loading config from URL " + url.toExternalForm() + " from class loader "
+                    trace("Loading config from resource '" + resource + "' URL " + url.toExternalForm() + " from class loader "
                             + loader);
 
-                ConfigOrigin elementOrigin = ((SimpleConfigOrigin) origin).addURL(url);
+                Parseable element = newResourceURL(url, finalOptions, resource, this);
 
-                AbstractConfigValue v;
-
-                // it's tempting to use ParseableURL here but it would be wrong
-                // because the wrong relativeTo() would be used for includes.
-                InputStream stream = url.openStream();
-                try {
-                    Reader reader = readerFromStream(stream);
-                    stream = null; // reader now owns it
-                    try {
-                        // parse in "raw" mode which will throw any IOException
-                        // from here.
-                        v = rawParseValue(reader, elementOrigin, finalOptions);
-                    } finally {
-                        reader.close();
-                    }
-                } finally {
-                    // stream is null if the reader owns it
-                    if (stream != null)
-                        stream.close();
-                }
+                AbstractConfigValue v = element.parseValue();
 
                 merged = merged.withFallback(v);
             }
@@ -634,7 +653,7 @@ public abstract class Parseable implements ConfigParseable {
         }
 
         @Override
-        ConfigParseable relativeTo(String sibling) {
+        public ConfigParseable relativeTo(String sibling) {
             if (sibling.startsWith("/")) {
                 // if it starts with "/" then don't make it relative to
                 // the including resource
