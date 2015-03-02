@@ -14,6 +14,7 @@ import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigValueType
 import com.typesafe.config.ConfigOrigin
+import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigValueFactory
 import com.typesafe.config.ConfigFactory
 
@@ -958,5 +959,12 @@ class ConfigValueTest extends TestUtils {
         val parsed = ConfigFactory.parseString(rendered)
 
         assertEquals(conf, parsed)
+    }
+
+    @Test
+    def renderSorting(): Unit = {
+        val config = parseConfig("""0=a,1=b,2=c,3=d,10=e,20=f,30=g""")
+        val rendered = config.root.render(ConfigRenderOptions.concise())
+        assertEquals("""{"0":"a","1":"b","2":"c","3":"d","10":"e","20":"f","30":"g"}""", rendered)
     }
 }
