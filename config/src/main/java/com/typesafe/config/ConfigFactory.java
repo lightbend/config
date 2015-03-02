@@ -885,7 +885,12 @@ public final class ConfigFactory {
      */
     public static Config parseMap(Map<String, ? extends Object> values,
             String originDescription) {
-        return ConfigImpl.fromPathMap(values, originDescription).toConfig();
+        return ((ConfigObject) ConfigImpl.fromPathMap(values, originDescription, false)).toConfig();
+    }
+
+    public static Config parseMapWithLists(Map<String, ? extends Object> values,
+                                  String originDescription) {
+        return ((ConfigObject) ConfigImpl.fromPathMap(values, originDescription, true)).toConfig();
     }
 
     /**

@@ -26,18 +26,20 @@ public final class ConfigParseOptions {
     final boolean allowMissing;
     final ConfigIncluder includer;
     final ClassLoader classLoader;
+    final boolean inferLists;
 
     private ConfigParseOptions(ConfigSyntax syntax, String originDescription, boolean allowMissing,
-            ConfigIncluder includer, ClassLoader classLoader) {
+            ConfigIncluder includer, ClassLoader classLoader, boolean inferLists) {
         this.syntax = syntax;
         this.originDescription = originDescription;
         this.allowMissing = allowMissing;
         this.includer = includer;
         this.classLoader = classLoader;
+        this.inferLists = inferLists;
     }
 
     public static ConfigParseOptions defaults() {
-        return new ConfigParseOptions(null, null, true, null, null);
+        return new ConfigParseOptions(null, null, true, null, null, false);
     }
 
     /**
@@ -53,7 +55,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(syntax, this.originDescription, this.allowMissing,
-                    this.includer, this.classLoader);
+                    this.includer, this.classLoader, this.inferLists);
     }
 
     public ConfigSyntax getSyntax() {
@@ -79,7 +81,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, originDescription, this.allowMissing,
-                    this.includer, this.classLoader);
+                    this.includer, this.classLoader, this.inferLists);
     }
 
     public String getOriginDescription() {
@@ -107,7 +109,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, this.originDescription, allowMissing,
-                    this.includer, this.classLoader);
+                    this.includer, this.classLoader, this.inferLists);
     }
 
     public boolean getAllowMissing() {
@@ -125,7 +127,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
-                    includer, this.classLoader);
+                    includer, this.classLoader, this.inferLists);
     }
 
     public ConfigParseOptions prependIncluder(ConfigIncluder includer) {
@@ -164,7 +166,21 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
-                    this.includer, loader);
+                    this.includer, loader, this.inferLists);
+    }
+
+
+    /**
+     *
+     * @param inferLists
+     * @return
+     */
+    public ConfigParseOptions setInferLists(boolean inferLists) {
+        if (this.inferLists == inferLists)
+            return this;
+        else
+            return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
+                    this.includer, this.classLoader, this.inferLists);
     }
 
     /**
@@ -179,5 +195,9 @@ public final class ConfigParseOptions {
             return Thread.currentThread().getContextClassLoader();
         else
             return this.classLoader;
+    }
+
+    public boolean getInferLists() {
+        return inferLists;
     }
 }
