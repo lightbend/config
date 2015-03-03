@@ -100,6 +100,10 @@ public abstract class Parseable implements ConfigParseable {
     // to support the "allow missing" feature.
     protected abstract Reader reader() throws IOException;
 
+    protected Reader reader(ConfigParseOptions options) throws IOException {
+        return reader();
+    }
+
     protected static void trace(String message) {
         if (ConfigImpl.traceLoadsEnabled()) {
             ConfigImpl.trace(message);
@@ -195,7 +199,7 @@ public abstract class Parseable implements ConfigParseable {
     // options.getAllowMissing()
     protected AbstractConfigValue rawParseValue(ConfigOrigin origin, ConfigParseOptions finalOptions)
             throws IOException {
-        Reader reader = reader();
+        Reader reader = reader(finalOptions);
 
         // after reader() we will have loaded the Content-Type.
         ConfigSyntax contentType = contentType();
@@ -417,6 +421,10 @@ public abstract class Parseable implements ConfigParseable {
         return new ParseableString(input, options);
     }
 
+    private static final String jsonContentType = "application/json";
+    private static final String propertiesContentType = "text/x-java-properties";
+    private static final String hoconContentType = "application/hocon";
+
     private static class ParseableURL extends Parseable {
         final protected URL input;
         private String contentType = null;
@@ -433,9 +441,38 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         protected Reader reader() throws IOException {
+            throw new ConfigException.BugOrBroken("reader() without options should not be called on ParseableURL");
+        }
+
+        private static String acceptContentType(ConfigParseOptions options) {
+            if (options.getSyntax() == null)
+                return null;
+
+            switch (options.getSyntax()) {
+            case JSON:
+                return jsonContentType;
+            case CONF:
+                return hoconContentType;
+            case PROPERTIES:
+                return propertiesContentType;
+            }
+
+            // not sure this is reachable but javac thinks it is
+            return null;
+        }
+
+        @Override
+        protected Reader reader(ConfigParseOptions options) throws IOException {
             if (ConfigImpl.traceLoadsEnabled())
                 trace("Loading config from a URL: " + input.toExternalForm());
             URLConnection connection = input.openConnection();
+
+            // allow server to serve multiple types from one URL
+            String acceptContent = acceptContentType(options);
+            if (acceptContent != null) {
+                connection.setRequestProperty("Accept", acceptContent);
+            }
+
             connection.connect();
 
             // save content type for later
@@ -462,11 +499,11 @@ public abstract class Parseable implements ConfigParseable {
         @Override
         ConfigSyntax contentType() {
             if (contentType != null) {
-                if (contentType.equals("application/json"))
+                if (contentType.equals(jsonContentType))
                     return ConfigSyntax.JSON;
-                else if (contentType.equals("text/x-java-properties"))
+                else if (contentType.equals(propertiesContentType))
                     return ConfigSyntax.PROPERTIES;
-                else if (contentType.equals("application/hocon"))
+                else if (contentType.equals(hoconContentType))
                     return ConfigSyntax.CONF;
                 else {
                     if (ConfigImpl.traceLoadsEnabled())
