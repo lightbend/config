@@ -54,7 +54,7 @@ final class Tokens {
 
     static private class Line extends Token {
         Line(ConfigOrigin origin) {
-            super(TokenType.NEWLINE, origin, "\n");
+            super(TokenType.NEWLINE, origin);
         }
 
         @Override
@@ -76,6 +76,11 @@ final class Tokens {
         public int hashCode() {
             return 41 * (41 + super.hashCode()) + lineNumber();
         }
+
+        @Override
+        public String tokenText() {
+            return "\n";
+        }
     }
 
     // This is not a Value, because it requires special processing
@@ -83,7 +88,7 @@ final class Tokens {
         final private String value;
 
         UnquotedText(ConfigOrigin origin, String s) {
-            super(TokenType.UNQUOTED_TEXT, origin, s);
+            super(TokenType.UNQUOTED_TEXT, origin);
             this.value = s;
         }
 
@@ -111,13 +116,18 @@ final class Tokens {
         public int hashCode() {
             return 41 * (41 + super.hashCode()) + value.hashCode();
         }
+
+        @Override
+        public String tokenText() {
+            return value;
+        }
     }
 
     static private class IgnoredWhitespace extends Token {
         final private String value;
 
         IgnoredWhitespace(ConfigOrigin origin, String s) {
-            super(TokenType.IGNORED_WHITESPACE, origin, s);
+            super(TokenType.IGNORED_WHITESPACE, origin);
             this.value = s;
         }
 
@@ -125,6 +135,11 @@ final class Tokens {
 
         @Override
         public String toString() { return "'" + value + "' (WHITESPACE)"; }
+
+        @Override
+        public String tokenText() {
+            return value;
+        }
     }
 
     static private class Problem extends Token {
@@ -195,12 +210,34 @@ final class Tokens {
         }
     }
 
-    static private class Comment extends Token {
+    static private abstract class Comment extends Token {
         final private String text;
 
-        Comment(ConfigOrigin origin, String text, boolean doubleSlash) {
-            super(TokenType.COMMENT, origin, (doubleSlash? "//" : "#") + text);
+        Comment(ConfigOrigin origin, String text) {
+            super(TokenType.COMMENT, origin);
             this.text = text;
+        }
+
+        final static class DoubleSlashComment extends Comment {
+            DoubleSlashComment(ConfigOrigin origin, String text) {
+                super(origin, text);
+            }
+
+            @Override
+            public String tokenText() {
+                return "//" + super.text;
+            }
+        }
+
+        final static class HashComment extends Comment {
+            HashComment(ConfigOrigin origin, String text) {
+                super(origin, text);
+            }
+
+            @Override
+            public String tokenText() {
+                return "#" + super.text;
+            }
         }
 
         String text() {
@@ -240,8 +277,7 @@ final class Tokens {
         final private List<Token> value;
 
         Substitution(ConfigOrigin origin, boolean optional, List<Token> expression) {
-            super(TokenType.SUBSTITUTION, origin,
-                    "${" + (optional? "?" : "") + Tokenizer.render(expression.iterator()) + "}");
+            super(TokenType.SUBSTITUTION, origin);
             this.optional = optional;
             this.value = expression;
         }
@@ -252,6 +288,11 @@ final class Tokens {
 
         List<Token> value() {
             return value;
+        }
+
+        @Override
+        public String tokenText() {
+            return "${" + (this.optional? "?" : "") + Tokenizer.render(this.value.iterator()) + "}";
         }
 
         @Override
@@ -409,8 +450,12 @@ final class Tokens {
         return new Problem(origin, what, message, suggestQuotes, cause);
     }
 
-    static Token newComment(ConfigOrigin origin, String text, boolean doubleSlash) {
-        return new Comment(origin, text, doubleSlash);
+    static Token newCommentDoubleSlash(ConfigOrigin origin, String text) {
+        return new Comment.DoubleSlashComment(origin, text);
+    }
+
+    static Token newCommentHash(ConfigOrigin origin, String text) {
+        return new Comment.HashComment(origin, text);
     }
 
     static Token newUnquotedText(ConfigOrigin origin, String s) {

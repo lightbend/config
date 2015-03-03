@@ -53,11 +53,11 @@ final class Tokenizer {
     }
 
     static String render(Iterator<Token> tokens) {
-        String renderedText = "";
+        StringBuilder renderedText = new StringBuilder();
         while (tokens.hasNext()) {
-            renderedText += tokens.next().tokenText();
+            renderedText.append(tokens.next().tokenText());
         }
-        return renderedText;
+        return renderedText.toString();
     }
 
     private static class TokenIterator implements Iterator<Token> {
@@ -90,14 +90,7 @@ final class Tokenizer {
             // simple values.
             private Token nextIsNotASimpleValue(ConfigOrigin baseOrigin, int lineNumber) {
                 lastTokenWasSimpleValue = false;
-
-                if (whitespace.length() > 0) {
-                    Token t = Tokens.newIgnoredWhitespace(lineOrigin(baseOrigin, lineNumber),
-                            whitespace.toString());
-                    whitespace.setLength(0);
-                    return t;
-                }
-                return null;
+                return createWhitespaceTokenFromSaver(baseOrigin, lineNumber);
             }
 
             // called if the next token IS a simple value,
@@ -105,29 +98,29 @@ final class Tokenizer {
             // token also was.
             private Token nextIsASimpleValue(ConfigOrigin baseOrigin,
                     int lineNumber) {
-                if (lastTokenWasSimpleValue) {
-                    // need to save whitespace between the two so
-                    // the parser has the option to concatenate it.
-                    if (whitespace.length() > 0) {
-                        Token t = Tokens.newUnquotedText(
-                                lineOrigin(baseOrigin, lineNumber),
-                                whitespace.toString());
-                        whitespace.setLength(0); // reset
-                        return t;
-                    } else {
-                        // lastTokenWasSimpleValue = true still
-                        return null;
-                    }
-                } else {
+                Token t = createWhitespaceTokenFromSaver(baseOrigin, lineNumber);
+                if (!lastTokenWasSimpleValue) {
                     lastTokenWasSimpleValue = true;
-                    if (whitespace.length() > 0) {
-                        Token t = Tokens.newIgnoredWhitespace(lineOrigin(baseOrigin, lineNumber),
-                                whitespace.toString());
-                        whitespace.setLength(0);
-                        return t;
-                    }
-                    return null;
                 }
+                return t;
+            }
+
+            private Token createWhitespaceTokenFromSaver(ConfigOrigin baseOrigin,
+                                                         int lineNumber) {
+                if (whitespace.length() > 0) {
+                    Token t;
+                    if (lastTokenWasSimpleValue) {
+                        t = Tokens.newUnquotedText(
+                            lineOrigin(baseOrigin, lineNumber),
+                            whitespace.toString());
+                    } else {
+                        t = Tokens.newIgnoredWhitespace(lineOrigin(baseOrigin, lineNumber),
+                                                        whitespace.toString());
+                    }
+                    whitespace.setLength(0); // reset
+                    return t;
+                }
+                return null;
             }
         }
 
@@ -291,7 +284,10 @@ final class Tokenizer {
                 int c = nextCharRaw();
                 if (c == -1 || c == '\n') {
                     putBack(c);
-                    return Tokens.newComment(lineOrigin, sb.toString(), doubleSlash);
+                    if (doubleSlash)
+                        return Tokens.newCommentDoubleSlash(lineOrigin, sb.toString());
+                    else
+                        return Tokens.newCommentHash(lineOrigin, sb.toString());
                 } else {
                     sb.appendCodePoint(c);
                 }

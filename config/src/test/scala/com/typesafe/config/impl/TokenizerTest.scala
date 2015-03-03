@@ -20,17 +20,15 @@ class TokenizerTest extends TestUtils {
     @Test
     def tokenizeEmptyString() {
         val source = ""
-        assertEquals(List(Tokens.START, Tokens.END),
-            tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List()
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeNewlines() {
         val source = "\n\n"
-        assertEquals(List(Tokens.START, tokenLine(1), tokenLine(2), Tokens.END),
-            tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenLine(1), tokenLine(2))
+        tokenizerTest(expected, source)
     }
 
     @Test
@@ -39,20 +37,19 @@ class TokenizerTest extends TestUtils {
         // but spec is unclear to me when spaces are required, and banning them
         // is actually extra work).
         val source = """,:=}{][+="foo"""" + "\"\"\"bar\"\"\"" + """true3.14false42null${a.b}${?x.y}${"c.d"}""" + "\n"
-        val expected = List(Tokens.START, Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
+        val expected = List(Tokens.COMMA, Tokens.COLON, Tokens.EQUALS, Tokens.CLOSE_CURLY,
             Tokens.OPEN_CURLY, Tokens.CLOSE_SQUARE, Tokens.OPEN_SQUARE, Tokens.PLUS_EQUALS, tokenString("foo"),
             tokenString("bar"), tokenTrue, tokenDouble(3.14), tokenFalse,
             tokenLong(42), tokenNull, tokenSubstitution(tokenUnquoted("a.b")),
             tokenOptionalSubstitution(tokenUnquoted("x.y")),
-            tokenKeySubstitution("c.d"), tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+            tokenKeySubstitution("c.d"), tokenLine(1))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeAllTypesWithSingleSpaces() {
         val source = """ , : = } { ] [ += "foo" """ + "\"\"\"bar\"\"\"" + """ 42 true 3.14 false null ${a.b} ${?x.y} ${"c.d"} """ + "\n "
-        val expected = List(Tokens.START, tokenWhitespace(" "), Tokens.COMMA, tokenWhitespace(" "), Tokens.COLON, tokenWhitespace(" "),
+        val expected = List(tokenWhitespace(" "), Tokens.COMMA, tokenWhitespace(" "), Tokens.COLON, tokenWhitespace(" "),
             Tokens.EQUALS, tokenWhitespace(" "), Tokens.CLOSE_CURLY, tokenWhitespace(" "), Tokens.OPEN_CURLY, tokenWhitespace(" "),
             Tokens.CLOSE_SQUARE, tokenWhitespace(" "), Tokens.OPEN_SQUARE, tokenWhitespace(" "), Tokens.PLUS_EQUALS, tokenWhitespace(" "),
             tokenString("foo"), tokenUnquoted(" "), tokenString("bar"), tokenUnquoted(" "), tokenLong(42), tokenUnquoted(" "),
@@ -60,15 +57,14 @@ class TokenizerTest extends TestUtils {
             tokenUnquoted(" "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted(" "),
             tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted(" "),
             tokenKeySubstitution("c.d"), tokenWhitespace(" "),
-            tokenLine(1), tokenWhitespace(" "), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+            tokenLine(1), tokenWhitespace(" "))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeAllTypesWithMultipleSpaces() {
         val source = """   ,   :   =   }   {   ]   [   +=   "foo"   """ + "\"\"\"bar\"\"\"" + """   42   true   3.14   false   null   ${a.b}   ${?x.y}   ${"c.d"}  """ + "\n   "
-        val expected = List(Tokens.START, tokenWhitespace("   "), Tokens.COMMA, tokenWhitespace("   "), Tokens.COLON, tokenWhitespace("   "),
+        val expected = List(tokenWhitespace("   "), Tokens.COMMA, tokenWhitespace("   "), Tokens.COLON, tokenWhitespace("   "),
             Tokens.EQUALS, tokenWhitespace("   "), Tokens.CLOSE_CURLY, tokenWhitespace("   "), Tokens.OPEN_CURLY, tokenWhitespace("   "), Tokens.CLOSE_SQUARE,
             tokenWhitespace("   "), Tokens.OPEN_SQUARE, tokenWhitespace("   "), Tokens.PLUS_EQUALS, tokenWhitespace("   "), tokenString("foo"),
             tokenUnquoted("   "), tokenString("bar"), tokenUnquoted("   "), tokenLong(42), tokenUnquoted("   "), tokenTrue, tokenUnquoted("   "),
@@ -76,57 +72,50 @@ class TokenizerTest extends TestUtils {
             tokenUnquoted("   "), tokenSubstitution(tokenUnquoted("a.b")), tokenUnquoted("   "),
             tokenOptionalSubstitution(tokenUnquoted("x.y")), tokenUnquoted("   "),
             tokenKeySubstitution("c.d"), tokenWhitespace("  "),
-            tokenLine(1), tokenWhitespace("   "), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+            tokenLine(1), tokenWhitespace("   "))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeTrueAndUnquotedText() {
         val source = """truefoo"""
-        val expected = List(Tokens.START, tokenTrue, tokenUnquoted("foo"), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenTrue, tokenUnquoted("foo"))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeFalseAndUnquotedText() {
         val source = """falsefoo"""
-        val expected = List(Tokens.START, tokenFalse, tokenUnquoted("foo"), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenFalse, tokenUnquoted("foo"))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeNullAndUnquotedText() {
         val source = """nullfoo"""
-        val expected = List(Tokens.START, tokenNull, tokenUnquoted("foo"), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenNull, tokenUnquoted("foo"))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeUnquotedTextContainingTrue() {
         val source = """footrue"""
-        val expected = List(Tokens.START, tokenUnquoted("footrue"), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenUnquoted("footrue"))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeUnquotedTextContainingSpaceTrue() {
         val source = """foo true"""
-        val expected = List(Tokens.START, tokenUnquoted("foo"), tokenUnquoted(" "), tokenTrue, Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenUnquoted("foo"), tokenUnquoted(" "), tokenTrue)
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeTrueAndSpaceAndUnquotedText() {
         val source = """true foo"""
-        val expected = List(Tokens.START, tokenTrue, tokenUnquoted(" "), tokenUnquoted("foo"), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenTrue, tokenUnquoted(" "), tokenUnquoted("foo"))
+        tokenizerTest(expected, source)
     }
 
     @Test
@@ -134,36 +123,33 @@ class TokenizerTest extends TestUtils {
         tokenizerTest(List(tokenUnquoted("a/b/c/")), "a/b/c/")
         tokenizerTest(List(tokenUnquoted("/")), "/")
         tokenizerTest(List(tokenUnquoted("/"), tokenUnquoted(" "), tokenUnquoted("/")), "/ /")
-        tokenizerTest(List(tokenComment("", true)), "//")
+        tokenizerTest(List(tokenCommentDoubleSlash("")), "//")
     }
 
     @Test
     def tokenizeUnquotedTextKeepsSpaces() {
         val source = "    foo     \n"
-        val expected = List(Tokens.START, tokenWhitespace("    "), tokenUnquoted("foo"), tokenWhitespace("     "),
-            tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenWhitespace("    "), tokenUnquoted("foo"), tokenWhitespace("     "),
+            tokenLine(1))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeUnquotedTextKeepsInternalSpaces() {
         val source = "    foo  bar baz   \n"
-        val expected = List(Tokens.START, tokenWhitespace("    "), tokenUnquoted("foo"), tokenUnquoted("  "),
+        val expected = List(tokenWhitespace("    "), tokenUnquoted("foo"), tokenUnquoted("  "),
             tokenUnquoted("bar"), tokenUnquoted(" "), tokenUnquoted("baz"), tokenWhitespace("   "),
-            tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList("    foo  bar baz   \n"))
-        assertEquals(source, tokenizeAsString(source))
+            tokenLine(1))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizeMixedUnquotedQuoted() {
         val source = "    foo\"bar\"baz   \n"
-        val expected = List(Tokens.START, tokenWhitespace("    "), tokenUnquoted("foo"),
+        val expected = List(tokenWhitespace("    "), tokenUnquoted("foo"),
             tokenString("bar"), tokenUnquoted("baz"), tokenWhitespace("   "),
-            tokenLine(1), Tokens.END)
-        assertEquals(expected, tokenizeAsList("    foo\"bar\"baz   \n"))
-        assertEquals(source, tokenizeAsString(source))
+            tokenLine(1))
+        tokenizerTest(expected, source)
     }
 
     @Test
@@ -185,10 +171,9 @@ class TokenizerTest extends TestUtils {
 
         for (t <- tests) {
             describeFailure(t.toString) {
-                assertEquals(List(Tokens.START, tokenWhitespace(" "), Tokens.newValue(t.result, t.toString),
-                    tokenWhitespace(" "), Tokens.END),
-                    tokenizeAsList(t.escaped))
-                assertEquals(t.escaped, tokenizeAsString(t.escaped))
+                val expected = List(tokenWhitespace(" "), Tokens.newValue(t.result, t.toString),
+                  tokenWhitespace(" "))
+                tokenizerTest(expected, t.escaped)
             }
         }
     }
@@ -218,41 +203,36 @@ class TokenizerTest extends TestUtils {
     @Test
     def tokenizerEmptyTripleQuoted(): Unit = {
         val source = "\"\"\"\"\"\""
-        assertEquals(List(Tokens.START, tokenString(""), Tokens.END),
-            tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenString(""))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizerTrivialTripleQuoted(): Unit = {
         val source = "\"\"\"bar\"\"\""
-        assertEquals(List(Tokens.START, tokenString("bar"), Tokens.END),
-            tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenString("bar"))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizerNoEscapesInTripleQuoted(): Unit = {
         val source = "\"\"\"\\n\"\"\""
-        assertEquals(List(Tokens.START, tokenString("\\n"), Tokens.END),
-            tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenString("\\n"))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizerTrailingQuotesInTripleQuoted(): Unit = {
         val source = "\"\"\"\"\"\"\"\"\""
-        assertEquals(List(Tokens.START, tokenString("\"\"\""), Tokens.END),
-            tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenString("\"\"\""))
+        tokenizerTest(expected, source)
     }
 
     @Test
     def tokenizerNewlineInTripleQuoted(): Unit = {
         val source = "\"\"\"foo\nbar\"\"\""
-        assertEquals(List(Tokens.START, tokenString("foo\nbar"), Tokens.END),
-            tokenizeAsList(source))
-        assertEquals(source, tokenizeAsString(source))
+        val expected = List(tokenString("foo\nbar"))
+        tokenizerTest(expected, source)
     }
 
     @Test
@@ -274,9 +254,8 @@ class TokenizerTest extends TestUtils {
 
         for (t <- tests) {
             describeFailure(t.toString()) {
-                assertEquals(List(Tokens.START, t.result, Tokens.END),
-                    tokenizeAsList(t.s))
-                assertEquals(t.s, tokenizeAsString(t.s))
+                val expected = List(t.result)
+                tokenizerTest(expected, t.s)
             }
         }
     }
@@ -285,20 +264,30 @@ class TokenizerTest extends TestUtils {
     def commentsHandledInVariousContexts() {
         tokenizerTest(List(tokenString("//bar")), "\"//bar\"")
         tokenizerTest(List(tokenString("#bar")), "\"#bar\"")
-        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment", true)), "bar//comment")
-        tokenizerTest(List(tokenUnquoted("bar"), tokenComment("comment", false)), "bar#comment")
-        tokenizerTest(List(tokenInt(10), tokenComment("comment", true)), "10//comment")
-        tokenizerTest(List(tokenInt(10), tokenComment("comment", false)), "10#comment")
-        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment", true)), "3.14//comment")
-        tokenizerTest(List(tokenDouble(3.14), tokenComment("comment", false)), "3.14#comment")
+        tokenizerTest(List(tokenUnquoted("bar"), tokenCommentDoubleSlash("comment")), "bar//comment")
+        tokenizerTest(List(tokenUnquoted("bar"), tokenCommentHash("comment")), "bar#comment")
+        tokenizerTest(List(tokenInt(10), tokenCommentDoubleSlash("comment")), "10//comment")
+        tokenizerTest(List(tokenInt(10), tokenCommentHash("comment")), "10#comment")
+        tokenizerTest(List(tokenDouble(3.14), tokenCommentDoubleSlash("comment")), "3.14//comment")
+        tokenizerTest(List(tokenDouble(3.14), tokenCommentHash("comment")), "3.14#comment")
         // be sure we keep the newline
-        tokenizerTest(List(tokenInt(10), tokenComment("comment", true), tokenLine(1), tokenInt(12)), "10//comment\n12")
-        tokenizerTest(List(tokenInt(10), tokenComment("comment", false), tokenLine(1), tokenInt(12)), "10#comment\n12")
+        tokenizerTest(List(tokenInt(10), tokenCommentDoubleSlash("comment"), tokenLine(1), tokenInt(12)), "10//comment\n12")
+        tokenizerTest(List(tokenInt(10), tokenCommentHash("comment"), tokenLine(1), tokenInt(12)), "10#comment\n12")
         // be sure we handle multi-line comments
-        tokenizerTest(List(tokenComment("comment", true), tokenLine(1), tokenComment("comment2", true)),
+        tokenizerTest(List(tokenCommentDoubleSlash("comment"), tokenLine(1), tokenCommentDoubleSlash("comment2")),
                       "//comment\n//comment2")
-        tokenizerTest(List(tokenComment("comment", false), tokenLine(1), tokenComment("comment2", false)),
+        tokenizerTest(List(tokenCommentHash("comment"), tokenLine(1), tokenCommentHash("comment2")),
                       "#comment\n#comment2")
+        tokenizerTest(List(tokenWhitespace("        "), tokenCommentDoubleSlash("comment\r"),
+                           tokenLine(1), tokenWhitespace("        "), tokenCommentDoubleSlash("comment2        "),
+                           tokenLine(2), tokenCommentDoubleSlash("comment3        "),
+                           tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
+                      "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
+        tokenizerTest(List(tokenWhitespace("        "), tokenCommentDoubleSlash("comment\r"),
+                           tokenLine(1), tokenWhitespace("        "), tokenCommentDoubleSlash("comment2        "),
+                           tokenLine(2), tokenCommentDoubleSlash("comment3        "),
+                           tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
+                      "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
     }
 
     @Test

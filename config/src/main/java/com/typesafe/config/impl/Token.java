@@ -36,7 +36,7 @@ class Token {
         return tokenType;
     }
 
-    final String tokenText() { return tokenText; }
+    public String tokenText() { return tokenText; }
 
     // this is final because we don't always use the origin() accessor,
     // and we don't because it throws if origin is null

@@ -203,7 +203,7 @@ final class Parser {
                 }
 
                 previous = next;
-                next = nextTokenFromIterator();
+                next = nextTokenIgnoringWhitespace();
             }
 
             // put our concluding token in the queue with all the comments
@@ -219,7 +219,7 @@ final class Parser {
 
         private TokenWithComments popTokenWithoutTrailingComment() {
             if (buffer.isEmpty()) {
-                Token t = nextTokenFromIterator();
+                Token t = nextTokenIgnoringWhitespace();
                 if (Tokens.isComment(t)) {
                     consolidateCommentBlock(t);
                     return buffer.pop();
@@ -243,7 +243,7 @@ final class Parser {
             if (!attractsTrailingComments(withPrecedingComments.token)) {
                 return withPrecedingComments;
             } else if (buffer.isEmpty()) {
-                Token after = nextTokenFromIterator();
+                Token after = nextTokenIgnoringWhitespace();
                 if (Tokens.isComment(after)) {
                     return withPrecedingComments.add(after);
                 } else {
@@ -321,7 +321,7 @@ final class Parser {
 
         // Grabs the next Token off of the TokenIterator, ignoring
         // IgnoredWhitespace tokens
-        private Token nextTokenFromIterator() {
+        private Token nextTokenIgnoringWhitespace() {
             Token t;
             do {
                 t = tokens.next();
