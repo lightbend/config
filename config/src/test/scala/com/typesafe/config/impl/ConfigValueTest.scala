@@ -897,7 +897,8 @@ class ConfigValueTest extends TestUtils {
             SimpleConfigOrigin.newSimple("foo"),
             SimpleConfigOrigin.newFile("/tmp/blahblah"),
             SimpleConfigOrigin.newURL(new URL("http://example.com")),
-            SimpleConfigOrigin.newResource("myresource"))
+            SimpleConfigOrigin.newResource("myresource"),
+            SimpleConfigOrigin.newResource("myresource", new URL("file://foo/bar")))
         val combos = bases.flatMap({
             base =>
                 Seq(

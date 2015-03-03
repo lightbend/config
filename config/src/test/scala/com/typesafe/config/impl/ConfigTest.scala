@@ -860,18 +860,27 @@ class ConfigTest extends TestUtils {
         val conf = ConfigFactory.load("test01")
 
         val o1 = conf.getValue("ints.fortyTwo").origin()
-        assertEquals("test01.conf: 3", o1.description)
+        // the checkout directory would be in between this startsWith and endsWith
+        assertTrue("description starts with resource '" + o1.description + "'", o1.description.startsWith("test01.conf @"))
+        assertTrue("description ends with url and line '" + o1.description + "'", o1.description.endsWith("/config/target/test-classes/test01.conf: 3"))
         assertEquals("test01.conf", o1.resource)
+        assertTrue("url ends with resource file", o1.url.getPath.endsWith("/config/target/test-classes/test01.conf"))
         assertEquals(3, o1.lineNumber)
 
         val o2 = conf.getValue("fromJson1").origin()
-        assertEquals("test01.json: 2", o2.description)
+        // the checkout directory would be in between this startsWith and endsWith
+        assertTrue("description starts with json resource '" + o2.description + "'", o2.description.startsWith("test01.json @"))
+        assertTrue("description of json resource ends with url and line '" + o2.description + "'", o2.description.endsWith("/config/target/test-classes/test01.json: 2"))
         assertEquals("test01.json", o2.resource)
+        assertTrue("url ends with json resource file", o2.url.getPath.endsWith("/config/target/test-classes/test01.json"))
         assertEquals(2, o2.lineNumber)
 
         val o3 = conf.getValue("fromProps.bool").origin()
-        assertEquals("test01.properties", o3.description)
+        // the checkout directory would be in between this startsWith and endsWith
+        assertTrue("description starts with props resource '" + o3.description + "'", o3.description.startsWith("test01.properties @"))
+        assertTrue("description of props resource ends with url '" + o3.description + "'", o3.description.endsWith("/config/target/test-classes/test01.properties"))
         assertEquals("test01.properties", o3.resource)
+        assertTrue("url ends with props resource file", o3.url.getPath.endsWith("/config/target/test-classes/test01.properties"))
         // we don't have line numbers for properties files
         assertEquals(-1, o3.lineNumber)
     }

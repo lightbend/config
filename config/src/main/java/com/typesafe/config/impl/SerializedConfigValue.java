@@ -65,7 +65,9 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
         ORIGIN_URL,
         ORIGIN_COMMENTS,
         ORIGIN_NULL_URL,
-        ORIGIN_NULL_COMMENTS;
+        ORIGIN_NULL_COMMENTS,
+        ORIGIN_RESOURCE,
+        ORIGIN_NULL_RESOURCE;
 
         static SerializedField forInt(int b) {
             if (b < values().length)
@@ -179,6 +181,9 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
         case ORIGIN_URL:
             out.writeUTF((String) v);
             break;
+        case ORIGIN_RESOURCE:
+            out.writeUTF((String) v);
+            break;
         case ORIGIN_COMMENTS:
             @SuppressWarnings("unchecked")
             List<String> list = (List<String>) v;
@@ -189,6 +194,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             }
             break;
         case ORIGIN_NULL_URL: // FALL THRU
+        case ORIGIN_NULL_RESOURCE: // FALL THRU
         case ORIGIN_NULL_COMMENTS:
             // nothing to write out besides code and length
             break;
@@ -245,6 +251,10 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
                 in.readInt(); // discard length
                 v = in.readUTF();
                 break;
+            case ORIGIN_RESOURCE:
+                in.readInt(); // discard length
+                v = in.readUTF();
+                break;
             case ORIGIN_COMMENTS:
                 in.readInt(); // discard length
                 int size = in.readInt();
@@ -255,6 +265,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
                 v = list;
                 break;
             case ORIGIN_NULL_URL: // FALL THRU
+            case ORIGIN_NULL_RESOURCE: // FALL THRU
             case ORIGIN_NULL_COMMENTS:
                 // nothing to read besides code and length
                 in.readInt(); // discard length

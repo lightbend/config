@@ -561,8 +561,8 @@ class PublicApiTest extends TestUtils {
         // check that each value has its own ConfigOrigin
         val v1 = conf.getValue("ints.fortyTwo")
         val v2 = conf.getValue("test-lib.fromTestLib")
-        assertEquals("test01.conf", v1.origin.resource)
-        assertEquals("test01.conf", v2.origin.resource)
+        assertEquals("v1 has right origin resource", "test01.conf", v1.origin.resource)
+        assertEquals("v2 has right origin resource", "test01.conf", v2.origin.resource)
         assertEquals(v1.origin.resource, v2.origin.resource)
         assertFalse("same urls in " + v1.origin + " " + v2.origin, v1.origin.url == v2.origin.url)
         assertFalse(v1.origin.filename == v2.origin.filename)
