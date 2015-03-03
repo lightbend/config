@@ -143,7 +143,7 @@ final class PropertiesParser {
             AbstractConfigValue value;
             if (convertedFromProperties) {
                 if (rawValue instanceof String) {
-                    value = new ConfigString(origin, (String) rawValue);
+                    value = new ConfigString.Quoted(origin, (String) rawValue);
                 } else {
                     // silently ignore non-string values in Properties
                     value = null;

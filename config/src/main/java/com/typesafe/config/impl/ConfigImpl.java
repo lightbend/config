@@ -227,7 +227,7 @@ public class ConfigImpl {
                 return defaultFalseValue;
             }
         } else if (object instanceof String) {
-            return new ConfigString(origin, (String) object);
+            return new ConfigString.Quoted(origin, (String) object);
         } else if (object instanceof Number) {
             // here we always keep the same type that was passed to us,
             // rather than figuring out if a Long would fit in an Int
@@ -346,7 +346,7 @@ public class ConfigImpl {
         for (Map.Entry<String, String> entry : env.entrySet()) {
             String key = entry.getKey();
             m.put(key,
-                    new ConfigString(SimpleConfigOrigin.newSimple("env var " + key), entry
+                    new ConfigString.Quoted(SimpleConfigOrigin.newSimple("env var " + key), entry
                             .getValue()));
         }
         return new SimpleConfigObject(SimpleConfigOrigin.newSimple("env variables"),

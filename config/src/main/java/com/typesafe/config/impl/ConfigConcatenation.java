@@ -81,6 +81,10 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         return Collections.singleton(this);
     }
 
+    private static boolean isIgnoredWhitespace(AbstractConfigValue value) {
+        return (value instanceof ConfigString) && !((ConfigString)value).wasQuoted();
+    }
+
     /**
      * Add left and right, or their merger, to builder.
      */
@@ -104,6 +108,10 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             joined = right.withFallback(left);
         } else if (left instanceof SimpleConfigList && right instanceof SimpleConfigList) {
             joined = ((SimpleConfigList)left).concatenate((SimpleConfigList)right);
+        } else if ((left instanceof SimpleConfigList || left instanceof ConfigObject) &&
+                   isIgnoredWhitespace(right)) {
+            joined = left;
+            // it should be impossible that left is whitespace and right is a list or object
         } else if (left instanceof ConfigConcatenation || right instanceof ConfigConcatenation) {
             throw new ConfigException.BugOrBroken("unflattened ConfigConcatenation");
         } else if (left instanceof Unmergeable || right instanceof Unmergeable) {
@@ -119,7 +127,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             } else {
                 ConfigOrigin joinedOrigin = SimpleConfigOrigin.mergeOrigins(left.origin(),
                         right.origin());
-                joined = new ConfigString(joinedOrigin, s1 + s2);
+                joined = new ConfigString.Quoted(joinedOrigin, s1 + s2);
             }
         }
 
