@@ -172,7 +172,7 @@ class TokenizerTest extends TestUtils {
         for (t <- tests) {
             describeFailure(t.toString) {
                 val expected = List(tokenWhitespace(" "), Tokens.newValue(t.result, t.toString),
-                  tokenWhitespace(" "))
+                    tokenWhitespace(" "))
                 tokenizerTest(expected, t.escaped)
             }
         }
@@ -275,19 +275,19 @@ class TokenizerTest extends TestUtils {
         tokenizerTest(List(tokenInt(10), tokenCommentHash("comment"), tokenLine(1), tokenInt(12)), "10#comment\n12")
         // be sure we handle multi-line comments
         tokenizerTest(List(tokenCommentDoubleSlash("comment"), tokenLine(1), tokenCommentDoubleSlash("comment2")),
-                      "//comment\n//comment2")
+            "//comment\n//comment2")
         tokenizerTest(List(tokenCommentHash("comment"), tokenLine(1), tokenCommentHash("comment2")),
-                      "#comment\n#comment2")
+            "#comment\n#comment2")
         tokenizerTest(List(tokenWhitespace("        "), tokenCommentDoubleSlash("comment\r"),
-                           tokenLine(1), tokenWhitespace("        "), tokenCommentDoubleSlash("comment2        "),
-                           tokenLine(2), tokenCommentDoubleSlash("comment3        "),
-                           tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
-                      "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
+            tokenLine(1), tokenWhitespace("        "), tokenCommentDoubleSlash("comment2        "),
+            tokenLine(2), tokenCommentDoubleSlash("comment3        "),
+            tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
+            "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
         tokenizerTest(List(tokenWhitespace("        "), tokenCommentDoubleSlash("comment\r"),
-                           tokenLine(1), tokenWhitespace("        "), tokenCommentDoubleSlash("comment2        "),
-                           tokenLine(2), tokenCommentDoubleSlash("comment3        "),
-                           tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
-                      "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
+            tokenLine(1), tokenWhitespace("        "), tokenCommentDoubleSlash("comment2        "),
+            tokenLine(2), tokenCommentDoubleSlash("comment3        "),
+            tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
+            "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
     }
 
     @Test
