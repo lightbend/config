@@ -24,6 +24,8 @@ class SimpleIncludeContext implements ConfigIncludeContext {
 
     @Override
     public ConfigParseable relativeTo(String filename) {
+        if (ConfigImpl.traceLoadsEnabled())
+            ConfigImpl.trace("Looking for '" + filename + "' relative to " + parseable);
         if (parseable != null)
             return parseable.relativeTo(filename);
         else

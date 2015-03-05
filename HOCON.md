@@ -1095,6 +1095,11 @@ Implementations need not support files, Java resources, or URLs;
 and they need not support particular URL protocols. However, if
 they do support them they should do so as described above.
 
+Note that at present, if `url()`/`file()`/`classpath()` are
+specified, the included items are NOT interpreted relative to the
+including items. Relative-to-including-file paths only work with
+the heuristic `include "foo.conf"`. This may change in the future.
+
 ### Conversion of numerically-indexed objects to arrays
 
 In some file formats and contexts, such as Java properties files,

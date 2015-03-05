@@ -1039,4 +1039,22 @@ include "onclasspath"
             assertEquals(42, conf.getInt("onclasspath"))
         }
     }
+
+    @Test
+    def fileIncludeStatements(): Unit = {
+        val file = resourceFile("file-include.conf")
+        val conf = ConfigFactory.parseFile(file)
+        assertEquals("got file-include.conf", 41, conf.getInt("base"))
+        assertEquals("got subdir/foo.conf", 42, conf.getInt("foo"))
+        assertEquals("got bar.conf", 43, conf.getInt("bar"))
+
+        // these two do not work right now, because we do not
+        // treat the filename as relative to the including file
+        // if file() is specified, so `include file("bar-file.conf")`
+        // fails.
+        //assertEquals("got bar-file.conf", 44, conf.getInt("bar-file"))
+        //assertEquals("got subdir/baz.conf", 45, conf.getInt("baz"))
+        assertFalse("did not get bar-file.conf", conf.hasPath("bar-file"))
+        assertFalse("did not get subdir/baz.conf", conf.hasPath("baz"))
+    }
 }
