@@ -39,7 +39,12 @@ javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.8", "
 // we have to run tests in serial.
 parallelExecution in Test := false
 
-javacOptions in doc ++= Seq("-group", "Public API", "com.typesafe.config",
-                            "-group", "Internal Implementation - Not ABI Stable", "com.typesafe.config.impl")
+javacOptions in (Compile, doc) ++= Seq("-group", "Public API", "com.typesafe.config",
+                                       "-group", "Internal Implementation - Not ABI Stable", "com.typesafe.config.impl")
+
+javadocSourceBaseUrl := {
+  for (gitHead <- com.typesafe.sbt.SbtGit.GitKeys.gitHeadCommit.value)
+    yield s"https://github.com/typesafehub/config/blob/$gitHead/config/src/main/java"
+}
 
 javaVersionPrefix in javaVersionCheck := Some("1.8")
