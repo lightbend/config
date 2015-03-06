@@ -86,8 +86,8 @@ public final class ConfigFactory {
      * {@link #defaultReference(ClassLoader)} and to load only the overrides use
      * {@link #defaultOverrides(ClassLoader)}.
      * 
-     * @param loader
-     * @param resourceBasename
+     * @param loader class loader to look for resources in
+     * @param resourceBasename basename (no .conf/.json/.properties suffix)
      * @return configuration for an application relative to given class loader
      */
     public static Config load(ClassLoader loader, String resourceBasename) {
@@ -396,7 +396,7 @@ public final class ConfigFactory {
      * Like {@link #defaultReference()} but allows you to specify a class loader
      * to use rather than the current context class loader.
      *
-     * @param loader
+     * @param loader class loader to look for resources in
      * @return the default reference config for this class loader
      */
     public static Config defaultReference(ClassLoader loader) {
@@ -426,7 +426,7 @@ public final class ConfigFactory {
      * Like {@link #defaultOverrides()} but allows you to specify a class loader
      * to use rather than the current context class loader.
      *
-     * @param loader
+     * @param loader class loader to look for resources in
      * @return the default override configuration
      */
     public static Config defaultOverrides(ClassLoader loader) {
@@ -490,7 +490,7 @@ public final class ConfigFactory {
      *
      * @since 1.3.0
      *
-     * @param loader
+     * @param loader class loader to look for resources in
      * @return the default application configuration
      */
     public static Config defaultApplication(ClassLoader loader) {
@@ -502,7 +502,7 @@ public final class ConfigFactory {
      *
      * @since 1.3.0
      *
-     * @param parseOptions the options
+     * @param options the options
      * @return the default application configuration
      */
     public static Config defaultApplication(ConfigParseOptions options) {
@@ -620,6 +620,7 @@ public final class ConfigFactory {
      * @param properties
      *            a Java Properties object
      * @param options
+     *            the parse options
      * @return the parsed configuration
      */
     public static Config parseProperties(Properties properties,
@@ -877,6 +878,9 @@ public final class ConfigFactory {
      * Like {@link #parseResources(ClassLoader,String,ConfigParseOptions)} but
      * uses thread's current context class loader if none is set in the
      * ConfigParseOptions.
+     * @param resource the resource name
+     * @param options parse options
+     * @return the parsed configuration
      */
     public static Config parseResources(String resource, ConfigParseOptions options) {
         ConfigParseOptions withLoader = ensureClassLoader(options, "parseResources");
@@ -886,6 +890,8 @@ public final class ConfigFactory {
     /**
      * Like {@link #parseResources(ClassLoader,String)} but uses thread's
      * current context class loader.
+     * @param resource the resource name
+     * @return the parsed configuration
      */
     public static Config parseResources(String resource) {
         return parseResources(resource, ConfigParseOptions.defaults());
@@ -895,6 +901,9 @@ public final class ConfigFactory {
      * Like
      * {@link #parseResourcesAnySyntax(ClassLoader,String,ConfigParseOptions)}
      * but uses thread's current context class loader.
+     * @param resourceBasename the resource basename (no file type suffix)
+     * @param options parse options
+     * @return the parsed configuration
      */
     public static Config parseResourcesAnySyntax(String resourceBasename, ConfigParseOptions options) {
         return ConfigImpl.parseResourcesAnySyntax(resourceBasename, options).toConfig();
@@ -903,15 +912,31 @@ public final class ConfigFactory {
     /**
      * Like {@link #parseResourcesAnySyntax(ClassLoader,String)} but uses
      * thread's current context class loader.
+     * @param resourceBasename the resource basename (no file type suffix)
+     * @return the parsed configuration
      */
     public static Config parseResourcesAnySyntax(String resourceBasename) {
         return parseResourcesAnySyntax(resourceBasename, ConfigParseOptions.defaults());
     }
 
+    /**
+     * Parses a string (which should be valid HOCON or JSON by default, or
+     * the syntax specified in the options otherwise).
+     *
+     * @param s string to parse
+     * @param options parse options
+     * @return the parsed configuration
+     */
     public static Config parseString(String s, ConfigParseOptions options) {
         return Parseable.newString(s, options).parse().toConfig();
     }
 
+    /**
+     * Parses a string (which should be valid HOCON or JSON).
+     *
+     * @param s string to parse
+     * @return the parsed configuration
+     */
     public static Config parseString(String s) {
         return parseString(s, ConfigParseOptions.defaults());
     }
@@ -932,7 +957,7 @@ public final class ConfigFactory {
      * object of "b". The caller of this method should ensure that doesn't
      * happen.
      *
-     * @param values
+     * @param values map from paths to plain Java objects
      * @param originDescription
      *            description of what this map represents, like a filename, or
      *            "default settings" (origin description is used in error
@@ -948,7 +973,7 @@ public final class ConfigFactory {
      * See the other overload of {@link #parseMap(Map, String)} for details,
      * this one just uses a default origin description.
      *
-     * @param values
+     * @param values map from paths to plain Java values
      * @return the map converted to a {@code Config}
      */
     public static Config parseMap(Map<String, ? extends Object> values) {

@@ -35,18 +35,22 @@ import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValue;
 
 /**
- * This is public but it's only for use by the config package; DO NOT TOUCH. The
- * point of this class is to avoid "propagating" each overload on
- * "thing which can be parsed" through multiple interfaces. Most interfaces can
- * have just one overload that takes a Parseable. Also it's used as an abstract
- * "resource handle" in the ConfigIncluder interface.
+ * Internal implementation detail, not ABI stable, do not touch.
+ * For use only by the {@link com.typesafe.config} package.
+ * The point of this class is to avoid "propagating" each
+ * overload on "thing which can be parsed" through multiple
+ * interfaces. Most interfaces can have just one overload that
+ * takes a Parseable. Also it's used as an abstract "resource
+ * handle" in the ConfigIncluder interface.
  */
 public abstract class Parseable implements ConfigParseable {
     private ConfigIncludeContext includeContext;
     private ConfigParseOptions initialOptions;
     private ConfigOrigin initialOrigin;
 
-
+    /**
+     * Internal implementation detail, not ABI stable, do not touch.
+     */
     protected interface Relativizer {
         ConfigParseable relativeTo(String filename);
     }
@@ -383,10 +387,8 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    /**
-     * note that we will never close this reader; you have to do it when parsing
-     * is complete.
-     */
+    // note that we will never close this reader; you have to do it when parsing
+    // is complete.
     public static Parseable newReader(Reader reader, ConfigParseOptions options) {
 
         return new ParseableReader(doNotClose(reader), options);

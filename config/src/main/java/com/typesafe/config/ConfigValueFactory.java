@@ -91,8 +91,8 @@ public final class ConfigValueFactory {
      * See also {@link ConfigFactory#parseMap(Map,String)} which interprets the
      * keys in the map as path expressions.
      * 
-     * @param values
-     * @param originDescription
+     * @param values map from keys to plain Java values
+     * @param originDescription description to use in {@link ConfigOrigin} of created values
      * @return a new {@link ConfigObject} value
      */
     public static ConfigObject fromMap(Map<String, ? extends Object> values,
@@ -104,9 +104,9 @@ public final class ConfigValueFactory {
      * See the {@link #fromAnyRef(Object,String)} documentation for details.
      * This is a typesafe wrapper that only works on {@link java.lang.Iterable}
      * and returns {@link ConfigList} rather than {@link ConfigValue}.
-     * 
-     * @param values
-     * @param originDescription
+     *
+     * @param values list of plain Java values
+     * @param originDescription description to use in {@link ConfigOrigin} of created values
      * @return a new {@link ConfigList} value
      */
     public static ConfigList fromIterable(Iterable<? extends Object> values,
@@ -118,7 +118,7 @@ public final class ConfigValueFactory {
      * See the other overload {@link #fromAnyRef(Object,String)} for details,
      * this one just uses a default origin description.
      *
-     * @param object
+     * @param object a plain Java value
      * @return a new {@link ConfigValue}
      */
     public static ConfigValue fromAnyRef(Object object) {
@@ -133,7 +133,7 @@ public final class ConfigValueFactory {
      * See also {@link ConfigFactory#parseMap(Map)} which interprets the keys in
      * the map as path expressions.
      *
-     * @param values
+     * @param values map from keys to plain Java values
      * @return a new {@link ConfigObject}
      */
     public static ConfigObject fromMap(Map<String, ? extends Object> values) {
@@ -144,7 +144,7 @@ public final class ConfigValueFactory {
      * See the other overload of {@link #fromIterable(Iterable, String)} for
      * details, this one just uses a default origin description.
      *
-     * @param values
+     * @param values list of plain Java values
      * @return a new {@link ConfigList}
      */
     public static ConfigList fromIterable(Iterable<? extends Object> values) {

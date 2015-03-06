@@ -40,6 +40,7 @@ public interface ConfigValue extends ConfigMergeable {
      * {@code List<Object>}, or {@code null}, matching the {@link #valueType()}
      * of this {@code ConfigValue}. If the value is a {@link ConfigObject} or
      * {@link ConfigList}, it is recursively unwrapped.
+     * @return a plain Java value corresponding to this ConfigValue
      */
     Object unwrapped();
 

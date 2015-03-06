@@ -39,6 +39,7 @@ javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.8", "
 // we have to run tests in serial.
 parallelExecution in Test := false
 
-sources in (Compile, doc) ~= (_.filter(_.getParentFile.getName != "impl"))
+javacOptions in doc ++= Seq("-group", "Public API", "com.typesafe.config",
+                            "-group", "Internal Implementation - Not ABI Stable", "com.typesafe.config.impl")
 
 javaVersionPrefix in javaVersionCheck := Some("1.8")

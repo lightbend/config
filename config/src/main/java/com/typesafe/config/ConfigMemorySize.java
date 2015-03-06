@@ -23,6 +23,8 @@ public final class ConfigMemorySize {
      * Constructs a ConfigMemorySize representing the given
      * number of bytes.
      * @since 1.3.0
+     * @param bytes a number of bytes
+     * @return an instance representing the number of bytes
      */
     public static ConfigMemorySize ofBytes(long bytes) {
         return new ConfigMemorySize(bytes);
@@ -31,6 +33,7 @@ public final class ConfigMemorySize {
     /**
      * Gets the size in bytes.
      * @since 1.3.0
+     * @return how many bytes
      */
     public long toBytes() {
         return bytes;

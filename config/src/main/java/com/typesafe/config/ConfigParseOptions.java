@@ -67,7 +67,7 @@ public final class ConfigParseOptions {
      * library to come up with something automatically. This description is the
      * basis for the {@link ConfigOrigin} of the parsed values.
      *
-     * @param originDescription
+     * @param originDescription description to put in the {@link ConfigOrigin}
      * @return options with the origin description set
      */
     public ConfigParseOptions setOriginDescription(String originDescription) {
@@ -99,7 +99,7 @@ public final class ConfigParseOptions {
      * a file) is missing. Set to true to just return an empty document in that
      * case.
      *
-     * @param allowMissing
+     * @param allowMissing true to silently ignore missing item
      * @return options with the "allow missing" flag set
      */
     public ConfigParseOptions setAllowMissing(boolean allowMissing) {
@@ -117,7 +117,7 @@ public final class ConfigParseOptions {
     /**
      * Set a ConfigIncluder which customizes how includes are handled.
      *
-     * @param includer
+     * @param includer the includer to use or null for default
      * @return new version of the parse options with different includer
      */
     public ConfigParseOptions setIncluder(ConfigIncluder includer) {

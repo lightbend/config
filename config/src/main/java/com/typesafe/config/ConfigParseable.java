@@ -24,12 +24,14 @@ public interface ConfigParseable {
      * @param options
      *            parse options, should be based on the ones from
      *            {@link ConfigParseable#options options()}
+     * @return the parsed object
      */
     ConfigObject parse(ConfigParseOptions options);
 
     /**
      * Returns a {@link ConfigOrigin} describing the origin of the parseable
      * item.
+     * @return the origin of the parseable item
      */
     ConfigOrigin origin();
 
@@ -37,6 +39,7 @@ public interface ConfigParseable {
      * Get the initial options, which can be modified then passed to parse().
      * These options will have the right description, includer, and other
      * parameters already set up.
+     * @return the initial options
      */
     ConfigParseOptions options();
 }

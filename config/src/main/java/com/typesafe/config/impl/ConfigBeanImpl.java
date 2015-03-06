@@ -23,11 +23,19 @@ import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
+/**
+ * Internal implementation detail, not ABI stable, do not touch.
+ * For use only by the {@link com.typesafe.config} package.
+ */
 public class ConfigBeanImpl {
 
     /**
      * This is public ONLY for use by the "config" package, DO NOT USE this ABI
      * may change.
+     * @param <T> type of the bean
+     * @param config config to use
+     * @param clazz class of the bean
+     * @return the bean instance
      */
     public static <T> T createInternal(Config config, Class<T> clazz) {
         if (((SimpleConfig)config).root().resolveStatus() != ResolveStatus.RESOLVED)

@@ -756,11 +756,15 @@ public interface Config extends ConfigMergeable {
 
     /**
      * @deprecated  As of release 1.1, replaced by {@link #getDurationList(String, TimeUnit)}
+     * @param path the path
+     * @return list of millisecond values
      */
     @Deprecated List<Long> getMillisecondsList(String path);
 
     /**
      * @deprecated  As of release 1.1, replaced by {@link #getDurationList(String, TimeUnit)}
+     * @param path the path
+     * @return list of nanosecond values
      */
     @Deprecated List<Long> getNanosecondsList(String path);
 

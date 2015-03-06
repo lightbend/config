@@ -15,43 +15,43 @@ import com.typesafe.config.impl.ConfigImpl;
 public final class ConfigOriginFactory {
     private ConfigOriginFactory() {
     }
-    
+
     /**
      * Returns the default origin for values when no other information is
      * provided. This is the origin used in {@link ConfigValueFactory
      * #fromAnyRef(Object)}.
-     * 
+     *
      * @return the default origin
      */
     public static ConfigOrigin newSimple() {
         return newSimple(null);
     }
-    
+
     /**
-     * Returns a origin with the given description.
-     * 
+     * Returns an origin with the given description.
+     *
      * @param description brief description of what the origin is
-     * @return
+     * @return a new origin
      */
     public static ConfigOrigin newSimple(String description) {
         return ConfigImpl.newSimpleOrigin(description);
     }
-    
+
     /**
      * Creates a file origin with the given filename.
-     * 
+     *
      * @param filename the filename of this origin
-     * @return
+     * @return a new origin
      */
     public static ConfigOrigin newFile(String filename) {
         return ConfigImpl.newFileOrigin(filename);
     }
-    
+
     /**
      * Creates a url origin with the given URL object.
-     * 
+     *
      * @param url the url of this origin
-     * @return
+     * @return a new origin
      */
     public static ConfigOrigin newURL(URL url) {
         return ConfigImpl.newURLOrigin(url);
