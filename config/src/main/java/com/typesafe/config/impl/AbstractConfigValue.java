@@ -312,7 +312,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         StringBuilder sb = new StringBuilder();
         render(sb, 0, true /* atRoot */, null /* atKey */, ConfigRenderOptions.concise());
         return getClass().getSimpleName() + "(" + sb.toString() + ")";

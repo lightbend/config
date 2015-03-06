@@ -497,4 +497,32 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
     protected SerializedConfigValue newCopy(ConfigOrigin origin) {
         throw shouldNotBeUsed();
     }
+
+    @Override
+    public final String toString() {
+        return getClass().getSimpleName() + "(value=" + value + ",wasConfig=" + wasConfig + ")";
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        // there's no reason we will ever call this equals(), but
+        // the one in AbstractConfigValue would explode due to
+        // calling unwrapped() above, so we just give some
+        // safe-to-call implementation to avoid breaking the
+        // contract of java.lang.Object
+        if (other instanceof SerializedConfigValue) {
+            return canEqual(other)
+                && (this.wasConfig == ((SerializedConfigValue) other).wasConfig)
+                && (this.value.equals(((SerializedConfigValue) other).value));
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        int h = 41 * (41 + value.hashCode());
+        h = 41 * (h + (wasConfig ? 1 : 0));
+        return h;
+    }
 }
