@@ -19,6 +19,7 @@ jdk:
 
 script:
   - sbt ++$TRAVIS_SCALA_VERSION test
+  - sbt ++$TRAVIS_SCALA_VERSION doc
 
   # Remove to avoid unnecessary cache updates
   - find $HOME/.sbt -name "*.lock" -delete
