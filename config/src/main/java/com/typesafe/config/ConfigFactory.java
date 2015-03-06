@@ -203,7 +203,7 @@ public final class ConfigFactory {
                 .resolve(resolveOptions);
     }
 
-    private static Config loadDefaultConfig(ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
+    private static Config parseApplicationConfig(ConfigParseOptions parseOptions) {
         ClassLoader loader = parseOptions.getClassLoader();
         if (loader == null)
             throw new ConfigException.BugOrBroken(
@@ -225,7 +225,7 @@ public final class ConfigFactory {
             specified += 1;
 
         if (specified == 0) {
-            return load(loader, "application", parseOptions, resolveOptions);
+            return ConfigFactory.parseResourcesAnySyntax("application", parseOptions);
         } else if (specified > 1) {
             throw new ConfigException.Generic("You set more than one of config.file='" + file
                     + "', config.url='" + url + "', config.resource='" + resource
@@ -238,15 +238,12 @@ public final class ConfigFactory {
                     resource = resource.substring(1);
                 // this deliberately does not parseResourcesAnySyntax; if
                 // people want that they can use an include statement.
-                Config parsedResources = parseResources(loader, resource, overrideOptions);
-                return load(loader, parsedResources, resolveOptions);
+                return parseResources(loader, resource, overrideOptions);
             } else if (file != null) {
-                Config parsedFile = parseFile(new File(file), overrideOptions);
-                return load(loader, parsedFile, resolveOptions);
+                return parseFile(new File(file), overrideOptions);
             } else {
                 try {
-                    Config parsedURL = parseURL(new URL(url), overrideOptions);
-                    return load(loader, parsedURL, resolveOptions);
+                    return parseURL(new URL(url), overrideOptions);
                 } catch (MalformedURLException e) {
                     throw new ConfigException.Generic("Bad URL in config.url system property: '"
                             + url + "': " + e.getMessage(), e);
@@ -256,36 +253,19 @@ public final class ConfigFactory {
     }
 
     /**
-     * Loads a default configuration, equivalent to {@link #load(String)
-     * load("application")} in most cases. This configuration should be used by
+     * Loads a default configuration, equivalent to {@link #load(Config)
+     * load(defaultApplication())} in most cases. This configuration should be used by
      * libraries and frameworks unless an application provides a different one.
      * <p>
      * This method may return a cached singleton so will not see changes to
      * system properties or config files. (Use {@link #invalidateCaches()} to
      * force it to reload.)
-     * <p>
-     * If the system properties <code>config.resource</code>,
-     * <code>config.file</code>, or <code>config.url</code> are set, then the
-     * classpath resource, file, or URL specified in those properties will be
-     * used rather than the default
-     * <code>application.{conf,json,properties}</code> classpath resources.
-     * These system properties should not be set in code (after all, you can
-     * just parse whatever you want manually and then use {@link #load(Config)}
-     * if you don't want to use <code>application.conf</code>). The properties
-     * are intended for use by the person or script launching the application.
-     * For example someone might have a <code>production.conf</code> that
-     * include <code>application.conf</code> but then change a couple of values.
-     * When launching the app they could specify
-     * <code>-Dconfig.resource=production.conf</code> to get production mode.
-     * <p>
-     * If no system properties are set to change the location of the default
-     * configuration, <code>ConfigFactory.load()</code> is equivalent to
-     * <code>ConfigFactory.load("application")</code>.
      *
      * @return configuration for an application
      */
     public static Config load() {
-        return load(ConfigParseOptions.defaults());
+        ClassLoader loader = checkedContextClassLoader("load");
+        return load(loader);
     }
 
     /**
@@ -308,7 +288,13 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load(final ClassLoader loader) {
-        return load(ConfigParseOptions.defaults().setClassLoader(loader));
+        final ConfigParseOptions withLoader = ConfigParseOptions.defaults().setClassLoader(loader);
+        return ConfigImpl.computeCachedConfig(loader, "load", new Callable<Config>() {
+            @Override
+            public Config call() {
+                return load(loader, defaultApplication(withLoader));
+            }
+        });
     }
 
     /**
@@ -316,7 +302,7 @@ public final class ConfigFactory {
      * thread's current context class loader, and parse options
      *
      * @param loader
-     *            class loader for finding resources
+     *            class loader for finding resources (overrides any loader in parseOptions)
      * @param parseOptions
      *            Options for parsing resources
      * @return configuration for an application
@@ -345,7 +331,7 @@ public final class ConfigFactory {
      * thread's current context class loader, parse options, and resolve options
      *
      * @param loader
-     *            class loader for finding resources
+     *            class loader for finding resources (overrides any loader in parseOptions)
      * @param parseOptions
      *            Options for parsing resources
      * @param resolveOptions
@@ -353,31 +339,25 @@ public final class ConfigFactory {
      * @return configuration for an application
      */
     public static Config load(ClassLoader loader, ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
-        return load(parseOptions.setClassLoader(loader), resolveOptions);
+        final ConfigParseOptions withLoader = ensureClassLoader(parseOptions, "load");
+        return load(loader, defaultApplication(withLoader), resolveOptions);
     }
 
-    // TODO this is private to avoid adding API in stable release, but no reason
-    // it isn't public in the long run.
     /**
      * Like {@link #load()} but allows specifying parse options and resolve
-     * options
-     * 
+     * options.
+     *
      * @param parseOptions
      *            Options for parsing resources
      * @param resolveOptions
      *            options for resolving the assembled config stack
      * @return configuration for an application
-     * 
-     * @since 1.2.1
+     *
+     * @since 1.3.0
      */
-    private static Config load(ConfigParseOptions parseOptions, final ConfigResolveOptions resolveOptions) {
+    public static Config load(ConfigParseOptions parseOptions, final ConfigResolveOptions resolveOptions) {
         final ConfigParseOptions withLoader = ensureClassLoader(parseOptions, "load");
-        return ConfigImpl.computeCachedConfig(withLoader.getClassLoader(), "load", new Callable<Config>() {
-            @Override
-            public Config call() {
-                return loadDefaultConfig(withLoader, resolveOptions);
-            }
-        });
+        return load(defaultApplication(withLoader), resolveOptions);
     }
 
     /**
@@ -451,6 +431,82 @@ public final class ConfigFactory {
      */
     public static Config defaultOverrides(ClassLoader loader) {
         return systemProperties();
+    }
+
+    /**
+     * Obtains the default application-specific configuration,
+     * which defaults to parsing <code>application.conf</code>,
+     * <code>application.json</code>, and
+     * <code>application.properties</code> on the classpath, but
+     * can also be rerouted using the <code>config.file</code>,
+     * <code>config.resource</code>, and <code>config.url</code>
+     * system properties.
+     *
+     * <p> The no-arguments {@link #load()} method automatically
+     * stacks the {@link #defaultReference()}, {@link
+     * #defaultApplication()}, and {@link #defaultOverrides()}
+     * configs. You would use <code>defaultApplication()</code>
+     * directly only if you're somehow customizing behavior by
+     * reimplementing <code>load()</code>.
+     *
+     * <p>The configuration returned by
+     * <code>defaultApplication()</code> will not be resolved
+     * already, in contrast to <code>defaultReference()</code> and
+     * <code>defaultOverrides()</code>. This is because
+     * application.conf would normally be resolved <em>after</em>
+     * merging with the reference and override configs.
+     *
+     * <p>
+     * If the system properties <code>config.resource</code>,
+     * <code>config.file</code>, or <code>config.url</code> are set, then the
+     * classpath resource, file, or URL specified in those properties will be
+     * used rather than the default
+     * <code>application.{conf,json,properties}</code> classpath resources.
+     * These system properties should not be set in code (after all, you can
+     * just parse whatever you want manually and then use {@link #load(Config)}
+     * if you don't want to use <code>application.conf</code>). The properties
+     * are intended for use by the person or script launching the application.
+     * For example someone might have a <code>production.conf</code> that
+     * include <code>application.conf</code> but then change a couple of values.
+     * When launching the app they could specify
+     * <code>-Dconfig.resource=production.conf</code> to get production mode.
+     *
+     * <p>
+     * If no system properties are set to change the location of the default
+     * configuration, <code>defaultApplication()</code> is equivalent to
+     * <code>ConfigFactory.parseResources("application")</code>.
+     *
+     * @since 1.3.0
+     *
+     * @return the default application.conf or system-property-configured configuration
+     */
+    public static Config defaultApplication() {
+        return defaultApplication(ConfigParseOptions.defaults());
+    }
+
+    /**
+     * Like {@link #defaultApplication()} but allows you to specify a class loader
+     * to use rather than the current context class loader.
+     *
+     * @since 1.3.0
+     *
+     * @param loader
+     * @return the default application configuration
+     */
+    public static Config defaultApplication(ClassLoader loader) {
+        return defaultApplication(ConfigParseOptions.defaults().setClassLoader(loader));
+    }
+
+    /**
+     * Like {@link #defaultApplication()} but allows you to specify parse options.
+     *
+     * @since 1.3.0
+     *
+     * @param parseOptions the options
+     * @return the default application configuration
+     */
+    public static Config defaultApplication(ConfigParseOptions options) {
+        return parseApplicationConfig(ensureClassLoader(options, "defaultApplication"));
     }
 
     /**

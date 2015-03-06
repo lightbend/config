@@ -676,6 +676,7 @@ class PublicApiTest extends TestUtils {
                 ConfigFactory.parseResourcesAnySyntax(loaderA1, "reference", ConfigParseOptions.defaults()),
                 ConfigFactory.load(loaderA1, "application"),
                 ConfigFactory.load(loaderA1, "application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()),
+                ConfigFactory.load(loaderA1, "application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()),
                 ConfigFactory.load(loaderA1, ConfigFactory.parseString("")),
                 ConfigFactory.load(loaderA1, ConfigFactory.parseString(""), ConfigResolveOptions.defaults()),
                 ConfigFactory.defaultReference(loaderA1))
@@ -758,7 +759,8 @@ class PublicApiTest extends TestUtils {
                 ConfigFactory.parseResources(loaderA1, "application.conf", ConfigParseOptions.defaults()),
                 ConfigFactory.parseResourcesAnySyntax(loaderA1, "application", ConfigParseOptions.defaults()),
                 ConfigFactory.load(loaderA1, "application"),
-                ConfigFactory.load(loaderA1, "application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()))
+                ConfigFactory.load(loaderA1, "application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()),
+                ConfigFactory.defaultApplication(loaderA1))
         ) {
             assertEquals(1, c.getInt("a"))
             assertFalse("no b", c.hasPath("b"))
@@ -769,6 +771,8 @@ class PublicApiTest extends TestUtils {
         for (
             c <- Seq(ConfigFactory.parseResources("application.conf", withLoader),
                 ConfigFactory.parseResourcesAnySyntax("application", withLoader),
+                ConfigFactory.defaultApplication(withLoader),
+                ConfigFactory.load(withLoader, ConfigResolveOptions.defaults()),
                 ConfigFactory.load("application", withLoader, ConfigResolveOptions.defaults()))
         ) {
             assertEquals(1, c.getInt("a"))
@@ -782,6 +786,7 @@ class PublicApiTest extends TestUtils {
                 ConfigFactory.parseResources("application.conf", ConfigParseOptions.defaults()),
                 ConfigFactory.parseResourcesAnySyntax("application", ConfigParseOptions.defaults()),
                 ConfigFactory.load("application"),
+                ConfigFactory.defaultApplication(),
                 ConfigFactory.load("application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()))
         ) {
             assertFalse("no a", c.hasPath("a"))
@@ -796,6 +801,7 @@ class PublicApiTest extends TestUtils {
                     ConfigFactory.parseResources("application.conf", ConfigParseOptions.defaults()),
                     ConfigFactory.parseResourcesAnySyntax("application", ConfigParseOptions.defaults()),
                     ConfigFactory.load("application"),
+                    ConfigFactory.defaultApplication(),
                     ConfigFactory.load("application", ConfigParseOptions.defaults(), ConfigResolveOptions.defaults()))
             ) {
                 assertEquals(1, c.getInt("a"))
