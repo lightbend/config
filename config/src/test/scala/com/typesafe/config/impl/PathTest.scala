@@ -111,6 +111,14 @@ class PathTest extends TestUtils {
     }
 
     @Test
+    def pathStartsWith() {
+        assertTrue(path("a", "b", "c", "d").startsWith(path("a", "b")))
+        assertTrue(path("a", "b", "c", "d").startsWith(path("a", "b", "c", "d")))
+        assertFalse(path("a", "b", "c", "d").startsWith(path("b", "c", "d")))
+        assertFalse(path("a", "b", "c", "d").startsWith(path("invalidpath")))
+    }
+
+    @Test
     def pathsAreInvalid() {
         // this test is just of the Path.newPath() wrapper, the extensive
         // test of different paths is over in ConfParserTest

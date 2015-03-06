@@ -141,6 +141,21 @@ final class Path {
         return pb.result();
     }
 
+    boolean startsWith(Path other) {
+        Path myRemainder = this;
+        Path otherRemainder = other;
+        if (otherRemainder.length() <= myRemainder.length()) {
+            while(otherRemainder != null) {
+                if (!otherRemainder.first().equals(myRemainder.first()))
+                    return false;
+                myRemainder = myRemainder.remainder();
+                otherRemainder = otherRemainder.remainder();
+            }
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Path) {
