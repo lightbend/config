@@ -1,0 +1,207 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/**<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *   Copyright (C) 2011-2012 Typesafe Inc. &lt;http://typesafe.com&gt;<a name="line.2"></a>
+<span class="sourceLineNo">003</span> */<a name="line.3"></a>
+<span class="sourceLineNo">004</span>package com.typesafe.config;<a name="line.4"></a>
+<span class="sourceLineNo">005</span><a name="line.5"></a>
+<span class="sourceLineNo">006</span>import java.util.Map;<a name="line.6"></a>
+<span class="sourceLineNo">007</span><a name="line.7"></a>
+<span class="sourceLineNo">008</span>/**<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * Subtype of {@link ConfigValue} representing an object (AKA dictionary or map)<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * value, as in JSON's curly brace &lt;code&gt;{ "a" : 42 }&lt;/code&gt; syntax.<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * <a name="line.11"></a>
+<span class="sourceLineNo">012</span> * &lt;p&gt;<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * An object may also be viewed as a {@link Config} by calling<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * {@link ConfigObject#toConfig()}.<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * <a name="line.15"></a>
+<span class="sourceLineNo">016</span> * &lt;p&gt;<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * {@code ConfigObject} implements {@code java.util.Map&lt;String, ConfigValue&gt;} so<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * you can use it like a regular Java map. Or call {@link #unwrapped()} to<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * unwrap the map to a map with plain Java values rather than<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * {@code ConfigValue}.<a name="line.20"></a>
+<span class="sourceLineNo">021</span> * <a name="line.21"></a>
+<span class="sourceLineNo">022</span> * &lt;p&gt;<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * Like all {@link ConfigValue} subtypes, {@code ConfigObject} is immutable.<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * This makes it threadsafe and you never have to create "defensive copies." The<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * mutator methods from {@link java.util.Map} all throw<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * {@link java.lang.UnsupportedOperationException}.<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * <a name="line.27"></a>
+<span class="sourceLineNo">028</span> * &lt;p&gt;<a name="line.28"></a>
+<span class="sourceLineNo">029</span> * The {@link ConfigValue#valueType} method on an object returns<a name="line.29"></a>
+<span class="sourceLineNo">030</span> * {@link ConfigValueType#OBJECT}.<a name="line.30"></a>
+<span class="sourceLineNo">031</span> * <a name="line.31"></a>
+<span class="sourceLineNo">032</span> * &lt;p&gt;<a name="line.32"></a>
+<span class="sourceLineNo">033</span> * In most cases you want to use the {@link Config} interface rather than this<a name="line.33"></a>
+<span class="sourceLineNo">034</span> * one. Call {@link #toConfig()} to convert a {@code ConfigObject} to a<a name="line.34"></a>
+<span class="sourceLineNo">035</span> * {@code Config}.<a name="line.35"></a>
+<span class="sourceLineNo">036</span> * <a name="line.36"></a>
+<span class="sourceLineNo">037</span> * &lt;p&gt;<a name="line.37"></a>
+<span class="sourceLineNo">038</span> * The API for a {@code ConfigObject} is in terms of keys, while the API for a<a name="line.38"></a>
+<span class="sourceLineNo">039</span> * {@link Config} is in terms of path expressions. Conceptually,<a name="line.39"></a>
+<span class="sourceLineNo">040</span> * {@code ConfigObject} is a tree of maps from keys to values, while a<a name="line.40"></a>
+<span class="sourceLineNo">041</span> * {@code Config} is a one-level map from paths to values.<a name="line.41"></a>
+<span class="sourceLineNo">042</span> * <a name="line.42"></a>
+<span class="sourceLineNo">043</span> * &lt;p&gt;<a name="line.43"></a>
+<span class="sourceLineNo">044</span> * Use {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath} to convert<a name="line.44"></a>
+<span class="sourceLineNo">045</span> * between path expressions and individual path elements (keys).<a name="line.45"></a>
+<span class="sourceLineNo">046</span> * <a name="line.46"></a>
+<span class="sourceLineNo">047</span> * &lt;p&gt;<a name="line.47"></a>
+<span class="sourceLineNo">048</span> * A {@code ConfigObject} may contain null values, which will have<a name="line.48"></a>
+<span class="sourceLineNo">049</span> * {@link ConfigValue#valueType()} equal to {@link ConfigValueType#NULL}. If<a name="line.49"></a>
+<span class="sourceLineNo">050</span> * {@link ConfigObject#get(Object)} returns Java's null then the key was not<a name="line.50"></a>
+<span class="sourceLineNo">051</span> * present in the parsed file (or wherever this value tree came from). If<a name="line.51"></a>
+<span class="sourceLineNo">052</span> * {@code get("key")} returns a {@link ConfigValue} with type<a name="line.52"></a>
+<span class="sourceLineNo">053</span> * {@code ConfigValueType#NULL} then the key was set to null explicitly in the<a name="line.53"></a>
+<span class="sourceLineNo">054</span> * config file.<a name="line.54"></a>
+<span class="sourceLineNo">055</span> * <a name="line.55"></a>
+<span class="sourceLineNo">056</span> * &lt;p&gt;<a name="line.56"></a>
+<span class="sourceLineNo">057</span> * &lt;em&gt;Do not implement interface {@code ConfigObject}&lt;/em&gt;; it should only be<a name="line.57"></a>
+<span class="sourceLineNo">058</span> * implemented by the config library. Arbitrary implementations will not work<a name="line.58"></a>
+<span class="sourceLineNo">059</span> * because the library internals assume a specific concrete implementation.<a name="line.59"></a>
+<span class="sourceLineNo">060</span> * Also, this interface is likely to grow new methods over time, so third-party<a name="line.60"></a>
+<span class="sourceLineNo">061</span> * implementations will break.<a name="line.61"></a>
+<span class="sourceLineNo">062</span> */<a name="line.62"></a>
+<span class="sourceLineNo">063</span>public interface ConfigObject extends ConfigValue, Map&lt;String, ConfigValue&gt; {<a name="line.63"></a>
+<span class="sourceLineNo">064</span><a name="line.64"></a>
+<span class="sourceLineNo">065</span>    /**<a name="line.65"></a>
+<span class="sourceLineNo">066</span>     * Converts this object to a {@link Config} instance, enabling you to use<a name="line.66"></a>
+<span class="sourceLineNo">067</span>     * path expressions to find values in the object. This is a constant-time<a name="line.67"></a>
+<span class="sourceLineNo">068</span>     * operation (it is not proportional to the size of the object).<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     *<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     * @return a {@link Config} with this object as its root<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     */<a name="line.71"></a>
+<span class="sourceLineNo">072</span>    Config toConfig();<a name="line.72"></a>
+<span class="sourceLineNo">073</span><a name="line.73"></a>
+<span class="sourceLineNo">074</span>    /**<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * Recursively unwraps the object, returning a map from String to whatever<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     * plain Java values are unwrapped from the object's values.<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     *<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     * @return a {@link java.util.Map} containing plain Java objects<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     */<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    @Override<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    Map&lt;String, Object&gt; unwrapped();<a name="line.81"></a>
+<span class="sourceLineNo">082</span><a name="line.82"></a>
+<span class="sourceLineNo">083</span>    @Override<a name="line.83"></a>
+<span class="sourceLineNo">084</span>    ConfigObject withFallback(ConfigMergeable other);<a name="line.84"></a>
+<span class="sourceLineNo">085</span><a name="line.85"></a>
+<span class="sourceLineNo">086</span>    /**<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * Gets a {@link ConfigValue} at the given key, or returns null if there is<a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * no value. The returned {@link ConfigValue} may have<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     * {@link ConfigValueType#NULL} or any other type, and the passed-in key<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * must be a key in this object (rather than a path expression).<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * <a name="line.91"></a>
+<span class="sourceLineNo">092</span>     * @param key<a name="line.92"></a>
+<span class="sourceLineNo">093</span>     *            key to look up<a name="line.93"></a>
+<span class="sourceLineNo">094</span>     * <a name="line.94"></a>
+<span class="sourceLineNo">095</span>     * @return the value at the key or null if none<a name="line.95"></a>
+<span class="sourceLineNo">096</span>     */<a name="line.96"></a>
+<span class="sourceLineNo">097</span>    @Override<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    ConfigValue get(Object key);<a name="line.98"></a>
+<span class="sourceLineNo">099</span><a name="line.99"></a>
+<span class="sourceLineNo">100</span>    /**<a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * Clone the object with only the given key (and its children) retained; all<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * sibling keys are removed.<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     *<a name="line.103"></a>
+<span class="sourceLineNo">104</span>     * @param key<a name="line.104"></a>
+<span class="sourceLineNo">105</span>     *            key to keep<a name="line.105"></a>
+<span class="sourceLineNo">106</span>     * @return a copy of the object minus all keys except the one specified<a name="line.106"></a>
+<span class="sourceLineNo">107</span>     */<a name="line.107"></a>
+<span class="sourceLineNo">108</span>    ConfigObject withOnlyKey(String key);<a name="line.108"></a>
+<span class="sourceLineNo">109</span><a name="line.109"></a>
+<span class="sourceLineNo">110</span>    /**<a name="line.110"></a>
+<span class="sourceLineNo">111</span>     * Clone the object with the given key removed.<a name="line.111"></a>
+<span class="sourceLineNo">112</span>     *<a name="line.112"></a>
+<span class="sourceLineNo">113</span>     * @param key<a name="line.113"></a>
+<span class="sourceLineNo">114</span>     *            key to remove<a name="line.114"></a>
+<span class="sourceLineNo">115</span>     * @return a copy of the object minus the specified key<a name="line.115"></a>
+<span class="sourceLineNo">116</span>     */<a name="line.116"></a>
+<span class="sourceLineNo">117</span>    ConfigObject withoutKey(String key);<a name="line.117"></a>
+<span class="sourceLineNo">118</span><a name="line.118"></a>
+<span class="sourceLineNo">119</span>    /**<a name="line.119"></a>
+<span class="sourceLineNo">120</span>     * Returns a {@code ConfigObject} based on this one, but with the given key<a name="line.120"></a>
+<span class="sourceLineNo">121</span>     * set to the given value. Does not modify this instance (since it's<a name="line.121"></a>
+<span class="sourceLineNo">122</span>     * immutable). If the key already has a value, that value is replaced. To<a name="line.122"></a>
+<span class="sourceLineNo">123</span>     * remove a value, use {@link ConfigObject#withoutKey(String)}.<a name="line.123"></a>
+<span class="sourceLineNo">124</span>     * <a name="line.124"></a>
+<span class="sourceLineNo">125</span>     * @param key<a name="line.125"></a>
+<span class="sourceLineNo">126</span>     *            key to add<a name="line.126"></a>
+<span class="sourceLineNo">127</span>     * @param value<a name="line.127"></a>
+<span class="sourceLineNo">128</span>     *            value at the new key<a name="line.128"></a>
+<span class="sourceLineNo">129</span>     * @return the new instance with the new map entry<a name="line.129"></a>
+<span class="sourceLineNo">130</span>     */<a name="line.130"></a>
+<span class="sourceLineNo">131</span>    ConfigObject withValue(String key, ConfigValue value);<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    <a name="line.132"></a>
+<span class="sourceLineNo">133</span>    @Override<a name="line.133"></a>
+<span class="sourceLineNo">134</span>    ConfigObject withOrigin(ConfigOrigin origin);<a name="line.134"></a>
+<span class="sourceLineNo">135</span>}<a name="line.135"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
