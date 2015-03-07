@@ -27,7 +27,10 @@ import com.typesafe.config.ConfigParseable;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.impl.SimpleIncluder.NameSource;
 
-/** This is public but is only supposed to be used by the "config" package */
+/**
+ * Internal implementation detail, not ABI stable, do not touch.
+ * For use only by the {@link com.typesafe.config} package.
+ */
 public class ConfigImpl {
 
     private static class LoaderCache {
@@ -78,7 +81,6 @@ public class ConfigImpl {
         static final LoaderCache cache = new LoaderCache();
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static Config computeCachedConfig(ClassLoader loader, String key,
             Callable<Config> updater) {
         LoaderCache cache;
@@ -118,21 +120,18 @@ public class ConfigImpl {
         }
     };
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject parseResourcesAnySyntax(Class<?> klass, String resourceBasename,
             ConfigParseOptions baseOptions) {
         NameSource source = new ClasspathNameSourceWithClass(klass);
         return SimpleIncluder.fromBasename(source, resourceBasename, baseOptions);
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject parseResourcesAnySyntax(String resourceBasename,
             ConfigParseOptions baseOptions) {
         NameSource source = new ClasspathNameSource();
         return SimpleIncluder.fromBasename(source, resourceBasename, baseOptions);
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject parseFileAnySyntax(File basename, ConfigParseOptions baseOptions) {
         NameSource source = new FileNameSource();
         return SimpleIncluder.fromBasename(source, basename.getPath(), baseOptions);
@@ -144,7 +143,6 @@ public class ConfigImpl {
         return emptyObject(origin);
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static Config emptyConfig(String originDescription) {
         return emptyObject(originDescription).toConfig();
     }
@@ -191,13 +189,11 @@ public class ConfigImpl {
             return SimpleConfigOrigin.newSimple(originDescription);
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigValue fromAnyRef(Object object, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
         return fromAnyRef(object, origin, FromMapMode.KEYS_ARE_KEYS);
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigObject fromPathMap(
             Map<String, ? extends Object> pathMap, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
@@ -328,12 +324,10 @@ public class ConfigImpl {
         }
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static Config systemPropertiesAsConfig() {
         return systemPropertiesAsConfigObject().toConfig();
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static void reloadSystemPropertiesConfig() {
         // ConfigFactory.invalidateCaches() relies on this having the side
         // effect that it drops all caches
@@ -365,12 +359,10 @@ public class ConfigImpl {
         }
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static Config envVariablesAsConfig() {
         return envVariablesAsConfigObject().toConfig();
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static Config defaultReference(final ClassLoader loader) {
         return computeCachedConfig(loader, "defaultReference", new Callable<Config>() {
             @Override
@@ -427,7 +419,6 @@ public class ConfigImpl {
         }
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static boolean traceLoadsEnabled() {
         try {
             return DebugHolder.traceLoadsEnabled();
@@ -470,8 +461,7 @@ public class ConfigImpl {
         else
             return new ConfigException.NotResolved(newMessage, original);
     }
-    
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+
     public static ConfigOrigin newSimpleOrigin(String description) {
         if (description == null) {
             return defaultValueOrigin;
@@ -480,14 +470,11 @@ public class ConfigImpl {
         }
     }
 
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
     public static ConfigOrigin newFileOrigin(String filename) {
         return SimpleConfigOrigin.newFile(filename);
     }
-    
-    /** For use ONLY by library internals, DO NOT TOUCH not guaranteed ABI */
+
     public static ConfigOrigin newURLOrigin(URL url) {
         return SimpleConfigOrigin.newURL(url);
     }
-    
 }

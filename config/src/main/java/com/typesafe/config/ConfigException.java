@@ -322,7 +322,10 @@ public abstract class ConfigException extends RuntimeException implements Serial
             this.problem = problem;
         }
 
-        /** Returns the config setting causing the problem. */
+        /**
+         * Returns the config setting causing the problem.
+         * @return the path of the problem setting
+         */
         public String path() {
             return path;
         }
@@ -330,12 +333,16 @@ public abstract class ConfigException extends RuntimeException implements Serial
         /**
          * Returns where the problem occurred (origin may include info on the
          * file, line number, etc.).
+         * @return the origin of the problem setting
          */
         public ConfigOrigin origin() {
             return origin;
         }
 
-        /** Returns a description of the problem. */
+        /**
+         * Returns a description of the problem.
+         * @return description of the problem
+         */
         public String problem() {
             return problem;
         }

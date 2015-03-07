@@ -23,7 +23,7 @@ public interface ConfigIncluder {
      * the fallback is the same one you already have. The same fallback may be
      * added repeatedly.
      *
-     * @param fallback
+     * @param fallback the previous includer for chaining
      * @return a new includer
      */
     ConfigIncluder withFallback(ConfigIncluder fallback);
