@@ -89,10 +89,9 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 ### Binary Releases
 
 Version 1.2.1 and earlier were built for Java 6, while newer
-versions will be built for Java 8.
+versions (1.3.0-M1 is the current beta) will be built for Java 8.
 
-You can find published releases (compiled for Java 8 and above) on
-Maven Central.
+You can find published releases on Maven Central.
 
     <dependency>
         <groupId>com.typesafe</groupId>

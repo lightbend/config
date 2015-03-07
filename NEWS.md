@@ -1,3 +1,104 @@
+# 1.3.0-M1: March 6, 2015
+
+- this is an ABI-not-guaranteed beta release in advance
+  of 1.3.0. The public, documented ABI should not be broken
+  vs. 1.2.0; however, there are enough changes that something
+  certainly could break, and some obscure corner cases have
+  changed semantics and that could bite some people.
+
+Changes that are most likely to break something:
+
+- now built with Java 8 and requires Java 8
+- if you were relying on the order of key iteration in a config,
+  note that Java 8 changed the iteration order for hashes
+  and that includes `Config` and `ConfigObject`
+- several correctness fixes to resolving substitutions (the
+  `${foo}` syntax). These should only matter in weird corner
+  cases, but some people did encounter the problems such as in
+  #177.
+- throw an exception if a size-in-bytes values are out of Long
+  range #170
+- two adjacent undefined concatenation elements (like
+  `${?foo}${?bar}`) now become undefined instead of throwing an
+  exception
+- when rendering a path that starts with a digit, don't put
+  quotes around it
+- set the Accept header on http requests when loading
+  config from a URL
+- when getting a 404 from a URL, treat it as a missing file
+  (silently ignore) instead of throwing exception.
+  Other error codes will still throw an exception.
+- ConfigParseOptions.prependIncluder/appendIncluder always
+  throw when given a null includer, formerly they only
+  threw sometimes
+
+New API:
+
+- `ConfigBeanFactory` will auto-fill a JavaBean from
+  a `Config`
+- it is now possible to create a `ConfigOrigin` using
+  `ConfigOriginFactory` and to modify origins on values
+  using `ConfigValue.withOrigin`
+- `Config.getMemorySize` returns a `ConfigMemorySize`
+- `Config.getDuration` returns a `java.time.Duration`
+- the existing `ConfigValueFactory.fromAnyRef` and related
+  methods now pass through a `ConfigValue` instead of throwing
+  an exception
+- `ConfigFactory.defaultApplication()` returns the default
+  `Config` used by `ConfigFactory.load()` in between
+  `defaultReference()` and `defaultOverrides()`, leaving
+  `ConfigFactory.load()` as a trivial convenience API
+  that uses no internal magic.
+
+Improvements:
+
+- allow duration abbreviations "nanos", "millis", "micros"
+- Config.hasPath is now _much_ faster, so if you were caching to
+  avoid this you may be able to stop
+- new debug option -Dconfig.trace=substitutions explains
+  how `${foo}` references are being resolved
+- sort numeric keys in numeric order when rendering
+- allow whitespace in between two substitutions referring to
+  objects or lists when concatenating them, so `${foo} ${bar}`
+  and `${foo}${bar}` are now the same if foo and bar are objects
+  or lists.
+- better error messages for problems loading resources from
+  classpath, now we show the jar URL that failed
+- even more test coverage!
+- lots of minor javadoc fixes
+- method names in javadoc now link to github source
+
+Bug fixes:
+
+- fix "allow unresolved" behavior for unresolved list elements
+- class loaders are cached with a WeakReference to avoid leaks
+  #171
+- create valid output for values with multiline descriptions
+  #239
+- `-Dsun.io.serialization.extendedDebugInfo=true` no longer
+  explodes due to calling toString on an internal object,
+  #176
+
+Thank you to contributors with commits since v1.2.1 tag:
+
+- Alex Wei
+- Andrey Zaytsev
+- Ben Jackman
+- Ben McCann
+- Chris Martin
+- Dale Wijnand
+- Francois Dang Ngoc
+- ian
+- KAWACHI Takashi
+- Kornel Kielczewski
+- Lunfu Zhong
+- Michel Daviot
+- Paul Phillips
+- Pavel Yakunin
+- Preben Ingvaldsen
+- verbeto
+- Wu Zhenwei
+
 # 1.2.1: May 2, 2014
 
 - bugfix release, no API additions or changes
