@@ -796,4 +796,37 @@ abstract trait TestUtils {
         assertEquals("found expected validation problems, got '" + problems + "' and expected '" + expecteds + "'",
             expecteds.size, problems.size)
     }
+
+    protected def writeFile(f: File, content: String): Unit = {
+        val writer = new java.io.PrintWriter(f, "UTF-8")
+        writer.append(content)
+        writer.close()
+    }
+
+    private def deleteRecursive(f: File): Unit = {
+        if (f.exists) {
+            if (f.isDirectory) {
+                val children = f.listFiles()
+                if (children ne null) {
+                    for (c <- children)
+                        deleteRecursive(c)
+                }
+            }
+            f.delete()
+        }
+    }
+
+    protected def withScratchDirectory[T](testcase: String)(body: File => T): Unit = {
+        val target = new File("config/target")
+        if (!target.isDirectory)
+            throw new RuntimeException(s"Expecting $target to exist")
+        val suffix = java.lang.Integer.toHexString(java.util.concurrent.ThreadLocalRandom.current.nextInt)
+        val scratch = new File(target, s"$testcase-$suffix")
+        scratch.mkdirs()
+        try {
+            body(scratch)
+        } finally {
+            deleteRecursive(scratch)
+        }
+    }
 }
