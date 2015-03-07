@@ -594,8 +594,10 @@ public abstract class Parseable implements ConfigParseable {
             if (sibling == null)
                 return null;
             if (sibling.exists()) {
+                trace(sibling + " exists, so loading it as a file");
                 return newFile(sibling, options().setOriginDescription(null));
             } else {
+                trace(sibling + " does not exist, so trying it as a classpath resource");
                 return super.relativeTo(filename);
             }
         }
