@@ -4,6 +4,7 @@ import de.johoop.jacoco4sbt.JacocoPlugin.jacoco
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
+import com.etsy.sbt.Checkstyle._
 
 SbtScalariform.scalariformSettings
 
@@ -24,6 +25,46 @@ libraryDependencies += "net.liftweb" %% "lift-json" % "2.5" % "test"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
 
 externalResolvers += "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
+
+checkstyleSettings
+
+CheckstyleTasks.checkstyleConfig := baseDirectory.value / "checkstyle-config.xml"
+
+CheckstyleTasks.checkstyle in Compile := {
+  val log = streams.value.log
+  (CheckstyleTasks.checkstyle in Compile).value
+  val resultFile = (target in Compile).value / "checkstyle-report.xml"
+  val results = scala.xml.XML.loadFile(resultFile)
+  val errorFiles = results \\ "checkstyle" \\ "file"
+
+  def errorFromXml(node: scala.xml.NodeSeq): (String, String, String) = {
+    val line: String = (node \ "@line" text)
+    val msg: String = (node \ "@message" text)
+    val source: String = (node \ "@source" text)
+    (line, msg, source)
+  }
+  def errorsFromXml(fileNode: scala.xml.NodeSeq): Seq[(String, String, String, String)] = {
+    val name: String = (fileNode \ "@name" text)
+    val errors = (fileNode \\ "error") map { e => errorFromXml(e) }
+    errors map { case (line, error, source) => (name, line, error, source) }
+  }
+
+  val errors = errorFiles flatMap { f => errorsFromXml(f) }
+
+  if (errors.nonEmpty) {
+    for (e <- errors) {
+      log.error(s"${e._1}:${e._2}: ${e._3} (from ${e._4})")
+    }
+    throw new RuntimeException(s"Checkstyle failed with ${errors.size} errors")
+  }
+  log.info("No errors from checkstyle")
+}
+
+// add checkstyle as a dependency of doc
+doc in Compile := {
+  (CheckstyleTasks.checkstyle in Compile).value
+  (doc in Compile).value
+}
 
 findbugsSettings
 findbugsReportType := Some(ReportType.Html)

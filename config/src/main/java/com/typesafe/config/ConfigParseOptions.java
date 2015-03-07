@@ -36,6 +36,12 @@ public final class ConfigParseOptions {
         this.classLoader = classLoader;
     }
 
+    /**
+     * Gets an instance of <code>ConfigParseOptions</code> with all fields
+     * set to the default values. Start with this instance and make any
+     * changes you need.
+     * @return the default parse options
+     */
     public static ConfigParseOptions defaults() {
         return new ConfigParseOptions(null, null, true, null, null);
     }
@@ -56,6 +62,10 @@ public final class ConfigParseOptions {
                     this.includer, this.classLoader);
     }
 
+    /**
+     * Gets the current syntax option, which may be null for "any".
+     * @return the current syntax or null
+     */
     public ConfigSyntax getSyntax() {
         return syntax;
     }
@@ -82,6 +92,10 @@ public final class ConfigParseOptions {
                     this.includer, this.classLoader);
     }
 
+    /**
+     * Gets the current origin description, which may be null for "automatic".
+     * @return the current origin description or null
+     */
     public String getOriginDescription() {
         return originDescription;
     }
@@ -110,12 +124,17 @@ public final class ConfigParseOptions {
                     this.includer, this.classLoader);
     }
 
+    /**
+     * Gets the current "allow missing" flag.
+     * @return whether we allow missing files
+     */
     public boolean getAllowMissing() {
         return allowMissing;
     }
 
     /**
-     * Set a ConfigIncluder which customizes how includes are handled.
+     * Set a {@link ConfigIncluder} which customizes how includes are handled.
+     * null means to use the default includer.
      *
      * @param includer the includer to use or null for default
      * @return new version of the parse options with different includer
@@ -128,6 +147,15 @@ public final class ConfigParseOptions {
                     includer, this.classLoader);
     }
 
+    /**
+     * Prepends a {@link ConfigIncluder} which customizes how
+     * includes are handled.  To prepend your includer, the
+     * library calls {@link ConfigIncluder#withFallback} on your
+     * includer to append the existing includer to it.
+     *
+     * @param includer the includer to prepend (may not be null)
+     * @return new version of the parse options with different includer
+     */
     public ConfigParseOptions prependIncluder(ConfigIncluder includer) {
         if (includer == null)
             throw new NullPointerException("null includer passed to prependIncluder");
@@ -139,6 +167,14 @@ public final class ConfigParseOptions {
             return setIncluder(includer);
     }
 
+    /**
+     * Appends a {@link ConfigIncluder} which customizes how
+     * includes are handled.  To append, the library calls {@link
+     * ConfigIncluder#withFallback} on the existing includer.
+     *
+     * @param includer the includer to append (may not be null)
+     * @return new version of the parse options with different includer
+     */
     public ConfigParseOptions appendIncluder(ConfigIncluder includer) {
         if (includer == null)
             throw new NullPointerException("null includer passed to appendIncluder");
@@ -150,6 +186,10 @@ public final class ConfigParseOptions {
             return setIncluder(includer);
     }
 
+    /**
+     * Gets the current includer (will be null for the default includer).
+     * @return current includer or null
+     */
     public ConfigIncluder getIncluder() {
         return includer;
     }

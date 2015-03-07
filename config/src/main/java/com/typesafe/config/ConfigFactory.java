@@ -167,6 +167,16 @@ public final class ConfigFactory {
         return load(checkedContextClassLoader("load"), config);
     }
 
+    /**
+     * Like {@link #load(Config)} but allows you to specify
+     * the class loader for looking up resources.
+     *
+     * @param loader
+     *            the class loader to use to find resources
+     * @param config
+     *            the application's portion of the configuration
+     * @return resolved configuration with overrides and fallbacks added
+     */
     public static Config load(ClassLoader loader, Config config) {
         return load(loader, config, ConfigResolveOptions.defaults());
     }
@@ -269,7 +279,7 @@ public final class ConfigFactory {
     }
 
     /**
-     * Like {@link #load()} but allows specifying parse options
+     * Like {@link #load()} but allows specifying parse options.
      *
      * @param parseOptions
      *            Options for parsing resources
@@ -299,7 +309,7 @@ public final class ConfigFactory {
 
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
-     * thread's current context class loader, and parse options
+     * thread's current context class loader and also specify parse options.
      *
      * @param loader
      *            class loader for finding resources (overrides any loader in parseOptions)
@@ -313,7 +323,7 @@ public final class ConfigFactory {
 
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
-     * thread's current context class loader, and resolve options
+     * thread's current context class loader and also specify resolve options.
      *
      * @param loader
      *            class loader for finding resources
@@ -328,7 +338,7 @@ public final class ConfigFactory {
 
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
-     * thread's current context class loader, parse options, and resolve options
+     * thread's current context class loader, parse options, and resolve options.
      *
      * @param loader
      *            class loader for finding resources (overrides any loader in parseOptions)
@@ -628,22 +638,79 @@ public final class ConfigFactory {
         return Parseable.newProperties(properties, options).parse().toConfig();
     }
 
+    /**
+     * Like {@link parseProperties(Properties, ConfigParseOptions)} but uses default
+     * parse options.
+     * @param properties
+     *            a Java Properties object
+     * @return the parsed configuration
+     */
     public static Config parseProperties(Properties properties) {
         return parseProperties(properties, ConfigParseOptions.defaults());
     }
 
+    /**
+     * Parses a Reader into a Config instance. Does not call
+     * {@link Config#resolve} or merge the parsed stream with any
+     * other configuration; this method parses a single stream and
+     * does nothing else. It does process "include" statements in
+     * the parsed stream, and may end up doing other IO due to those
+     * statements.
+     *
+     * @param reader
+     *       the reader to parse
+     * @param options
+     *       parse options to control how the reader is interpreted
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
     public static Config parseReader(Reader reader, ConfigParseOptions options) {
         return Parseable.newReader(reader, options).parse().toConfig();
     }
 
+    /**
+     * Parses a reader into a Config instance as with
+     * {@link #parseReader(Reader,ConfigParseOptions)} but always uses the
+     * default parse options.
+     *
+     * @param reader
+     *       the reader to parse
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
     public static Config parseReader(Reader reader) {
         return parseReader(reader, ConfigParseOptions.defaults());
     }
 
+    /**
+     * Parses a URL into a Config instance. Does not call
+     * {@link Config#resolve} or merge the parsed stream with any
+     * other configuration; this method parses a single stream and
+     * does nothing else. It does process "include" statements in
+     * the parsed stream, and may end up doing other IO due to those
+     * statements.
+     *
+     * @param url
+     *       the url to parse
+     * @param options
+     *       parse options to control how the url is interpreted
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
     public static Config parseURL(URL url, ConfigParseOptions options) {
         return Parseable.newURL(url, options).parse().toConfig();
     }
 
+    /**
+     * Parses a url into a Config instance as with
+     * {@link #parseURL(URL,ConfigParseOptions)} but always uses the
+     * default parse options.
+     *
+     * @param url
+     *       the url to parse
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
     public static Config parseURL(URL url) {
         return parseURL(url, ConfigParseOptions.defaults());
     }
@@ -766,6 +833,19 @@ public final class ConfigFactory {
                 .toConfig();
     }
 
+    /**
+     * Like {@link #parseResources(Class,String,ConfigParseOptions)} but always uses
+     * default parse options.
+     *
+     * @param klass
+     *            <code>klass.getClassLoader()</code> will be used to load
+     *            resources, and non-absolute resource names will have this
+     *            class's package added
+     * @param resource
+     *            resource to look up, relative to <code>klass</code>'s package
+     *            or absolute starting with a "/"
+     * @return the parsed configuration
+     */
     public static Config parseResources(Class<?> klass, String resource) {
         return parseResources(klass, resource, ConfigParseOptions.defaults());
     }
@@ -806,6 +886,19 @@ public final class ConfigFactory {
                 options).toConfig();
     }
 
+    /**
+     * Like {@link #parseResourcesAnySyntax(Class,String,ConfigParseOptions)}
+     * but always uses default parse options.
+     *
+     * @param klass
+     *            <code>klass.getClassLoader()</code> will be used to load
+     *            resources, and non-absolute resource names will have this
+     *            class's package added
+     * @param resourceBasename
+     *            a resource name as in {@link java.lang.Class#getResource},
+     *            with or without extension
+     * @return the parsed configuration
+     */
     public static Config parseResourcesAnySyntax(Class<?> klass, String resourceBasename) {
         return parseResourcesAnySyntax(klass, resourceBasename, ConfigParseOptions.defaults());
     }
@@ -837,6 +930,16 @@ public final class ConfigFactory {
         return parseResources(resource, options.setClassLoader(loader));
     }
 
+    /**
+     * Like {@link #parseResources(ClassLoader,String,ConfigParseOptions)} but always uses
+     * default parse options.
+     *
+     * @param loader
+     *            will be used to load resources
+     * @param resource
+     *            resource to look up in the loader
+     * @return the parsed configuration
+     */
     public static Config parseResources(ClassLoader loader, String resource) {
         return parseResources(loader, resource, ConfigParseOptions.defaults());
     }
@@ -870,6 +973,18 @@ public final class ConfigFactory {
                 .toConfig();
     }
 
+    /**
+     * Like {@link #parseResourcesAnySyntax(ClassLoader,String,ConfigParseOptions)} but always uses
+     * default parse options.
+     *
+     * @param loader
+     *            will be used to load resources
+     * @param resourceBasename
+     *            a resource name as in
+     *            {@link java.lang.ClassLoader#getResource}, with or without
+     *            extension
+     * @return the parsed configuration
+     */
     public static Config parseResourcesAnySyntax(ClassLoader loader, String resourceBasename) {
         return parseResourcesAnySyntax(loader, resourceBasename, ConfigParseOptions.defaults());
     }

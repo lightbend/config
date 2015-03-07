@@ -723,24 +723,154 @@ public interface Config extends ConfigMergeable {
      */
     ConfigList getList(String path);
 
+    /**
+     * Gets a list value with boolean elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to boolean.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of booleans
+     */
     List<Boolean> getBooleanList(String path);
 
+    /**
+     * Gets a list value with number elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to number.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of numbers
+     */
     List<Number> getNumberList(String path);
 
+    /**
+     * Gets a list value with int elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to int.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of ints
+     */
     List<Integer> getIntList(String path);
 
+    /**
+     * Gets a list value with long elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to long.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of longs
+     */
     List<Long> getLongList(String path);
 
+    /**
+     * Gets a list value with double elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to double.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of doubles
+     */
     List<Double> getDoubleList(String path);
 
+    /**
+     * Gets a list value with string elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to string.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of strings
+     */
     List<String> getStringList(String path);
 
+    /**
+     * Gets a list value with object elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to <code>ConfigObject</code>.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of objects
+     */
     List<? extends ConfigObject> getObjectList(String path);
 
+    /**
+     * Gets a list value with <code>Config</code> elements.
+     * Throws if the path is unset or null or not a list or
+     * contains values not convertible to <code>Config</code>.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of configs
+     */
     List<? extends Config> getConfigList(String path);
 
+    /**
+     * Gets a list value with any kind of elements.  Throws if the
+     * path is unset or null or not a list. Each element is
+     * "unwrapped" (see {@link ConfigValue#unwrapped()}).
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list
+     */
     List<? extends Object> getAnyRefList(String path);
 
+    /**
+     * Gets a list value with elements representing a size in
+     * bytes.  Throws if the path is unset or null or not a list
+     * or contains values not convertible to memory sizes.
+     *
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of memory sizes
+     */
     List<Long> getBytesList(String path);
 
     /**
@@ -751,6 +881,10 @@ public interface Config extends ConfigMergeable {
      * @param path
      *            a path expression
      * @return list of memory sizes
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of memory sizes
      */
     List<ConfigMemorySize> getMemorySizeList(String path);
 
@@ -771,7 +905,7 @@ public interface Config extends ConfigMergeable {
     /**
      * Gets a list, converting each value in the list to a duration, using the
      * same rules as {@link #getDuration(String, TimeUnit)}.
-     * 
+     *
      * @since 1.2.0
      * @param path
      *            a path expression

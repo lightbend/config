@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suppressions PUBLIC "-//Puppy Crawl//DTD Suppressions 1.1//EN"
+    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+<suppressions>
+  <!-- don't care about javadoc coverage of methods in impl -->
+  <suppress checks="JavadocMethod"
+            files="com[\\/]typesafe[\\/]config[\\/]impl[\\/]"/>
+  <!-- ConfigException has a bunch of constructors that are
+       self-evident and would clutter the heck out of the file
+       to document -->
+  <suppress checks="JavadocMethod"
+            files="com[\\/]typesafe[\\/]config[\\/]ConfigException.java"/>
+</suppressions>
