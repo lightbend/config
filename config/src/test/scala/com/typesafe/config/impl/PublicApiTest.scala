@@ -1026,4 +1026,17 @@ class PublicApiTest extends TestUtils {
             conf.getInt("b")
         }
     }
+
+    @Test
+    def heuristicIncludeChecksClasspath(): Unit = {
+        // from https://github.com/typesafehub/config/issues/188
+        withScratchDirectory("heuristicIncludeChecksClasspath") { dir =>
+            val f = new File(dir, "foo.conf")
+            writeFile(f, """
+include "onclasspath"
+""")
+            val conf = ConfigFactory.parseFile(f)
+            assertEquals(42, conf.getInt("onclasspath"))
+        }
+    }
 }
