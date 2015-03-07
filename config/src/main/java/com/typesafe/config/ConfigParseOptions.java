@@ -129,6 +129,8 @@ public final class ConfigParseOptions {
     }
 
     public ConfigParseOptions prependIncluder(ConfigIncluder includer) {
+        if (includer == null)
+            throw new NullPointerException("null includer passed to prependIncluder");
         if (this.includer == includer)
             return this;
         else if (this.includer != null)
@@ -138,6 +140,8 @@ public final class ConfigParseOptions {
     }
 
     public ConfigParseOptions appendIncluder(ConfigIncluder includer) {
+        if (includer == null)
+            throw new NullPointerException("null includer passed to appendIncluder");
         if (this.includer == includer)
             return this;
         else if (this.includer != null)
