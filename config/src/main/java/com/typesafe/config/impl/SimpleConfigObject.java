@@ -418,7 +418,10 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         });
     }
 
-    static final private class RenderComparator implements java.util.Comparator<String> {
+    // this is only Serializable to chill out a findbugs warning
+    static final private class RenderComparator implements java.util.Comparator<String>, Serializable {
+        private static final long serialVersionUID = 1L;
+
         private static boolean isAllDigits(String s) {
             int length = s.length();
 

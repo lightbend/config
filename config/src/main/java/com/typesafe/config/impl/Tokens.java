@@ -137,6 +137,22 @@ final class Tokens {
         public String toString() { return "'" + value + "' (WHITESPACE)"; }
 
         @Override
+        protected boolean canEqual(Object other) {
+            return other instanceof IgnoredWhitespace;
+        }
+
+        @Override
+        public boolean equals(Object other) {
+            return super.equals(other)
+                && ((IgnoredWhitespace) other).value.equals(value);
+        }
+
+        @Override
+        public int hashCode() {
+            return 41 * (41 + super.hashCode()) + value.hashCode();
+        }
+
+        @Override
         public String tokenText() {
             return value;
         }

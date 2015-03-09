@@ -49,7 +49,7 @@ public class ConfigBeanImpl {
             String camelName = ConfigImplUtil.toCamelCase(originalName);
             // if a setting is in there both as some hyphen name and the camel name,
             // the camel one wins
-            if (originalNames.containsKey(camelName) && originalName != camelName) {
+            if (originalNames.containsKey(camelName) && !originalName.equals(camelName)) {
                 // if we aren't a camel name to start with, we lose.
                 // if we are or we are the first matching key, we win.
             } else {
@@ -105,7 +105,7 @@ public class ConfigBeanImpl {
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
                 Type parameterType = setter.getGenericParameterTypes()[0];
-                Class parameterClass = setter.getParameterTypes()[0];
+                Class<?> parameterClass = setter.getParameterTypes()[0];
                 Object unwrapped = getValue(clazz, parameterType, parameterClass, config, originalNames.get(beanProp.getName()));
                 setter.invoke(bean, unwrapped);
             }
@@ -127,7 +127,7 @@ public class ConfigBeanImpl {
     // setting. So, instead, we only support a limited number of
     // types plus you can always use Object, ConfigValue, Config,
     // ConfigObject, etc.  as an escape hatch.
-    private static Object getValue(Class beanClass, Type parameterType, Class parameterClass, Config config, String configPropName) {
+    private static Object getValue(Class beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return config.getBoolean(configPropName);
         } else if (parameterClass == Integer.class || parameterClass == int.class) {
@@ -168,7 +168,7 @@ public class ConfigBeanImpl {
         }
     }
 
-    private static Object getListValue(Class beanClass, Type parameterType, Class parameterClass, Config config, String configPropName) {
+    private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
         Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
 
         if (elementType == Boolean.class) {

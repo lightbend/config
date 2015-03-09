@@ -68,13 +68,14 @@ doc in Compile := {
 
 findbugsSettings
 findbugsReportType := Some(ReportType.Html)
-findbugsReportName := Some("findbugs.html")
-findbugsEffort := Effort.High
-findbugsMaxMemory := 1000
+findbugsReportPath := Some(crossTarget.value / "findbugs.html")
+findbugsEffort := Effort.Maximum
+findbugsMaxMemory := 2000
 
 jacoco.settings
 
-javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.8", "-g")
+javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.8",
+                                           "-g", "-Xlint:unchecked")
 
 // because we test some global state such as singleton caches,
 // we have to run tests in serial.
