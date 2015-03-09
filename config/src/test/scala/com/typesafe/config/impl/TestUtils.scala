@@ -664,19 +664,19 @@ abstract trait TestUtils {
     }
 
     def configNodeSimpleValue(value: Token) = {
-        new ConfigNodeSimpleValue(value);
+        new ConfigNodeSimpleValue(value)
     }
 
     def configNodeKey(value: Token) = {
-        new ConfigNodeKey(value);
+        new ConfigNodeKey(value)
     }
 
     def configNodeBasic(value: Token) = {
-        new BasicConfigNode(value: Token);
+        new BasicConfigNode(value: Token)
     }
 
     def configNodeComplexValue(nodes: List[ConfigNode]) = {
-        new ConfigNodeComplexValue(nodes.asJavaCollection);
+        new ConfigNodeComplexValue(nodes.asJavaCollection)
     }
 
     def nodeColon = new BasicConfigNode(Tokens.COLON)
@@ -687,6 +687,16 @@ abstract trait TestUtils {
     def nodeWhitespace(whitespace: String) = new BasicConfigNode(tokenWhitespace(whitespace))
     def nodeQuotedKey(key: String) = configNodeKey(tokenString(key))
     def nodeUnquotedKey(key: String) = configNodeKey(tokenUnquoted(key))
+    def nodeKeyValuePair(key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: BasicConfigNode) = {
+        val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
+        new ConfigNodeKeyValue(nodes.asJavaCollection)
+    }
+    def nodeKeyValuePair(leadingWhitespace: BasicConfigNode, key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: BasicConfigNode) = {
+        val nodes = List(leadingWhitespace, key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
+        new ConfigNodeKeyValue(nodes.asJavaCollection);
+    }
+    def nodeInt(value: Integer) = new ConfigNodeSimpleValue(tokenInt(value))
+    def nodeString(value: String) = new ConfigNodeSimpleValue(tokenString(value))
 
     // this is importantly NOT using Path.newPath, which relies on
     // the parser; in the test suite we are often testing the parser,
