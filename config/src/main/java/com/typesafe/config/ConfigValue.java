@@ -107,12 +107,14 @@ public interface ConfigValue extends ConfigMergeable {
      * @return a {@code Config} instance containing this value at the given key.
      */
     Config atKey(String key);
-    
+
     /**
      * Returns a {@code ConfigValue} based on this one, but with the given
      * origin. This is useful when you are parsing a new format of file or setting
      * comments for a single ConfigValue.
-     * 
+     *
+     * @since 1.3.0
+     *
      * @param origin the origin set on the returned value
      * @return the new ConfigValue with the given origin
      */

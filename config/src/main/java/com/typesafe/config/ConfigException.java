@@ -394,6 +394,7 @@ public abstract class ConfigException extends RuntimeException implements Serial
 
     /**
      * Some problem with a JavaBean we are trying to initialize.
+     * @since 1.3.0
      */
     public static class BadBean extends BugOrBroken {
         private static final long serialVersionUID = 1L;

@@ -639,7 +639,7 @@ public final class ConfigFactory {
     }
 
     /**
-     * Like {@link parseProperties(Properties, ConfigParseOptions)} but uses default
+     * Like {@link #parseProperties(Properties, ConfigParseOptions)} but uses default
      * parse options.
      * @param properties
      *            a Java Properties object

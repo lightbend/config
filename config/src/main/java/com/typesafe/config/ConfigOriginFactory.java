@@ -11,6 +11,7 @@ import com.typesafe.config.impl.ConfigImpl;
  * But you can also set the origin of an existing {@code ConfigValue}, using
  * {@link ConfigValue#withOrigin(ConfigOrigin)}.
  *
+ * @since 1.3.0
  */
 public final class ConfigOriginFactory {
     private ConfigOriginFactory() {
@@ -21,6 +22,8 @@ public final class ConfigOriginFactory {
      * provided. This is the origin used in {@link ConfigValueFactory
      * #fromAnyRef(Object)}.
      *
+     * @since 1.3.0
+     *
      * @return the default origin
      */
     public static ConfigOrigin newSimple() {
@@ -29,6 +32,8 @@ public final class ConfigOriginFactory {
 
     /**
      * Returns an origin with the given description.
+     *
+     *  @since 1.3.0
      *
      * @param description brief description of what the origin is
      * @return a new origin
@@ -40,6 +45,8 @@ public final class ConfigOriginFactory {
     /**
      * Creates a file origin with the given filename.
      *
+     * @since 1.3.0
+     *
      * @param filename the filename of this origin
      * @return a new origin
      */
@@ -49,6 +56,8 @@ public final class ConfigOriginFactory {
 
     /**
      * Creates a url origin with the given URL object.
+     *
+     * @since 1.3.0
      *
      * @param url the url of this origin
      * @return a new origin
