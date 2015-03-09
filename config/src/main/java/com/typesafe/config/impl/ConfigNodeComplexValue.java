@@ -35,7 +35,7 @@ final class ConfigNodeComplexValue implements ConfigNode, ConfigNodeValue {
         return renderedText.toString();
     }
 
-    private ConfigNodeComplexValue changeValueOnPath(Path desiredPath, ConfigNodeValue value) {
+    protected ConfigNodeComplexValue changeValueOnPath(Path desiredPath, ConfigNodeValue value) {
         ArrayList<ConfigNode> childrenCopy = (ArrayList<ConfigNode>)(children.clone());
         boolean replaced = value == null;
         ConfigNodeKeyValue node;
@@ -54,7 +54,7 @@ final class ConfigNodeComplexValue implements ConfigNode, ConfigNodeValue {
                 if (node.value() instanceof ConfigNodeComplexValue) {
                     Path remainingPath = desiredPath.subPath(key.length());
                     if (!replaced) {
-                        node = node.replaceValue(((ConfigNodeComplexValue) node.value()).setValueOnPath(remainingPath, value));
+                        node = node.replaceValue(((ConfigNodeComplexValue) node.value()).changeValueOnPath(remainingPath, value));
                         if (node.render() != children.get(keyValIndex.intValue()).render())
                             replaced = true;
                         childrenCopy.set(keyValIndex.intValue(), node);
@@ -69,7 +69,23 @@ final class ConfigNodeComplexValue implements ConfigNode, ConfigNodeValue {
     }
 
     public ConfigNodeComplexValue setValueOnPath(Path desiredPath, ConfigNodeValue value) {
-        return changeValueOnPath(desiredPath, value);
+        ConfigNodeComplexValue node = changeValueOnPath(desiredPath, value);
+
+        // If the desired Path did not exist, add it
+        if (node.render().equals(render())) {
+            ArrayList<ConfigNode> childrenCopy = (ArrayList<ConfigNode>)children.clone();
+            ArrayList<ConfigNode> newNodes = new ArrayList<ConfigNode>();
+            newNodes.add(new ConfigNodeBasic(Tokens.newLine(null)));
+            newNodes.add(new ConfigNodeKey(Tokens.newUnquotedText(null, desiredPath.render())));
+            newNodes.add(new ConfigNodeBasic(Tokens.newIgnoredWhitespace(null, " ")));
+            newNodes.add(new ConfigNodeBasic(Tokens.COLON));
+            newNodes.add(new ConfigNodeBasic(Tokens.newIgnoredWhitespace(null, " ")));
+            newNodes.add(value);
+            newNodes.add(new ConfigNodeBasic(Tokens.newLine(null)));
+            childrenCopy.add(new ConfigNodeKeyValue(newNodes));
+            node = new ConfigNodeComplexValue(childrenCopy);
+        }
+        return node;
     }
 
     public ConfigNodeComplexValue removeValueOnPath(Path desiredPath) {

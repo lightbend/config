@@ -672,26 +672,26 @@ abstract trait TestUtils {
     }
 
     def configNodeBasic(value: Token) = {
-        new BasicConfigNode(value: Token)
+        new ConfigNodeBasic(value: Token)
     }
 
     def configNodeComplexValue(nodes: List[ConfigNode]) = {
         new ConfigNodeComplexValue(nodes.asJavaCollection)
     }
 
-    def nodeColon = new BasicConfigNode(Tokens.COLON)
-    def nodeSpace = new BasicConfigNode(tokenUnquoted(" "))
-    def nodeOpenBrace = new BasicConfigNode(Tokens.OPEN_CURLY)
-    def nodeCloseBrace = new BasicConfigNode(Tokens.CLOSE_CURLY)
-    def nodeLine(line: Integer) = new BasicConfigNode(tokenLine(line))
-    def nodeWhitespace(whitespace: String) = new BasicConfigNode(tokenWhitespace(whitespace))
+    def nodeColon = new ConfigNodeBasic(Tokens.COLON)
+    def nodeSpace = new ConfigNodeBasic(tokenUnquoted(" "))
+    def nodeOpenBrace = new ConfigNodeBasic(Tokens.OPEN_CURLY)
+    def nodeCloseBrace = new ConfigNodeBasic(Tokens.CLOSE_CURLY)
+    def nodeLine(line: Integer) = new ConfigNodeBasic(tokenLine(line))
+    def nodeWhitespace(whitespace: String) = new ConfigNodeBasic(tokenWhitespace(whitespace))
     def nodeQuotedKey(key: String) = configNodeKey(tokenString(key))
     def nodeUnquotedKey(key: String) = configNodeKey(tokenUnquoted(key))
-    def nodeKeyValuePair(key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: BasicConfigNode) = {
+    def nodeKeyValuePair(key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: ConfigNodeBasic) = {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
         new ConfigNodeKeyValue(nodes.asJavaCollection)
     }
-    def nodeKeyValuePair(leadingWhitespace: BasicConfigNode, key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: BasicConfigNode) = {
+    def nodeKeyValuePair(leadingWhitespace: ConfigNodeBasic, key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: ConfigNodeBasic) = {
         val nodes = List(leadingWhitespace, key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
         new ConfigNodeKeyValue(nodes.asJavaCollection);
     }
