@@ -45,11 +45,25 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(finalText, newNode.render())
     }
 
-    private def replaceInComplexValueTest(nodes: List[ConfigNode], origText: String, newText: String, replaceVal: ConfigNodeValue, replacePath: String) {
-        val complexNode = configNodeComplexValue(nodes)
-        assertEquals(complexNode.render(), origText)
-        val newNode = complexNode.setValueOnPath(Path.newPath(replacePath), replaceVal)
-        assertEquals(newNode.render(), newText)
+    private def replaceDuplicatesTest(value1: ConfigNodeValue, value2: ConfigNodeValue, value3: ConfigNodeValue) {
+        val key = nodeUnquotedKey("foo")
+        val keyValPair1 = nodeKeyValuePair(key, value1)
+        val keyValPair2 = nodeKeyValuePair(key, value2)
+        val keyValPair3 = nodeKeyValuePair(key, value3)
+        val complexNode = configNodeComplexValue(List(keyValPair1, keyValPair2, keyValPair3))
+        val origText = keyValPair1.render() + keyValPair2.render() + keyValPair3.render()
+        val finalText = key.render() + " : 15"
+
+        assertEquals(origText, complexNode.render())
+        assertEquals(finalText, complexNode.setValueOnPath(Path.newPath("foo"), nodeInt(15)).render())
+    }
+
+    private def nonExistentPathTest(value: ConfigNodeValue) {
+        val node = configNodeComplexValue(List(nodeKeyValuePair(nodeUnquotedKey("bar"), nodeInt(15))))
+        assertEquals("bar : 15", node.render())
+        val newNode = node.setValueOnPath(Path.newPath("foo"), value)
+        val finalText = "bar : 15\nfoo : " + value.render() + "\n"
+        assertEquals(finalText, newNode.render())
     }
 
     @Test
@@ -107,34 +121,61 @@ class ConfigNodeTest extends TestUtils {
     }
 
     @Test
-    def replaceNodesTopLevel() {
+    def replaceNodes() {
         //Ensure simple values can be replaced by other simple values
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenInt(10)), configNodeSimpleValue(tokenInt(15)))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenLong(10000)), configNodeSimpleValue(tokenInt(20)))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenDouble(3.14159)), configNodeSimpleValue(tokenLong(10000)))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenFalse), configNodeSimpleValue(tokenTrue))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenTrue), configNodeSimpleValue(tokenNull))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenNull), configNodeSimpleValue(tokenString("Hello my name is string")))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenString("Hello my name is string")), configNodeSimpleValue(tokenUnquoted("mynameisunquotedstring")))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenUnquoted("mynameisunquotedstring")), configNodeSimpleValue(tokenKeySubstitution("c.d")))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenInt(10)), configNodeSimpleValue(tokenOptionalSubstitution(tokenUnquoted("x.y"))))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenInt(10)), configNodeSimpleValue(tokenSubstitution(tokenUnquoted("a.b"))))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenSubstitution(tokenUnquoted("a.b"))), configNodeSimpleValue(tokenInt(10)))
+        topLevelValueReplaceTest(nodeInt(10), nodeInt(15))
+        topLevelValueReplaceTest(nodeLong(10000), nodeInt(20))
+        topLevelValueReplaceTest(nodeDouble(3.14159), nodeLong(10000))
+        topLevelValueReplaceTest(nodeFalse, nodeTrue)
+        topLevelValueReplaceTest(nodeTrue, nodeNull)
+        topLevelValueReplaceTest(nodeNull, nodeString("Hello my name is string"))
+        topLevelValueReplaceTest(nodeString("Hello my name is string"), nodeUnquotedText("mynameisunquotedstring"))
+        topLevelValueReplaceTest(nodeUnquotedText("mynameisunquotedstring"), nodeKeySubstitution("c.d"))
+        topLevelValueReplaceTest(nodeInt(10), nodeOptionalSubstitution(tokenUnquoted("x.y")))
+        topLevelValueReplaceTest(nodeInt(10), nodeSubstitution(tokenUnquoted("a.b")))
+        topLevelValueReplaceTest(nodeSubstitution(tokenUnquoted("a.b")), nodeInt(10))
+
+        // Ensure arrays can be replaced
+        val array = configNodeComplexValue(List(nodeOpenBracket, nodeInt(10), nodeSpace, nodeComma, nodeSpace, nodeInt(15), nodeCloseBracket))
+        topLevelValueReplaceTest(nodeInt(10), array)
+        topLevelValueReplaceTest(array, nodeInt(10))
+        topLevelValueReplaceTest(array, configNodeComplexValue(List(nodeOpenBrace, nodeCloseBrace)))
 
         //Ensure maps can be replaced
         val nestedMap = configNodeComplexValue(List(nodeOpenBrace, nodeUnquotedKey("abc"),
                                                     nodeColon, configNodeSimpleValue(tokenString("a string")),
                                                     nodeCloseBrace))
-        topLevelValueReplaceTest(nestedMap, configNodeSimpleValue(tokenInt(10)))
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenInt(10)), nestedMap)
+        topLevelValueReplaceTest(nestedMap, nodeInt(10))
+        topLevelValueReplaceTest(nodeInt(10), nestedMap)
+        topLevelValueReplaceTest(array, nestedMap)
+        topLevelValueReplaceTest(nestedMap, array)
         topLevelValueReplaceTest(nestedMap, configNodeComplexValue(List(nodeOpenBrace, nodeCloseBrace)))
 
         //Ensure a key with format "a.b" will be properly replaced
-        topLevelValueReplaceTest(configNodeSimpleValue(tokenInt(10)), nestedMap, tokenUnquoted("foo.bar"))
+        topLevelValueReplaceTest(nodeInt(10), nestedMap, tokenUnquoted("foo.bar"))
     }
 
     @Test
-    def replaceInNestedMapComplexValue() {
+    def removeDuplicates() {
+        val emptyMapNode = configNodeComplexValue(List(nodeOpenBrace, nodeCloseBrace))
+        val emptyArrayNode = configNodeComplexValue(List(nodeOpenBracket, nodeCloseBracket))
+        //Ensure duplicates of a key are removed from a map
+        replaceDuplicatesTest(nodeInt(10), nodeTrue, nodeNull)
+        replaceDuplicatesTest(emptyMapNode, emptyMapNode, emptyMapNode)
+        replaceDuplicatesTest(emptyArrayNode, emptyArrayNode, emptyArrayNode)
+        replaceDuplicatesTest(nodeInt(10), emptyMapNode, emptyArrayNode)
+    }
+
+    @Test
+    def addNonExistentPaths() {
+        nonExistentPathTest(nodeInt(10))
+        nonExistentPathTest(configNodeComplexValue(List(nodeOpenBracket, nodeInt(15), nodeCloseBracket)))
+        nonExistentPathTest(configNodeComplexValue(List(nodeOpenBrace, nodeKeyValuePair(nodeUnquotedKey("foo"), nodeDouble(3.14), nodeSpace))))
+    }
+
+    @Test
+    def replaceNestedNodes() {
+        // Test that all features of node replacement in a map work in a complex map containing nested maps
         val origText = "foo : bar\nbaz : {\n\t\"abc.def\" : 123\n\t//This is a comment about the below setting\n\n\tabc : {\n\t\t" +
           "def : \"this is a string\"\n\t\tghi : ${\"a.b\"}\n\t}\n}\nbaz.abc.ghi : 52\nbaz.abc.ghi : 53\n}"
         val lowestLevelMap = configNodeComplexValue(List(nodeOpenBrace, nodeLine(6),
@@ -161,10 +202,10 @@ class ConfigNodeTest extends TestUtils {
         var newNode = origNode.setValueOnPath(Path.newPath("baz.\"abc.def\""), configNodeSimpleValue(tokenTrue))
         newNode = newNode.setValueOnPath(Path.newPath("baz.abc.def"), configNodeSimpleValue(tokenFalse))
 
-        // Repeats are removed
+        // Repeats are removed from nested maps
         newNode = newNode.setValueOnPath(Path.newPath("baz.abc.ghi"), configNodeSimpleValue(tokenUnquoted("randomunquotedString")))
 
-        // Missing paths are added to the top level
+        // Missing paths are added to the top level if they don't appear anywhere, including in nested maps
         newNode = newNode.setValueOnPath(Path.newPath("baz.abc.this.does.not.exist"), configNodeSimpleValue(tokenUnquoted("doesnotexist")))
 
         // The above operations cause the resultant map to be rendered properly
