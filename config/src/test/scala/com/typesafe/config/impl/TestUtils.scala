@@ -668,7 +668,7 @@ abstract trait TestUtils {
     }
 
     def configNodeKey(path: String) = {
-        val parsedPath = Parser.parsePath(path)
+        val parsedPath = PathParser.parsePath(path)
         new ConfigNodeKey(parsedPath)
     }
 

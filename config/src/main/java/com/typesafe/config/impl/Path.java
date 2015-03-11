@@ -245,6 +245,6 @@ final class Path {
     }
 
     static Path newPath(String path) {
-        return Parser.parsePath(path);
+        return PathParser.parsePath(path);
     }
 }

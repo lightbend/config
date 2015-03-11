@@ -90,7 +90,7 @@ class ConfParserTest extends TestUtils {
         // also parse with the standalone path parser and be sure the
         // outcome is the same.
         try {
-            val shouldBeSame = Parser.parsePath(s)
+            val shouldBeSame = PathParser.parsePath(s)
             assertEquals(result, shouldBeSame)
         } catch {
             case e: ConfigException =>
