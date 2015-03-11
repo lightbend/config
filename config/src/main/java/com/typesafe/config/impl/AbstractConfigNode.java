@@ -1,3 +1,6 @@
+/**
+ *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
+ */
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigNode;

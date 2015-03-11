@@ -1,13 +1,13 @@
+/**
+ *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
+ */
 package com.typesafe.config.impl;
 
 import java.util.Collection;
 import java.util.Collections;
 
-/**
- * This class represents a leaf ConfigNode. This type of ConfigNode has no children.
- */
 class ConfigNodeSimpleValue extends AbstractConfigNodeValue {
-    Token token;
+    final Token token;
     ConfigNodeSimpleValue(Token value) {
         token = value;
     }

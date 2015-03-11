@@ -1,3 +1,6 @@
+/**
+ *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
+ */
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigException;
@@ -6,7 +9,7 @@ import com.typesafe.config.ConfigNode;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class ConfigNodeKeyValue extends AbstractConfigNode {
+final class ConfigNodeKeyValue extends AbstractConfigNode {
     final private ArrayList<AbstractConfigNode> children;
 
     public ConfigNodeKeyValue(Collection<AbstractConfigNode> children) {
