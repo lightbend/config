@@ -33,7 +33,7 @@ final class ConfigNodeComplexValue extends AbstractConfigNodeValue {
                 continue;
             }
             node = (ConfigNodeKeyValue)children.get(i);
-            key = Path.newPath(node.key().render());
+            key = node.key().value();
             if (key.equals(desiredPath)) {
                 if (!replaced) {
                     childrenCopy.set(i, node.replaceValue(value));
@@ -67,7 +67,7 @@ final class ConfigNodeComplexValue extends AbstractConfigNodeValue {
             ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
             ArrayList<AbstractConfigNode> newNodes = new ArrayList();
             newNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
-            newNodes.add(new ConfigNodeKey(Tokens.newUnquotedText(null, desiredPath.render())));
+            newNodes.add(new ConfigNodeKey(desiredPath));
             newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
             newNodes.add(new ConfigNodeSingleToken(Tokens.COLON));
             newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));

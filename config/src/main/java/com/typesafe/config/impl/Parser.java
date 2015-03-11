@@ -1063,6 +1063,7 @@ final class Parser {
     private static Path parsePathExpression(Iterator<Token> expression,
             ConfigOrigin origin, String originalText) {
         // each builder in "buf" is an element in the path.
+        ArrayList<Token> pathTokens = new ArrayList<Token>();
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
 
@@ -1073,6 +1074,7 @@ final class Parser {
 
         while (expression.hasNext()) {
             Token t = expression.next();
+            pathTokens.add(t);
 
             // Ignore all IgnoredWhitespace tokens
             if (Tokens.isIgnoredWhitespace(t))
@@ -1119,7 +1121,7 @@ final class Parser {
             }
         }
 
-        PathBuilder pb = new PathBuilder();
+        PathBuilder pb = new PathBuilder(pathTokens);
         for (Element e : buf) {
             if (e.sb.length() == 0 && !e.canBeEmpty) {
                 throw new ConfigException.BadPath(
@@ -1192,8 +1194,10 @@ final class Parser {
     private static Path fastPathBuild(Path tail, String s, int end) {
         // lastIndexOf takes last index it should look at, end - 1 not end
         int splitAt = s.lastIndexOf('.', end - 1);
+        ArrayList<Token> tokens = new ArrayList<Token>();
+        tokens.add(Tokens.newUnquotedText(null, s));
         // this works even if splitAt is -1; then we start the substring at 0
-        Path withOneMoreElement = new Path(s.substring(splitAt + 1, end), tail);
+        Path withOneMoreElement = new Path(s.substring(splitAt + 1, end), tail, tokens);
         if (splitAt < 0) {
             return withOneMoreElement;
         } else {

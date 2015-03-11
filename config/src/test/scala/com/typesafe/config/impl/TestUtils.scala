@@ -667,8 +667,9 @@ abstract trait TestUtils {
         new ConfigNodeSimpleValue(value)
     }
 
-    def configNodeKey(value: Token) = {
-        new ConfigNodeKey(value)
+    def configNodeKey(path: String) = {
+        val parsedPath = Parser.parsePath(path)
+        new ConfigNodeKey(parsedPath)
     }
 
     def configNodeBasic(value: Token) = {
@@ -688,8 +689,6 @@ abstract trait TestUtils {
     def nodeComma = new ConfigNodeSingleToken(Tokens.COMMA)
     def nodeLine(line: Integer) = new ConfigNodeSingleToken(tokenLine(line))
     def nodeWhitespace(whitespace: String) = new ConfigNodeSingleToken(tokenWhitespace(whitespace))
-    def nodeQuotedKey(key: String) = configNodeKey(tokenString(key))
-    def nodeUnquotedKey(key: String) = configNodeKey(tokenUnquoted(key))
     def nodeKeyValuePair(key: ConfigNodeKey, value: AbstractConfigNodeValue) = {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value)
         new ConfigNodeKeyValue(nodes.asJavaCollection)

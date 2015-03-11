@@ -3,6 +3,8 @@
  */
 package com.typesafe.config.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Stack;
 
 import com.typesafe.config.ConfigException;
@@ -12,8 +14,17 @@ final class PathBuilder {
     final private Stack<String> keys;
     private Path result;
 
+    // the tokens only matter for top-level paths created with parsePath, in all
+    // other cases this will be empty
+    final private ArrayList<Token> tokens;
+
     PathBuilder() {
+        this(new ArrayList<Token>());
+    }
+
+    PathBuilder(Collection<Token> tokens) {
         keys = new Stack<String>();
+        this.tokens = new ArrayList<Token>(tokens);
     }
 
     private void checkCanAppend() {
@@ -51,7 +62,7 @@ final class PathBuilder {
             Path remainder = null;
             while (!keys.isEmpty()) {
                 String key = keys.pop();
-                remainder = new Path(key, remainder);
+                remainder = new Path(key, remainder, tokens);
             }
             result = remainder;
         }
