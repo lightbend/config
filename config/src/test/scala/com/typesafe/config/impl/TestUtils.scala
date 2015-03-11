@@ -672,33 +672,33 @@ abstract trait TestUtils {
     }
 
     def configNodeBasic(value: Token) = {
-        new ConfigNodeBasic(value: Token)
+        new ConfigNodeSingleToken(value: Token)
     }
 
-    def configNodeComplexValue(nodes: List[ConfigNode]) = {
+    def configNodeComplexValue(nodes: List[AbstractConfigNode]) = {
         new ConfigNodeComplexValue(nodes.asJavaCollection)
     }
 
-    def nodeColon = new ConfigNodeBasic(Tokens.COLON)
-    def nodeSpace = new ConfigNodeBasic(tokenUnquoted(" "))
-    def nodeOpenBrace = new ConfigNodeBasic(Tokens.OPEN_CURLY)
-    def nodeCloseBrace = new ConfigNodeBasic(Tokens.CLOSE_CURLY)
-    def nodeOpenBracket = new ConfigNodeBasic(Tokens.OPEN_SQUARE)
-    def nodeCloseBracket = new ConfigNodeBasic(Tokens.CLOSE_SQUARE)
-    def nodeComma = new ConfigNodeBasic(Tokens.COMMA)
-    def nodeLine(line: Integer) = new ConfigNodeBasic(tokenLine(line))
-    def nodeWhitespace(whitespace: String) = new ConfigNodeBasic(tokenWhitespace(whitespace))
+    def nodeColon = new ConfigNodeSingleToken(Tokens.COLON)
+    def nodeSpace = new ConfigNodeSingleToken(tokenUnquoted(" "))
+    def nodeOpenBrace = new ConfigNodeSingleToken(Tokens.OPEN_CURLY)
+    def nodeCloseBrace = new ConfigNodeSingleToken(Tokens.CLOSE_CURLY)
+    def nodeOpenBracket = new ConfigNodeSingleToken(Tokens.OPEN_SQUARE)
+    def nodeCloseBracket = new ConfigNodeSingleToken(Tokens.CLOSE_SQUARE)
+    def nodeComma = new ConfigNodeSingleToken(Tokens.COMMA)
+    def nodeLine(line: Integer) = new ConfigNodeSingleToken(tokenLine(line))
+    def nodeWhitespace(whitespace: String) = new ConfigNodeSingleToken(tokenWhitespace(whitespace))
     def nodeQuotedKey(key: String) = configNodeKey(tokenString(key))
     def nodeUnquotedKey(key: String) = configNodeKey(tokenUnquoted(key))
-    def nodeKeyValuePair(key: ConfigNodeKey, value: ConfigNodeValue) = {
+    def nodeKeyValuePair(key: ConfigNodeKey, value: AbstractConfigNodeValue) = {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value)
         new ConfigNodeKeyValue(nodes.asJavaCollection)
     }
-    def nodeKeyValuePair(key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: ConfigNodeBasic) = {
+    def nodeKeyValuePair(key: ConfigNodeKey, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
         new ConfigNodeKeyValue(nodes.asJavaCollection)
     }
-    def nodeKeyValuePair(leadingWhitespace: ConfigNodeBasic, key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: ConfigNodeBasic) = {
+    def nodeKeyValuePair(leadingWhitespace: ConfigNodeSingleToken, key: ConfigNodeKey, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
         val nodes = List(leadingWhitespace, key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
         new ConfigNodeKeyValue(nodes.asJavaCollection)
     }
@@ -708,8 +708,8 @@ abstract trait TestUtils {
     def nodeDouble(value: Double) = new ConfigNodeSimpleValue(tokenDouble(value))
     def nodeTrue = new ConfigNodeSimpleValue(tokenTrue)
     def nodeFalse = new ConfigNodeSimpleValue(tokenFalse)
-    def nodeCommentHash(text: String) = new ConfigNodeBasic(tokenCommentHash(text))
-    def nodeCommentDoubleSlash(text: String) = new ConfigNodeBasic(tokenCommentDoubleSlash(text))
+    def nodeCommentHash(text: String) = new ConfigNodeSingleToken(tokenCommentHash(text))
+    def nodeCommentDoubleSlash(text: String) = new ConfigNodeSingleToken(tokenCommentDoubleSlash(text))
     def nodeUnquotedText(text: String) = new ConfigNodeSimpleValue(tokenUnquoted(text))
     def nodeNull = new ConfigNodeSimpleValue(tokenNull)
     def nodeKeySubstitution(s: String) = new ConfigNodeSimpleValue(tokenKeySubstitution(s))

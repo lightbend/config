@@ -3,9 +3,9 @@ package com.typesafe.config.impl;
 import java.util.Collection;
 import java.util.Collections;
 
-final class ConfigNodeKey extends AbstractConfigNode {
+final class ConfigNodeSingleToken extends AbstractConfigNode{
     Token token;
-    ConfigNodeKey(Token t) {
+    ConfigNodeSingleToken(Token t) {
         token = t;
     }
 

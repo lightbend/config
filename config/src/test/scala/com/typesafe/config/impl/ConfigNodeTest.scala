@@ -21,7 +21,7 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(node.render(), token.tokenText())
     }
 
-    private def keyValueNodeTest(key: ConfigNodeKey, value: ConfigNodeValue, trailingWhitespace: ConfigNodeBasic, newValue: ConfigNodeValue) {
+    private def keyValueNodeTest(key: ConfigNodeKey, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken, newValue: AbstractConfigNodeValue) {
         val keyValNode = nodeKeyValuePair(key, value, trailingWhitespace)
         assertEquals(key.render() + " : " + value.render() + trailingWhitespace.render(), keyValNode.render())
         assertEquals(key.render, keyValNode.key().render())
@@ -32,7 +32,7 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(newValue.render(), newKeyValNode.value().render())
     }
 
-    private def topLevelValueReplaceTest(value: ConfigNodeValue, newValue: ConfigNodeValue, key: Token = tokenString("foo")) {
+    private def topLevelValueReplaceTest(value: AbstractConfigNodeValue, newValue: AbstractConfigNodeValue, key: Token = tokenString("foo")) {
         val complexNodeChildren = List(nodeOpenBrace,
                                        nodeKeyValuePair(nodeWhitespace("       "), configNodeKey(key),value, nodeWhitespace("    ")),
                                        nodeCloseBrace)
@@ -45,7 +45,7 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(finalText, newNode.render())
     }
 
-    private def replaceDuplicatesTest(value1: ConfigNodeValue, value2: ConfigNodeValue, value3: ConfigNodeValue) {
+    private def replaceDuplicatesTest(value1: AbstractConfigNodeValue, value2: AbstractConfigNodeValue, value3: AbstractConfigNodeValue) {
         val key = nodeUnquotedKey("foo")
         val keyValPair1 = nodeKeyValuePair(key, value1)
         val keyValPair2 = nodeKeyValuePair(key, value2)
@@ -58,7 +58,7 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(finalText, complexNode.setValueOnPath(Path.newPath("foo"), nodeInt(15)).render())
     }
 
-    private def nonExistentPathTest(value: ConfigNodeValue) {
+    private def nonExistentPathTest(value: AbstractConfigNodeValue) {
         val node = configNodeComplexValue(List(nodeKeyValuePair(nodeUnquotedKey("bar"), nodeInt(15))))
         assertEquals("bar : 15", node.render())
         val newNode = node.setValueOnPath(Path.newPath("foo"), value)

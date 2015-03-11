@@ -1,15 +1,16 @@
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigNode;
+import java.util.Collection;
 
 abstract class AbstractConfigNode implements ConfigNode {
-    final private Token token;
-
-    AbstractConfigNode(Token t) {
-        token = t;
-    }
-
-    public String render() {
-        return token.tokenText();
+    abstract Collection<Token> tokens();
+    final public String render() {
+        StringBuilder origText = new StringBuilder();
+        Iterable<Token> tokens = tokens();
+        for (Token t : tokens) {
+            origText.append(t.tokenText());
+        }
+        return origText.toString();
     }
 }
