@@ -2,7 +2,6 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit.Test
-import com.typesafe.config.ConfigNode
 
 class ConfigNodeTest extends TestUtils {
 

@@ -12,7 +12,7 @@ final class ConfigNodeComplexValue extends AbstractConfigNodeValue {
         this.children = new ArrayList(children);
     }
 
-    final public Iterable<AbstractConfigNode> children() {
+    final public Collection<AbstractConfigNode> children() {
         return children;
     }
 
