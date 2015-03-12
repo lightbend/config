@@ -667,10 +667,7 @@ abstract trait TestUtils {
         new ConfigNodeSimpleValue(value)
     }
 
-    def configNodeKey(path: String) = {
-        val parsedPath = PathParser.parsePath(path)
-        new ConfigNodeKey(parsedPath)
-    }
+    def configNodeKey(path: String) = PathParser.parsePathNode(path)
 
     def configNodeBasic(value: Token) = {
         new ConfigNodeSingleToken(value: Token)
@@ -689,17 +686,17 @@ abstract trait TestUtils {
     def nodeComma = new ConfigNodeSingleToken(Tokens.COMMA)
     def nodeLine(line: Integer) = new ConfigNodeSingleToken(tokenLine(line))
     def nodeWhitespace(whitespace: String) = new ConfigNodeSingleToken(tokenWhitespace(whitespace))
-    def nodeKeyValuePair(key: ConfigNodeKey, value: AbstractConfigNodeValue) = {
+    def nodeKeyValuePair(key: ConfigNodePath, value: AbstractConfigNodeValue) = {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value)
-        new ConfigNodeKeyValue(nodes.asJavaCollection)
+        new ConfigNodeField(nodes.asJavaCollection)
     }
-    def nodeKeyValuePair(key: ConfigNodeKey, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
+    def nodeKeyValuePair(key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
-        new ConfigNodeKeyValue(nodes.asJavaCollection)
+        new ConfigNodeField(nodes.asJavaCollection)
     }
-    def nodeKeyValuePair(leadingWhitespace: ConfigNodeSingleToken, key: ConfigNodeKey, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
+    def nodeKeyValuePair(leadingWhitespace: ConfigNodeSingleToken, key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
         val nodes = List(leadingWhitespace, key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
-        new ConfigNodeKeyValue(nodes.asJavaCollection)
+        new ConfigNodeField(nodes.asJavaCollection)
     }
     def nodeInt(value: Integer) = new ConfigNodeSimpleValue(tokenInt(value))
     def nodeString(value: String) = new ConfigNodeSimpleValue(tokenString(value))

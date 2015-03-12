@@ -32,6 +32,19 @@ final class PathParser {
 
     static ConfigOrigin apiOrigin = SimpleConfigOrigin.newSimple("path parameter");
 
+    static ConfigNodePath parsePathNode(String path) {
+        StringReader reader = new StringReader(path);
+
+        try {
+            Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader,
+                    ConfigSyntax.CONF);
+            tokens.next(); // drop START
+            return parsePathNodeExpression(tokens, apiOrigin, path);
+        } finally {
+            reader.close();
+        }
+    }
+
     static Path parsePath(String path) {
         Path speculated = speculativeFastParsePath(path);
         if (speculated != null)
@@ -51,14 +64,31 @@ final class PathParser {
 
     protected static Path parsePathExpression(Iterator<Token> expression,
                                             ConfigOrigin origin) {
-        return parsePathExpression(expression, origin, null);
+        return parsePathExpression(expression, origin, null, null);
+    }
+
+    protected static Path parsePathExpression(Iterator<Token> expression,
+                                              ConfigOrigin origin, String originalText) {
+        return parsePathExpression(expression, origin, originalText, null);
+    }
+
+    protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
+                                                            ConfigOrigin origin) {
+        return parsePathNodeExpression(expression, origin, null);
+    }
+
+    protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
+                                                            ConfigOrigin origin, String originalText) {
+        ArrayList<Token> pathTokens = new ArrayList<Token>();
+        Path path = parsePathExpression(expression, origin, originalText, pathTokens);
+        return new ConfigNodePath(path, pathTokens);
     }
 
     // originalText may be null if not available
     protected static Path parsePathExpression(Iterator<Token> expression,
-                                            ConfigOrigin origin, String originalText) {
+                                            ConfigOrigin origin, String originalText,
+                                            ArrayList<Token> pathTokens) {
         // each builder in "buf" is an element in the path.
-        ArrayList<Token> pathTokens = new ArrayList<Token>();
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
 
@@ -69,7 +99,9 @@ final class PathParser {
 
         while (expression.hasNext()) {
             Token t = expression.next();
-            pathTokens.add(t);
+
+            if (pathTokens != null)
+                pathTokens.add(t);
 
             // Ignore all IgnoredWhitespace tokens
             if (Tokens.isIgnoredWhitespace(t))
@@ -116,7 +148,7 @@ final class PathParser {
             }
         }
 
-        PathBuilder pb = new PathBuilder(pathTokens);
+        PathBuilder pb = new PathBuilder();
         for (Element e : buf) {
             if (e.sb.length() == 0 && !e.canBeEmpty) {
                 throw new ConfigException.BadPath(
@@ -194,7 +226,7 @@ final class PathParser {
         ArrayList<Token> tokens = new ArrayList<Token>();
         tokens.add(Tokens.newUnquotedText(null, s));
         // this works even if splitAt is -1; then we start the substring at 0
-        Path withOneMoreElement = new Path(s.substring(splitAt + 1, end), tail, tokens);
+        Path withOneMoreElement = new Path(s.substring(splitAt + 1, end), tail);
         if (splitAt < 0) {
             return withOneMoreElement;
         } else {

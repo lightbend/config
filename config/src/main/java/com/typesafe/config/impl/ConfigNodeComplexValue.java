@@ -3,8 +3,6 @@
  */
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigNode;
-
 import java.util.*;
 
 final class ConfigNodeComplexValue extends AbstractConfigNodeValue {
@@ -14,10 +12,11 @@ final class ConfigNodeComplexValue extends AbstractConfigNodeValue {
         this.children = new ArrayList(children);
     }
 
-    public Iterable<AbstractConfigNode> children() {
+    final public Iterable<AbstractConfigNode> children() {
         return children;
     }
 
+    @Override
     protected Collection<Token> tokens() {
         ArrayList<Token> tokens = new ArrayList();
         for (AbstractConfigNode child : children) {
@@ -28,62 +27,61 @@ final class ConfigNodeComplexValue extends AbstractConfigNodeValue {
 
     protected ConfigNodeComplexValue changeValueOnPath(Path desiredPath, AbstractConfigNodeValue value) {
         ArrayList<AbstractConfigNode> childrenCopy = new ArrayList(children);
-        boolean replaced = value == null;
-        ConfigNodeKeyValue node;
-        Path key;
+        // Copy the value so we can change it to null but not modify the original parameter
+        AbstractConfigNodeValue valueCopy = value;
         for (int i = children.size() - 1; i >= 0; i--) {
-            if (!(children.get(i) instanceof ConfigNodeKeyValue)) {
+            if (!(children.get(i) instanceof ConfigNodeField)) {
                 continue;
             }
-            node = (ConfigNodeKeyValue)children.get(i);
-            key = node.key().value();
+            ConfigNodeField node = (ConfigNodeField)children.get(i);
+            Path key = node.path().value();
             if (key.equals(desiredPath)) {
-                if (!replaced) {
-                    childrenCopy.set(i, node.replaceValue(value));
-                    replaced = true;
-                }
-                else
+                if (valueCopy == null)
                     childrenCopy.remove(i);
+                else {
+                    childrenCopy.set(i, node.replaceValue(value));
+                    valueCopy = null;
+                }
             } else if (desiredPath.startsWith(key)) {
                 if (node.value() instanceof ConfigNodeComplexValue) {
                     Path remainingPath = desiredPath.subPath(key.length());
-                    if (!replaced) {
-                        node = node.replaceValue(((ConfigNodeComplexValue) node.value()).changeValueOnPath(remainingPath, value));
-                        if (node.render() != children.get(i).render())
-                            replaced = true;
-                        childrenCopy.set(i, node);
-                    } else {
-                        node = node.replaceValue(((ConfigNodeComplexValue) node.value()).removeValueOnPath(remainingPath));
-                        childrenCopy.set(i, node);
-                    }
+                    childrenCopy.set(i, node.replaceValue(((ConfigNodeComplexValue) node.value()).changeValueOnPath(remainingPath, valueCopy)));
+                    if (valueCopy != null && node.render() != children.get(i).render())
+                        valueCopy = null;
                 }
             }
         }
         return new ConfigNodeComplexValue(childrenCopy);
     }
 
-    public ConfigNodeComplexValue setValueOnPath(Path desiredPath, AbstractConfigNodeValue value) {
-        ConfigNodeComplexValue node = changeValueOnPath(desiredPath, value);
+    public ConfigNodeComplexValue setValueOnPath(String desiredPath, AbstractConfigNodeValue value) {
+        ConfigNodePath path = PathParser.parsePathNode(desiredPath);
+        return setValueOnPath(path, value);
+    }
+
+    private ConfigNodeComplexValue setValueOnPath(ConfigNodePath desiredPath, AbstractConfigNodeValue value) {
+        ConfigNodeComplexValue node = changeValueOnPath(desiredPath.value(), value);
 
         // If the desired Path did not exist, add it
         if (node.render().equals(render())) {
             ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
             ArrayList<AbstractConfigNode> newNodes = new ArrayList();
             newNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
-            newNodes.add(new ConfigNodeKey(desiredPath));
+            newNodes.add(desiredPath);
             newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
             newNodes.add(new ConfigNodeSingleToken(Tokens.COLON));
             newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
             newNodes.add(value);
             newNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
-            childrenCopy.add(new ConfigNodeKeyValue(newNodes));
+            childrenCopy.add(new ConfigNodeField(newNodes));
             node = new ConfigNodeComplexValue(childrenCopy);
         }
         return node;
     }
 
-    public ConfigNodeComplexValue removeValueOnPath(Path desiredPath) {
-        return changeValueOnPath(desiredPath, null);
+    public ConfigNodeComplexValue removeValueOnPath(String desiredPath) {
+        Path path = PathParser.parsePath(desiredPath);
+        return changeValueOnPath(path, null);
     }
 
 }

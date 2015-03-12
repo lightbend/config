@@ -21,10 +21,10 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(node.render(), token.tokenText())
     }
 
-    private def keyValueNodeTest(key: ConfigNodeKey, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken, newValue: AbstractConfigNodeValue) {
+    private def keyValueNodeTest(key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken, newValue: AbstractConfigNodeValue) {
         val keyValNode = nodeKeyValuePair(key, value, trailingWhitespace)
         assertEquals(key.render() + " : " + value.render() + trailingWhitespace.render(), keyValNode.render())
-        assertEquals(key.render, keyValNode.key().render())
+        assertEquals(key.render, keyValNode.path().render())
         assertEquals(value.render, keyValNode.value().render())
 
         val newKeyValNode = keyValNode.replaceValue(newValue)
@@ -37,7 +37,7 @@ class ConfigNodeTest extends TestUtils {
                                        nodeKeyValuePair(nodeWhitespace("       "), configNodeKey(key),value, nodeWhitespace("    ")),
                                        nodeCloseBrace)
         val complexNode = configNodeComplexValue(complexNodeChildren)
-        val newNode = complexNode.setValueOnPath(Path.newPath(key), newValue)
+        val newNode = complexNode.setValueOnPath(key, newValue)
         val origText = "{       " + key + " : " + value.render() + "    }"
         val finalText = "{       " + key + " : " + newValue.render() + "    }"
 
@@ -55,13 +55,13 @@ class ConfigNodeTest extends TestUtils {
         val finalText = key.render() + " : 15"
 
         assertEquals(origText, complexNode.render())
-        assertEquals(finalText, complexNode.setValueOnPath(Path.newPath("foo"), nodeInt(15)).render())
+        assertEquals(finalText, complexNode.setValueOnPath("foo", nodeInt(15)).render())
     }
 
     private def nonExistentPathTest(value: AbstractConfigNodeValue) {
         val node = configNodeComplexValue(List(nodeKeyValuePair(configNodeKey("bar"), nodeInt(15))))
         assertEquals("bar : 15", node.render())
-        val newNode = node.setValueOnPath(Path.newPath("foo"), value)
+        val newNode = node.setValueOnPath("foo", value)
         val finalText = "bar : 15\nfoo : " + value.render() + "\n"
         assertEquals(finalText, newNode.render())
     }
@@ -199,14 +199,14 @@ class ConfigNodeTest extends TestUtils {
 
         //Can replace settings in nested maps
         // Paths with quotes in the name are treated as a single Path, rather than multiple sub-paths
-        var newNode = origNode.setValueOnPath(Path.newPath("baz.\"abc.def\""), configNodeSimpleValue(tokenTrue))
-        newNode = newNode.setValueOnPath(Path.newPath("baz.abc.def"), configNodeSimpleValue(tokenFalse))
+        var newNode = origNode.setValueOnPath("baz.\"abc.def\"", configNodeSimpleValue(tokenTrue))
+        newNode = newNode.setValueOnPath("baz.abc.def", configNodeSimpleValue(tokenFalse))
 
         // Repeats are removed from nested maps
-        newNode = newNode.setValueOnPath(Path.newPath("baz.abc.ghi"), configNodeSimpleValue(tokenUnquoted("randomunquotedString")))
+        newNode = newNode.setValueOnPath("baz.abc.ghi", configNodeSimpleValue(tokenUnquoted("randomunquotedString")))
 
         // Missing paths are added to the top level if they don't appear anywhere, including in nested maps
-        newNode = newNode.setValueOnPath(Path.newPath("baz.abc.\"this.does.not.exist@@@+$#\".end"), configNodeSimpleValue(tokenUnquoted("doesnotexist")))
+        newNode = newNode.setValueOnPath("baz.abc.\"this.does.not.exist@@@+$#\".end", configNodeSimpleValue(tokenUnquoted("doesnotexist")))
 
         // The above operations cause the resultant map to be rendered properly
         assertEquals(finalText, newNode.render())

@@ -15,22 +15,12 @@ final class Path {
     final private String first;
     final private Path remainder;
 
-    // We only need to keep track of this for top-level paths created with
-    // parsePath, so this will be empty or null for all other cases
-    final private ArrayList<Token> tokens;
-
     Path(String first, Path remainder) {
-        this(first, remainder, new ArrayList<Token>());
-    }
-
-    Path(String first, Path remainder, Collection<Token> tokens) {
         this.first = first;
         this.remainder = remainder;
-        this.tokens = new ArrayList<Token>(tokens);
     }
 
     Path(String... elements) {
-        this.tokens = null;
         if (elements.length == 0)
             throw new ConfigException.BugOrBroken("empty path");
         this.first = elements[0];
@@ -52,7 +42,6 @@ final class Path {
 
     // append all the paths in the iterator together into one path
     Path(Iterator<Path> i) {
-        this.tokens = null;
         if (!i.hasNext())
             throw new ConfigException.BugOrBroken("empty path");
 
@@ -215,10 +204,6 @@ final class Path {
             sb.append(".");
             remainder.appendToStringBuilder(sb);
         }
-    }
-
-    protected Collection<Token> tokens() {
-        return tokens;
     }
 
     @Override

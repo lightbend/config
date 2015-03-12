@@ -4,18 +4,18 @@
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
-final class ConfigNodeKeyValue extends AbstractConfigNode {
+final class ConfigNodeField extends AbstractConfigNode {
     final private ArrayList<AbstractConfigNode> children;
 
-    public ConfigNodeKeyValue(Collection<AbstractConfigNode> children) {
+    public ConfigNodeField(Collection<AbstractConfigNode> children) {
         this.children = new ArrayList(children);
     }
 
+    @Override
     protected Collection<Token> tokens() {
         ArrayList<Token> tokens = new ArrayList();
         for (AbstractConfigNode child : children) {
@@ -24,15 +24,15 @@ final class ConfigNodeKeyValue extends AbstractConfigNode {
         return tokens;
     }
 
-    public ConfigNodeKeyValue replaceValue(AbstractConfigNodeValue newValue) {
+    public ConfigNodeField replaceValue(AbstractConfigNodeValue newValue) {
         ArrayList<AbstractConfigNode> childrenCopy = new ArrayList(children);
         for (int i = 0; i < childrenCopy.size(); i++) {
             if (childrenCopy.get(i) instanceof AbstractConfigNodeValue) {
                 childrenCopy.set(i, newValue);
-                return new ConfigNodeKeyValue(childrenCopy);
+                return new ConfigNodeField(childrenCopy);
             }
         }
-        throw new ConfigException.BugOrBroken("KeyValue node doesn't have a value");
+        throw new ConfigException.BugOrBroken("Field node doesn't have a value");
     }
 
     public AbstractConfigNodeValue value() {
@@ -41,15 +41,15 @@ final class ConfigNodeKeyValue extends AbstractConfigNode {
                 return (AbstractConfigNodeValue)children.get(i);
             }
         }
-        throw new ConfigException.BugOrBroken("KeyValue node doesn't have a value");
+        throw new ConfigException.BugOrBroken("Field node doesn't have a value");
     }
 
-    public ConfigNodeKey key() {
+    public ConfigNodePath path() {
         for (int i = 0; i < children.size(); i++) {
-            if (children.get(i) instanceof ConfigNodeKey) {
-                return (ConfigNodeKey)children.get(i);
+            if (children.get(i) instanceof ConfigNodePath) {
+                return (ConfigNodePath)children.get(i);
             }
         }
-        throw new ConfigException.BugOrBroken("KeyValue node doesn't have a key");
+        throw new ConfigException.BugOrBroken("Field node doesn't have a path");
     }
 }
