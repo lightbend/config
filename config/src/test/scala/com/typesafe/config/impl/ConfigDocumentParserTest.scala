@@ -1,13 +1,27 @@
 package com.typesafe.config.impl
 
+import com.typesafe.config.{ConfigException, ConfigSyntax, ConfigParseOptions}
 import org.junit.Assert._
 import org.junit.Test
 
-class ConfigDocumentParserTest extends TestUtils{
+class ConfigDocumentParserTest extends TestUtils {
 
   private def parseTest(origText: String) {
       val node = ConfigDocumentParser.parse(tokenize(origText))
       assertEquals(origText, node.render())
+  }
+
+  private def parseJSONFailuresTest(origText: String, containsMessage: String) {
+      var exceptionThrown = false
+      try {
+        ConfigDocumentParser.parse(tokenize(origText), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+      } catch {
+        case e: Exception =>
+          exceptionThrown = true
+          assertTrue(e.isInstanceOf[ConfigException])
+          assertTrue(e.getMessage.contains(containsMessage))
+      }
+      assertTrue(exceptionThrown)
   }
 
   @Test
@@ -122,5 +136,55 @@ class ConfigDocumentParserTest extends TestUtils{
           }
         // Did I cover everything?
         }""")
+
+      // Can correctly parse a JSON string
+      val origText =
+        """{
+              "foo": "bar",
+              "baz": 123,
+              "qux": true,
+              "array": [
+                {"a": true,
+                 "c": false},
+                12
+              ]
+           }
+      """
+      val node = ConfigDocumentParser.parse(tokenize(origText), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+      assertEquals(origText, node.render())
+  }
+
+  @Test
+  def parseJSONFailures() {
+      // JSON does not support concatenations
+      parseJSONFailuresTest("""{ "foo": 123 456 789 } """, "Expecting close brace } or a comma")
+
+      // JSON must begin with { or [
+      parseJSONFailuresTest(""""a": 123, "b": 456"""", "Document must have an object or array at root")
+
+      // JSON does not support unquoted text
+      parseJSONFailuresTest("""{"foo": unquotedtext}""", "Token not allowed in valid JSON")
+
+      // JSON does not support substitutions
+      parseJSONFailuresTest("""{"foo": ${"a.b"}}""", "Substitutions (${} syntax) not allowed in JSON")
+
+      // JSON does not support multi-element paths
+      parseJSONFailuresTest("""{"foo"."bar": 123}""", "Token not allowed in valid JSON")
+
+      // JSON does not support =
+      parseJSONFailuresTest("""{"foo"=123}""", """Key '"foo"' may not be followed by token: '='""")
+
+      // JSON does not support +=
+      parseJSONFailuresTest("""{"foo" += "bar"}""", """Key '"foo"' may not be followed by token: '+='""")
+
+      // JSON does not support duplicate keys
+      parseJSONFailuresTest("""{"foo" : 123, "foo": 456}""", "JSON does not allow duplicate fields")
+
+      // JSON does not support trailing commas
+      parseJSONFailuresTest("""{"foo" : 123,}""", "expecting a field name after a comma, got a close brace } instead")
+
+      // JSON does not support empty documents
+      parseJSONFailuresTest("", "Empty document")
+
   }
 }

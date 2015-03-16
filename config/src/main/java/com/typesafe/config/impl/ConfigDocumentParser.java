@@ -56,7 +56,7 @@ final class ConfigDocumentParser {
         private Token nextToken() {
             Token t = popToken();
             if (flavor == ConfigSyntax.JSON) {
-                if (Tokens.isUnquotedText(t)) {
+                if (Tokens.isUnquotedText(t) && !isUnquotedWhitespace(t)) {
                     throw parseError(addKeyName("Token not allowed in valid JSON: '"
                             + Tokens.getUnquotedText(t) + "'"));
                 } else if (Tokens.isSubstitution(t)) {
@@ -91,6 +91,7 @@ final class ConfigDocumentParser {
             if (flavor == ConfigSyntax.JSON) {
                 Token t = nextTokenIgnoringWhitespace(nodes);
                 if (t == Tokens.COMMA) {
+                    nodes.add(new ConfigNodeSingleToken(t));
                     return true;
                 } else {
                     putBack(t);
