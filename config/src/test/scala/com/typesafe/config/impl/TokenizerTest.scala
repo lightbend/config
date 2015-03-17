@@ -283,11 +283,11 @@ class TokenizerTest extends TestUtils {
             tokenLine(2), tokenCommentDoubleSlash("comment3        "),
             tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
             "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
-        tokenizerTest(List(tokenWhitespace("        "), tokenCommentDoubleSlash("comment\r"),
-            tokenLine(1), tokenWhitespace("        "), tokenCommentDoubleSlash("comment2        "),
-            tokenLine(2), tokenCommentDoubleSlash("comment3        "),
-            tokenLine(3), tokenLine(4), tokenCommentDoubleSlash("comment4")),
-            "        //comment\r\n        //comment2        \n//comment3        \n\n//comment4")
+        tokenizerTest(List(tokenWhitespace("        "), tokenCommentHash("comment\r"),
+            tokenLine(1), tokenWhitespace("        "), tokenCommentHash("comment2        "),
+            tokenLine(2), tokenCommentHash("comment3        "),
+            tokenLine(3), tokenLine(4), tokenCommentHash("comment4")),
+            "        #comment\r\n        #comment2        \n#comment3        \n\n#comment4")
     }
 
     @Test
