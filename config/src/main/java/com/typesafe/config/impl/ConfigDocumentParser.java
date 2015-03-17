@@ -11,14 +11,19 @@ import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValueType;
 
 final class ConfigDocumentParser {
-    static AbstractConfigNodeValue parse(Iterator<Token> tokens, ConfigParseOptions options) {
+    static ConfigNodeComplexValue parse(Iterator<Token> tokens, ConfigParseOptions options) {
         ParseContext context = new ParseContext(options.getSyntax(), tokens);
         return context.parse();
     }
 
-    static AbstractConfigNodeValue parse(Iterator<Token> tokens) {
+    static ConfigNodeComplexValue parse(Iterator<Token> tokens) {
         ParseContext context = new ParseContext(ConfigSyntax.CONF, tokens);
         return context.parse();
+    }
+
+    static AbstractConfigNodeValue parseValue(Iterator<Token> tokens, ConfigParseOptions options) {
+        ParseContext context = new ParseContext(options.getSyntax(), tokens);
+        return context.parseSingleValue();
     }
 
     static private final class ParseContext {
@@ -623,6 +628,32 @@ final class ConfigDocumentParser {
             } else {
                 throw parseError("Document has trailing tokens after first object or array: "
                         + t);
+            }
+        }
+
+        // Parse a given input stream into a single value node. Used when doing a replace inside a ConfigDocument.
+        AbstractConfigNodeValue parseSingleValue() {
+            Token t = nextToken();
+            if (t == Tokens.START) {
+                // OK
+            } else {
+                throw new ConfigException.BugOrBroken(
+                        "token stream did not begin with START, had " + t);
+            }
+
+            t = nextToken();
+            while (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
+                t = nextToken();
+            }
+            if (t == Tokens.END) {
+                throw parseError("Empty value");
+            }
+            if (flavor == ConfigSyntax.JSON) {
+                return parseValue(t);
+            } else {
+                putBack(t);
+                ArrayList<AbstractConfigNode> nodes = new ArrayList();
+                return consolidateValues(nodes);
             }
         }
     }

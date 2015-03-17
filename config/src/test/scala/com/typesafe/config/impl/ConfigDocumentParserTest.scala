@@ -24,6 +24,44 @@ class ConfigDocumentParserTest extends TestUtils {
       assertTrue(exceptionThrown)
   }
 
+  private def parseSimpleValueTest(origText: String, finalText: String = null) {
+      val expectedRenderedText = if (finalText == null) origText else finalText
+      val node = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults())
+      assertEquals(expectedRenderedText, node.render())
+      assertTrue(node.isInstanceOf[AbstractConfigNodeValue])
+
+      val nodeJSON = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+      assertEquals(expectedRenderedText, nodeJSON.render())
+      assertTrue(nodeJSON.isInstanceOf[AbstractConfigNodeValue])
+  }
+
+  private def parseComplexValueTest(origText: String) {
+      val node = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults())
+      assertEquals(origText, node.render())
+      assertTrue(node.isInstanceOf[AbstractConfigNodeValue])
+
+      val nodeJSON = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+      assertEquals(origText, nodeJSON.render())
+      assertTrue(nodeJSON.isInstanceOf[AbstractConfigNodeValue])
+  }
+
+  private def parseSingleValueInvalidJSONTest(origText: String, containsMessage: String) {
+      val node = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults())
+      assertEquals(origText, node.render())
+
+      var exceptionThrown = false
+      try {
+          ConfigDocumentParser.parse(tokenize(origText), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+      } catch {
+        case e: Exception =>
+            exceptionThrown = true
+            assertTrue(e.isInstanceOf[ConfigException])
+            assertTrue(e.getMessage.contains(containsMessage))
+      }
+      assertTrue(exceptionThrown)
+  }
+
+
   @Test
   def parseSuccess {
       parseTest("foo:bar")
@@ -183,5 +221,38 @@ class ConfigDocumentParserTest extends TestUtils {
       // JSON does not support empty documents
       parseJSONFailuresTest("", "Empty document")
 
+  }
+
+  @Test
+  def parseSingleValues() {
+      // Parse simple values
+      parseSimpleValueTest("123")
+      parseSimpleValueTest("123.456")
+      parseSimpleValueTest(""""a string"""")
+      parseSimpleValueTest("true")
+      parseSimpleValueTest("false")
+      parseSimpleValueTest("null")
+
+      // Parse Simple Value throws out trailing and leading whitespace
+      parseSimpleValueTest("   123", "123")
+      parseSimpleValueTest("123    ", "123")
+      parseSimpleValueTest("   123   ", "123")
+
+      // Can parse complex values
+      parseComplexValueTest("""{"a": "b"}""")
+      parseComplexValueTest("""["a","b","c"]""")
+
+      parseSingleValueInvalidJSONTest("unquotedtext", "Token not allowed in valid JSON")
+      parseSingleValueInvalidJSONTest("${a.b}", "Substitutions (${} syntax) not allowed in JSON")
+
+      // Check that concatenations are handled by CONF parsing
+      var origText = "123 456 unquotedtext abc"
+      var node = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults())
+      assertEquals(origText, node.render())
+
+      // Check that concatenations in JSON will only return the first value passed in
+      origText = "123 456 789"
+      node = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+      assertEquals("123", node.render())
   }
 }

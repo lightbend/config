@@ -16,4 +16,6 @@ final class ConfigNodeSingleToken extends AbstractConfigNode{
     protected Collection<Token> tokens() {
         return Collections.singletonList(token);
     }
+
+    protected Token token() { return token; }
 }

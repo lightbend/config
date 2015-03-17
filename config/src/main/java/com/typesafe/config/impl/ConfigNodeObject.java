@@ -1,7 +1,10 @@
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigException;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 final class ConfigNodeObject extends ConfigNodeComplexValue {
     ConfigNodeObject(Collection<AbstractConfigNode> children) {
@@ -47,17 +50,33 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
 
         // If the desired Path did not exist, add it
         if (node.render().equals(render())) {
+            boolean startsWithBrace = super.children.get(0) instanceof ConfigNodeSingleToken &&
+                                        ((ConfigNodeSingleToken) super.children.get(0)).token() == Tokens.OPEN_CURLY;
             ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children);
             ArrayList<AbstractConfigNode> newNodes = new ArrayList();
             newNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
+            if (startsWithBrace)
+                newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, "\t")));
             newNodes.add(desiredPath);
             newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
             newNodes.add(new ConfigNodeSingleToken(Tokens.COLON));
             newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
             newNodes.add(value);
             newNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
-            childrenCopy.add(new ConfigNodeField(newNodes));
-            node = new ConfigNodeObject(childrenCopy);
+
+            if (startsWithBrace) {
+                for (int i = childrenCopy.size() - 1; i >= 0; i--) {
+                    if (childrenCopy.get(i) instanceof ConfigNodeSingleToken &&
+                            ((ConfigNodeSingleToken) childrenCopy.get(i)).token == Tokens.CLOSE_CURLY) {
+                        childrenCopy.add(i, new ConfigNodeField(newNodes));
+                        return new ConfigNodeObject(childrenCopy);
+                    }
+                }
+                throw new ConfigException.BugOrBroken("Object had an opening brace, but no closing brace");
+            } else {
+                childrenCopy.add(new ConfigNodeField(newNodes));
+                node = new ConfigNodeObject(childrenCopy);
+            }
         }
         return node;
     }
