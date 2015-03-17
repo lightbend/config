@@ -124,9 +124,8 @@ final class ConfigDocumentParser {
             }
         }
 
-        // merge a bunch of adjacent values into one
-        // value
-        private ConfigNodeComplexValue parseConcatenation(Collection<AbstractConfigNode> nodes) {
+        // parse a concatenation. If there is no concatenation, return the next value
+        private AbstractConfigNodeValue consolidateValues(Collection<AbstractConfigNode> nodes) {
             // this trick is not done in JSON
             if (flavor == ConfigSyntax.JSON)
                 return null;
@@ -139,18 +138,18 @@ final class ConfigDocumentParser {
             Token t = nextTokenIgnoringWhitespace(nodes);
             while (true) {
                 AbstractConfigNodeValue v = null;
-                if (Tokens.isValue(t) || Tokens.isUnquotedText(t)
+                if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t)) {
+                    values.add(new ConfigNodeSingleToken(t));
+                    t = nextToken();
+                    continue;
+                }
+                else if (Tokens.isValue(t) || Tokens.isUnquotedText(t)
                         || Tokens.isSubstitution(t) || t == Tokens.OPEN_CURLY
                         || t == Tokens.OPEN_SQUARE) {
                     // there may be newlines _within_ the objects and arrays
                     v = parseValue(t);
                     valueCount++;
-                } else if (Tokens.isIgnoredWhitespace(t)) {
-                    values.add(new ConfigNodeSingleToken(t));
-                    t = nextToken();
-                    continue;
-                }
-                else {
+                } else {
                     break;
                 }
 
@@ -163,15 +162,20 @@ final class ConfigDocumentParser {
             }
 
             putBack(t);
-            ConfigNodeComplexValue value = new ConfigNodeComplexValue(values);
 
-            // put back all tokens, as they did not form a concatenation
+            // No concatenation was seen, but a single value may have been parsed, so return it, and put back
+            // all succeeding tokens
             if (valueCount < 2) {
-                ArrayList<Token> tokens = new ArrayList(value.tokens());
-                for (int i = tokens.size() - 1; i >= 0; i--) {
-                    putBack(tokens.get(i));
+                AbstractConfigNodeValue value = null;
+                for (AbstractConfigNode node : values) {
+                    if (node instanceof AbstractConfigNodeValue)
+                        value = (AbstractConfigNodeValue)node;
+                    else if (node == null)
+                        nodes.add(node);
+                    else
+                        putBack((new ArrayList<Token>(node.tokens())).get(0));
                 }
-                return null;
+                return value;
             }
 
             return new ConfigNodeComplexValue(values);
@@ -409,10 +413,10 @@ final class ConfigDocumentParser {
                     boolean insideEquals = false;
 
                     Token valueToken;
-                    AbstractConfigNodeValue newValue;
+                    AbstractConfigNodeValue nextValue;
                     if (flavor == ConfigSyntax.CONF && afterKey == Tokens.OPEN_CURLY) {
                         // can omit the ':' or '=' before an object value
-                        newValue = parseValue(afterKey);
+                        nextValue = parseValue(afterKey);
                     } else {
                         if (!isKeyValueSeparatorToken(afterKey)) {
                             throw parseError(addQuoteSuggestion(afterKey.toString(),
@@ -427,13 +431,13 @@ final class ConfigDocumentParser {
                             equalsCount += 1;
                         }
 
-                        newValue = parseConcatenation(keyValueNodes);
-                        if (newValue == null) {
-                            newValue = parseValue(nextTokenIgnoringWhitespace(keyValueNodes));
+                        nextValue = consolidateValues(keyValueNodes);
+                        if (nextValue == null) {
+                            nextValue = parseValue(nextTokenIgnoringWhitespace(keyValueNodes));
                         }
                     }
 
-                    keyValueNodes.add(newValue);
+                    keyValueNodes.add(nextValue);
                     if (insideEquals) {
                         equalsCount -= 1;
                     }
@@ -506,10 +510,10 @@ final class ConfigDocumentParser {
             arrayCount += 1;
             Token t;
 
-            ConfigNodeComplexValue concatenation = parseConcatenation(children);
-            if (concatenation != null) {
-                children.add(concatenation);
-                concatenation = null;
+            AbstractConfigNodeValue nextValue = consolidateValues(children);
+            if (nextValue != null) {
+                children.add(nextValue);
+                nextValue = null;
             } else {
                 t = nextTokenIgnoringWhitespace(children);
 
@@ -521,8 +525,9 @@ final class ConfigDocumentParser {
                 } else if (Tokens.isValue(t) || t == Tokens.OPEN_CURLY
                         || t == Tokens.OPEN_SQUARE || Tokens.isUnquotedText(t)
                         || Tokens.isSubstitution(t)) {
-                    AbstractConfigNodeValue v = parseValue(t);
-                    children.add(v);
+                    nextValue = parseValue(t);
+                    children.add(nextValue);
+                    nextValue = null;
                 } else {
                     throw parseError(addKeyName("List should have ] or a first element after the open [, instead had token: "
                             + t
@@ -553,17 +558,18 @@ final class ConfigDocumentParser {
                 }
 
                 // now just after a comma
-                concatenation = parseConcatenation(children);
-                if (concatenation != null) {
-                    children.add(concatenation);
-                    concatenation = null;
+                nextValue = consolidateValues(children);
+                if (nextValue != null) {
+                    children.add(nextValue);
+                    nextValue = null;
                 } else {
                     t = nextTokenIgnoringWhitespace(children);
                     if (Tokens.isValue(t) || t == Tokens.OPEN_CURLY
                             || t == Tokens.OPEN_SQUARE || Tokens.isUnquotedText(t)
                             || Tokens.isSubstitution(t)) {
-                        AbstractConfigNodeValue v = parseValue(t);
-                        children.add(v);
+                        nextValue = parseValue(t);
+                        children.add(nextValue);
+                        nextValue = null;
                     } else if (flavor != ConfigSyntax.JSON && t == Tokens.CLOSE_SQUARE) {
                         // we allow one trailing comma
                         putBack(t);

@@ -49,9 +49,6 @@ class ConfigDocumentParserTest extends TestUtils {
       parseTest("{foo:bar}     ")
       parseTest("""{include "foo.conf"}""")
 
-      //Is this valid?
-      //parseTest("  {  foo  :  bar  }  ")
-
       //Can parse a map with all simple types
       parseTest(
         """{
