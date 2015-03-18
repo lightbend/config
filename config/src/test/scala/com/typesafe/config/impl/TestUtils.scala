@@ -673,8 +673,16 @@ abstract trait TestUtils {
         new ConfigNodeSingleToken(value: Token)
     }
 
-    def configNodeComplexValue(nodes: List[AbstractConfigNode]) = {
-        new ConfigNodeComplexValue(nodes.asJavaCollection)
+    def configNodeObject(nodes: List[AbstractConfigNode]) = {
+        new ConfigNodeObject(nodes.asJavaCollection)
+    }
+
+    def configNodeArray(nodes: List[AbstractConfigNode]) = {
+        new ConfigNodeArray(nodes.asJavaCollection)
+    }
+
+    def configNodeConcatenation(nodes: List[AbstractConfigNode]) = {
+        new ConfigNodeConcatenation(nodes.asJavaCollection)
     }
 
     def nodeColon = new ConfigNodeSingleToken(Tokens.COLON)

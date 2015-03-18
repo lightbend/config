@@ -20,7 +20,7 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(node.render(), token.tokenText())
     }
 
-    private def keyValueNodeTest(key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken, newValue: AbstractConfigNodeValue) {
+    private def fieldNodeTest(key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken, newValue: AbstractConfigNodeValue) {
         val keyValNode = nodeKeyValuePair(key, value, trailingWhitespace)
         assertEquals(key.render() + " : " + value.render() + trailingWhitespace.render(), keyValNode.render())
         assertEquals(key.render, keyValNode.path().render())
@@ -35,7 +35,7 @@ class ConfigNodeTest extends TestUtils {
         val complexNodeChildren = List(nodeOpenBrace,
                                        nodeKeyValuePair(nodeWhitespace("       "), configNodeKey(key),value, nodeWhitespace("    ")),
                                        nodeCloseBrace)
-        val complexNode = configNodeComplexValue(complexNodeChildren)
+        val complexNode = configNodeObject(complexNodeChildren)
         val newNode = complexNode.setValueOnPath(key, newValue)
         val origText = "{       " + key + " : " + value.render() + "    }"
         val finalText = "{       " + key + " : " + newValue.render() + "    }"
@@ -49,7 +49,7 @@ class ConfigNodeTest extends TestUtils {
         val keyValPair1 = nodeKeyValuePair(key, value1)
         val keyValPair2 = nodeKeyValuePair(key, value2)
         val keyValPair3 = nodeKeyValuePair(key, value3)
-        val complexNode = configNodeComplexValue(List(keyValPair1, keyValPair2, keyValPair3))
+        val complexNode = configNodeObject(List(keyValPair1, keyValPair2, keyValPair3))
         val origText = keyValPair1.render() + keyValPair2.render() + keyValPair3.render()
         val finalText = key.render() + " : 15"
 
@@ -58,7 +58,7 @@ class ConfigNodeTest extends TestUtils {
     }
 
     private def nonExistentPathTest(value: AbstractConfigNodeValue) {
-        val node = configNodeComplexValue(List(nodeKeyValuePair(configNodeKey("bar"), nodeInt(15))))
+        val node = configNodeObject(List(nodeKeyValuePair(configNodeKey("bar"), nodeInt(15))))
         assertEquals("bar : 15", node.render())
         val newNode = node.setValueOnPath("foo", value)
         val finalText = "bar : 15\nfoo : " + value.render() + "\n"
@@ -109,14 +109,14 @@ class ConfigNodeTest extends TestUtils {
     }
 
     @Test
-    def createConfigNodeKeyValue() {
+    def createConfigNodeField() {
         // Supports Quoted and Unquoted keys
-        keyValueNodeTest(configNodeKey("\"abc\""), nodeInt(123), nodeLine(1), nodeInt(245))
-        keyValueNodeTest(configNodeKey("abc"), nodeInt(123), nodeLine(1), nodeInt(245))
+        fieldNodeTest(configNodeKey("\"abc\""), nodeInt(123), nodeLine(1), nodeInt(245))
+        fieldNodeTest(configNodeKey("abc"), nodeInt(123), nodeLine(1), nodeInt(245))
 
         // Can replace value with values of different types
-        keyValueNodeTest(configNodeKey("\"abc\""), nodeInt(123), nodeLine(1), nodeString("I am a string"))
-        keyValueNodeTest(configNodeKey("\"abc\""), nodeInt(123), nodeLine(1), configNodeComplexValue(List(nodeOpenBrace, nodeCloseBrace)))
+        fieldNodeTest(configNodeKey("\"abc\""), nodeInt(123), nodeLine(1), nodeString("I am a string"))
+        fieldNodeTest(configNodeKey("\"abc\""), nodeInt(123), nodeLine(1), configNodeObject(List(nodeOpenBrace, nodeCloseBrace)))
     }
 
     @Test
@@ -135,20 +135,30 @@ class ConfigNodeTest extends TestUtils {
         topLevelValueReplaceTest(nodeSubstitution(tokenUnquoted("a.b")), nodeInt(10))
 
         // Ensure arrays can be replaced
-        val array = configNodeComplexValue(List(nodeOpenBracket, nodeInt(10), nodeSpace, nodeComma, nodeSpace, nodeInt(15), nodeCloseBracket))
+        val array = configNodeArray(List(nodeOpenBracket, nodeInt(10), nodeSpace, nodeComma, nodeSpace, nodeInt(15), nodeCloseBracket))
         topLevelValueReplaceTest(nodeInt(10), array)
         topLevelValueReplaceTest(array, nodeInt(10))
-        topLevelValueReplaceTest(array, configNodeComplexValue(List(nodeOpenBrace, nodeCloseBrace)))
+        topLevelValueReplaceTest(array, configNodeObject(List(nodeOpenBrace, nodeCloseBrace)))
 
-        //Ensure maps can be replaced
-        val nestedMap = configNodeComplexValue(List(nodeOpenBrace, configNodeKey("abc"),
+        // Ensure maps can be replaced
+        val nestedMap = configNodeObject(List(nodeOpenBrace, configNodeKey("abc"),
                                                     nodeColon, configNodeSimpleValue(tokenString("a string")),
                                                     nodeCloseBrace))
         topLevelValueReplaceTest(nestedMap, nodeInt(10))
         topLevelValueReplaceTest(nodeInt(10), nestedMap)
         topLevelValueReplaceTest(array, nestedMap)
         topLevelValueReplaceTest(nestedMap, array)
-        topLevelValueReplaceTest(nestedMap, configNodeComplexValue(List(nodeOpenBrace, nodeCloseBrace)))
+        topLevelValueReplaceTest(nestedMap, configNodeObject(List(nodeOpenBrace, nodeCloseBrace)))
+
+        // Ensure concatenations can be replaced
+        val concatenation = configNodeConcatenation(List(nodeInt(10), nodeSpace, nodeString("Hello")))
+        topLevelValueReplaceTest(concatenation, nodeInt(12))
+        topLevelValueReplaceTest(nodeInt(12), concatenation)
+        topLevelValueReplaceTest(nestedMap, concatenation)
+        topLevelValueReplaceTest(concatenation, nestedMap)
+        topLevelValueReplaceTest(array, concatenation)
+        topLevelValueReplaceTest(concatenation, array)
+
 
         //Ensure a key with format "a.b" will be properly replaced
         topLevelValueReplaceTest(nodeInt(10), nestedMap, "foo.bar")
@@ -156,8 +166,8 @@ class ConfigNodeTest extends TestUtils {
 
     @Test
     def removeDuplicates() {
-        val emptyMapNode = configNodeComplexValue(List(nodeOpenBrace, nodeCloseBrace))
-        val emptyArrayNode = configNodeComplexValue(List(nodeOpenBracket, nodeCloseBracket))
+        val emptyMapNode = configNodeObject(List(nodeOpenBrace, nodeCloseBrace))
+        val emptyArrayNode = configNodeArray(List(nodeOpenBracket, nodeCloseBracket))
         //Ensure duplicates of a key are removed from a map
         replaceDuplicatesTest(nodeInt(10), nodeTrue, nodeNull)
         replaceDuplicatesTest(emptyMapNode, emptyMapNode, emptyMapNode)
@@ -168,8 +178,8 @@ class ConfigNodeTest extends TestUtils {
     @Test
     def addNonExistentPaths() {
         nonExistentPathTest(nodeInt(10))
-        nonExistentPathTest(configNodeComplexValue(List(nodeOpenBracket, nodeInt(15), nodeCloseBracket)))
-        nonExistentPathTest(configNodeComplexValue(List(nodeOpenBrace, nodeKeyValuePair(configNodeKey("foo"), nodeDouble(3.14), nodeSpace))))
+        nonExistentPathTest(configNodeArray(List(nodeOpenBracket, nodeInt(15), nodeCloseBracket)))
+        nonExistentPathTest(configNodeObject(List(nodeOpenBrace, nodeKeyValuePair(configNodeKey("foo"), nodeDouble(3.14), nodeSpace))))
     }
 
     @Test
@@ -177,21 +187,21 @@ class ConfigNodeTest extends TestUtils {
         // Test that all features of node replacement in a map work in a complex map containing nested maps
         val origText = "foo : bar\nbaz : {\n\t\"abc.def\" : 123\n\t//This is a comment about the below setting\n\n\tabc : {\n\t\t" +
           "def : \"this is a string\"\n\t\tghi : ${\"a.b\"}\n\t}\n}\nbaz.abc.ghi : 52\nbaz.abc.ghi : 53\n}"
-        val lowestLevelMap = configNodeComplexValue(List(nodeOpenBrace, nodeLine(6),
-                                                         nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("def"), configNodeSimpleValue(tokenString("this is a string")), nodeLine(7)),
-                                                         nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("ghi"), configNodeSimpleValue(tokenKeySubstitution("a.b")), nodeLine(8)),
-                                                         nodeWhitespace("\t"), nodeCloseBrace))
-        val higherLevelMap = configNodeComplexValue(List(nodeOpenBrace, nodeLine(2),
-                                                         nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("\"abc.def\""), configNodeSimpleValue(tokenInt(123)), nodeLine(3)),
-                                                         nodeWhitespace("\t"), configNodeBasic(tokenCommentDoubleSlash("This is a comment about the below setting")),
-                                                         nodeLine(4), nodeLine(5),
-                                                         nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("abc"), lowestLevelMap, nodeLine(9)), nodeWhitespace(""),
-                                                         nodeCloseBrace))
-        val origNode =  configNodeComplexValue(List(nodeKeyValuePair(configNodeKey("foo"), configNodeSimpleValue(tokenUnquoted("bar")), nodeLine(1)),
-                                                    nodeKeyValuePair(configNodeKey("baz"), higherLevelMap, nodeLine(10)),
-                                                    nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(52)), nodeLine(11)),
-                                                    nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(53)), nodeLine(12)),
-                                                    nodeCloseBrace))
+        val lowestLevelMap = configNodeObject(List(nodeOpenBrace, nodeLine(6),
+                                                   nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("def"), configNodeSimpleValue(tokenString("this is a string")), nodeLine(7)),
+                                                   nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("ghi"), configNodeSimpleValue(tokenKeySubstitution("a.b")), nodeLine(8)),
+                                                   nodeWhitespace("\t"), nodeCloseBrace))
+        val higherLevelMap = configNodeObject(List(nodeOpenBrace, nodeLine(2),
+                                                   nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("\"abc.def\""), configNodeSimpleValue(tokenInt(123)), nodeLine(3)),
+                                                   nodeWhitespace("\t"), configNodeBasic(tokenCommentDoubleSlash("This is a comment about the below setting")),
+                                                   nodeLine(4), nodeLine(5),
+                                                   nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("abc"), lowestLevelMap, nodeLine(9)), nodeWhitespace(""),
+                                                   nodeCloseBrace))
+        val origNode =  configNodeObject(List(nodeKeyValuePair(configNodeKey("foo"), configNodeSimpleValue(tokenUnquoted("bar")), nodeLine(1)),
+                                              nodeKeyValuePair(configNodeKey("baz"), higherLevelMap, nodeLine(10)),
+                                              nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(52)), nodeLine(11)),
+                                              nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(53)), nodeLine(12)),
+                                              nodeCloseBrace))
         assertEquals(origText, origNode.render())
         val finalText = "foo : bar\nbaz : {\n\t\"abc.def\" : true\n\t//This is a comment about the below setting\n\n\tabc : {\n\t\t" +
           "def : false\n\t}\n}\nbaz.abc.ghi : randomunquotedString\n}\nbaz.abc.\"this.does.not.exist@@@+$#\".end : doesnotexist\n"

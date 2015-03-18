@@ -178,7 +178,7 @@ final class ConfigDocumentParser {
                 return value;
             }
 
-            return new ConfigNodeComplexValue(values);
+            return new ConfigNodeConcatenation(values);
         }
 
         private ConfigException parseError(String message) {
@@ -500,7 +500,7 @@ final class ConfigDocumentParser {
                 }
             }
 
-            return new ConfigNodeComplexValue(objectNodes);
+            return new ConfigNodeObject(objectNodes);
         }
 
         private ConfigNodeComplexValue parseArray() {
@@ -521,7 +521,7 @@ final class ConfigDocumentParser {
                 if (t == Tokens.CLOSE_SQUARE) {
                     arrayCount -= 1;
                     children.add(new ConfigNodeSingleToken(t));
-                    return new ConfigNodeComplexValue(children);
+                    return new ConfigNodeArray(children);
                 } else if (Tokens.isValue(t) || t == Tokens.OPEN_CURLY
                         || t == Tokens.OPEN_SQUARE || Tokens.isUnquotedText(t)
                         || Tokens.isSubstitution(t)) {
@@ -547,7 +547,7 @@ final class ConfigDocumentParser {
                     if (t == Tokens.CLOSE_SQUARE) {
                         arrayCount -= 1;
                         children.add(new ConfigNodeSingleToken(t));
-                        return new ConfigNodeComplexValue(children);
+                        return new ConfigNodeArray(children);
                     } else {
                         throw parseError(addKeyName("List should have ended with ] or had a comma, instead had token: "
                                 + t
@@ -616,7 +616,10 @@ final class ConfigDocumentParser {
             ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>(((ConfigNodeComplexValue)result).children());
             t = nextTokenIgnoringWhitespace(children);
             if (t == Tokens.END) {
-                return new ConfigNodeComplexValue(children);
+                if (result instanceof ConfigNodeArray) {
+                    return new ConfigNodeArray(children);
+                }
+                return new ConfigNodeObject(children);
             } else {
                 throw parseError("Document has trailing tokens after first object or array: "
                         + t);
