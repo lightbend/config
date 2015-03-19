@@ -27,7 +27,7 @@ final class SimpleConfigDocument implements ConfigDocument {
         AbstractConfigNodeValue parsedValue = ConfigDocumentParser.parseValue(tokens, parseOptions);
         reader.close();
 
-        return new SimpleConfigDocument(((ConfigNodeObject)configNodeTree).setValueOnPath(path, parsedValue), parseOptions);
+        return new SimpleConfigDocument(((ConfigNodeObject)configNodeTree).setValueOnPath(path, parsedValue, parseOptions.getSyntax()), parseOptions);
     }
 
     public String render() {

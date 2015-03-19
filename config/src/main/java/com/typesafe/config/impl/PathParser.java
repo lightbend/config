@@ -9,9 +9,7 @@ import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValueType;
 
 import java.io.StringReader;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 final class PathParser {
     static class Element {
@@ -33,13 +31,17 @@ final class PathParser {
     static ConfigOrigin apiOrigin = SimpleConfigOrigin.newSimple("path parameter");
 
     static ConfigNodePath parsePathNode(String path) {
+        return parsePathNode(path, ConfigSyntax.CONF);
+    }
+
+    static ConfigNodePath parsePathNode(String path, ConfigSyntax flavor) {
         StringReader reader = new StringReader(path);
 
         try {
             Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader,
-                    ConfigSyntax.CONF);
+                    flavor);
             tokens.next(); // drop START
-            return parsePathNodeExpression(tokens, apiOrigin, path);
+            return parsePathNodeExpression(tokens, apiOrigin, path, flavor);
         } finally {
             reader.close();
         }
@@ -64,30 +66,31 @@ final class PathParser {
 
     protected static Path parsePathExpression(Iterator<Token> expression,
                                             ConfigOrigin origin) {
-        return parsePathExpression(expression, origin, null, null);
+        return parsePathExpression(expression, origin, null, null, ConfigSyntax.CONF);
     }
 
     protected static Path parsePathExpression(Iterator<Token> expression,
                                               ConfigOrigin origin, String originalText) {
-        return parsePathExpression(expression, origin, originalText, null);
+        return parsePathExpression(expression, origin, originalText, null, ConfigSyntax.CONF);
     }
 
     protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
                                                             ConfigOrigin origin) {
-        return parsePathNodeExpression(expression, origin, null);
+        return parsePathNodeExpression(expression, origin, null, ConfigSyntax.CONF);
     }
 
     protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
-                                                            ConfigOrigin origin, String originalText) {
+                                                            ConfigOrigin origin, String originalText, ConfigSyntax flavor) {
         ArrayList<Token> pathTokens = new ArrayList<Token>();
-        Path path = parsePathExpression(expression, origin, originalText, pathTokens);
+        Path path = parsePathExpression(expression, origin, originalText, pathTokens, flavor);
         return new ConfigNodePath(path, pathTokens);
     }
 
     // originalText may be null if not available
     protected static Path parsePathExpression(Iterator<Token> expression,
                                             ConfigOrigin origin, String originalText,
-                                            ArrayList<Token> pathTokens) {
+                                            ArrayList<Token> pathTokens,
+                                            ConfigSyntax flavor) {
         // each builder in "buf" is an element in the path.
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
@@ -132,8 +135,21 @@ final class PathParser {
                     // we tokenize non-string values is largely an
                     // implementation detail.
                     AbstractConfigValue v = Tokens.getValue(t);
+
+                    // We need to split the tokens on a . so that we can get sub-paths but still preserve
+                    // the original path text when doing an insertion
+                    if (pathTokens != null) {
+                        pathTokens.remove(pathTokens.size() - 1);
+                        pathTokens.addAll(splitTokenOnPeriod(t, flavor));
+                    }
                     text = v.transformToString();
                 } else if (Tokens.isUnquotedText(t)) {
+                    // We need to split the tokens on a . so that we can get sub-paths but still preserve
+                    // the original path text when doing an insertion on ConfigNodeObjects
+                    if (pathTokens != null) {
+                        pathTokens.remove(pathTokens.size() - 1);
+                        pathTokens.addAll(splitTokenOnPeriod(t, flavor));
+                    }
                     text = Tokens.getUnquotedText(t);
                 } else {
                     throw new ConfigException.BadPath(
@@ -161,6 +177,25 @@ final class PathParser {
         }
 
         return pb.result();
+    }
+
+    private static Collection<Token> splitTokenOnPeriod(Token t, ConfigSyntax flavor) {
+        String tokenText = t.tokenText();
+        if (tokenText.equals(".")) {
+            return Collections.singletonList(t);
+        }
+        String[] splitToken = tokenText.split("\\.");
+        ArrayList<Token> splitTokens = new ArrayList<Token>();
+        for (String s : splitToken) {
+            if (flavor == ConfigSyntax.CONF)
+                splitTokens.add(Tokens.newUnquotedText(t.origin(), s));
+            else
+                splitTokens.add(Tokens.newString(t.origin(), s, "\"" + s + "\""));
+            splitTokens.add(Tokens.newUnquotedText(t.origin(), "."));
+        }
+        if (tokenText.charAt(tokenText.length() - 1) != '.')
+            splitTokens.remove(splitTokens.size() - 1);
+        return splitTokens;
     }
 
     private static void addPathText(List<Element> buf, boolean wasQuoted,

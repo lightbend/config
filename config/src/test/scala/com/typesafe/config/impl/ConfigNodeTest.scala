@@ -93,6 +93,15 @@ class ConfigNodeTest extends TestUtils {
     }
 
     @Test
+    def pathNodeSubpath() {
+        val origPath = "a.b.c.\"@$%#@!@#$\".\"\".1234.5678"
+        val pathNode = configNodeKey(origPath)
+        assertEquals(origPath, pathNode.render())
+        assertEquals("c.\"@$%#@!@#$\".\"\".1234.5678", pathNode.subPath(2).render())
+        assertEquals("5678", pathNode.subPath(6).render())
+    }
+
+    @Test
     def createConfigNodeSimpleValue() {
         //Ensure a ConfigNodeSimpleValue can handle the normal value types
         simpleValueNodeTest(tokenInt(10))
@@ -204,7 +213,7 @@ class ConfigNodeTest extends TestUtils {
                                               nodeCloseBrace))
         assertEquals(origText, origNode.render())
         val finalText = "foo : bar\nbaz : {\n\t\"abc.def\" : true\n\t//This is a comment about the below setting\n\n\tabc : {\n\t\t" +
-          "def : false\n\t}\n}\nbaz.abc.ghi : randomunquotedString\n}\nbaz.abc.\"this.does.not.exist@@@+$#\".end : doesnotexist\n"
+          "def : false\n\t\n\"this.does.not.exist@@@+$#\" : {\nend : doesnotexist\n}\n}\n}\nbaz.abc.ghi : randomunquotedString\n}"
 
         //Can replace settings in nested maps
         // Paths with quotes in the name are treated as a single Path, rather than multiple sub-paths

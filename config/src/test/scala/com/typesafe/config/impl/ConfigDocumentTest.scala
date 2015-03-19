@@ -139,9 +139,10 @@ class ConfigDocumentTest extends TestUtils {
     @Test
     def configDocumentSetNewValueBraceRoot {
         val origText = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n}"
-        val finalText = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n\n\t\"e\" : \"f\"\n}"
-        configDocumentReplaceConfTest(origText, finalText, "\"f\"", "\"e\"")
-        configDocumentReplaceJsonTest(origText, finalText, "\"f\"", "\"e\"")
+        val finalTextConf = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n\n\"e\" : \"f\"\n}"
+        val finalTextJson = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\",\n\n\"e\" : \"f\"\n}"
+        configDocumentReplaceConfTest(origText, finalTextConf, "\"f\"", "\"e\"")
+        configDocumentReplaceJsonTest(origText, finalTextJson, "\"f\"", "\"e\"")
     }
 
     @Test
@@ -149,6 +150,20 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "\"a\":\"b\",\n\"c\":\"d\"\n"
         val finalText = "\"a\":\"b\",\n\"c\":\"d\"\n\n\"e\" : \"f\"\n"
         configDocumentReplaceConfTest(origText, finalText, "\"f\"", "\"e\"")
+    }
+
+    @Test
+    def configDocumentSetNewValueMultiLevelConf {
+        val origText = "a:b\nc:d"
+        val finalText = "a:b\nc:d\ne : {\nf : {\ng : 12\n}\n}\n"
+        configDocumentReplaceConfTest(origText, finalText, "12", "e.f.g")
+    }
+
+    @Test
+    def configDocumentSetNewValueMultiLevelJson {
+        val origText = "{\"a\":\"b\",\n\"c\":\"d\"}"
+        val finalText = "{\"a\":\"b\",\n\"c\":\"d\",\n\"e\" : {\n\"f\" : {\n\"g\" : 12\n}\n}\n}"
+        configDocumentReplaceJsonTest(origText, finalText, "12", "e.f.g")
     }
 
     @Test
