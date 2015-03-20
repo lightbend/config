@@ -27,7 +27,6 @@ final class ConfigDocumentParser {
     }
 
     static private final class ParseContext {
-        private int lineNumber;
         final private Stack<Token> buffer;
         final private Iterator<Token> tokens;
         final private ConfigSyntax flavor;
@@ -42,7 +41,6 @@ final class ConfigDocumentParser {
         int arrayCount;
 
         ParseContext(ConfigSyntax flavor, Iterator<Token> tokens) {
-            lineNumber = 1;
             buffer = new Stack<Token>();
             this.tokens = tokens;
             this.flavor = flavor;
@@ -109,8 +107,6 @@ final class ConfigDocumentParser {
                     if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t)) {
                         //do nothing
                     } else if (Tokens.isNewline(t)) {
-                        // newline number is the line just ended, so add one
-                        lineNumber = t.lineNumber() + 1;
                         sawSeparatorOrNewline = true;
 
                         // we want to continue to also eat
@@ -280,7 +276,6 @@ final class ConfigDocumentParser {
         private ConfigNodePath parseKey(Token token) {
             if (flavor == ConfigSyntax.JSON) {
                 if (Tokens.isValueWithType(token, ConfigValueType.STRING)) {
-                    String key = (String) Tokens.getValue(token).unwrapped();
                     return PathParser.parsePathNodeExpression(Collections.singletonList(token).iterator(), null);
                 } else {
                     throw parseError(addKeyName("Expecting close brace } or a field name here, got "
