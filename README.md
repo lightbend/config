@@ -769,6 +769,10 @@ format.
   * configs https://github.com/kxbmap/configs
   * connfig-annotation https://github.com/wacai/config-annotation
 
+#### Clojure wrappers for the Java library
+
+  * beamly-core.config https://github.com/beamly/beamly-core.config
+
 #### Ruby port
 
    * https://github.com/cprice404/ruby-hocon
