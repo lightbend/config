@@ -25,11 +25,28 @@ public interface ConfigDocument {
      *
      * @param path the path at which to set the desired value
      * @param newValue the value to set at the desired path, represented as a string. This
-     *                 string will be parsed into a ConfigNode, and the text will be inserted
+     *                 string will be parsed into a ConfigNode using the same options used to
+     *                 parse the entire document, and the text will be inserted
      *                 as-is into the document, with leading and trailing whitespace removed.
+     *                 If a concatenation is passed in for newValue but the document was parsed
+     *                 with JSON, the first value in the concatenation will be parsed and inserted
+     *                 into the ConfigDocument.
      * @return a copy of the ConfigDocument with the desired value at the desired path
      */
     ConfigDocument setValue(String path, String newValue);
+
+    /**
+     * Returns a new ConfigDocument that is a copy of the current ConfigDocument,
+     * but with the desired value set at the desired path as with {@link #setValue(String, String)},
+     * but takes a ConfigValue instead of a string.
+     *
+     * @param path the path at which to set the desired value
+     * @param newValue the value to set at the desired path, represented as a ConfigValue.
+     *                 The rendered text of the ConfigValue will be inserted into the
+     *                 ConfigDocument.
+     * @return a copy of the ConfigDocument with the desired value at the desired path
+     */
+    ConfigDocument setValue(String path, ConfigValue newValue);
 
     /**
      * The original text of the input, modified if necessary with

@@ -1,10 +1,10 @@
 package com.typesafe.config.impl
 
-import java.io.{BufferedReader, FileReader}
+import java.io.{ BufferedReader, FileReader }
 import java.nio.charset.StandardCharsets
-import java.nio.file.{Paths, Files}
+import java.nio.file.{ Paths, Files }
 
-import com.typesafe.config.{ConfigException, ConfigSyntax, ConfigParseOptions, ConfigDocumentFactory}
+import com.typesafe.config._
 import org.junit.Assert._
 import org.junit.Test
 
@@ -36,7 +36,7 @@ class ConfigDocumentTest extends TestUtils {
 
         // Can handle parsing/replacement with a complicated map
         var origText =
-          """{
+            """{
               "a":123,
               "b": 123.456,
               "c": true,
@@ -53,7 +53,7 @@ class ConfigDocumentTest extends TestUtils {
               }
              }"""
         var finalText =
-          """{
+            """{
               "a":123,
               "b": 123.456,
               "c": true,
@@ -72,10 +72,9 @@ class ConfigDocumentTest extends TestUtils {
         configDocumentReplaceConfTest(origText, finalText, """"i am now a string"""", "h.b.a")
         configDocumentReplaceJsonTest(origText, finalText, """"i am now a string"""", "h.b.a")
 
-
         // Can handle replacing values with maps
         finalText =
-          """{
+            """{
               "a":123,
               "b": 123.456,
               "c": true,
@@ -96,7 +95,7 @@ class ConfigDocumentTest extends TestUtils {
 
         // Can handle replacing values with arrays
         finalText =
-          """{
+            """{
               "a":123,
               "b": 123.456,
               "c": true,
@@ -116,7 +115,7 @@ class ConfigDocumentTest extends TestUtils {
         configDocumentReplaceJsonTest(origText, finalText, "[1,2,3,4,5]", "h.b.a")
 
         finalText =
-          """{
+            """{
               "a":123,
               "b": 123.456,
               "c": true,
@@ -133,7 +132,7 @@ class ConfigDocumentTest extends TestUtils {
               }
              }"""
         configDocumentReplaceConfTest(origText, finalText,
-          "this is a concatenation 123 456 {a:b} [1,2,3] {a: this is another 123 concatenation null true}", "h.b.a")
+            "this is a concatenation 123 456 {a:b} [1,2,3] {a: this is another 123 concatenation null true}", "h.b.a")
     }
 
     @Test
@@ -167,7 +166,20 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentReplaceFailure {
+    def configDocumentSetNewConfigValue {
+        val origText = "{\"a\": \"b\"}"
+        val finalText = "{\"a\": 12}"
+        val configDocHOCON = ConfigDocumentFactory.parseString(origText)
+        val configDocJSON = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults.setSyntax(ConfigSyntax.JSON))
+        val newValue = ConfigValueFactory.fromAnyRef(12)
+        assertEquals(origText, configDocHOCON.render())
+        assertEquals(origText, configDocJSON.render())
+        assertEquals(finalText, configDocHOCON.setValue("a", newValue).render())
+        assertEquals(finalText, configDocJSON.setValue("a", newValue).render())
+    }
+
+    @Test
+    def configDocumentArrayReplaceFailure {
         // Attempting a replace on a ConfigDocument parsed from an array throws an error
         val origText = "[1, 2, 3, 4, 5]"
         val document = ConfigDocumentFactory.parseString(origText)
@@ -175,10 +187,46 @@ class ConfigDocumentTest extends TestUtils {
         try {
             document.setValue("a", "1")
         } catch {
-          case e: Exception =>
-            exceptionThrown = true
-            assertTrue(e.isInstanceOf[ConfigException])
-            assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
+            case e: Exception =>
+                exceptionThrown = true
+                assertTrue(e.isInstanceOf[ConfigException])
+                assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
+        }
+        assertTrue(exceptionThrown)
+    }
+
+    @Test
+    def configDocumentJSONReplaceFailure {
+        // Attempting a replace on a ConfigDocument parsed from JSON with a value using HOCON syntax
+        // will fail
+        val origText = "{\"foo\": \"bar\", \"baz\": \"qux\"}"
+        val document = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+        var exceptionThrown = false
+        try {
+            document.setValue("foo", "unquoted")
+        } catch {
+            case e: Exception =>
+                exceptionThrown = true
+                assertTrue(e.isInstanceOf[ConfigException])
+                assertTrue(e.getMessage.contains("Token not allowed in valid JSON"))
+        }
+        assertTrue(exceptionThrown)
+    }
+
+  @Test
+    def configDocumentJSONReplaceWithConcatenationFailure {
+        // Attempting a replace on a ConfigDocument parsed from JSON with a concatenation will
+        // fail
+        val origText = "{\"foo\": \"bar\", \"baz\": \"qux\"}"
+        val document = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+        var exceptionThrown = false
+        try {
+            document.setValue("foo", "1 2 3 concatenation")
+        } catch {
+            case e: Exception =>
+                exceptionThrown = true
+                assertTrue(e.isInstanceOf[ConfigException])
+                assertTrue(e.getMessage.contains("Tried to parse a concatenation. Concatenations not allowed in valid JSON"))
         }
         assertTrue(exceptionThrown)
     }
@@ -205,4 +253,5 @@ class ConfigDocumentTest extends TestUtils {
         val configDocumentFile = ConfigDocumentFactory.parseFile(resourceFile("/test03.conf"))
         assertEquals(configDocumentFile.render(), configDocument.render())
     }
+
 }

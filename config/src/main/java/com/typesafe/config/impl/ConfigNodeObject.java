@@ -33,7 +33,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
                 if (node.value() instanceof ConfigNodeObject) {
                     Path remainingPath = desiredPath.subPath(key.length());
                     childrenCopy.set(i, node.replaceValue(((ConfigNodeObject)node.value()).changeValueOnPath(remainingPath, valueCopy)));
-                    if (valueCopy != null && node.render() != super.children.get(i).render())
+                    if (valueCopy != null && !node.equals(super.children.get(i)))
                         valueCopy = null;
                 }
             }

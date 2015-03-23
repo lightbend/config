@@ -16,4 +16,9 @@ abstract class AbstractConfigNode implements ConfigNode {
         }
         return origText.toString();
     }
+
+    @Override
+    final public boolean equals(Object other) {
+        return other instanceof AbstractConfigNode && render().equals(((AbstractConfigNode)other).render());
+    }
 }

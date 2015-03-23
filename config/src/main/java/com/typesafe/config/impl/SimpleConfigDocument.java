@@ -30,6 +30,10 @@ final class SimpleConfigDocument implements ConfigDocument {
         return new SimpleConfigDocument(((ConfigNodeObject)configNodeTree).setValueOnPath(path, parsedValue, parseOptions.getSyntax()), parseOptions);
     }
 
+    public ConfigDocument setValue(String path, ConfigValue newValue) {
+        return setValue(path, newValue.render());
+    }
+
     public String render() {
         return configNodeTree.render();
     }

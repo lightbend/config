@@ -644,7 +644,16 @@ final class ConfigDocumentParser {
                 throw parseError("Empty value");
             }
             if (flavor == ConfigSyntax.JSON) {
-                return parseValue(t);
+                AbstractConfigNodeValue node = parseValue(t);
+                t = nextToken();
+                while (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
+                    t = nextToken();
+                }
+                if (t == Tokens.END) {
+                    return node;
+                } else {
+                    throw parseError("Tried to parse a concatenation. Concatenations not allowed in valid JSON");
+                }
             } else {
                 putBack(t);
                 ArrayList<AbstractConfigNode> nodes = new ArrayList();

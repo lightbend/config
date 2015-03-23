@@ -33,8 +33,8 @@ class ConfigNodeTest extends TestUtils {
 
     private def topLevelValueReplaceTest(value: AbstractConfigNodeValue, newValue: AbstractConfigNodeValue, key: String = "foo") {
         val complexNodeChildren = List(nodeOpenBrace,
-                                       nodeKeyValuePair(nodeWhitespace("       "), configNodeKey(key),value, nodeWhitespace("    ")),
-                                       nodeCloseBrace)
+            nodeKeyValuePair(nodeWhitespace("       "), configNodeKey(key), value, nodeWhitespace("    ")),
+            nodeCloseBrace)
         val complexNode = configNodeObject(complexNodeChildren)
         val newNode = complexNode.setValueOnPath(key, newValue)
         val origText = "{       " + key + " : " + value.render() + "    }"
@@ -151,8 +151,8 @@ class ConfigNodeTest extends TestUtils {
 
         // Ensure maps can be replaced
         val nestedMap = configNodeObject(List(nodeOpenBrace, configNodeKey("abc"),
-                                                    nodeColon, configNodeSimpleValue(tokenString("a string")),
-                                                    nodeCloseBrace))
+            nodeColon, configNodeSimpleValue(tokenString("a string")),
+            nodeCloseBrace))
         topLevelValueReplaceTest(nestedMap, nodeInt(10))
         topLevelValueReplaceTest(nodeInt(10), nestedMap)
         topLevelValueReplaceTest(array, nestedMap)
@@ -167,7 +167,6 @@ class ConfigNodeTest extends TestUtils {
         topLevelValueReplaceTest(concatenation, nestedMap)
         topLevelValueReplaceTest(array, concatenation)
         topLevelValueReplaceTest(concatenation, array)
-
 
         //Ensure a key with format "a.b" will be properly replaced
         topLevelValueReplaceTest(nodeInt(10), nestedMap, "foo.bar")
@@ -195,25 +194,25 @@ class ConfigNodeTest extends TestUtils {
     def replaceNestedNodes() {
         // Test that all features of node replacement in a map work in a complex map containing nested maps
         val origText = "foo : bar\nbaz : {\n\t\"abc.def\" : 123\n\t//This is a comment about the below setting\n\n\tabc : {\n\t\t" +
-          "def : \"this is a string\"\n\t\tghi : ${\"a.b\"}\n\t}\n}\nbaz.abc.ghi : 52\nbaz.abc.ghi : 53\n}"
+            "def : \"this is a string\"\n\t\tghi : ${\"a.b\"}\n\t}\n}\nbaz.abc.ghi : 52\nbaz.abc.ghi : 53\n}"
         val lowestLevelMap = configNodeObject(List(nodeOpenBrace, nodeLine(6),
-                                                   nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("def"), configNodeSimpleValue(tokenString("this is a string")), nodeLine(7)),
-                                                   nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("ghi"), configNodeSimpleValue(tokenKeySubstitution("a.b")), nodeLine(8)),
-                                                   nodeWhitespace("\t"), nodeCloseBrace))
+            nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("def"), configNodeSimpleValue(tokenString("this is a string")), nodeLine(7)),
+            nodeKeyValuePair(nodeWhitespace("\t\t"), configNodeKey("ghi"), configNodeSimpleValue(tokenKeySubstitution("a.b")), nodeLine(8)),
+            nodeWhitespace("\t"), nodeCloseBrace))
         val higherLevelMap = configNodeObject(List(nodeOpenBrace, nodeLine(2),
-                                                   nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("\"abc.def\""), configNodeSimpleValue(tokenInt(123)), nodeLine(3)),
-                                                   nodeWhitespace("\t"), configNodeBasic(tokenCommentDoubleSlash("This is a comment about the below setting")),
-                                                   nodeLine(4), nodeLine(5),
-                                                   nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("abc"), lowestLevelMap, nodeLine(9)), nodeWhitespace(""),
-                                                   nodeCloseBrace))
-        val origNode =  configNodeObject(List(nodeKeyValuePair(configNodeKey("foo"), configNodeSimpleValue(tokenUnquoted("bar")), nodeLine(1)),
-                                              nodeKeyValuePair(configNodeKey("baz"), higherLevelMap, nodeLine(10)),
-                                              nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(52)), nodeLine(11)),
-                                              nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(53)), nodeLine(12)),
-                                              nodeCloseBrace))
+            nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("\"abc.def\""), configNodeSimpleValue(tokenInt(123)), nodeLine(3)),
+            nodeWhitespace("\t"), configNodeBasic(tokenCommentDoubleSlash("This is a comment about the below setting")),
+            nodeLine(4), nodeLine(5),
+            nodeKeyValuePair(nodeWhitespace("\t"), configNodeKey("abc"), lowestLevelMap, nodeLine(9)), nodeWhitespace(""),
+            nodeCloseBrace))
+        val origNode = configNodeObject(List(nodeKeyValuePair(configNodeKey("foo"), configNodeSimpleValue(tokenUnquoted("bar")), nodeLine(1)),
+            nodeKeyValuePair(configNodeKey("baz"), higherLevelMap, nodeLine(10)),
+            nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(52)), nodeLine(11)),
+            nodeKeyValuePair(configNodeKey("baz.abc.ghi"), configNodeSimpleValue(tokenInt(53)), nodeLine(12)),
+            nodeCloseBrace))
         assertEquals(origText, origNode.render())
         val finalText = "foo : bar\nbaz : {\n\t\"abc.def\" : true\n\t//This is a comment about the below setting\n\n\tabc : {\n\t\t" +
-          "def : false\n\t\n\"this.does.not.exist@@@+$#\" : {\nend : doesnotexist\n}\n}\n}\nbaz.abc.ghi : randomunquotedString\n}"
+            "def : false\n\t\n\"this.does.not.exist@@@+$#\" : {\nend : doesnotexist\n}\n}\n}\nbaz.abc.ghi : randomunquotedString\n}"
 
         //Can replace settings in nested maps
         // Paths with quotes in the name are treated as a single Path, rather than multiple sub-paths
