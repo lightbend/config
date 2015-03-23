@@ -7,6 +7,7 @@ import com.typesafe.config.ConfigException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 final class ConfigNodeField extends AbstractConfigNode {
     final private ArrayList<AbstractConfigNode> children;
@@ -51,5 +52,27 @@ final class ConfigNodeField extends AbstractConfigNode {
             }
         }
         throw new ConfigException.BugOrBroken("Field node doesn't have a path");
+    }
+
+    protected Token separator() {
+        for (AbstractConfigNode child : children) {
+            if (child instanceof ConfigNodeSingleToken) {
+                Token t = ((ConfigNodeSingleToken) child).token();
+                if (t == Tokens.PLUS_EQUALS || t == Tokens.COLON || t == Tokens.EQUALS) {
+                    return t;
+                }
+            }
+        }
+        return null;
+    }
+
+    protected List<String> comments() {
+        List<String> comments = new ArrayList<String>();
+        for (AbstractConfigNode child : children) {
+            if (child instanceof ConfigNodeComment) {
+                comments.add(((ConfigNodeComment) child).commentText());
+            }
+        }
+        return comments;
     }
 }

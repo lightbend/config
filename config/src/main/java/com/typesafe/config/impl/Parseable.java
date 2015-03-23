@@ -211,7 +211,7 @@ public abstract class Parseable implements ConfigParseable {
             return rawParseDocument(origin, finalOptions);
         } catch (IOException e) {
             if (finalOptions.getAllowMissing()) {
-                return new SimpleConfigDocument(new ConfigNodeObject(new ArrayList<AbstractConfigNode>()), finalOptions);
+                return new SimpleConfigDocument(new ConfigNodeRoot(Collections.singletonList(new ConfigNodeObject(new ArrayList<AbstractConfigNode>()))), finalOptions);
             } else {
                 trace("exception loading " + origin.description() + ": " + e.getClass().getName()
                         + ": " + e.getMessage());
@@ -254,7 +254,9 @@ public abstract class Parseable implements ConfigParseable {
             return PropertiesParser.parse(reader, origin);
         } else {
             Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
-            return Parser.parse(tokens, origin, finalOptions, includeContext());
+            ConfigNodeRoot document = ConfigDocumentParser.parse(tokens, finalOptions);
+            return ConfigParser.parse(document, origin, finalOptions, includeContext());
+            //return Parser.parse(tokens, origin, finalOptions, includeContext());
         }
     }
 

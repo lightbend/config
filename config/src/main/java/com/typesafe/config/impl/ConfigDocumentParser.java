@@ -11,7 +11,7 @@ import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValueType;
 
 final class ConfigDocumentParser {
-    static ConfigNodeComplexValue parse(Iterator<Token> tokens, ConfigParseOptions options) {
+    static ConfigNodeRoot parse(Iterator<Token> tokens, ConfigParseOptions options) {
         ParseContext context = new ParseContext(options.getSyntax(), tokens);
         return context.parse();
     }
@@ -74,11 +74,13 @@ final class ConfigDocumentParser {
         private Token nextTokenIgnoringWhitespace(Collection<AbstractConfigNode> nodes) {
             while (true) {
                 Token t = nextToken();
-                if (Tokens.isIgnoredWhitespace(t) || Tokens.isComment(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
+                if (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
                     nodes.add(new ConfigNodeSingleToken(t));
                     if (Tokens.isNewline(t)) {
                         lineNumber = t.lineNumber() + 1;
                     }
+                } else if (Tokens.isComment(t)) {
+                    nodes.add(new ConfigNodeComment(t));
                 } else {
                     int newNumber = t.lineNumber();
                     if (newNumber >= 0)
@@ -112,8 +114,12 @@ final class ConfigDocumentParser {
                 boolean sawSeparatorOrNewline = false;
                 Token t = nextToken();
                 while (true) {
-                    if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t) || Tokens.isComment(t)) {
+                    if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t)) {
                         //do nothing
+                    } else if (Tokens.isComment(t)) {
+                        nodes.add(new ConfigNodeComment(t));
+                        t = nextToken();
+                        continue;
                     } else if (Tokens.isNewline(t)) {
                         sawSeparatorOrNewline = true;
                         lineNumber++;
@@ -344,7 +350,7 @@ final class ConfigDocumentParser {
             }
         }
 
-        private void parseInclude(ArrayList<AbstractConfigNode> children) {
+        private ConfigNodeInclude parseInclude(ArrayList<AbstractConfigNode> children) {
             Token t = nextTokenIgnoringWhitespace(children);
 
             // we either have a quoted string or the "file()" syntax
@@ -374,7 +380,7 @@ final class ConfigDocumentParser {
                     throw parseError("expecting a quoted string inside file(), classpath(), or url(), rather than: "
                             + t);
                 }
-                children.add(new ConfigNodeSingleToken(t));
+                children.add(new ConfigNodeSimpleValue(t));
                 // skip space after string, inside parens
                 t = nextTokenIgnoringWhitespace(children);
 
@@ -389,6 +395,7 @@ final class ConfigDocumentParser {
             } else {
                 throw parseError("include keyword is not followed by a quoted string, but by: " + t);
             }
+            return new ConfigNodeInclude(children);
         }
 
         private ConfigNodeComplexValue parseObject(boolean hadOpenCurly) {
@@ -418,9 +425,9 @@ final class ConfigDocumentParser {
                     putBack(t);
                     break;
                 } else if (flavor != ConfigSyntax.JSON && isIncludeKeyword(t)) {
-                    objectNodes.add(new ConfigNodeSingleToken(t));
-                    parseInclude(objectNodes);
-
+                    ArrayList<AbstractConfigNode> includeNodes = new ArrayList<AbstractConfigNode>();
+                    includeNodes.add(new ConfigNodeSingleToken(t));
+                    objectNodes.add(parseInclude(includeNodes));
                     afterComma = false;
                 } else {
                     keyValueNodes = new ArrayList<AbstractConfigNode>();
@@ -602,7 +609,7 @@ final class ConfigDocumentParser {
             }
         }
 
-        ConfigNodeComplexValue parse() {
+        ConfigNodeRoot parse() {
             ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>();
             Token t = nextToken();
             if (t == Tokens.START) {
@@ -614,6 +621,7 @@ final class ConfigDocumentParser {
 
             t = nextTokenIgnoringWhitespace(children);
             AbstractConfigNode result = null;
+            boolean missingCurly = false;
             if (t == Tokens.OPEN_CURLY || t == Tokens.OPEN_SQUARE) {
                 result = parseValue(t);
             } else {
@@ -629,18 +637,26 @@ final class ConfigDocumentParser {
                     // this token should be the first field's key, or part
                     // of it, so put it back.
                     putBack(t);
+                    missingCurly = true;
                     result = parseObject(false);
                 }
             }
             // Need to pull the children out of the resulting node so we can keep leading
-            // and trailing whitespace
-            children.addAll(((ConfigNodeComplexValue)result).children());
+            // and trailing whitespace if this was a no-brace object. Otherwise, we need to add
+            // the result into the list of children.
+            if (result instanceof ConfigNodeObject && missingCurly) {
+                children.addAll(((ConfigNodeComplexValue) result).children());
+            } else {
+                children.add(result);
+            }
             t = nextTokenIgnoringWhitespace(children);
             if (t == Tokens.END) {
-                if (result instanceof ConfigNodeArray) {
-                    return new ConfigNodeArray(children);
+                if (missingCurly) {
+                    // If there were no braces, the entire document should be treated as a single object
+                    return new ConfigNodeRoot(Collections.singletonList(new ConfigNodeObject(children)));
+                } else {
+                    return new ConfigNodeRoot(children);
                 }
-                return new ConfigNodeObject(children);
             } else {
                 throw parseError("Document has trailing tokens after first object or array: "
                         + t);
