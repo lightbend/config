@@ -198,4 +198,11 @@ class ConfigDocumentTest extends TestUtils {
         val fileText = sb.toString()
         assertEquals(fileText, configDocument.render())
     }
+
+    @Test
+    def configDocumentReaderParse {
+        val configDocument = ConfigDocumentFactory.parseReader(new FileReader(resourceFile("/test03.conf")))
+        val configDocumentFile = ConfigDocumentFactory.parseFile(resourceFile("/test03.conf"))
+        assertEquals(configDocumentFile.render(), configDocument.render())
+    }
 }

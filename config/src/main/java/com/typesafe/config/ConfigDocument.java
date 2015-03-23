@@ -24,7 +24,9 @@ public interface ConfigDocument {
      * at the final occurrence of the path. If the path does not exist, it will be added.
      *
      * @param path the path at which to set the desired value
-     * @param newValue the value to set at the desired path
+     * @param newValue the value to set at the desired path, represented as a string. This
+     *                 string will be parsed into a ConfigNode, and the text will be inserted
+     *                 as-is into the document, with leading and trailing whitespace removed.
      * @return a copy of the ConfigDocument with the desired value at the desired path
      */
     ConfigDocument setValue(String path, String newValue);

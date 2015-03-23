@@ -4,12 +4,41 @@ import com.typesafe.config.impl.ConfigImpl;
 import com.typesafe.config.impl.Parseable;
 
 import java.io.File;
+import java.io.Reader;
 
 /**
  * Factory for automatically creating a ConfigDocument from a given input. Currently
  * only supports files and strings.
  */
 public final class ConfigDocumentFactory {
+
+    /**
+     * Parses a Reader into a ConfigDocument instance.
+     *
+     * @param reader
+     *       the reader to parse
+     * @param options
+     *       parse options to control how the reader is interpreted
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
+    public static ConfigDocument parseReader(Reader reader, ConfigParseOptions options) {
+        return Parseable.newReader(reader, options).parseConfigDocument();
+    }
+
+    /**
+     * Parses a reader into a Config instance as with
+     * {@link #parseReader(Reader,ConfigParseOptions)} but always uses the
+     * default parse options.
+     *
+     * @param reader
+     *       the reader to parse
+     * @return the parsed configuration
+     * @throws ConfigException on IO or parse errors
+     */
+    public static ConfigDocument parseReader(Reader reader) {
+        return parseReader(reader, ConfigParseOptions.defaults());
+    }
 
     /**
      * Parses a file into a ConfigDocument instance.
