@@ -427,7 +427,7 @@ public interface Config extends ConfigMergeable {
      * <p>
      * To handle all three cases (unset, null, and a non-null value)
      * the code might look like:
-     * <code><pre>
+     * <pre><code>
      * if (config.hasPathOrNull(path)) {
      *     if (config.getIsNull(path)) {
      *        // handle null setting
@@ -437,7 +437,7 @@ public interface Config extends ConfigMergeable {
      * } else {
      *     // handle entirely unset path
      * }
-     * </pre></code>
+     * </code></pre>
      *
      * <p> However, the usual thing is to allow entirely unset
      * paths to be a bug that throws an exception (because you set
