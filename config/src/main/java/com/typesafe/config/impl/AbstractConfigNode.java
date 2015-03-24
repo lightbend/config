@@ -21,4 +21,9 @@ abstract class AbstractConfigNode implements ConfigNode {
     final public boolean equals(Object other) {
         return other instanceof AbstractConfigNode && render().equals(((AbstractConfigNode)other).render());
     }
+
+    @Override
+    final public int hashCode() {
+        return render().hashCode();
+    }
 }

@@ -226,7 +226,7 @@ class ConfigDocumentTest extends TestUtils {
             case e: Exception =>
                 exceptionThrown = true
                 assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("Tried to parse a concatenation. Concatenations not allowed in valid JSON"))
+                assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
         }
         assertTrue(exceptionThrown)
     }

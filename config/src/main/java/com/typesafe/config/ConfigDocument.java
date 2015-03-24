@@ -27,7 +27,8 @@ public interface ConfigDocument {
      * @param newValue the value to set at the desired path, represented as a string. This
      *                 string will be parsed into a ConfigNode using the same options used to
      *                 parse the entire document, and the text will be inserted
-     *                 as-is into the document, with leading and trailing whitespace removed.
+     *                 as-is into the document. Leading and trailing comments, whitespace, or
+     *                 newlines are not allowed, and if present an exception will be thrown.
      *                 If a concatenation is passed in for newValue but the document was parsed
      *                 with JSON, the first value in the concatenation will be parsed and inserted
      *                 into the ConfigDocument.

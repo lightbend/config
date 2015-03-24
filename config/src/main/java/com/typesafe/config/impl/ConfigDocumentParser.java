@@ -139,7 +139,7 @@ final class ConfigDocumentParser {
             Token t = nextTokenIgnoringWhitespace(nodes);
             while (true) {
                 AbstractConfigNodeValue v = null;
-                if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t)) {
+                if (Tokens.isIgnoredWhitespace(t)) {
                     values.add(new ConfigNodeSingleToken(t));
                     t = nextToken();
                     continue;
@@ -179,6 +179,16 @@ final class ConfigDocumentParser {
                 return value;
             }
 
+            // Put back any trailing whitespace, as the parent object is responsible for tracking
+            // any leading/trailing whitespace
+            for (int i = values.size() - 1; i >= 0; i--) {
+                if (values.get(i) instanceof ConfigNodeSingleToken) {
+                    putBack((new ArrayList<Token>(values.get(i).tokens())).get(0));
+                    values.remove(i);
+                } else {
+                    break;
+                }
+            }
             return new ConfigNodeConcatenation(values);
         }
 
@@ -637,8 +647,8 @@ final class ConfigDocumentParser {
             }
 
             t = nextToken();
-            while (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
-                t = nextToken();
+            if (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t) || Tokens.isComment(t)) {
+                throw parseError("The value from setValue cannot have leading or trailing newlines, whitespace, or comments");
             }
             if (t == Tokens.END) {
                 throw parseError("Empty value");
@@ -646,18 +656,22 @@ final class ConfigDocumentParser {
             if (flavor == ConfigSyntax.JSON) {
                 AbstractConfigNodeValue node = parseValue(t);
                 t = nextToken();
-                while (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
-                    t = nextToken();
-                }
                 if (t == Tokens.END) {
                     return node;
                 } else {
-                    throw parseError("Tried to parse a concatenation. Concatenations not allowed in valid JSON");
+                    throw parseError("Parsing JSON and the value set in setValue was either a concatenation or " +
+                                        "had trailing whitespace, newlines, or comments");
                 }
             } else {
                 putBack(t);
                 ArrayList<AbstractConfigNode> nodes = new ArrayList();
-                return consolidateValues(nodes);
+                AbstractConfigNodeValue node = consolidateValues(nodes);
+                t = nextToken();
+                if (t == Tokens.END) {
+                    return node;
+                } else {
+                    throw parseError("The value from setValue cannot have leading or trailing newlines, whitespace, or comments");
+                }
             }
         }
     }

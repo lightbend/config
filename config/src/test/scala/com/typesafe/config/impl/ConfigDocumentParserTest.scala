@@ -61,6 +61,19 @@ class ConfigDocumentParserTest extends TestUtils {
         assertTrue(exceptionThrown)
     }
 
+    private def parseLeadingTrailingFailure(toReplace: String) {
+        var exceptionThrown = false
+        try {
+            ConfigDocumentParser.parseValue(tokenize(toReplace), ConfigParseOptions.defaults())
+        } catch {
+          case e: Exception =>
+              exceptionThrown = true
+              assertTrue(e.isInstanceOf[ConfigException])
+              assertTrue(e.getMessage.contains("The value from setValue cannot have leading or trailing newlines, whitespace, or comments"))
+        }
+        assertTrue(exceptionThrown)
+    }
+
     @Test
     def parseSuccess {
         parseTest("foo:bar")
@@ -232,17 +245,9 @@ class ConfigDocumentParserTest extends TestUtils {
         parseSimpleValueTest("false")
         parseSimpleValueTest("null")
 
-        // Parse Simple Value throws out trailing and leading whitespace
-        parseSimpleValueTest("   123", "123")
-        parseSimpleValueTest("123    ", "123")
-        parseSimpleValueTest("   123   ", "123")
-
         // Can parse complex values
         parseComplexValueTest("""{"a": "b"}""")
         parseComplexValueTest("""["a","b","c"]""")
-
-        parseSingleValueInvalidJSONTest("unquotedtext", "Token not allowed in valid JSON")
-        parseSingleValueInvalidJSONTest("${a.b}", "Substitutions (${} syntax) not allowed in JSON")
 
         // Check that concatenations are handled by CONF parsing
         var origText = "123 456 unquotedtext abc"
@@ -258,7 +263,38 @@ class ConfigDocumentParserTest extends TestUtils {
             case e: Exception =>
                 exceptionThrown = true
                 assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("Tried to parse a concatenation. Concatenations not allowed in valid JSON"))
+                assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
+        }
+        assertTrue(exceptionThrown)
+    }
+
+    @Test
+    def parseSingleValuesFailures {
+        // Parse Simple Value throws on leading and trailing whitespace, comments, or newlines
+        parseLeadingTrailingFailure("   123")
+        parseLeadingTrailingFailure("123   ")
+        parseLeadingTrailingFailure(" 123 ")
+        parseLeadingTrailingFailure("\n123")
+        parseLeadingTrailingFailure("123\n")
+        parseLeadingTrailingFailure("\n123\n")
+        parseLeadingTrailingFailure("#thisisacomment\n123#comment")
+
+        // Parse Simple Value correctly throws on whitespace after a concatenation
+        parseLeadingTrailingFailure("123 456 789   ")
+
+        parseSingleValueInvalidJSONTest("unquotedtext", "Token not allowed in valid JSON")
+        parseSingleValueInvalidJSONTest("${a.b}", "Substitutions (${} syntax) not allowed in JSON")
+
+        // Check that concatenations in JSON will throw an error
+        val origText = "123 456 789"
+        var exceptionThrown = false
+        try {
+            val node = ConfigDocumentParser.parseValue(tokenize(origText), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+        } catch {
+            case e: Exception =>
+                exceptionThrown = true
+                assertTrue(e.isInstanceOf[ConfigException])
+                assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
         }
         assertTrue(exceptionThrown)
     }
