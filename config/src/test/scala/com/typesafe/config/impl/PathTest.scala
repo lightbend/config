@@ -73,8 +73,8 @@ class PathTest extends TestUtils {
 
         for (t <- tests) {
             assertEquals(t.expected, t.path.render())
-            assertEquals(t.path, Parser.parsePath(t.expected))
-            assertEquals(t.path, Parser.parsePath(t.path.render()))
+            assertEquals(t.path, PathParser.parsePath(t.expected))
+            assertEquals(t.path, PathParser.parsePath(t.path.render()))
         }
     }
 
@@ -108,6 +108,14 @@ class PathTest extends TestUtils {
     def pathLast() {
         assertEquals("a", path("a").last())
         assertEquals("b", path("a", "b").last())
+    }
+
+    @Test
+    def pathStartsWith() {
+        assertTrue(path("a", "b", "c", "d").startsWith(path("a", "b")))
+        assertTrue(path("a", "b", "c", "d").startsWith(path("a", "b", "c", "d")))
+        assertFalse(path("a", "b", "c", "d").startsWith(path("b", "c", "d")))
+        assertFalse(path("a", "b", "c", "d").startsWith(path("invalidpath")))
     }
 
     @Test

@@ -334,7 +334,7 @@ abstract trait TestUtils {
         ParseTest(true, " \"foo\" : "), // no value in object with no braces; lift-json thinks this is acceptable
         ParseTest(true, " : 10 "), // no key in object with no braces; lift-json is cool with this too
         " \"foo\" : 10 } ", // close brace but no open
-        " \"foo\" : 10 [ ", // no-braces object with trailing gunk 
+        " \"foo\" : 10 [ ", // no-braces object with trailing gunk
         "{ \"foo\" }", // no value or colon
         "{ \"a\" : [ }", // [ is not a valid value
         "{ \"foo\" : 10, true }", // non-key after comma
@@ -611,10 +611,10 @@ abstract trait TestUtils {
     def tokenFalse = Tokens.newBoolean(fakeOrigin(), false)
     def tokenNull = Tokens.newNull(fakeOrigin())
     def tokenUnquoted(s: String) = Tokens.newUnquotedText(fakeOrigin(), s)
-    def tokenString(s: String) = Tokens.newString(fakeOrigin(), s, s)
-    def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d, null)
-    def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, null)
-    def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, null)
+    def tokenString(s: String) = Tokens.newString(fakeOrigin(), s, "\"" + s + "\"")
+    def tokenDouble(d: Double) = Tokens.newDouble(fakeOrigin(), d, "" + d)
+    def tokenInt(i: Int) = Tokens.newInt(fakeOrigin(), i, "" + i)
+    def tokenLong(l: Long) = Tokens.newLong(fakeOrigin(), l, l.toString())
     def tokenLine(line: Int) = Tokens.newLine(fakeOrigin.withLineNumber(line))
     def tokenCommentDoubleSlash(text: String) = Tokens.newCommentDoubleSlash(fakeOrigin(), text)
     def tokenCommentHash(text: String) = Tokens.newCommentHash(fakeOrigin(), text)
@@ -662,6 +662,63 @@ abstract trait TestUtils {
     def tokenizeAsString(s: String) = {
         Tokenizer.render(tokenize(s))
     }
+
+    def configNodeSimpleValue(value: Token) = {
+        new ConfigNodeSimpleValue(value)
+    }
+
+    def configNodeKey(path: String) = PathParser.parsePathNode(path)
+
+    def configNodeBasic(value: Token) = {
+        new ConfigNodeSingleToken(value: Token)
+    }
+
+    def configNodeObject(nodes: List[AbstractConfigNode]) = {
+        new ConfigNodeObject(nodes.asJavaCollection)
+    }
+
+    def configNodeArray(nodes: List[AbstractConfigNode]) = {
+        new ConfigNodeArray(nodes.asJavaCollection)
+    }
+
+    def configNodeConcatenation(nodes: List[AbstractConfigNode]) = {
+        new ConfigNodeConcatenation(nodes.asJavaCollection)
+    }
+
+    def nodeColon = new ConfigNodeSingleToken(Tokens.COLON)
+    def nodeSpace = new ConfigNodeSingleToken(tokenUnquoted(" "))
+    def nodeOpenBrace = new ConfigNodeSingleToken(Tokens.OPEN_CURLY)
+    def nodeCloseBrace = new ConfigNodeSingleToken(Tokens.CLOSE_CURLY)
+    def nodeOpenBracket = new ConfigNodeSingleToken(Tokens.OPEN_SQUARE)
+    def nodeCloseBracket = new ConfigNodeSingleToken(Tokens.CLOSE_SQUARE)
+    def nodeComma = new ConfigNodeSingleToken(Tokens.COMMA)
+    def nodeLine(line: Integer) = new ConfigNodeSingleToken(tokenLine(line))
+    def nodeWhitespace(whitespace: String) = new ConfigNodeSingleToken(tokenWhitespace(whitespace))
+    def nodeKeyValuePair(key: ConfigNodePath, value: AbstractConfigNodeValue) = {
+        val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value)
+        new ConfigNodeField(nodes.asJavaCollection)
+    }
+    def nodeKeyValuePair(key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
+        val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
+        new ConfigNodeField(nodes.asJavaCollection)
+    }
+    def nodeKeyValuePair(leadingWhitespace: ConfigNodeSingleToken, key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
+        val nodes = List(leadingWhitespace, key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
+        new ConfigNodeField(nodes.asJavaCollection)
+    }
+    def nodeInt(value: Integer) = new ConfigNodeSimpleValue(tokenInt(value))
+    def nodeString(value: String) = new ConfigNodeSimpleValue(tokenString(value))
+    def nodeLong(value: Long) = new ConfigNodeSimpleValue(tokenLong(value))
+    def nodeDouble(value: Double) = new ConfigNodeSimpleValue(tokenDouble(value))
+    def nodeTrue = new ConfigNodeSimpleValue(tokenTrue)
+    def nodeFalse = new ConfigNodeSimpleValue(tokenFalse)
+    def nodeCommentHash(text: String) = new ConfigNodeSingleToken(tokenCommentHash(text))
+    def nodeCommentDoubleSlash(text: String) = new ConfigNodeSingleToken(tokenCommentDoubleSlash(text))
+    def nodeUnquotedText(text: String) = new ConfigNodeSimpleValue(tokenUnquoted(text))
+    def nodeNull = new ConfigNodeSimpleValue(tokenNull)
+    def nodeKeySubstitution(s: String) = new ConfigNodeSimpleValue(tokenKeySubstitution(s))
+    def nodeOptionalSubstitution(expression: Token*) = new ConfigNodeSimpleValue(tokenOptionalSubstitution(expression: _*))
+    def nodeSubstitution(expression: Token*) = new ConfigNodeSimpleValue(tokenSubstitution(expression: _*))
 
     // this is importantly NOT using Path.newPath, which relies on
     // the parser; in the test suite we are often testing the parser,

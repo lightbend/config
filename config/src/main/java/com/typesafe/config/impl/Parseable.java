@@ -19,19 +19,9 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Properties;
+import java.util.*;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigIncludeContext;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigParseOptions;
-import com.typesafe.config.ConfigParseable;
-import com.typesafe.config.ConfigSyntax;
-import com.typesafe.config.ConfigValue;
+import com.typesafe.config.*;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -199,6 +189,38 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
+    final ConfigDocument parseDocument(ConfigParseOptions baseOptions) {
+        // note that we are NOT using our "initialOptions",
+        // but using the ones from the passed-in options. The idea is that
+        // callers can get our original options and then parse with different
+        // ones if they want.
+        ConfigParseOptions options = fixupOptions(baseOptions);
+
+        // passed-in options can override origin
+        ConfigOrigin origin;
+        if (options.getOriginDescription() != null)
+            origin = SimpleConfigOrigin.newSimple(options.getOriginDescription());
+        else
+            origin = initialOrigin;
+        return parseDocument(origin, options);
+    }
+
+    final private ConfigDocument parseDocument(ConfigOrigin origin,
+                                                 ConfigParseOptions finalOptions) {
+        try {
+            return rawParseDocument(origin, finalOptions);
+        } catch (IOException e) {
+            if (finalOptions.getAllowMissing()) {
+                return new SimpleConfigDocument(new ConfigNodeObject(new ArrayList<AbstractConfigNode>()), finalOptions);
+            } else {
+                trace("exception loading " + origin.description() + ": " + e.getClass().getName()
+                        + ": " + e.getMessage());
+                throw new ConfigException.IO(origin,
+                        e.getClass().getName() + ": " + e.getMessage(), e);
+            }
+        }
+    }
+
     // this is parseValue without post-processing the IOException or handling
     // options.getAllowMissing()
     protected AbstractConfigValue rawParseValue(ConfigOrigin origin, ConfigParseOptions finalOptions)
@@ -236,8 +258,45 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
+    // this is parseValue without post-processing the IOException or handling
+    // options.getAllowMissing()
+    protected ConfigDocument rawParseDocument(ConfigOrigin origin, ConfigParseOptions finalOptions)
+            throws IOException {
+        Reader reader = reader(finalOptions);
+
+        // after reader() we will have loaded the Content-Type.
+        ConfigSyntax contentType = contentType();
+
+        ConfigParseOptions optionsWithContentType;
+        if (contentType != null) {
+            if (ConfigImpl.traceLoadsEnabled() && finalOptions.getSyntax() != null)
+                trace("Overriding syntax " + finalOptions.getSyntax()
+                        + " with Content-Type which specified " + contentType);
+
+            optionsWithContentType = finalOptions.setSyntax(contentType);
+        } else {
+            optionsWithContentType = finalOptions;
+        }
+
+        try {
+            return rawParseDocument(reader, origin, optionsWithContentType);
+        } finally {
+            reader.close();
+        }
+    }
+
+    private ConfigDocument rawParseDocument(Reader reader, ConfigOrigin origin,
+                                              ConfigParseOptions finalOptions) throws IOException {
+            Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
+        return new SimpleConfigDocument(ConfigDocumentParser.parse(tokens, finalOptions), finalOptions);
+    }
+
     public ConfigObject parse() {
         return forceParsedToObject(parseValue(options()));
+    }
+
+    public ConfigDocument parseConfigDocument() {
+        return parseDocument(options());
     }
 
     AbstractConfigValue parseValue() {

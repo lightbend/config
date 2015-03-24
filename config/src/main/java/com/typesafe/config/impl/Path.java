@@ -3,8 +3,7 @@
  */
 package com.typesafe.config.impl;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 import com.typesafe.config.ConfigException;
 
@@ -141,6 +140,21 @@ final class Path {
         return pb.result();
     }
 
+    boolean startsWith(Path other) {
+        Path myRemainder = this;
+        Path otherRemainder = other;
+        if (otherRemainder.length() <= myRemainder.length()) {
+            while(otherRemainder != null) {
+                if (!otherRemainder.first().equals(myRemainder.first()))
+                    return false;
+                myRemainder = myRemainder.remainder();
+                otherRemainder = otherRemainder.remainder();
+            }
+            return true;
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other instanceof Path) {
@@ -213,6 +227,6 @@ final class Path {
     }
 
     static Path newPath(String path) {
-        return Parser.parsePath(path);
+        return PathParser.parsePath(path);
     }
 }
