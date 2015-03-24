@@ -1057,4 +1057,38 @@ include "onclasspath"
         assertFalse("did not get bar-file.conf", conf.hasPath("bar-file"))
         assertFalse("did not get subdir/baz.conf", conf.hasPath("baz"))
     }
+
+    @Test
+    def hasPathOrNullWorks(): Unit = {
+        val conf = ConfigFactory.parseString("x.a=null,x.b=42")
+        assertFalse("hasPath says false for null", conf.hasPath("x.a"))
+        assertTrue("hasPathOrNull says true for null", conf.hasPathOrNull("x.a"))
+
+        assertTrue("hasPath says true for non-null", conf.hasPath("x.b"))
+        assertTrue("hasPathOrNull says true for non-null", conf.hasPathOrNull("x.b"))
+
+        assertFalse("hasPath says false for missing", conf.hasPath("x.c"))
+        assertFalse("hasPathOrNull says false for missing", conf.hasPathOrNull("x.c"))
+
+        // this is to be sure we handle a null along the path correctly
+        assertFalse("hasPath says false for missing under null", conf.hasPath("x.a.y"))
+        assertFalse("hasPathOrNull says false for missing under null", conf.hasPathOrNull("x.a.y"))
+
+        // this is to be sure we handle missing along the path correctly
+        assertFalse("hasPath says false for missing under missing", conf.hasPath("x.c.y"))
+        assertFalse("hasPathOrNull says false for missing under missing", conf.hasPathOrNull("x.c.y"))
+    }
+
+    @Test
+    def getIsNullWorks(): Unit = {
+        val conf = ConfigFactory.parseString("x.a=null,x.b=42")
+
+        assertTrue("getIsNull says true for null", conf.getIsNull("x.a"))
+        assertFalse("getIsNull says false for non-null", conf.getIsNull("x.b"))
+        intercept[ConfigException.Missing] { conf.getIsNull("x.c") }
+        // missing underneath null
+        intercept[ConfigException.Missing] { conf.getIsNull("x.a.y") }
+        // missing underneath missing
+        intercept[ConfigException.Missing] { conf.getIsNull("x.c.y") }
+    }
 }
