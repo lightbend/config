@@ -79,6 +79,7 @@ class ConfigDocumentParserTest extends TestUtils {
         parseTest("foo:bar")
         parseTest(" foo : bar ")
         parseTest("""include "foo.conf" """)
+        parseTest("   \nfoo:bar\n    ")
 
         // Can parse a map with all simple types
         parseTest(
@@ -98,6 +99,7 @@ class ConfigDocumentParserTest extends TestUtils {
         parseTest("{  foo  :  bar  }")
         parseTest("{foo:bar}     ")
         parseTest("""{include "foo.conf"}""")
+        parseTest("   \n{foo:bar}\n    ")
 
         //Can parse a map with all simple types
         parseTest(
@@ -139,6 +141,9 @@ class ConfigDocumentParserTest extends TestUtils {
         // Test trailing comment and whitespace
         parseTest("[foo,]")
         parseTest("[foo,]     ")
+
+        // Test leading and trailing whitespace
+        parseTest("   \n[]\n   ")
 
         // Can parse arrays with all simple types
         parseTest("""[foo, bar,"qux", 123,123.456, true,false, null, ${a.b}]""")

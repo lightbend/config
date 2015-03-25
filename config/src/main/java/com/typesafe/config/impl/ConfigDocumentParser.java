@@ -595,6 +595,7 @@ final class ConfigDocumentParser {
         }
 
         ConfigNodeComplexValue parse() {
+            ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>();
             Token t = nextToken();
             if (t == Tokens.START) {
                 // OK
@@ -603,7 +604,7 @@ final class ConfigDocumentParser {
                         "token stream did not begin with START, had " + t);
             }
 
-            t = nextToken();
+            t = nextTokenIgnoringWhitespace(children);
             AbstractConfigNode result = null;
             if (t == Tokens.OPEN_CURLY || t == Tokens.OPEN_SQUARE) {
                 result = parseValue(t);
@@ -623,7 +624,9 @@ final class ConfigDocumentParser {
                     result = parseObject(false);
                 }
             }
-            ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>(((ConfigNodeComplexValue)result).children());
+            // Need to pull the children out of the resulting node so we can keep leading
+            // and trailing whitespace
+            children.addAll(((ConfigNodeComplexValue)result).children());
             t = nextTokenIgnoringWhitespace(children);
             if (t == Tokens.END) {
                 if (result instanceof ConfigNodeArray) {
