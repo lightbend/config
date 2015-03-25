@@ -165,11 +165,11 @@ class ConfigDocumentParserTest extends TestUtils {
                                   c: 13
                                   d: {
                                     a: 22
-                                    b: "abcdefg"
+                                    b: "abcdefg" # this is a comment
                                     c: [1, 2, 3]
                                   }
                                 }
-                                },
+                                }, # this was an object in an array
                                 //The above value is a map containing a map containing a map, all in an array
                                 22,
                                 // The below value is an array contained in another array

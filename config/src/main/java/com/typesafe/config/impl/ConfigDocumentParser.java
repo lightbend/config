@@ -104,7 +104,7 @@ final class ConfigDocumentParser {
                 boolean sawSeparatorOrNewline = false;
                 Token t = nextToken();
                 while (true) {
-                    if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t)) {
+                    if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t) || Tokens.isComment(t)) {
                         //do nothing
                     } else if (Tokens.isNewline(t)) {
                         sawSeparatorOrNewline = true;
