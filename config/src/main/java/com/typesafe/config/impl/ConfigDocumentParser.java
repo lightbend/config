@@ -27,6 +27,7 @@ final class ConfigDocumentParser {
     }
 
     static private final class ParseContext {
+        private int lineNumber;
         final private Stack<Token> buffer;
         final private Iterator<Token> tokens;
         final private ConfigSyntax flavor;
@@ -41,6 +42,7 @@ final class ConfigDocumentParser {
         int arrayCount;
 
         ParseContext(ConfigSyntax flavor, Iterator<Token> tokens) {
+            lineNumber = 1;
             buffer = new Stack<Token>();
             this.tokens = tokens;
             this.flavor = flavor;
@@ -74,7 +76,13 @@ final class ConfigDocumentParser {
                 Token t = nextToken();
                 if (Tokens.isIgnoredWhitespace(t) || Tokens.isComment(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
                     nodes.add(new ConfigNodeSingleToken(t));
+                    if (Tokens.isNewline(t)) {
+                        lineNumber = t.lineNumber() + 1;
+                    }
                 } else {
+                    int newNumber = t.lineNumber();
+                    if (newNumber >= 0)
+                        lineNumber = newNumber;
                     return t;
                 }
             }
@@ -108,7 +116,7 @@ final class ConfigDocumentParser {
                         //do nothing
                     } else if (Tokens.isNewline(t)) {
                         sawSeparatorOrNewline = true;
-
+                        lineNumber++;
                         // we want to continue to also eat
                         // a comma if there is one.
                     } else if (t == Tokens.COMMA) {
@@ -197,7 +205,7 @@ final class ConfigDocumentParser {
         }
 
         private ConfigException parseError(String message, Throwable cause) {
-            return new ConfigException.Parse(SimpleConfigOrigin.newSimple(""), message, cause);
+            return new ConfigException.Parse(SimpleConfigOrigin.newSimple("").withLineNumber(lineNumber), message, cause);
         }
 
         private String previousFieldName(Path lastPath) {
