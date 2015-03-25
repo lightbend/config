@@ -417,6 +417,47 @@ public interface Config extends ConfigMergeable {
     boolean hasPath(String path);
 
     /**
+     * Checks whether a value is present at the given path, even
+     * if the value is null. Most of the getters on
+     * <code>Config</code> will throw if you try to get a null
+     * value, so if you plan to call {@link #getValue(String)},
+     * {@link #getInt(String)}, or another getter you may want to
+     * use plain {@link #hasPath(String)} rather than this method.
+     *
+     * <p>
+     * To handle all three cases (unset, null, and a non-null value)
+     * the code might look like:
+     * <pre><code>
+     * if (config.hasPathOrNull(path)) {
+     *     if (config.getIsNull(path)) {
+     *        // handle null setting
+     *     } else {
+     *        // get and use non-null setting
+     *     }
+     * } else {
+     *     // handle entirely unset path
+     * }
+     * </code></pre>
+     *
+     * <p> However, the usual thing is to allow entirely unset
+     * paths to be a bug that throws an exception (because you set
+     * a default in your <code>reference.conf</code>), so in that
+     * case it's OK to call {@link #getIsNull(String)} without
+     * checking <code>hasPathOrNull</code> first.
+     *
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     *
+     * @param path
+     *            the path expression
+     * @return true if a value is present at the path, even if the value is null
+     * @throws ConfigException.BadPath
+     *             if the path expression is invalid
+     */
+    boolean hasPathOrNull(String path);
+
+    /**
      * Returns true if the {@code Config}'s root object contains no key-value
      * pairs.
      *
@@ -447,6 +488,33 @@ public interface Config extends ConfigMergeable {
      *         each leaf value.
      */
     Set<Map.Entry<String, ConfigValue>> entrySet();
+
+    /**
+     * Checks whether a value is set to null at the given path,
+     * but throws an exception if the value is entirely
+     * unset. This method will not throw if {@link
+     * #hasPathOrNull(String)} returned true for the same path, so
+     * to avoid any possible exception check
+     * <code>hasPathOrNull()</code> first.  However, an exception
+     * for unset paths will usually be the right thing (because a
+     * <code>reference.conf</code> should exist that has the path
+     * set, the path should never be unset unless something is
+     * broken).
+     *
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     *
+     * @param path
+     *            the path expression
+     * @return true if the value exists and is null, false if it
+     * exists and is not null
+     * @throws ConfigException.BadPath
+     *             if the path expression is invalid
+     * @throws ConfigException.Missing
+     *             if value is not set at all
+     */
+    boolean getIsNull(String path);
 
     /**
      *

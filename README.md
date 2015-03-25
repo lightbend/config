@@ -336,6 +336,10 @@ options:
  `Config`; `ConfigObject` implements `java.util.Map<String,?>` and
  the `get()` method on `Map` returns null for missing keys. See
  the API docs for more detail on `Config` vs. `ConfigObject`.
+ 6. Set the setting to `null` in `reference.conf`, then use
+ `Config.getIsNull` and `Config.hasPathOrNull` to handle `null`
+ in a special way while still throwing an exception if the setting
+ is entirely absent.
 
 The *recommended* path (for most cases, in most apps) is that you
 require all settings to be present in either `reference.conf` or

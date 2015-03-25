@@ -79,8 +79,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             return new SimpleConfig((AbstractConfigObject) resolved);
     }
 
-    @Override
-    public boolean hasPath(String pathExpression) {
+    private ConfigValue hasPathPeek(String pathExpression) {
         Path path = Path.newPath(pathExpression);
         ConfigValue peeked;
         try {
@@ -88,7 +87,19 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         } catch (ConfigException.NotResolved e) {
             throw ConfigImpl.improveNotResolved(path, e);
         }
+        return peeked;
+    }
+
+    @Override
+    public boolean hasPath(String pathExpression) {
+        ConfigValue peeked = hasPathPeek(pathExpression);
         return peeked != null && peeked.valueType() != ConfigValueType.NULL;
+    }
+
+    @Override
+    public boolean hasPathOrNull(String path) {
+        ConfigValue peeked = hasPathPeek(path);
+        return peeked != null;
     }
 
     @Override
@@ -121,7 +132,20 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return entries;
     }
 
+    static private AbstractConfigValue throwIfNull(AbstractConfigValue v, ConfigValueType expected, Path originalPath) {
+        if (v.valueType() == ConfigValueType.NULL)
+            throw new ConfigException.Null(v.origin(), originalPath.render(),
+                    expected != null ? expected.name() : null);
+        else
+            return v;
+    }
+
     static private AbstractConfigValue findKey(AbstractConfigObject self, String key,
+            ConfigValueType expected, Path originalPath) {
+        return throwIfNull(findKeyOrNull(self, key, expected, originalPath), expected, originalPath);
+    }
+
+    static private AbstractConfigValue findKeyOrNull(AbstractConfigObject self, String key,
             ConfigValueType expected, Path originalPath) {
         AbstractConfigValue v = self.peekAssumingResolved(key, originalPath);
         if (v == null)
@@ -130,10 +154,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         if (expected != null)
             v = DefaultTransformer.transform(v, expected);
 
-        if (v.valueType() == ConfigValueType.NULL)
-            throw new ConfigException.Null(v.origin(), originalPath.render(),
-                    expected != null ? expected.name() : null);
-        else if (expected != null && v.valueType() != expected)
+        if (expected != null && (v.valueType() != expected && v.valueType() != ConfigValueType.NULL))
             throw new ConfigException.WrongType(v.origin(), originalPath.render(), expected.name(),
                     v.valueType().name());
         else
@@ -142,17 +163,22 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     static private AbstractConfigValue find(AbstractConfigObject self, Path path,
             ConfigValueType expected, Path originalPath) {
+        return throwIfNull(findOrNull(self, path, expected, originalPath), expected, originalPath);
+    }
+
+    static private AbstractConfigValue findOrNull(AbstractConfigObject self, Path path,
+            ConfigValueType expected, Path originalPath) {
         try {
             String key = path.first();
             Path next = path.remainder();
             if (next == null) {
-                return findKey(self, key, expected, originalPath);
+                return findKeyOrNull(self, key, expected, originalPath);
             } else {
                 AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
                         ConfigValueType.OBJECT,
                         originalPath.subPath(0, originalPath.length() - next.length()));
                 assert (o != null); // missing was supposed to throw
-                return find(o, next, expected, originalPath);
+                return findOrNull(o, next, expected, originalPath);
             }
         } catch (ConfigException.NotResolved e) {
             throw ConfigImpl.improveNotResolved(path, e);
@@ -160,7 +186,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     AbstractConfigValue find(Path pathExpression, ConfigValueType expected, Path originalPath) {
-        return find(object, pathExpression, expected, originalPath);
+        return throwIfNull(findOrNull(object, pathExpression, expected, originalPath), expected, originalPath);
     }
 
     AbstractConfigValue find(String pathExpression, ConfigValueType expected) {
@@ -168,9 +194,24 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return find(path, expected, path);
     }
 
+    private AbstractConfigValue findOrNull(Path pathExpression, ConfigValueType expected, Path originalPath) {
+        return findOrNull(object, pathExpression, expected, originalPath);
+    }
+
+    private AbstractConfigValue findOrNull(String pathExpression, ConfigValueType expected) {
+        Path path = Path.newPath(pathExpression);
+        return findOrNull(path, expected, path);
+    }
+
     @Override
     public AbstractConfigValue getValue(String path) {
         return find(path, null);
+    }
+
+    @Override
+    public boolean getIsNull(String path) {
+        AbstractConfigValue v = findOrNull(path, null);
+        return (v.valueType() == ConfigValueType.NULL);
     }
 
     @Override
