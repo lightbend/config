@@ -13,12 +13,12 @@ final class ConfigNodeField extends AbstractConfigNode {
     final private ArrayList<AbstractConfigNode> children;
 
     public ConfigNodeField(Collection<AbstractConfigNode> children) {
-        this.children = new ArrayList(children);
+        this.children = new ArrayList<AbstractConfigNode>(children);
     }
 
     @Override
     protected Collection<Token> tokens() {
-        ArrayList<Token> tokens = new ArrayList();
+        ArrayList<Token> tokens = new ArrayList<Token>();
         for (AbstractConfigNode child : children) {
             tokens.addAll(child.tokens());
         }
@@ -26,7 +26,7 @@ final class ConfigNodeField extends AbstractConfigNode {
     }
 
     public ConfigNodeField replaceValue(AbstractConfigNodeValue newValue) {
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList(children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
         for (int i = 0; i < childrenCopy.size(); i++) {
             if (childrenCopy.get(i) instanceof AbstractConfigNodeValue) {
                 childrenCopy.set(i, newValue);

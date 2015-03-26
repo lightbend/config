@@ -117,7 +117,7 @@ final class ConfigParser {
             }
 
             if (comments != null && !comments.isEmpty()) {
-                v = v.withOrigin(v.origin().prependComments(new ArrayList(comments)));
+                v = v.withOrigin(v.origin().prependComments(new ArrayList<String>(comments)));
                 comments.clear();
             }
 
@@ -220,7 +220,7 @@ final class ConfigParser {
             SimpleConfigOrigin objectOrigin = lineOrigin();
             boolean lastWasNewline = false;
 
-            ArrayList<AbstractConfigNode> nodes = new ArrayList(n.children());
+            ArrayList<AbstractConfigNode> nodes = new ArrayList<AbstractConfigNode>(n.children());
             List<String> comments = new ArrayList<String>();
             for (int i = 0; i < nodes.size(); i++) {
                 AbstractConfigNode node = nodes.get(i);
@@ -381,7 +381,7 @@ final class ConfigParser {
                     if (lastWasNewLine && v == null) {
                         comments.clear();
                     } else if (v != null) {
-                        values.add(v.withOrigin(v.origin().appendComments(new ArrayList(comments))));
+                        values.add(v.withOrigin(v.origin().appendComments(new ArrayList<String>(comments))));
                         comments.clear();
                         v = null;
                     }
@@ -389,7 +389,7 @@ final class ConfigParser {
                 } else if (node instanceof AbstractConfigNodeValue) {
                     lastWasNewLine = false;
                     if (v != null) {
-                        values.add(v.withOrigin(v.origin().appendComments(new ArrayList(comments))));
+                        values.add(v.withOrigin(v.origin().appendComments(new ArrayList<String>(comments))));
                         comments.clear();
                     }
                     v = parseValue((AbstractConfigNodeValue)node, comments);
@@ -397,7 +397,7 @@ final class ConfigParser {
             }
             // There shouldn't be any comments at this point, but add them just in case
             if (v != null) {
-                values.add(v.withOrigin(v.origin().appendComments(new ArrayList(comments))));
+                values.add(v.withOrigin(v.origin().appendComments(new ArrayList<String>(comments))));
             }
             arrayCount -= 1;
             return new SimpleConfigList(arrayOrigin, values);
@@ -418,7 +418,7 @@ final class ConfigParser {
                         if (lastWasNewLine && result == null) {
                             comments.clear();
                         } else if (result != null) {
-                            result = result.withOrigin(result.origin().appendComments(new ArrayList(comments)));
+                            result = result.withOrigin(result.origin().appendComments(new ArrayList<String>(comments)));
                             comments.clear();
                             break;
                         }

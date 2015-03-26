@@ -405,7 +405,7 @@ final class ConfigDocumentParser {
             boolean lastInsideEquals = false;
             ArrayList<AbstractConfigNode> objectNodes = new ArrayList<AbstractConfigNode>();
             ArrayList<AbstractConfigNode> keyValueNodes;
-            HashMap<String, Boolean> keys  = new HashMap();
+            HashMap<String, Boolean> keys  = new HashMap<String, Boolean>();
             if (hadOpenCurly)
                 objectNodes.add(new ConfigNodeSingleToken(Tokens.OPEN_CURLY));
 
@@ -653,7 +653,7 @@ final class ConfigDocumentParser {
             if (t == Tokens.END) {
                 if (missingCurly) {
                     // If there were no braces, the entire document should be treated as a single object
-                    return new ConfigNodeRoot(Collections.singletonList(new ConfigNodeObject(children)));
+                    return new ConfigNodeRoot(Collections.singletonList((AbstractConfigNode)new ConfigNodeObject(children)));
                 } else {
                     return new ConfigNodeRoot(children);
                 }
@@ -691,7 +691,7 @@ final class ConfigDocumentParser {
                 }
             } else {
                 putBack(t);
-                ArrayList<AbstractConfigNode> nodes = new ArrayList();
+                ArrayList<AbstractConfigNode> nodes = new ArrayList<AbstractConfigNode>();
                 AbstractConfigNodeValue node = consolidateValues(nodes);
                 t = nextToken();
                 if (t == Tokens.END) {

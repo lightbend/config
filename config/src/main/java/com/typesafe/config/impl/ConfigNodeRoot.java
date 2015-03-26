@@ -21,7 +21,7 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
     }
 
     protected ConfigNodeRoot setValue(String desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList(children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
         for (int i = 0; i < childrenCopy.size(); i++) {
             AbstractConfigNode node = childrenCopy.get(i);
             if (node instanceof ConfigNodeComplexValue) {
