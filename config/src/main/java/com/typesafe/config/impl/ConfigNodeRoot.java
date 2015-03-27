@@ -1,14 +1,18 @@
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 final class ConfigNodeRoot extends ConfigNodeComplexValue {
-    ConfigNodeRoot(Collection<AbstractConfigNode> children) {
+    final private ConfigOrigin origin;
+
+    ConfigNodeRoot(Collection<AbstractConfigNode> children, ConfigOrigin origin) {
         super(children);
+        this.origin = origin;
     }
 
     protected ConfigNodeComplexValue value() {
@@ -26,10 +30,10 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
             AbstractConfigNode node = childrenCopy.get(i);
             if (node instanceof ConfigNodeComplexValue) {
                 if (node instanceof ConfigNodeArray) {
-                    throw new ConfigException.Generic("The ConfigDocument had an array at the root level, and values cannot be replaced inside an array.");
+                    throw new ConfigException.WrongType(origin, "The ConfigDocument had an array at the root level, and values cannot be replaced inside an array.");
                 } else if (node instanceof ConfigNodeObject) {
                     childrenCopy.set(i, ((ConfigNodeObject) node).setValueOnPath(desiredPath, value, flavor));
-                    return new ConfigNodeRoot(childrenCopy);
+                    return new ConfigNodeRoot(childrenCopy, origin);
                 }
             }
         }

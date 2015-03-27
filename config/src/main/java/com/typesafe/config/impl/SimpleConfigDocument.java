@@ -21,7 +21,7 @@ final class SimpleConfigDocument implements ConfigDocument {
         SimpleConfigOrigin origin = SimpleConfigOrigin.newSimple("single value parsing");
         StringReader reader = new StringReader(newValue);
         Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, parseOptions.getSyntax());
-        AbstractConfigNodeValue parsedValue = ConfigDocumentParser.parseValue(tokens, parseOptions);
+        AbstractConfigNodeValue parsedValue = ConfigDocumentParser.parseValue(tokens, origin, parseOptions);
         reader.close();
 
         return new SimpleConfigDocument(configNodeTree.setValue(path, parsedValue, parseOptions.getSyntax()), parseOptions);

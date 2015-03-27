@@ -213,7 +213,7 @@ class ConfigDocumentTest extends TestUtils {
         assertTrue(exceptionThrown)
     }
 
-  @Test
+    @Test
     def configDocumentJSONReplaceWithConcatenationFailure {
         // Attempting a replace on a ConfigDocument parsed from JSON with a concatenation will
         // fail

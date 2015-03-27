@@ -13,7 +13,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
-import java.util.Stack;
 
 import com.typesafe.config.*;
 
@@ -34,10 +33,7 @@ final class ConfigParser {
         final private ConfigSyntax flavor;
         final private ConfigOrigin baseOrigin;
         final private LinkedList<Path> pathStack;
-        // this is the number of "equals" we are inside,
-        // used to modify the error message to reflect that
-        // someone may think this is .properties format.
-        int equalsCount;
+
         // the number of lists we are inside; this is used to detect the "cannot
         // generate a reference to a list element" problem, and once we fix that
         // problem we should be able to get rid of this variable.
@@ -52,7 +48,6 @@ final class ConfigParser {
             this.includer = includer;
             this.includeContext = includeContext;
             this.pathStack = new LinkedList<Path>();
-            this.equalsCount = 0;
             this.arrayCount = 0;
         }
 
@@ -62,7 +57,7 @@ final class ConfigParser {
         private AbstractConfigValue parseConcatenation(ConfigNodeConcatenation n) {
             // this trick is not done in JSON
             if (flavor == ConfigSyntax.JSON)
-                return null;
+                throw new ConfigException.BugOrBroken("Found a concatenation node in JSON");
 
             // create only if we have value tokens
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
@@ -102,7 +97,6 @@ final class ConfigParser {
             AbstractConfigValue v;
 
             int startingArrayCount = arrayCount;
-            int startingEqualsCount = equalsCount;
 
             if (n instanceof ConfigNodeSimpleValue) {
                 v = ((ConfigNodeSimpleValue) n).value();
@@ -123,8 +117,6 @@ final class ConfigParser {
 
             if (arrayCount != startingArrayCount)
                 throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced array count");
-            if (equalsCount != startingEqualsCount)
-                throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced equals count");
 
             return v;
         }
@@ -167,9 +159,8 @@ final class ConfigParser {
 
         private void parseInclude(Map<String, AbstractConfigValue> values, ConfigNodeInclude n) {
             AbstractConfigObject obj;
-
-            if (n.kind() != null) {
-                if (n.kind().equals("url(")) {
+            switch (n.kind()) {
+                case URL:
                     URL url;
                     try {
                         url = new URL(n.name());
@@ -177,17 +168,24 @@ final class ConfigParser {
                         throw parseError("include url() specifies an invalid URL: " + n.name(), e);
                     }
                     obj = (AbstractConfigObject) includer.includeURL(includeContext, url);
-                } else if (n.kind().equals("file(")) {
+                    break;
+
+                case FILE:
                     obj = (AbstractConfigObject) includer.includeFile(includeContext,
                             new File(n.name()));
-                } else if (n.kind().equals("classpath(")) {
+                    break;
+
+                case CLASSPATH:
                     obj = (AbstractConfigObject) includer.includeResources(includeContext, n.name());
-                } else {
+                    break;
+
+                case HEURISTIC:
+                    obj = (AbstractConfigObject) includer
+                            .include(includeContext, n.name());
+                    break;
+
+                default:
                     throw new ConfigException.BugOrBroken("should not be reached");
-                }
-            } else {
-                obj = (AbstractConfigObject) includer
-                        .include(includeContext, n.name());
             }
 
             // we really should make this work, but for now throwing an
@@ -267,7 +265,6 @@ final class ConfigParser {
 
                     if (((ConfigNodeField) node).separator() == Tokens.EQUALS) {
                         insideEquals = true;
-                        equalsCount += 1;
                     }
 
                     valueNode = ((ConfigNodeField) node).value();
@@ -315,9 +312,6 @@ final class ConfigParser {
                     }
 
                     pathStack.pop();
-                    if (insideEquals) {
-                        equalsCount -= 1;
-                    }
 
                     String key = path.first();
                     Path remaining = path.remainder();

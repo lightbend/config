@@ -3,6 +3,8 @@
  */
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigException;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,6 +34,6 @@ final class ConfigNodeSimpleValue extends AbstractConfigNodeValue {
 
             return new ConfigReference(token.origin(), new SubstitutionExpression(path, optional));
         }
-        return null;
+        throw new ConfigException.BugOrBroken("ConfigNodeSimpleValue did not contain a valid value token");
     }
 }
