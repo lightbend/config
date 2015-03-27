@@ -955,6 +955,17 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
+    def exceptionSerializableWithWrongType() {
+        val e = intercept[ConfigException.WrongType] {
+            ConfigValueFactory.fromAnyRef(Map("item" -> "uhoh, fail").asJava) match {
+                case o: ConfigObject => o.toConfig.getStringList("item")
+            }
+        }
+        val eCopy = checkSerializableNoMeaningfulEquals(e)
+        assertTrue("messages equal after deserialize", e.getMessage.equals(eCopy.getMessage))
+    }
+
+    @Test
     def invalidateCaches() {
         val conf0 = ConfigFactory.load()
         val sys0 = ConfigFactory.systemProperties()
