@@ -55,6 +55,24 @@ public interface ConfigDocument {
     ConfigDocument setValue(String path, ConfigValue newValue);
 
     /**
+     * Returns a new ConfigDocument that is a copy of the current ConfigDocument, but with
+     * the value at the desired path removed. If the desired path does not exist in the document,
+     * a copy of the current document will be returned. If there is an array at the root, an exception
+     * will be thrown.
+     *
+     * @param path the path to remove from the document
+     * @return a copy of the ConfigDocument with the desired value removed from the document.
+     */
+    ConfigDocument removeValue(String path);
+
+    /**
+     * Returns a boolean indicating whether or not a ConfigDocument has a value at the desired path.
+     * @param path the path to check
+     * @return true if the path exists in the document, otherwise false
+     */
+    boolean hasValue(String path);
+
+    /**
      * The original text of the input, modified if necessary with
      * any replaced or added values.
      * @return the modified original text

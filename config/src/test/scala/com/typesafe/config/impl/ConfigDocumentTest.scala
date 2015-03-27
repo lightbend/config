@@ -180,13 +180,67 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentArrayReplaceFailure {
+    def configDocumentHasValue {
+        val origText = "{a: b, a.b.c.d: e, c: {a: {b: c}}}"
+        val configDoc = ConfigDocumentFactory.parseString(origText)
+
+        assertTrue(configDoc.hasValue("a"))
+        assertTrue(configDoc.hasValue("a.b.c"))
+        assertTrue(configDoc.hasValue("c.a.b"))
+        assertFalse(configDoc.hasValue("c.a.b.c"))
+        assertFalse(configDoc.hasValue("a.b.c.d.e"))
+        assertFalse(configDoc.hasValue("this.does.not.exist"))
+    }
+
+    @Test
+    def configDocumentRemoveValue {
+        val origText = "{a: b, a.b.c.d: e, c: {a: {b: c}}}"
+        val configDoc = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("{c: {a: {b: c}}}", configDoc.removeValue("a").render())
+        assertEquals("{a: b, a.b.c.d: e, }", configDoc.removeValue("c").render())
+        assertEquals(configDoc, configDoc.removeValue("this.does.not.exist"))
+    }
+
+    @Test
+    def configDocumentRemoveValueJSON {
+        val origText = """{"a": "b", "c": "d"}"""
+        val configDoc = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+
+        // Ensure that removing a value in JSON does not leave us with a trailing comma
+        assertEquals("""{"a": "b" }""", configDoc.removeValue("c").render())
+    }
+
+    @Test
+    def configDocumentArrayFailures {
         // Attempting a replace on a ConfigDocument parsed from an array throws an error
         val origText = "[1, 2, 3, 4, 5]"
         val document = ConfigDocumentFactory.parseString(origText)
         var exceptionThrown = false
         try {
             document.setValue("a", "1")
+        } catch {
+            case e: Exception =>
+                exceptionThrown = true
+                assertTrue(e.isInstanceOf[ConfigException])
+                assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
+        }
+        assertTrue(exceptionThrown)
+
+        exceptionThrown = false;
+        try {
+            document.hasValue("a")
+        } catch {
+            case e: Exception =>
+                exceptionThrown = true
+                assertTrue(e.isInstanceOf[ConfigException])
+                assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
+        }
+        assertTrue(exceptionThrown)
+
+        exceptionThrown = false
+        try {
+            document.removeValue("a")
         } catch {
             case e: Exception =>
                 exceptionThrown = true
