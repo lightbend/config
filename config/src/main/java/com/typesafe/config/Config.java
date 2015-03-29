@@ -75,8 +75,9 @@ import java.util.concurrent.TimeUnit;
  * conceptually, {@code ConfigValue}s with a {@link ConfigValue#valueType()
  * valueType()} of {@link ConfigValueType#NULL NULL} exist in a
  * {@code ConfigObject}, while a {@code Config} treats null values as if they
- * were missing.
- * 
+ * were missing. (With the exception of two methods: {@link Config#hasPathOrNull}
+ * and {@link Config#getIsNull} let you detect <code>null</code> values.)
+ *
  * <p>
  * <strong>Getting configuration values</strong>
  * 
