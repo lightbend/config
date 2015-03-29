@@ -21,7 +21,8 @@ public interface ConfigDocument {
      * Returns a new ConfigDocument that is a copy of the current ConfigDocument,
      * but with the desired value set at the desired path. If the path exists, it will
      * remove all duplicates before the final occurrence of the path, and replace the value
-     * at the final occurrence of the path. If the path does not exist, it will be added.
+     * at the final occurrence of the path. If the path does not exist, it will be added. If
+     * the document has an array as the root value, an exception will be thrown.
      *
      * @param path the path at which to set the desired value
      * @param newValue the value to set at the desired path, represented as a string. This

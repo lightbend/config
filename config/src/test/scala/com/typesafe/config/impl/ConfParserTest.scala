@@ -567,6 +567,14 @@ class ConfParserTest extends TestUtils {
                 ]
                 """)
         assertComments(Seq(" BeforeCommaElementSameLine"), conf22, "foo", 0)
+
+        // comment with a line containing only whitespace after is dropped
+        val conf23 = parseConfig("""
+                { # BlankAfter
+
+                foo=10 }
+                              """)
+        assertComments(Seq(), conf23, "foo")
     }
 
     @Test

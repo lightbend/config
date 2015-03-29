@@ -5,48 +5,38 @@ package com.typesafe.config.impl;
 
 import java.util.*;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigParseOptions;
-import com.typesafe.config.ConfigSyntax;
-import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.*;
 
 final class ConfigDocumentParser {
-    static ConfigNodeComplexValue parse(Iterator<Token> tokens, ConfigParseOptions options) {
-        ParseContext context = new ParseContext(options.getSyntax(), tokens);
+    static ConfigNodeRoot parse(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
+        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parse();
     }
 
-    static ConfigNodeComplexValue parse(Iterator<Token> tokens) {
-        ParseContext context = new ParseContext(ConfigSyntax.CONF, tokens);
-        return context.parse();
-    }
-
-    static AbstractConfigNodeValue parseValue(Iterator<Token> tokens, ConfigParseOptions options) {
-        ParseContext context = new ParseContext(options.getSyntax(), tokens);
+    static AbstractConfigNodeValue parseValue(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
+        ParseContext context = new ParseContext(options.getSyntax(), origin, tokens);
         return context.parseSingleValue();
     }
 
     static private final class ParseContext {
+        private int lineNumber;
         final private Stack<Token> buffer;
         final private Iterator<Token> tokens;
         final private ConfigSyntax flavor;
-        final private LinkedList<Path> pathStack;
+        final private ConfigOrigin baseOrigin;
         // this is the number of "equals" we are inside,
         // used to modify the error message to reflect that
         // someone may think this is .properties format.
         int equalsCount;
-        // the number of lists we are inside; this is used to detect the "cannot
-        // generate a reference to a list element" problem, and once we fix that
-        // problem we should be able to get rid of this variable.
-        int arrayCount;
 
-        ParseContext(ConfigSyntax flavor, Iterator<Token> tokens) {
+        ParseContext(ConfigSyntax flavor, ConfigOrigin origin, Iterator<Token> tokens) {
+            lineNumber = 1;
             buffer = new Stack<Token>();
             this.tokens = tokens;
             this.flavor = flavor;
-            this.pathStack = new LinkedList<Path>();
             this.equalsCount = 0;
-            this.arrayCount = 0;
+            this.baseOrigin = origin;
         }
 
         private Token popToken() {
@@ -60,21 +50,29 @@ final class ConfigDocumentParser {
             Token t = popToken();
             if (flavor == ConfigSyntax.JSON) {
                 if (Tokens.isUnquotedText(t) && !isUnquotedWhitespace(t)) {
-                    throw parseError(addKeyName("Token not allowed in valid JSON: '"
-                            + Tokens.getUnquotedText(t) + "'"));
+                    throw parseError("Token not allowed in valid JSON: '"
+                            + Tokens.getUnquotedText(t) + "'");
                 } else if (Tokens.isSubstitution(t)) {
-                    throw parseError(addKeyName("Substitutions (${} syntax) not allowed in JSON"));
+                    throw parseError("Substitutions (${} syntax) not allowed in JSON");
                 }
             }
             return t;
         }
 
-        private Token nextTokenIgnoringWhitespace(Collection<AbstractConfigNode> nodes) {
+        private Token nextTokenCollectingWhitespace(Collection<AbstractConfigNode> nodes) {
             while (true) {
                 Token t = nextToken();
-                if (Tokens.isIgnoredWhitespace(t) || Tokens.isComment(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
+                if (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t)) {
                     nodes.add(new ConfigNodeSingleToken(t));
+                    if (Tokens.isNewline(t)) {
+                        lineNumber = t.lineNumber() + 1;
+                    }
+                } else if (Tokens.isComment(t)) {
+                    nodes.add(new ConfigNodeComment(t));
                 } else {
+                    int newNumber = t.lineNumber();
+                    if (newNumber >= 0)
+                        lineNumber = newNumber;
                     return t;
                 }
             }
@@ -92,7 +90,7 @@ final class ConfigDocumentParser {
         // is left just after the comma or the newline.
         private boolean checkElementSeparator(Collection<AbstractConfigNode> nodes) {
             if (flavor == ConfigSyntax.JSON) {
-                Token t = nextTokenIgnoringWhitespace(nodes);
+                Token t = nextTokenCollectingWhitespace(nodes);
                 if (t == Tokens.COMMA) {
                     nodes.add(new ConfigNodeSingleToken(t));
                     return true;
@@ -105,10 +103,13 @@ final class ConfigDocumentParser {
                 Token t = nextToken();
                 while (true) {
                     if (Tokens.isIgnoredWhitespace(t) || isUnquotedWhitespace(t)) {
-                        //do nothing
+                        nodes.add(new ConfigNodeSingleToken(t));
+                    } else if (Tokens.isComment(t)) {
+                        nodes.add(new ConfigNodeComment(t));
                     } else if (Tokens.isNewline(t)) {
                         sawSeparatorOrNewline = true;
-
+                        lineNumber++;
+                        nodes.add(new ConfigNodeSingleToken(t));
                         // we want to continue to also eat
                         // a comma if there is one.
                     } else if (t == Tokens.COMMA) {
@@ -119,7 +120,6 @@ final class ConfigDocumentParser {
                         putBack(t);
                         return sawSeparatorOrNewline;
                     }
-                    nodes.add(new ConfigNodeSingleToken(t));
                     t = nextToken();
                 }
             }
@@ -136,7 +136,7 @@ final class ConfigDocumentParser {
             int valueCount = 0;
 
             // ignore a newline up front
-            Token t = nextTokenIgnoringWhitespace(nodes);
+            Token t = nextTokenCollectingWhitespace(nodes);
             while (true) {
                 AbstractConfigNodeValue v = null;
                 if (Tokens.isIgnoredWhitespace(t)) {
@@ -197,29 +197,7 @@ final class ConfigDocumentParser {
         }
 
         private ConfigException parseError(String message, Throwable cause) {
-            return new ConfigException.Parse(SimpleConfigOrigin.newSimple(""), message, cause);
-        }
-
-        private String previousFieldName(Path lastPath) {
-            if (lastPath != null) {
-                return lastPath.render();
-            } else if (pathStack.isEmpty())
-                return null;
-            else
-                return pathStack.peek().render();
-        }
-
-        private String previousFieldName() {
-            return previousFieldName(null);
-        }
-
-        private String addKeyName(String message) {
-            String previousFieldName = previousFieldName();
-            if (previousFieldName != null) {
-                return "in value for key '" + previousFieldName + "': " + message;
-            } else {
-                return message;
-            }
+            return new ConfigException.Parse(baseOrigin.withLineNumber(lineNumber), message, cause);
         }
 
         private String addQuoteSuggestion(String badToken, String message) {
@@ -228,7 +206,7 @@ final class ConfigDocumentParser {
 
         private String addQuoteSuggestion(Path lastPath, boolean insideEquals, String badToken,
                                           String message) {
-            String previousFieldName = previousFieldName(lastPath);
+            String previousFieldName = lastPath != null ? lastPath.render() : null;
 
             String part;
             if (badToken.equals(Tokens.END.toString())) {
@@ -260,8 +238,6 @@ final class ConfigDocumentParser {
 
         private AbstractConfigNodeValue parseValue(Token t) {
             AbstractConfigNodeValue v = null;
-
-            int startingArrayCount = arrayCount;
             int startingEqualsCount = equalsCount;
 
             if (Tokens.isValue(t) || Tokens.isUnquotedText(t) || Tokens.isSubstitution(t)) {
@@ -275,8 +251,6 @@ final class ConfigDocumentParser {
                         "Expecting a value but got wrong token: " + t));
             }
 
-            if (arrayCount != startingArrayCount)
-                throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced array count");
             if (equalsCount != startingEqualsCount)
                 throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced equals count");
 
@@ -288,8 +262,8 @@ final class ConfigDocumentParser {
                 if (Tokens.isValueWithType(token, ConfigValueType.STRING)) {
                     return PathParser.parsePathNodeExpression(Collections.singletonList(token).iterator(), null);
                 } else {
-                    throw parseError(addKeyName("Expecting close brace } or a field name here, got "
-                            + token));
+                    throw parseError("Expecting close brace } or a field name here, got "
+                            + token);
                 }
             } else {
                 List<Token> expression = new ArrayList<Token>();
@@ -300,8 +274,8 @@ final class ConfigDocumentParser {
                 }
 
                 if (expression.isEmpty()) {
-                    throw parseError(addKeyName("expecting a close brace or a field name here, got "
-                            + t));
+                    throw parseError("expecting a close brace or a field name here, got "
+                            + t);
                 }
 
                 putBack(t); // put back the token we ended with
@@ -336,20 +310,21 @@ final class ConfigDocumentParser {
             }
         }
 
-        private void parseInclude(ArrayList<AbstractConfigNode> children) {
-            Token t = nextTokenIgnoringWhitespace(children);
+        private ConfigNodeInclude parseInclude(ArrayList<AbstractConfigNode> children) {
+            Token t = nextTokenCollectingWhitespace(children);
 
             // we either have a quoted string or the "file()" syntax
             if (Tokens.isUnquotedText(t)) {
                 // get foo(
-                String kind = Tokens.getUnquotedText(t);
+                String kindText = Tokens.getUnquotedText(t);
+                ConfigIncludeKind kind;
 
-                if (kind.equals("url(")) {
-
-                } else if (kind.equals("file(")) {
-
-                } else if (kind.equals("classpath(")) {
-
+                if (kindText.equals("url(")) {
+                    kind = ConfigIncludeKind.URL;
+                } else if (kindText.equals("file(")) {
+                    kind = ConfigIncludeKind.FILE;
+                } else if (kindText.equals("classpath(")) {
+                    kind = ConfigIncludeKind.CLASSPATH;
                 } else {
                     throw parseError("expecting include parameter to be quoted filename, file(), classpath(), or url(). No spaces are allowed before the open paren. Not expecting: "
                             + t);
@@ -358,7 +333,7 @@ final class ConfigDocumentParser {
                 children.add(new ConfigNodeSingleToken(t));
 
                 // skip space inside parens
-                t = nextTokenIgnoringWhitespace(children);
+                t = nextTokenCollectingWhitespace(children);
 
                 // quoted string
                 String name;
@@ -366,18 +341,20 @@ final class ConfigDocumentParser {
                     throw parseError("expecting a quoted string inside file(), classpath(), or url(), rather than: "
                             + t);
                 }
-                children.add(new ConfigNodeSingleToken(t));
+                children.add(new ConfigNodeSimpleValue(t));
                 // skip space after string, inside parens
-                t = nextTokenIgnoringWhitespace(children);
+                t = nextTokenCollectingWhitespace(children);
 
                 if (Tokens.isUnquotedText(t) && Tokens.getUnquotedText(t).equals(")")) {
                     // OK, close paren
                 } else {
                     throw parseError("expecting a close parentheses ')' here, not: " + t);
                 }
+                return new ConfigNodeInclude(children, kind);
 
             } else if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
                 children.add(new ConfigNodeSimpleValue(t));
+                return new ConfigNodeInclude(children, ConfigIncludeKind.HEURISTIC);
             } else {
                 throw parseError("include keyword is not followed by a quoted string, but by: " + t);
             }
@@ -390,12 +367,12 @@ final class ConfigDocumentParser {
             boolean lastInsideEquals = false;
             ArrayList<AbstractConfigNode> objectNodes = new ArrayList<AbstractConfigNode>();
             ArrayList<AbstractConfigNode> keyValueNodes;
-            HashMap<String, Boolean> keys  = new HashMap();
+            HashMap<String, Boolean> keys  = new HashMap<String, Boolean>();
             if (hadOpenCurly)
                 objectNodes.add(new ConfigNodeSingleToken(Tokens.OPEN_CURLY));
 
             while (true) {
-                Token t = nextTokenIgnoringWhitespace(objectNodes);
+                Token t = nextTokenCollectingWhitespace(objectNodes);
                 if (t == Tokens.CLOSE_CURLY) {
                     if (flavor == ConfigSyntax.JSON && afterComma) {
                         throw parseError(addQuoteSuggestion(t.toString(),
@@ -410,16 +387,16 @@ final class ConfigDocumentParser {
                     putBack(t);
                     break;
                 } else if (flavor != ConfigSyntax.JSON && isIncludeKeyword(t)) {
-                    objectNodes.add(new ConfigNodeSingleToken(t));
-                    parseInclude(objectNodes);
-
+                    ArrayList<AbstractConfigNode> includeNodes = new ArrayList<AbstractConfigNode>();
+                    includeNodes.add(new ConfigNodeSingleToken(t));
+                    objectNodes.add(parseInclude(includeNodes));
                     afterComma = false;
                 } else {
                     keyValueNodes = new ArrayList<AbstractConfigNode>();
                     Token keyToken = t;
                     ConfigNodePath path = parseKey(keyToken);
                     keyValueNodes.add(path);
-                    Token afterKey = nextTokenIgnoringWhitespace(keyValueNodes);
+                    Token afterKey = nextTokenCollectingWhitespace(keyValueNodes);
                     boolean insideEquals = false;
 
                     Token valueToken;
@@ -443,7 +420,7 @@ final class ConfigDocumentParser {
 
                         nextValue = consolidateValues(keyValueNodes);
                         if (nextValue == null) {
-                            nextValue = parseValue(nextTokenIgnoringWhitespace(keyValueNodes));
+                            nextValue = parseValue(nextTokenCollectingWhitespace(keyValueNodes));
                         }
                     }
 
@@ -487,7 +464,7 @@ final class ConfigDocumentParser {
                     // continue looping
                     afterComma = true;
                 } else {
-                    t = nextTokenIgnoringWhitespace(objectNodes);
+                    t = nextTokenCollectingWhitespace(objectNodes);
                     if (t == Tokens.CLOSE_CURLY) {
                         if (!hadOpenCurly) {
                             throw parseError(addQuoteSuggestion(lastPath, lastInsideEquals,
@@ -517,7 +494,6 @@ final class ConfigDocumentParser {
             ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>();
             children.add(new ConfigNodeSingleToken(Tokens.OPEN_SQUARE));
             // invoked just after the OPEN_SQUARE
-            arrayCount += 1;
             Token t;
 
             AbstractConfigNodeValue nextValue = consolidateValues(children);
@@ -525,11 +501,10 @@ final class ConfigDocumentParser {
                 children.add(nextValue);
                 nextValue = null;
             } else {
-                t = nextTokenIgnoringWhitespace(children);
+                t = nextTokenCollectingWhitespace(children);
 
                 // special-case the first element
                 if (t == Tokens.CLOSE_SQUARE) {
-                    arrayCount -= 1;
                     children.add(new ConfigNodeSingleToken(t));
                     return new ConfigNodeArray(children);
                 } else if (Tokens.isValue(t) || t == Tokens.OPEN_CURLY
@@ -539,11 +514,11 @@ final class ConfigDocumentParser {
                     children.add(nextValue);
                     nextValue = null;
                 } else {
-                    throw parseError(addKeyName("List should have ] or a first element after the open [, instead had token: "
+                    throw parseError("List should have ] or a first element after the open [, instead had token: "
                             + t
                             + " (if you want "
                             + t
-                            + " to be part of a string value, then double-quote it)"));
+                            + " to be part of a string value, then double-quote it)");
                 }
             }
 
@@ -553,17 +528,16 @@ final class ConfigDocumentParser {
                 if (checkElementSeparator(children)) {
                     // comma (or newline equivalent) consumed
                 } else {
-                    t = nextTokenIgnoringWhitespace(children);
+                    t = nextTokenCollectingWhitespace(children);
                     if (t == Tokens.CLOSE_SQUARE) {
-                        arrayCount -= 1;
                         children.add(new ConfigNodeSingleToken(t));
                         return new ConfigNodeArray(children);
                     } else {
-                        throw parseError(addKeyName("List should have ended with ] or had a comma, instead had token: "
+                        throw parseError("List should have ended with ] or had a comma, instead had token: "
                                 + t
                                 + " (if you want "
                                 + t
-                                + " to be part of a string value, then double-quote it)"));
+                                + " to be part of a string value, then double-quote it)");
                     }
                 }
 
@@ -573,7 +547,7 @@ final class ConfigDocumentParser {
                     children.add(nextValue);
                     nextValue = null;
                 } else {
-                    t = nextTokenIgnoringWhitespace(children);
+                    t = nextTokenCollectingWhitespace(children);
                     if (Tokens.isValue(t) || t == Tokens.OPEN_CURLY
                             || t == Tokens.OPEN_SQUARE || Tokens.isUnquotedText(t)
                             || Tokens.isSubstitution(t)) {
@@ -584,17 +558,18 @@ final class ConfigDocumentParser {
                         // we allow one trailing comma
                         putBack(t);
                     } else {
-                        throw parseError(addKeyName("List should have had new element after a comma, instead had token: "
+                        throw parseError("List should have had new element after a comma, instead had token: "
                                 + t
                                 + " (if you want the comma or "
                                 + t
-                                + " to be part of a string value, then double-quote it)"));
+                                + " to be part of a string value, then double-quote it)");
                     }
                 }
             }
         }
 
-        ConfigNodeComplexValue parse() {
+        ConfigNodeRoot parse() {
+            ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>();
             Token t = nextToken();
             if (t == Tokens.START) {
                 // OK
@@ -603,8 +578,9 @@ final class ConfigDocumentParser {
                         "token stream did not begin with START, had " + t);
             }
 
-            t = nextToken();
+            t = nextTokenCollectingWhitespace(children);
             AbstractConfigNode result = null;
+            boolean missingCurly = false;
             if (t == Tokens.OPEN_CURLY || t == Tokens.OPEN_SQUARE) {
                 result = parseValue(t);
             } else {
@@ -620,16 +596,26 @@ final class ConfigDocumentParser {
                     // this token should be the first field's key, or part
                     // of it, so put it back.
                     putBack(t);
+                    missingCurly = true;
                     result = parseObject(false);
                 }
             }
-            ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>(((ConfigNodeComplexValue)result).children());
-            t = nextTokenIgnoringWhitespace(children);
+            // Need to pull the children out of the resulting node so we can keep leading
+            // and trailing whitespace if this was a no-brace object. Otherwise, we need to add
+            // the result into the list of children.
+            if (result instanceof ConfigNodeObject && missingCurly) {
+                children.addAll(((ConfigNodeComplexValue) result).children());
+            } else {
+                children.add(result);
+            }
+            t = nextTokenCollectingWhitespace(children);
             if (t == Tokens.END) {
-                if (result instanceof ConfigNodeArray) {
-                    return new ConfigNodeArray(children);
+                if (missingCurly) {
+                    // If there were no braces, the entire document should be treated as a single object
+                    return new ConfigNodeRoot(Collections.singletonList((AbstractConfigNode)new ConfigNodeObject(children)), baseOrigin);
+                } else {
+                    return new ConfigNodeRoot(children, baseOrigin);
                 }
-                return new ConfigNodeObject(children);
             } else {
                 throw parseError("Document has trailing tokens after first object or array: "
                         + t);
@@ -664,7 +650,7 @@ final class ConfigDocumentParser {
                 }
             } else {
                 putBack(t);
-                ArrayList<AbstractConfigNode> nodes = new ArrayList();
+                ArrayList<AbstractConfigNode> nodes = new ArrayList<AbstractConfigNode>();
                 AbstractConfigNodeValue node = consolidateValues(nodes);
                 t = nextToken();
                 if (t == Tokens.END) {

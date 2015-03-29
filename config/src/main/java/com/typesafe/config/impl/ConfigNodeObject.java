@@ -13,7 +13,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
     }
 
     protected ConfigNodeObject changeValueOnPath(Path desiredPath, AbstractConfigNodeValue value) {
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList(super.children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children);
         // Copy the value so we can change it to null but not modify the original parameter
         AbstractConfigNodeValue valueCopy = value;
         for (int i = super.children.size() - 1; i >= 0; i--) {
@@ -62,7 +62,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
 
     protected ConfigNodeObject addValueOnPath(ConfigNodePath desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
         Path path = desiredPath.value();
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList(super.children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children);
         if (path.length() > 1) {
             for (int i = super.children.size() - 1; i >= 0; i--) {
                 if (!(super.children.get(i) instanceof ConfigNodeField)) {
@@ -80,7 +80,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         }
         boolean startsWithBrace = super.children.get(0) instanceof ConfigNodeSingleToken &&
                 ((ConfigNodeSingleToken) super.children.get(0)).token() == Tokens.OPEN_CURLY;
-        ArrayList<AbstractConfigNode> newNodes = new ArrayList();
+        ArrayList<AbstractConfigNode> newNodes = new ArrayList<AbstractConfigNode>();
         newNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
         newNodes.add(desiredPath.first());
         newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
@@ -90,7 +90,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         if (path.length() == 1) {
             newNodes.add(value);
         } else {
-            ArrayList<AbstractConfigNode> newObjectNodes = new ArrayList();
+            ArrayList<AbstractConfigNode> newObjectNodes = new ArrayList<AbstractConfigNode>();
             newObjectNodes.add(new ConfigNodeSingleToken(Tokens.OPEN_CURLY));
             newObjectNodes.add(new ConfigNodeSingleToken(Tokens.CLOSE_CURLY));
             ConfigNodeObject newObject = new ConfigNodeObject(newObjectNodes);
