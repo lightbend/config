@@ -31,7 +31,25 @@ final class SimpleConfigDocument implements ConfigDocument {
         return setValue(path, newValue.render());
     }
 
+    public ConfigDocument removeValue(String path) {
+        return new SimpleConfigDocument(configNodeTree.setValue(path, null, parseOptions.getSyntax()), parseOptions);
+    }
+
+    public boolean hasValue(String path) {
+        return configNodeTree.hasValue(path);
+    }
+
     public String render() {
         return configNodeTree.render();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof ConfigDocument && render().equals(((ConfigDocument) other).render());
+    }
+
+    @Override
+    public int hashCode() {
+        return render().hashCode();
     }
 }

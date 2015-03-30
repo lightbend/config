@@ -27,7 +27,7 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentReplace() {
+    def configDocumentReplace {
         // Can handle parsing/replacement with a very simple map
         configDocumentReplaceConfTest("""{"a":1}""", """{"a":2}""", "2", "a")
         configDocumentReplaceJsonTest("""{"a":1}""", """{"a":2}""", "2", "a")
@@ -137,6 +137,21 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
+    def configDocumentMultiElementDuplicatesRemoved {
+        var origText = "{a: b, a.b.c: d, a: e}"
+        var configDoc = ConfigDocumentFactory.parseString(origText)
+        assertEquals("{a: 2}", configDoc.setValue("a", "2").render())
+
+        origText = "{a: b, a: e, a.b.c: d}"
+        configDoc = ConfigDocumentFactory.parseString(origText)
+        assertEquals("{a: 2, }", configDoc.setValue("a", "2").render())
+
+        origText = "{a.b.c: d}"
+        configDoc = ConfigDocumentFactory.parseString(origText)
+        assertEquals("{\na : 2\n}", configDoc.setValue("a", "2").render())
+    }
+
+    @Test
     def configDocumentSetNewValueBraceRoot {
         val origText = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n}"
         val finalTextConf = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n\n\"e\" : \"f\"\n}"
@@ -180,20 +195,51 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentArrayReplaceFailure {
+    def configDocumentHasValue {
+        val origText = "{a: b, a.b.c.d: e, c: {a: {b: c}}}"
+        val configDoc = ConfigDocumentFactory.parseString(origText)
+
+        assertTrue(configDoc.hasValue("a"))
+        assertTrue(configDoc.hasValue("a.b.c"))
+        assertTrue(configDoc.hasValue("c.a.b"))
+        assertFalse(configDoc.hasValue("c.a.b.c"))
+        assertFalse(configDoc.hasValue("a.b.c.d.e"))
+        assertFalse(configDoc.hasValue("this.does.not.exist"))
+    }
+
+    @Test
+    def configDocumentRemoveValue {
+        val origText = "{a: b, a.b.c.d: e, c: {a: {b: c}}}"
+        val configDoc = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("{c: {a: {b: c}}}", configDoc.removeValue("a").render())
+        assertEquals("{a: b, a.b.c.d: e, }", configDoc.removeValue("c").render())
+        assertEquals(configDoc, configDoc.removeValue("this.does.not.exist"))
+    }
+
+    @Test
+    def configDocumentRemoveValueJSON {
+        val origText = """{"a": "b", "c": "d"}"""
+        val configDoc = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+
+        // Ensure that removing a value in JSON does not leave us with a trailing comma
+        assertEquals("""{"a": "b" }""", configDoc.removeValue("c").render())
+    }
+
+    @Test
+    def configDocumentArrayFailures {
         // Attempting a replace on a ConfigDocument parsed from an array throws an error
         val origText = "[1, 2, 3, 4, 5]"
         val document = ConfigDocumentFactory.parseString(origText)
-        var exceptionThrown = false
-        try {
-            document.setValue("a", "1")
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
-        }
-        assertTrue(exceptionThrown)
+
+        val e1 = intercept[ConfigException] { document.setValue("a", "1") }
+        assertTrue(e1.getMessage.contains("ConfigDocument had an array at the root level"))
+
+        val e2 = intercept[ConfigException] { document.hasValue("a") }
+        assertTrue(e2.getMessage.contains("ConfigDocument had an array at the root level"))
+
+        val e3 = intercept[ConfigException] { document.removeValue("a") }
+        assertTrue(e3.getMessage.contains("ConfigDocument had an array at the root level"))
     }
 
     @Test

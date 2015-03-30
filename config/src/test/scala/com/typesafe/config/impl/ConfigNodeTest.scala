@@ -212,7 +212,7 @@ class ConfigNodeTest extends TestUtils {
             nodeCloseBrace))
         assertEquals(origText, origNode.render())
         val finalText = "foo : bar\nbaz : {\n\t\"abc.def\" : true\n\t//This is a comment about the below setting\n\n\tabc : {\n\t\t" +
-            "def : false\n\t\n\"this.does.not.exist@@@+$#\" : {\nend : doesnotexist\n}\n}\n}\nbaz.abc.ghi : randomunquotedString\n}"
+            "def : false\n\n\"this.does.not.exist@@@+$#\" : {\nend : doesnotexist\n}\n}\n}\nbaz.abc.ghi : randomunquotedString\n}"
 
         //Can replace settings in nested maps
         // Paths with quotes in the name are treated as a single Path, rather than multiple sub-paths
