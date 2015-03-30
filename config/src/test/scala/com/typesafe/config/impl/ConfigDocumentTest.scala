@@ -231,38 +231,15 @@ class ConfigDocumentTest extends TestUtils {
         // Attempting a replace on a ConfigDocument parsed from an array throws an error
         val origText = "[1, 2, 3, 4, 5]"
         val document = ConfigDocumentFactory.parseString(origText)
-        var exceptionThrown = false
-        try {
-            document.setValue("a", "1")
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
-        }
-        assertTrue(exceptionThrown)
 
-        exceptionThrown = false;
-        try {
-            document.hasValue("a")
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
-        }
-        assertTrue(exceptionThrown)
+        val e1 = intercept[ConfigException] { document.setValue("a", "1") }
+        assertTrue(e1.getMessage.contains("ConfigDocument had an array at the root level"))
 
-        exceptionThrown = false
-        try {
-            document.removeValue("a")
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("ConfigDocument had an array at the root level"))
-        }
-        assertTrue(exceptionThrown)
+        val e2 = intercept[ConfigException] { document.hasValue("a") }
+        assertTrue(e2.getMessage.contains("ConfigDocument had an array at the root level"))
+
+        val e3 = intercept[ConfigException] { document.removeValue("a") }
+        assertTrue(e3.getMessage.contains("ConfigDocument had an array at the root level"))
     }
 
     @Test

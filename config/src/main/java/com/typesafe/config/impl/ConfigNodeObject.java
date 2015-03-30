@@ -13,13 +13,15 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
     public boolean hasValue(Path desiredPath) {
         for (AbstractConfigNode node : children) {
             if (node instanceof ConfigNodeField) {
-                Path key = ((ConfigNodeField) node).path().value();
+                ConfigNodeField field = (ConfigNodeField) node;
+                Path key = field.path().value();
                 if (key.equals(desiredPath) || key.startsWith(desiredPath)) {
                     return true;
                 } else if (desiredPath.startsWith(key)) {
-                    if (((ConfigNodeField) node).value() instanceof ConfigNodeObject) {
+                    if (field.value() instanceof ConfigNodeObject) {
+                        ConfigNodeObject obj = (ConfigNodeObject) field.value();
                         Path remainingPath = desiredPath.subPath(key.length());
-                        if (((ConfigNodeObject) ((ConfigNodeField) node).value()).hasValue(remainingPath)) {
+                        if (obj.hasValue(remainingPath)) {
                             return true;
                         }
                     }
