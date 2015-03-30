@@ -1,11 +1,9 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigSyntax;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 final class ConfigNodeObject extends ConfigNodeComplexValue {
     ConfigNodeObject(Collection<AbstractConfigNode> children) {
@@ -44,50 +42,44 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
                     childrenCopy.remove(i);
                 }
                 continue;
-            }else if (!(childrenCopy.get(i) instanceof ConfigNodeField)) {
+            } else if (!(childrenCopy.get(i) instanceof ConfigNodeField)) {
                 continue;
             }
-            ConfigNodeField node = (ConfigNodeField)childrenCopy.get(i);
+            ConfigNodeField node = (ConfigNodeField) childrenCopy.get(i);
             Path key = node.path().value();
-            if (key.equals(desiredPath) || key.startsWith(desiredPath)) {
-                if (valueCopy == null) {
-                    childrenCopy.remove(i);
-                    // Remove any whitespace or commas after the deleted setting
-                    for (int j = i; j < childrenCopy.size(); j++) {
-                        if (childrenCopy.get(j) instanceof ConfigNodeSingleToken) {
-                            Token t = ((ConfigNodeSingleToken) childrenCopy.get(j)).token();
-                            if (Tokens.isIgnoredWhitespace(t) || t == Tokens.COMMA) {
-                                childrenCopy.remove(j);
-                                j--;
-                            } else {
-                                break;
-                            }
+
+            // Delete all multi-element paths that start with the desired path, since technically they are duplicates
+            if ((valueCopy == null && key.equals(desiredPath))|| (key.startsWith(desiredPath) && !key.equals(desiredPath))) {
+                childrenCopy.remove(i);
+                // Remove any whitespace or commas after the deleted setting
+                for (int j = i; j < childrenCopy.size(); j++) {
+                    if (childrenCopy.get(j) instanceof ConfigNodeSingleToken) {
+                        Token t = ((ConfigNodeSingleToken) childrenCopy.get(j)).token();
+                        if (Tokens.isIgnoredWhitespace(t) || t == Tokens.COMMA) {
+                            childrenCopy.remove(j);
+                            j--;
                         } else {
                             break;
                         }
+                    } else {
+                        break;
                     }
                 }
-                else if (key.equals(desiredPath)){
-                    seenNonMatching = true;
-                    childrenCopy.set(i, node.replaceValue(value));
-                    valueCopy = null;
-                }
+            } else if (key.equals(desiredPath)) {
+                seenNonMatching = true;
+                childrenCopy.set(i, node.replaceValue(value));
+                valueCopy = null;
             } else if (desiredPath.startsWith(key)) {
                 seenNonMatching = true;
                 if (node.value() instanceof ConfigNodeObject) {
                     Path remainingPath = desiredPath.subPath(key.length());
-                    childrenCopy.set(i, node.replaceValue(((ConfigNodeObject)node.value()).changeValueOnPath(remainingPath, valueCopy, flavor)));
+                    childrenCopy.set(i, node.replaceValue(((ConfigNodeObject) node.value()).changeValueOnPath(remainingPath, valueCopy, flavor)));
                     if (valueCopy != null && !node.equals(super.children.get(i)))
                         valueCopy = null;
                 }
             } else {
                 seenNonMatching = true;
             }
-        }
-
-        // Since we've removed values and valid JSON does not allow trailing commas, remove a comma after the final setting
-        if (flavor == ConfigSyntax.JSON) {
-
         }
         return new ConfigNodeObject(childrenCopy);
     }
@@ -105,8 +97,8 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         ConfigNodeObject node = changeValueOnPath(desiredPath.value(), value, flavor);
 
         // If the desired Path did not exist, add it
-        if (node.equals(this)) {
-            return addValueOnPath(desiredPath, value, flavor);
+        if (!node.hasValue(desiredPath.value())) {
+            return node.addValueOnPath(desiredPath, value, flavor);
         }
         return node;
     }

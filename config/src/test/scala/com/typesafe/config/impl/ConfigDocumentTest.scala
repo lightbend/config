@@ -27,7 +27,7 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentReplace() {
+    def configDocumentReplace {
         // Can handle parsing/replacement with a very simple map
         configDocumentReplaceConfTest("""{"a":1}""", """{"a":2}""", "2", "a")
         configDocumentReplaceJsonTest("""{"a":1}""", """{"a":2}""", "2", "a")
@@ -134,6 +134,21 @@ class ConfigDocumentTest extends TestUtils {
              }"""
         configDocumentReplaceConfTest(origText, finalText,
             "this is a concatenation 123 456 {a:b} [1,2,3] {a: this is another 123 concatenation null true}", "h.b.a")
+    }
+
+    @Test
+    def configDocumentMultiElementDuplicatesRemoved {
+        var origText = "{a: b, a.b.c: d, a: e}"
+        var configDoc = ConfigDocumentFactory.parseString(origText)
+        assertEquals("{a: 2}", configDoc.setValue("a", "2").render())
+
+        origText = "{a: b, a: e, a.b.c: d}"
+        configDoc = ConfigDocumentFactory.parseString(origText)
+        assertEquals("{a: 2, }", configDoc.setValue("a", "2").render())
+
+        origText = "{a.b.c: d}"
+        configDoc = ConfigDocumentFactory.parseString(origText)
+        assertEquals("{\na : 2\n}", configDoc.setValue("a", "2").render())
     }
 
     @Test
