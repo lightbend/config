@@ -3,7 +3,7 @@
  */
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigNode;
+import com.typesafe.config.parser.ConfigNode;
 import java.util.Collection;
 
 abstract class AbstractConfigNode implements ConfigNode {

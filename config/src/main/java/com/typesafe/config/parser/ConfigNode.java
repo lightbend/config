@@ -1,11 +1,10 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config.parser;
 
 /**
- * An immutable node that makes up the ConfigDocument AST, and which can be
- * used to reproduce part or all of the original text of an input.
+ * A node in the syntax tree for a HOCON or JSON document.
  *
  * <p>
  * Because this object is immutable, it is safe to use from multiple threads and

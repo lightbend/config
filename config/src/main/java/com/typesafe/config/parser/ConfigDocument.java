@@ -1,8 +1,12 @@
-package com.typesafe.config;
+package com.typesafe.config.parser;
+
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigValue;
 
 /**
- * An object parsed from the original input text, which can be used to
- * replace individual values and exactly render the original text of the
+ * Represents an individual HOCON or JSON file, preserving all
+ * formatting and syntax details.  This can be used to replace
+ * individual values and exactly render the original text of the
  * input.
  *
  * <p>
@@ -10,7 +14,7 @@ package com.typesafe.config;
  * there's no need for "defensive copies."
  *
  * <p>
- * <em>Do not implement interface {@code ConfigNode}</em>; it should only be
+ * <em>Do not implement interface {@code ConfigDocument}</em>; it should only be
  * implemented by the config library. Arbitrary implementations will not work
  * because the library internals assume a specific concrete implementation.
  * Also, this interface is likely to grow new methods over time, so third-party
