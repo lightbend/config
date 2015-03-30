@@ -231,15 +231,15 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }"
         val configDoc = ConfigDocumentFactory.parseString(origText)
         val removed = configDoc.removeValue("a.b")
-        assertEquals("a { }, a { b: { } }", removed.render())
+        assertEquals("a { }, a { }", removed.render())
     }
 
     @Test
     def configDocumentRemoveOverridden {
-        val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 }, a : 57 }"
+        val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }, a : 57 "
         val configDoc = ConfigDocumentFactory.parseString(origText)
         val removed = configDoc.removeValue("a.b")
-        assertEquals("a { }, a : 57", removed.render())
+        assertEquals("a { }, a { }, a : 57 ", removed.render())
     }
 
     @Test
@@ -247,7 +247,7 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }"
         val configDoc = ConfigDocumentFactory.parseString(origText)
         val removed = configDoc.removeValue("a.b.c")
-        assertEquals("a { b: 42 }, a.b = 43, a { b: {  } }", removed.render())
+        assertEquals("a { b: 42 }, a.b = 43, a { b: { } }", removed.render())
     }
 
     @Test
