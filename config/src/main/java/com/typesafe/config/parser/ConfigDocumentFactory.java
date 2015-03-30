@@ -9,8 +9,8 @@ import java.io.File;
 import java.io.Reader;
 
 /**
- * Factory for automatically creating a ConfigDocument from a given input. Currently
- * only supports files and strings.
+ * Factory for creating {@link
+ * com.typesafe.config.parser.ConfigDocument} instances.
  */
 public final class ConfigDocumentFactory {
 
@@ -22,7 +22,7 @@ public final class ConfigDocumentFactory {
      * @param options
      *       parse options to control how the reader is interpreted
      * @return the parsed configuration
-     * @throws ConfigException on IO or parse errors
+     * @throws com.typesafe.config.ConfigException on IO or parse errors
      */
     public static ConfigDocument parseReader(Reader reader, ConfigParseOptions options) {
         return Parseable.newReader(reader, options).parseConfigDocument();
@@ -36,7 +36,7 @@ public final class ConfigDocumentFactory {
      * @param reader
      *       the reader to parse
      * @return the parsed configuration
-     * @throws ConfigException on IO or parse errors
+     * @throws com.typesafe.config.ConfigException on IO or parse errors
      */
     public static ConfigDocument parseReader(Reader reader) {
         return parseReader(reader, ConfigParseOptions.defaults());
@@ -50,7 +50,7 @@ public final class ConfigDocumentFactory {
      * @param options
      *       parse options to control how the file is interpreted
      * @return the parsed configuration
-     * @throws ConfigException on IO or parse errors
+     * @throws com.typesafe.config.ConfigException on IO or parse errors
      */
     public static ConfigDocument parseFile(File file, ConfigParseOptions options) {
         return Parseable.newFile(file, options).parseConfigDocument();
@@ -64,7 +64,7 @@ public final class ConfigDocumentFactory {
      * @param file
      *       the file to parse
      * @return the parsed configuration
-     * @throws ConfigException on IO or parse errors
+     * @throws com.typesafe.config.ConfigException on IO or parse errors
      */
     public static ConfigDocument parseFile(File file) {
         return parseFile(file, ConfigParseOptions.defaults());
