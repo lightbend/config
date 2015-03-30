@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.{ Paths, Files }
 
 import com.typesafe.config._
+import com.typesafe.config.parser._
 import org.junit.Assert._
 import org.junit.Test
 

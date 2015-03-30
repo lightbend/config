@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config.parser;
 
 /**
  * An immutable node that makes up the ConfigDocument AST, and which can be

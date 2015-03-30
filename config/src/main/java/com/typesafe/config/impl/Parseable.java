@@ -22,6 +22,7 @@ import java.net.URLConnection;
 import java.util.*;
 
 import com.typesafe.config.*;
+import com.typesafe.config.parser.*;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.

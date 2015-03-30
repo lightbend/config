@@ -1,4 +1,6 @@
-package com.typesafe.config;
+package com.typesafe.config.parser;
+
+import com.typesafe.config.ConfigParseOptions;
 
 import com.typesafe.config.impl.ConfigImpl;
 import com.typesafe.config.impl.Parseable;

@@ -1,4 +1,7 @@
-package com.typesafe.config;
+package com.typesafe.config.parser;
+
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigValue;
 
 /**
  * An object parsed from the original input text, which can be used to

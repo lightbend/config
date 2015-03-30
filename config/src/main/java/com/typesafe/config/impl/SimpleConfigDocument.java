@@ -1,6 +1,6 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigDocument;
+import com.typesafe.config.parser.ConfigDocument;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigValue;
