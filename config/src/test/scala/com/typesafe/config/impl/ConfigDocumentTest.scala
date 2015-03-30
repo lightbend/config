@@ -227,6 +227,30 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
+    def configDocumentRemoveMultiple {
+        val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }"
+        val configDoc = ConfigDocumentFactory.parseString(origText)
+        val removed = configDoc.removeValue("a.b")
+        assertEquals("a { }, a { b: { } }", removed.render())
+    }
+
+    @Test
+    def configDocumentRemoveOverridden {
+        val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 }, a : 57 }"
+        val configDoc = ConfigDocumentFactory.parseString(origText)
+        val removed = configDoc.removeValue("a.b")
+        assertEquals("a { }, a : 57", removed.render())
+    }
+
+    @Test
+    def configDocumentRemoveNested {
+        val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }"
+        val configDoc = ConfigDocumentFactory.parseString(origText)
+        val removed = configDoc.removeValue("a.b.c")
+        assertEquals("a { b: 42 }, a.b = 43, a { b: {  } }", removed.render())
+    }
+
+    @Test
     def configDocumentArrayFailures {
         // Attempting a replace on a ConfigDocument parsed from an array throws an error
         val origText = "[1, 2, 3, 4, 5]"
