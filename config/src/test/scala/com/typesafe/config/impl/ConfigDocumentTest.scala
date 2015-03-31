@@ -413,4 +413,17 @@ class ConfigDocumentTest extends TestUtils {
         assertEquals("a { b {\n  c: d\n}, e : f }", configDocument.setValue("a.e", "f").render())
     }
 
+    @Test
+    def configDocumentIndentationReplacingWithMultiLineValue {
+        var origText = "a {\n  b {\n    c : 22\n  }\n}"
+        var configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a {\n  b {\n    c : {\n      d:e\n    }\n  }\n}", configDocument.setValue("a.b.c", "{\n  d:e\n}").render())
+
+        origText = "a {\n  b {\n                f : 10\n    c : 22\n  }\n}"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a {\n  b {\n                f : 10\n    c : {\n      d:e\n    }\n  }\n}", configDocument.setValue("a.b.c", "{\n  d:e\n}").render())
+    }
+
 }

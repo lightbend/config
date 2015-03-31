@@ -69,7 +69,15 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
                 }
             } else if (key.equals(desiredPath)) {
                 seenNonMatching = true;
-                childrenCopy.set(i, node.replaceValue(value));
+                AbstractConfigNodeValue indentedValue;
+                AbstractConfigNode before = i - 1 > 0 ? childrenCopy.get(i - 1) : null;
+                if (value instanceof ConfigNodeComplexValue &&
+                        before instanceof ConfigNodeSingleToken &&
+                        Tokens.isIgnoredWhitespace(((ConfigNodeSingleToken) before).token()))
+                    indentedValue = ((ConfigNodeComplexValue) value).indentText(before);
+                else
+                    indentedValue = value;
+                childrenCopy.set(i, node.replaceValue(indentedValue));
                 valueCopy = null;
             } else if (desiredPath.startsWith(key)) {
                 seenNonMatching = true;
