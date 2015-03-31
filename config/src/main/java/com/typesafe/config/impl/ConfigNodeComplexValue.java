@@ -24,4 +24,29 @@ abstract class ConfigNodeComplexValue extends AbstractConfigNodeValue {
         }
         return tokens;
     }
+
+    protected ConfigNodeComplexValue indentText(AbstractConfigNode indentation) {
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
+        for (int i = 0; i < childrenCopy.size(); i++) {
+            if (childrenCopy.get(i) instanceof ConfigNodeSingleToken &&
+                    Tokens.isNewline(((ConfigNodeSingleToken) childrenCopy.get(i)).token())) {
+                childrenCopy.add(i + 1, indentation);
+                i++;
+            } else if (childrenCopy.get(i) instanceof ConfigNodeField) {
+                AbstractConfigNode value = ((ConfigNodeField) childrenCopy.get(i)).value();
+                if (value instanceof ConfigNodeComplexValue) {
+                    childrenCopy.set(i, ((ConfigNodeField) childrenCopy.get(i)).replaceValue(((ConfigNodeComplexValue) value).indentText(indentation)));
+                }
+            } else if (childrenCopy.get(i) instanceof ConfigNodeComplexValue) {
+                childrenCopy.set(i, ((ConfigNodeComplexValue) childrenCopy.get(i)).indentText(indentation));
+            }
+        }
+        if (this instanceof ConfigNodeArray) {
+            return new ConfigNodeArray(childrenCopy);
+        } else if (this instanceof ConfigNodeObject) {
+            return new ConfigNodeObject(childrenCopy);
+        } else {
+            return new ConfigNodeConcatenation(childrenCopy);
+        }
+    }
 }
