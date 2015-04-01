@@ -1,20 +1,28 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigException;
-
+import java.util.ArrayList;
 import java.util.Collection;
 
-final class ConfigNodeInclude extends ConfigNodeComplexValue {
+final class ConfigNodeInclude extends AbstractConfigNode {
+    final private ArrayList<AbstractConfigNode> children;
     final private ConfigIncludeKind kind;
 
     ConfigNodeInclude(Collection<AbstractConfigNode> children, ConfigIncludeKind kind) {
-        super(children);
+        this.children = new ArrayList<AbstractConfigNode>(children);
         this.kind = kind;
     }
 
+    final public Collection<AbstractConfigNode> children() {
+        return children;
+    }
+
     @Override
-    protected ConfigNodeInclude newNode(Collection<AbstractConfigNode> nodes) {
-        throw new ConfigException.BugOrBroken("Tried to indent an include node");
+    protected Collection<Token> tokens() {
+        ArrayList<Token> tokens = new ArrayList();
+        for (AbstractConfigNode child : children) {
+            tokens.addAll(child.tokens());
+        }
+        return tokens;
     }
 
     protected ConfigIncludeKind kind() {

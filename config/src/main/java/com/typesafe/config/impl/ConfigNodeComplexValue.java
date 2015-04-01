@@ -35,10 +35,10 @@ abstract class ConfigNodeComplexValue extends AbstractConfigNodeValue {
                 i++;
             } else if (child instanceof ConfigNodeField) {
                 AbstractConfigNode value = ((ConfigNodeField) child).value();
-                if (value instanceof ConfigNodeComplexValue && !(value instanceof ConfigNodeInclude)) {
+                if (value instanceof ConfigNodeComplexValue) {
                     childrenCopy.set(i, ((ConfigNodeField) child).replaceValue(((ConfigNodeComplexValue) value).indentText(indentation)));
                 }
-            } else if (child instanceof ConfigNodeComplexValue && !(child instanceof ConfigNodeInclude)) {
+            } else if (child instanceof ConfigNodeComplexValue) {
                 childrenCopy.set(i, ((ConfigNodeComplexValue) child).indentText(indentation));
             }
         }
