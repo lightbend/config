@@ -426,4 +426,13 @@ class ConfigDocumentTest extends TestUtils {
         assertEquals("a {\n  b {\n                f : 10\n    c : {\n      d:e\n    }\n  }\n}", configDocument.setValue("a.b.c", "{\n  d:e\n}").render())
     }
 
+    @Test
+    def configDocumentIndentationValueWithIncludeTest {
+        val origText = "a {\n  b {\n    c : 22\n  }\n}"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a {\n  b {\n    c : 22\n    d : {\n      include \"foo\"\n      e:f\n    }\n  }\n}",
+                      configDocument.setValue("a.b.d", "{\n  include \"foo\"\n  e:f\n}").render())
+    }
+
 }

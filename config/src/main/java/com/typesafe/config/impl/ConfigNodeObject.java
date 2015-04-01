@@ -10,6 +10,11 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         super(children);
     }
 
+    @Override
+    protected ConfigNodeObject newNode(Collection<AbstractConfigNode> nodes) {
+        return new ConfigNodeObject(nodes);
+    }
+
     public boolean hasValue(Path desiredPath) {
         for (AbstractConfigNode node : children) {
             if (node instanceof ConfigNodeField) {
