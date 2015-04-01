@@ -131,7 +131,8 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
             } else {
                 if (children.get(i) instanceof ConfigNodeSingleToken &&
                         Tokens.isIgnoredWhitespace(((ConfigNodeSingleToken) children.get(i)).token()) &&
-                        i + 1 < children.size() && children.get(i+1) instanceof ConfigNodeField) {
+                        i + 1 < children.size() && (children.get(i+1) instanceof ConfigNodeField ||
+                        children.get(i+1) instanceof ConfigNodeInclude)) {
                     // Return the indentation of the first setting on its own line
                     indentation.add(children.get(i));
                     return indentation;

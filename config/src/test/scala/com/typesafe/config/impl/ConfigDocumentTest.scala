@@ -432,7 +432,15 @@ class ConfigDocumentTest extends TestUtils {
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
         assertEquals("a {\n  b {\n    c : 22\n    d : {\n      include \"foo\"\n      e:f\n    }\n  }\n}",
-                      configDocument.setValue("a.b.d", "{\n  include \"foo\"\n  e:f\n}").render())
+            configDocument.setValue("a.b.d", "{\n  include \"foo\"\n  e:f\n}").render())
+    }
+
+    @Test
+    def configDocumentIndentationBadedOnIncludeNode {
+        val origText = "a : b\n      include \"foo\"\n"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a : b\n      include \"foo\"\n      c : d\n", configDocument.setValue("c", "d").render())
     }
 
 }
