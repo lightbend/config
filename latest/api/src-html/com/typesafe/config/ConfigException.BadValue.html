@@ -402,35 +402,36 @@
 <span class="sourceLineNo">394</span><a name="line.394"></a>
 <span class="sourceLineNo">395</span>    /**<a name="line.395"></a>
 <span class="sourceLineNo">396</span>     * Some problem with a JavaBean we are trying to initialize.<a name="line.396"></a>
-<span class="sourceLineNo">397</span>     */<a name="line.397"></a>
-<span class="sourceLineNo">398</span>    public static class BadBean extends BugOrBroken {<a name="line.398"></a>
-<span class="sourceLineNo">399</span>        private static final long serialVersionUID = 1L;<a name="line.399"></a>
-<span class="sourceLineNo">400</span><a name="line.400"></a>
-<span class="sourceLineNo">401</span>        public BadBean(String message, Throwable cause) {<a name="line.401"></a>
-<span class="sourceLineNo">402</span>            super(message, cause);<a name="line.402"></a>
-<span class="sourceLineNo">403</span>        }<a name="line.403"></a>
-<span class="sourceLineNo">404</span><a name="line.404"></a>
-<span class="sourceLineNo">405</span>        public BadBean(String message) {<a name="line.405"></a>
-<span class="sourceLineNo">406</span>            this(message, null);<a name="line.406"></a>
-<span class="sourceLineNo">407</span>        }<a name="line.407"></a>
-<span class="sourceLineNo">408</span>    }<a name="line.408"></a>
-<span class="sourceLineNo">409</span><a name="line.409"></a>
-<span class="sourceLineNo">410</span>    /**<a name="line.410"></a>
-<span class="sourceLineNo">411</span>     * Exception that doesn't fall into any other category.<a name="line.411"></a>
-<span class="sourceLineNo">412</span>     */<a name="line.412"></a>
-<span class="sourceLineNo">413</span>    public static class Generic extends ConfigException {<a name="line.413"></a>
-<span class="sourceLineNo">414</span>        private static final long serialVersionUID = 1L;<a name="line.414"></a>
-<span class="sourceLineNo">415</span><a name="line.415"></a>
-<span class="sourceLineNo">416</span>        public Generic(String message, Throwable cause) {<a name="line.416"></a>
-<span class="sourceLineNo">417</span>            super(message, cause);<a name="line.417"></a>
-<span class="sourceLineNo">418</span>        }<a name="line.418"></a>
-<span class="sourceLineNo">419</span><a name="line.419"></a>
-<span class="sourceLineNo">420</span>        public Generic(String message) {<a name="line.420"></a>
-<span class="sourceLineNo">421</span>            this(message, null);<a name="line.421"></a>
-<span class="sourceLineNo">422</span>        }<a name="line.422"></a>
-<span class="sourceLineNo">423</span>    }<a name="line.423"></a>
-<span class="sourceLineNo">424</span><a name="line.424"></a>
-<span class="sourceLineNo">425</span>}<a name="line.425"></a>
+<span class="sourceLineNo">397</span>     * @since 1.3.0<a name="line.397"></a>
+<span class="sourceLineNo">398</span>     */<a name="line.398"></a>
+<span class="sourceLineNo">399</span>    public static class BadBean extends BugOrBroken {<a name="line.399"></a>
+<span class="sourceLineNo">400</span>        private static final long serialVersionUID = 1L;<a name="line.400"></a>
+<span class="sourceLineNo">401</span><a name="line.401"></a>
+<span class="sourceLineNo">402</span>        public BadBean(String message, Throwable cause) {<a name="line.402"></a>
+<span class="sourceLineNo">403</span>            super(message, cause);<a name="line.403"></a>
+<span class="sourceLineNo">404</span>        }<a name="line.404"></a>
+<span class="sourceLineNo">405</span><a name="line.405"></a>
+<span class="sourceLineNo">406</span>        public BadBean(String message) {<a name="line.406"></a>
+<span class="sourceLineNo">407</span>            this(message, null);<a name="line.407"></a>
+<span class="sourceLineNo">408</span>        }<a name="line.408"></a>
+<span class="sourceLineNo">409</span>    }<a name="line.409"></a>
+<span class="sourceLineNo">410</span><a name="line.410"></a>
+<span class="sourceLineNo">411</span>    /**<a name="line.411"></a>
+<span class="sourceLineNo">412</span>     * Exception that doesn't fall into any other category.<a name="line.412"></a>
+<span class="sourceLineNo">413</span>     */<a name="line.413"></a>
+<span class="sourceLineNo">414</span>    public static class Generic extends ConfigException {<a name="line.414"></a>
+<span class="sourceLineNo">415</span>        private static final long serialVersionUID = 1L;<a name="line.415"></a>
+<span class="sourceLineNo">416</span><a name="line.416"></a>
+<span class="sourceLineNo">417</span>        public Generic(String message, Throwable cause) {<a name="line.417"></a>
+<span class="sourceLineNo">418</span>            super(message, cause);<a name="line.418"></a>
+<span class="sourceLineNo">419</span>        }<a name="line.419"></a>
+<span class="sourceLineNo">420</span><a name="line.420"></a>
+<span class="sourceLineNo">421</span>        public Generic(String message) {<a name="line.421"></a>
+<span class="sourceLineNo">422</span>            this(message, null);<a name="line.422"></a>
+<span class="sourceLineNo">423</span>        }<a name="line.423"></a>
+<span class="sourceLineNo">424</span>    }<a name="line.424"></a>
+<span class="sourceLineNo">425</span><a name="line.425"></a>
+<span class="sourceLineNo">426</span>}<a name="line.426"></a>
 
 
 
