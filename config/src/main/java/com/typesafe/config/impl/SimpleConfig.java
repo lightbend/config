@@ -161,11 +161,6 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             return v;
     }
 
-    static private AbstractConfigValue find(AbstractConfigObject self, Path path,
-            ConfigValueType expected, Path originalPath) {
-        return throwIfNull(findOrNull(self, path, expected, originalPath), expected, originalPath);
-    }
-
     static private AbstractConfigValue findOrNull(AbstractConfigObject self, Path path,
             ConfigValueType expected, Path originalPath) {
         try {

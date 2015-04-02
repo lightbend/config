@@ -1,6 +1,5 @@
 package com.typesafe.config.parser;
 
-import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigValue;
 
 /**

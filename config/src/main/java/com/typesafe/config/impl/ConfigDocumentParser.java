@@ -336,7 +336,6 @@ final class ConfigDocumentParser {
                 t = nextTokenCollectingWhitespace(children);
 
                 // quoted string
-                String name;
                 if (!Tokens.isValueWithType(t, ConfigValueType.STRING)) {
                     throw parseError("expecting a quoted string inside file(), classpath(), or url(), rather than: "
                             + t);
@@ -399,7 +398,6 @@ final class ConfigDocumentParser {
                     Token afterKey = nextTokenCollectingWhitespace(keyValueNodes);
                     boolean insideEquals = false;
 
-                    Token valueToken;
                     AbstractConfigNodeValue nextValue;
                     if (flavor == ConfigSyntax.CONF && afterKey == Tokens.OPEN_CURLY) {
                         // can omit the ':' or '=' before an object value

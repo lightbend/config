@@ -131,8 +131,6 @@ final class Tokens {
             this.value = s;
         }
 
-        String value() { return value; }
-
         @Override
         public String toString() { return "'" + value + "' (WHITESPACE)"; }
 

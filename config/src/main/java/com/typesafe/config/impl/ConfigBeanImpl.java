@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.time.Duration;
 
 import com.typesafe.config.Config;
@@ -79,7 +78,7 @@ public class ConfigBeanImpl {
             List<ConfigException.ValidationProblem> problems = new ArrayList<ConfigException.ValidationProblem>();
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
-                Class parameterClass = setter.getParameterTypes()[0];
+                Class<?> parameterClass = setter.getParameterTypes()[0];
 
                 ConfigValueType expectedType = getValueTypeOrNull(parameterClass);
                 if (expectedType != null) {
@@ -127,7 +126,8 @@ public class ConfigBeanImpl {
     // setting. So, instead, we only support a limited number of
     // types plus you can always use Object, ConfigValue, Config,
     // ConfigObject, etc.  as an escape hatch.
-    private static Object getValue(Class beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
+    private static Object getValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
+            String configPropName) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return config.getBoolean(configPropName);
         } else if (parameterClass == Integer.class || parameterClass == int.class) {

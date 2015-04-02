@@ -3,8 +3,6 @@
  */
 package com.typesafe.config.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Stack;
 
 import com.typesafe.config.ConfigException;

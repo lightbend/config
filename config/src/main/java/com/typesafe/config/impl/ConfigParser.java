@@ -238,9 +238,7 @@ final class ConfigParser {
                 } else if (node instanceof ConfigNodeField) {
                     lastWasNewline = false;
                     Path path = ((ConfigNodeField) node).path().value();
-                    AbstractConfigNodeValue nodeValue = ((ConfigNodeField) node).value();
                     comments.addAll(((ConfigNodeField) node).comments());
-                    boolean insideEquals = false;
 
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
@@ -262,10 +260,6 @@ final class ConfigParser {
 
                     AbstractConfigNodeValue valueNode;
                     AbstractConfigValue newValue;
-
-                    if (((ConfigNodeField) node).separator() == Tokens.EQUALS) {
-                        insideEquals = true;
-                    }
 
                     valueNode = ((ConfigNodeField) node).value();
 

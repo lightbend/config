@@ -9,7 +9,7 @@ abstract class ConfigNodeComplexValue extends AbstractConfigNodeValue {
     final protected ArrayList<AbstractConfigNode> children;
 
     ConfigNodeComplexValue(Collection<AbstractConfigNode> children) {
-        this.children = new ArrayList(children);
+        this.children = new ArrayList<AbstractConfigNode>(children);
     }
 
     final public Collection<AbstractConfigNode> children() {
@@ -18,7 +18,7 @@ abstract class ConfigNodeComplexValue extends AbstractConfigNodeValue {
 
     @Override
     protected Collection<Token> tokens() {
-        ArrayList<Token> tokens = new ArrayList();
+        ArrayList<Token> tokens = new ArrayList<Token>();
         for (AbstractConfigNode child : children) {
             tokens.addAll(child.tokens());
         }
