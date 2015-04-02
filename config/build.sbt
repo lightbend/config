@@ -81,7 +81,7 @@ javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.8",
 // we have to run tests in serial.
 parallelExecution in Test := false
 
-javacOptions in (Compile, doc) ++= Seq("-group", s"Public API (version ${version.value})", "com.typesafe.config",
+javacOptions in (Compile, doc) ++= Seq("-group", s"Public API (version ${version.value})", "com.typesafe.config:com.typesafe.config.parser",
                                        "-group", "Internal Implementation - Not ABI Stable", "com.typesafe.config.impl")
 
 javadocSourceBaseUrl := {
