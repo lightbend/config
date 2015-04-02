@@ -1,3 +1,34 @@
+# 1.3.0-M2: April 1, 2015
+
+- not in fact an April Fool's joke. Unless it's broken. Then it
+  was.
+- this is an ABI-not-guaranteed beta release in advance
+  of 1.3.0. Please see the notes for 1.3.0-M1 below for warnings,
+  caveats, and the bulk of what's changed since 1.2.1.
+- this release churns the internals a good bit since 1.3.0-M1,
+  so would benefit from your testing efforts.
+
+New API (since 1.3.0-M1):
+
+- added Config.hasPathOrNull
+- added Config.getIsNull
+- added parser.ConfigDocument which supports simple load/edit/save
+  on a config file. For now, the only allowed edits are
+  removing/replacing values. This was a major effort (redoing the
+  whole parser), implemented by Preben Ingvaldsen.
+
+Fixes:
+
+- added missing @since tags to javadoc
+- fixed obscure bug in converting to camel case when instantiating
+  beans
+
+Thank you to contributors with commits since v1.3.0-M1 tag:
+
+- Glen Ford
+- Jay McCure
+- Preben Ingvaldsen
+
 # 1.3.0-M1: March 6, 2015
 
 - this is an ABI-not-guaranteed beta release in advance
