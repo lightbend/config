@@ -15,6 +15,11 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
         this.origin = origin;
     }
 
+    @Override
+    protected ConfigNodeRoot newNode(Collection<AbstractConfigNode> nodes) {
+        throw new ConfigException.BugOrBroken("Tried to indent the root object");
+    }
+
     protected ConfigNodeComplexValue value() {
         for (AbstractConfigNode node : children) {
             if (node instanceof ConfigNodeComplexValue) {

@@ -148,14 +148,14 @@ class ConfigDocumentTest extends TestUtils {
 
         origText = "{a.b.c: d}"
         configDoc = ConfigDocumentFactory.parseString(origText)
-        assertEquals("{\na : 2\n}", configDoc.setValue("a", "2").render())
+        assertEquals("{ a : 2}", configDoc.setValue("a", "2").render())
     }
 
     @Test
     def configDocumentSetNewValueBraceRoot {
         val origText = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n}"
-        val finalTextConf = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n\n\"e\" : \"f\"\n}"
-        val finalTextJson = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\",\n\n\"e\" : \"f\"\n}"
+        val finalTextConf = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\"\n\t\"e\" : \"f\"\n}"
+        val finalTextJson = "{\n\t\"a\":\"b\",\n\t\"c\":\"d\",\n\t\"e\" : \"f\"\n}"
         configDocumentReplaceConfTest(origText, finalTextConf, "\"f\"", "\"e\"")
         configDocumentReplaceJsonTest(origText, finalTextJson, "\"f\"", "\"e\"")
     }
@@ -163,21 +163,21 @@ class ConfigDocumentTest extends TestUtils {
     @Test
     def configDocumentSetNewValueNoBraces {
         val origText = "\"a\":\"b\",\n\"c\":\"d\"\n"
-        val finalText = "\"a\":\"b\",\n\"c\":\"d\"\n\n\"e\" : \"f\"\n"
+        val finalText = "\"a\":\"b\",\n\"c\":\"d\"\n\"e\" : \"f\"\n"
         configDocumentReplaceConfTest(origText, finalText, "\"f\"", "\"e\"")
     }
 
     @Test
     def configDocumentSetNewValueMultiLevelConf {
         val origText = "a:b\nc:d"
-        val finalText = "a:b\nc:d\ne : {\nf : {\ng : 12\n}\n}\n"
+        val finalText = "a:b\nc:d\ne : { f : { g : 12 } }"
         configDocumentReplaceConfTest(origText, finalText, "12", "e.f.g")
     }
 
     @Test
     def configDocumentSetNewValueMultiLevelJson {
         val origText = "{\"a\":\"b\",\n\"c\":\"d\"}"
-        val finalText = "{\"a\":\"b\",\n\"c\":\"d\",\n\"e\" : {\n\"f\" : {\n\"g\" : 12\n}\n}\n}"
+        val finalText = "{\"a\":\"b\",\n\"c\":\"d\",\n\"e\" : { \"f\" : { \"g\" : 12 } }}"
         configDocumentReplaceJsonTest(origText, finalText, "12", "e.f.g")
     }
 
@@ -323,6 +323,124 @@ class ConfigDocumentTest extends TestUtils {
         val configDocument = ConfigDocumentFactory.parseReader(new FileReader(resourceFile("/test03.conf")))
         val configDocumentFile = ConfigDocumentFactory.parseFile(resourceFile("/test03.conf"))
         assertEquals(configDocumentFile.render(), configDocument.render())
+    }
+
+    @Test
+    def configDocumentIndentationSingleLineObject {
+        // Proper insertion for single-line objects
+        var origText = "a { b: c }"
+        var configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a { b: c, d : e }", configDocument.setValue("a.d", "e").render())
+
+        origText = "a { b: c }, d: e"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a { b: c }, d: e, f : g", configDocument.setValue("f", "g").render())
+
+        origText = "a { b: c }, d: e,"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a { b: c }, d: e, f : g", configDocument.setValue("f", "g").render())
+
+        assertEquals("a { b: c }, d: e, f : { g : { h : i } }", configDocument.setValue("f.g.h", "i").render())
+
+        origText = "{a { b: c }, d: e}"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("{a { b: c }, d: e, f : g}", configDocument.setValue("f", "g").render())
+
+        assertEquals("{a { b: c }, d: e, f : { g : { h : i } }}", configDocument.setValue("f.g.h", "i").render())
+    }
+
+    @Test
+    def configDocumentIndentationMultiLineObject {
+        var origText = "a {\n  b: c\n}"
+        var configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a {\n  b: c\n  e : f\n}", configDocument.setValue("a.e", "f").render())
+
+        assertEquals("a {\n  b: c\n  d : { e : { f : g } }\n}", configDocument.setValue("a.d.e.f", "g").render())
+
+        origText = "a {\n b: c\n}\n"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a {\n b: c\n}\nd : e\n", configDocument.setValue("d", "e").render())
+
+        assertEquals("a {\n b: c\n}\nd : { e : { f : g } }\n", configDocument.setValue("d.e.f", "g").render())
+    }
+
+    @Test
+    def configDocumentIndentationNested {
+        var origText = "a { b { c { d: e } } }"
+        var configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a { b { c { d: e, f : g } } }", configDocument.setValue("a.b.c.f", "g").render())
+
+        origText = "a {\n  b {\n    c {\n      d: e\n    }\n  }\n}"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a {\n  b {\n    c {\n      d: e\n      f : g\n    }\n  }\n}", configDocument.setValue("a.b.c.f", "g").render())
+    }
+
+    @Test
+    def configDocumentIndentationEmptyObject {
+        var origText = "a { }"
+        var configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a { b : c }", configDocument.setValue("a.b", "c").render())
+
+        origText = "a {\n  b {\n  }\n}"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a {\n  b {\n    c : d\n  }\n}", configDocument.setValue("a.b.c", "d").render())
+    }
+
+    @Test
+    def configDocumentIndentationMultiLineValue {
+        val origText = "a {\n  b {\n    c {\n      d: e\n    }\n  }\n}"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a {\n  b {\n    c {\n      d: e\n      f : {\n        g: h\n        i: j\n        k: {\n          l: m\n        }\n      }\n    }\n  }\n}",
+            configDocument.setValue("a.b.c.f", "{\n  g: h\n  i: j\n  k: {\n    l: m\n  }\n}").render())
+
+        assertEquals("a {\n  b {\n    c {\n      d: e\n      f : 12 13 [1,\n      2,\n      3,\n      {\n        a:b\n      }]\n    }\n  }\n}",
+            configDocument.setValue("a.b.c.f", "12 13 [1,\n2,\n3,\n{\n  a:b\n}]").render())
+    }
+
+    @Test
+    def configDocumentIndentationMultiLineValueSingleLineObject {
+        // Weird indentation occurs when adding a multi-line value to a single-line object
+        val origText = "a { b { } }"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+        assertEquals("a { b { c : {\n   c:d\n } } }", configDocument.setValue("a.b.c", "{\n  c:d\n}").render())
+    }
+
+    @Test
+    def configDocumentIndentationSingleLineObjectContainingMultiLineValue {
+        val origText = "a { b {\n  c: d\n} }"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a { b {\n  c: d\n}, e : f }", configDocument.setValue("a.e", "f").render())
+    }
+
+    @Test
+    def configDocumentIndentationReplacingWithMultiLineValue {
+        var origText = "a {\n  b {\n    c : 22\n  }\n}"
+        var configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a {\n  b {\n    c : {\n      d:e\n    }\n  }\n}", configDocument.setValue("a.b.c", "{\n  d:e\n}").render())
+
+        origText = "a {\n  b {\n                f : 10\n    c : 22\n  }\n}"
+        configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a {\n  b {\n                f : 10\n    c : {\n      d:e\n    }\n  }\n}", configDocument.setValue("a.b.c", "{\n  d:e\n}").render())
+    }
+
+    @Test
+    def configDocumentIndentationValueWithIncludeTest {
+        val origText = "a {\n  b {\n    c : 22\n  }\n}"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a {\n  b {\n    c : 22\n    d : {\n      include \"foo\"\n      e:f\n    }\n  }\n}",
+            configDocument.setValue("a.b.d", "{\n  include \"foo\"\n  e:f\n}").render())
+    }
+
+    @Test
+    def configDocumentIndentationBadedOnIncludeNode {
+        val origText = "a : b\n      include \"foo\"\n"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals("a : b\n      include \"foo\"\n      c : d\n", configDocument.setValue("c", "d").render())
     }
 
 }

@@ -270,7 +270,6 @@ final class ConfigParser {
                     valueNode = ((ConfigNodeField) node).value();
 
                     // comments from the key token go to the value token
-                    //newValue = parseValue(valueToken.prepend(keyToken.comments));
                     newValue = parseValue(valueNode, comments);
 
                     if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
