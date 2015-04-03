@@ -669,7 +669,7 @@ abstract trait TestUtils {
 
     def configNodeKey(path: String) = PathParser.parsePathNode(path)
 
-    def configNodeBasic(value: Token) = {
+    def configNodeSingleToken(value: Token) = {
         new ConfigNodeSingleToken(value: Token)
     }
 
@@ -698,22 +698,14 @@ abstract trait TestUtils {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value)
         new ConfigNodeField(nodes.asJavaCollection)
     }
-    def nodeKeyValuePair(key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
-        val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
-        new ConfigNodeField(nodes.asJavaCollection)
-    }
-    def nodeKeyValuePair(leadingWhitespace: ConfigNodeSingleToken, key: ConfigNodePath, value: AbstractConfigNodeValue, trailingWhitespace: ConfigNodeSingleToken) = {
-        val nodes = List(leadingWhitespace, key, nodeSpace, nodeColon, nodeSpace, value, trailingWhitespace)
-        new ConfigNodeField(nodes.asJavaCollection)
-    }
     def nodeInt(value: Integer) = new ConfigNodeSimpleValue(tokenInt(value))
     def nodeString(value: String) = new ConfigNodeSimpleValue(tokenString(value))
     def nodeLong(value: Long) = new ConfigNodeSimpleValue(tokenLong(value))
     def nodeDouble(value: Double) = new ConfigNodeSimpleValue(tokenDouble(value))
     def nodeTrue = new ConfigNodeSimpleValue(tokenTrue)
     def nodeFalse = new ConfigNodeSimpleValue(tokenFalse)
-    def nodeCommentHash(text: String) = new ConfigNodeSingleToken(tokenCommentHash(text))
-    def nodeCommentDoubleSlash(text: String) = new ConfigNodeSingleToken(tokenCommentDoubleSlash(text))
+    def nodeCommentHash(text: String) = new ConfigNodeComment(tokenCommentHash(text))
+    def nodeCommentDoubleSlash(text: String) = new ConfigNodeComment(tokenCommentDoubleSlash(text))
     def nodeUnquotedText(text: String) = new ConfigNodeSimpleValue(tokenUnquoted(text))
     def nodeNull = new ConfigNodeSimpleValue(tokenNull)
     def nodeKeySubstitution(s: String) = new ConfigNodeSimpleValue(tokenKeySubstitution(s))
