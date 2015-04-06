@@ -15,7 +15,8 @@ final class ConfigDocumentParser {
     }
 
     static AbstractConfigNodeValue parseValue(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
-        ParseContext context = new ParseContext(options.getSyntax(), origin, tokens);
+        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parseSingleValue();
     }
 
@@ -171,7 +172,7 @@ final class ConfigDocumentParser {
                 for (AbstractConfigNode node : values) {
                     if (node instanceof AbstractConfigNodeValue)
                         value = (AbstractConfigNodeValue)node;
-                    else if (node == null)
+                    else if (value == null)
                         nodes.add(node);
                     else
                         putBack((new ArrayList<Token>(node.tokens())).get(0));
@@ -183,7 +184,7 @@ final class ConfigDocumentParser {
             // any leading/trailing whitespace
             for (int i = values.size() - 1; i >= 0; i--) {
                 if (values.get(i) instanceof ConfigNodeSingleToken) {
-                    putBack((new ArrayList<Token>(values.get(i).tokens())).get(0));
+                    putBack(((ConfigNodeSingleToken) values.get(i)).token());
                     values.remove(i);
                 } else {
                     break;
@@ -497,7 +498,6 @@ final class ConfigDocumentParser {
             AbstractConfigNodeValue nextValue = consolidateValues(children);
             if (nextValue != null) {
                 children.add(nextValue);
-                nextValue = null;
             } else {
                 t = nextTokenCollectingWhitespace(children);
 
@@ -510,7 +510,6 @@ final class ConfigDocumentParser {
                         || Tokens.isSubstitution(t)) {
                     nextValue = parseValue(t);
                     children.add(nextValue);
-                    nextValue = null;
                 } else {
                     throw parseError("List should have ] or a first element after the open [, instead had token: "
                             + t
@@ -543,7 +542,6 @@ final class ConfigDocumentParser {
                 nextValue = consolidateValues(children);
                 if (nextValue != null) {
                     children.add(nextValue);
-                    nextValue = null;
                 } else {
                     t = nextTokenCollectingWhitespace(children);
                     if (Tokens.isValue(t) || t == Tokens.OPEN_CURLY
@@ -551,7 +549,6 @@ final class ConfigDocumentParser {
                             || Tokens.isSubstitution(t)) {
                         nextValue = parseValue(t);
                         children.add(nextValue);
-                        nextValue = null;
                     } else if (flavor != ConfigSyntax.JSON && t == Tokens.CLOSE_SQUARE) {
                         // we allow one trailing comma
                         putBack(t);
