@@ -14,7 +14,7 @@ class ConfigDocumentParserTest extends TestUtils {
     private def parseJSONFailuresTest(origText: String, containsMessage: String) {
         var exceptionThrown = false
         val e = intercept[ConfigException] {
-          ConfigDocumentParser.parse(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
+            ConfigDocumentParser.parse(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
         }
         assertTrue(e.getMessage.contains(containsMessage))
     }
