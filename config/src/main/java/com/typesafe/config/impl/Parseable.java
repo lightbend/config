@@ -262,7 +262,7 @@ public abstract class Parseable implements ConfigParseable {
         }
     }
 
-    // this is parseValue without post-processing the IOException or handling
+    // this is parseDocument without post-processing the IOException or handling
     // options.getAllowMissing()
     protected ConfigDocument rawParseDocument(ConfigOrigin origin, ConfigParseOptions finalOptions)
             throws IOException {

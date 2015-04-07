@@ -59,7 +59,6 @@ final class ConfigParser {
             if (flavor == ConfigSyntax.JSON)
                 throw new ConfigException.BugOrBroken("Found a concatenation node in JSON");
 
-            // create only if we have value tokens
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
 
             for (AbstractConfigNode node : n.children()) {
@@ -213,7 +212,6 @@ final class ConfigParser {
         }
 
         private AbstractConfigObject parseObject(ConfigNodeObject n) {
-            // invoked just after the OPEN_CURLY (or START, if !hadOpenCurly)
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
             SimpleConfigOrigin objectOrigin = lineOrigin();
             boolean lastWasNewline = false;
@@ -348,7 +346,6 @@ final class ConfigParser {
         }
 
         private SimpleConfigList parseArray(ConfigNodeArray n) {
-            // invoked just after the OPEN_SQUARE
             arrayCount += 1;
 
             SimpleConfigOrigin arrayOrigin = lineOrigin();
@@ -358,7 +355,7 @@ final class ConfigParser {
             List<String> comments = new ArrayList<String>();
 
             AbstractConfigValue v = null;
-            // now remaining elements
+
             for (AbstractConfigNode node : n.children()) {
                 if (node instanceof ConfigNodeComment) {
                     comments.add(((ConfigNodeComment) node).commentText());
