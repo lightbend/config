@@ -13,65 +13,48 @@ class ConfigDocumentParserTest extends TestUtils {
 
     private def parseJSONFailuresTest(origText: String, containsMessage: String) {
         var exceptionThrown = false
-        try {
+        val e = intercept[ConfigException] {
             ConfigDocumentParser.parse(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains(containsMessage))
         }
-        assertTrue(exceptionThrown)
+        assertTrue(e.getMessage.contains(containsMessage))
     }
 
     private def parseSimpleValueTest(origText: String, finalText: String = null) {
         val expectedRenderedText = if (finalText == null) origText else finalText
         val node = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults())
         assertEquals(expectedRenderedText, node.render())
-        assertTrue(node.isInstanceOf[AbstractConfigNodeValue])
+        assertTrue(node.isInstanceOf[ConfigNodeSimpleValue])
 
         val nodeJSON = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
         assertEquals(expectedRenderedText, nodeJSON.render())
-        assertTrue(nodeJSON.isInstanceOf[AbstractConfigNodeValue])
+        assertTrue(nodeJSON.isInstanceOf[ConfigNodeSimpleValue])
     }
 
     private def parseComplexValueTest(origText: String) {
         val node = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults())
         assertEquals(origText, node.render())
-        assertTrue(node.isInstanceOf[AbstractConfigNodeValue])
+        assertTrue(node.isInstanceOf[ConfigNodeComplexValue])
 
         val nodeJSON = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
         assertEquals(origText, nodeJSON.render())
-        assertTrue(nodeJSON.isInstanceOf[AbstractConfigNodeValue])
+        assertTrue(nodeJSON.isInstanceOf[ConfigNodeComplexValue])
     }
 
     private def parseSingleValueInvalidJSONTest(origText: String, containsMessage: String) {
         val node = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults())
         assertEquals(origText, node.render())
 
-        var exceptionThrown = false
-        try {
-            ConfigDocumentParser.parse(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains(containsMessage))
+        val e = intercept[ConfigException] {
+            ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
         }
-        assertTrue(exceptionThrown)
+        assertTrue(e.getMessage.contains(containsMessage))
     }
 
     private def parseLeadingTrailingFailure(toReplace: String) {
-        var exceptionThrown = false
-        try {
+        val e = intercept[ConfigException] {
             ConfigDocumentParser.parseValue(tokenize(toReplace), fakeOrigin(), ConfigParseOptions.defaults())
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("The value from setValue cannot have leading or trailing newlines, whitespace, or comments"))
         }
-        assertTrue(exceptionThrown)
+        assertTrue(e.getMessage.contains("The value from setValue cannot have leading or trailing newlines, whitespace, or comments"))
     }
 
     @Test
@@ -212,7 +195,7 @@ class ConfigDocumentParserTest extends TestUtils {
         parseJSONFailuresTest("""{ "foo": 123 456 789 } """, "Expecting close brace } or a comma")
 
         // JSON must begin with { or [
-        parseJSONFailuresTest(""""a": 123, "b": 456"""", "Document must have an object or array at root")
+        parseJSONFailuresTest(""""a": 123, "b": 456""", "Document must have an object or array at root")
 
         // JSON does not support unquoted text
         parseJSONFailuresTest("""{"foo": unquotedtext}""", "Token not allowed in valid JSON")
@@ -255,22 +238,14 @@ class ConfigDocumentParserTest extends TestUtils {
         parseComplexValueTest("""["a","b","c"]""")
 
         // Check that concatenations are handled by CONF parsing
-        var origText = "123 456 unquotedtext abc"
+        var origText = "123 456 \"abc\""
         var node = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults())
         assertEquals(origText, node.render())
 
-        // Check that concatenations in JSON will throw an error
-        origText = "123 456 789"
-        var exceptionThrown = false
-        try {
-            node = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
-        }
-        assertTrue(exceptionThrown)
+        // Check that keys with no separators and object values are handled by CONF parsing
+        origText = """{"foo" { "bar" : 12 } }"""
+        node = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults())
+        assertEquals(origText, node.render())
     }
 
     @Test
@@ -291,17 +266,14 @@ class ConfigDocumentParserTest extends TestUtils {
         parseSingleValueInvalidJSONTest("${a.b}", "Substitutions (${} syntax) not allowed in JSON")
 
         // Check that concatenations in JSON will throw an error
-        val origText = "123 456 789"
-        var exceptionThrown = false
-        try {
-            val node = ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
-        }
-        assertTrue(exceptionThrown)
+        var origText = "123 456 \"abc\""
+        var e = intercept[ConfigException] { ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON)) }
+        assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
+
+        // Check that keys with no separators and object values in JSON will throw an error
+        origText = """{"foo" { "bar" : 12 } }"""
+        e = intercept[ConfigException] { ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax((ConfigSyntax.JSON))) }
+        assertTrue(e.getMessage.contains("""Key '"foo"' may not be followed by token: '{'"""))
     }
 
     @Test

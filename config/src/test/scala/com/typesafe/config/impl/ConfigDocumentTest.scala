@@ -252,7 +252,7 @@ class ConfigDocumentTest extends TestUtils {
 
     @Test
     def configDocumentArrayFailures {
-        // Attempting a replace on a ConfigDocument parsed from an array throws an error
+        // Attempting certain methods on a ConfigDocument parsed from an array throws an error
         val origText = "[1, 2, 3, 4, 5]"
         val document = ConfigDocumentFactory.parseString(origText)
 
@@ -272,16 +272,9 @@ class ConfigDocumentTest extends TestUtils {
         // will fail
         val origText = "{\"foo\": \"bar\", \"baz\": \"qux\"}"
         val document = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
-        var exceptionThrown = false
-        try {
-            document.setValue("foo", "unquoted")
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("Token not allowed in valid JSON"))
-        }
-        assertTrue(exceptionThrown)
+
+        val e = intercept[ConfigException] { document.setValue("foo", "unquoted") }
+        assertTrue(e.getMessage.contains("Token not allowed in valid JSON"))
     }
 
     @Test
@@ -290,16 +283,9 @@ class ConfigDocumentTest extends TestUtils {
         // fail
         val origText = "{\"foo\": \"bar\", \"baz\": \"qux\"}"
         val document = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
-        var exceptionThrown = false
-        try {
-            document.setValue("foo", "1 2 3 concatenation")
-        } catch {
-            case e: Exception =>
-                exceptionThrown = true
-                assertTrue(e.isInstanceOf[ConfigException])
-                assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
-        }
-        assertTrue(exceptionThrown)
+
+        val e = intercept[ConfigException] { document.setValue("foo", "1 2 3 concatenation") }
+        assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
     }
 
     @Test
@@ -427,7 +413,7 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentIndentationValueWithIncludeTest {
+    def configDocumentIndentationValueWithInclude {
         val origText = "a {\n  b {\n    c : 22\n  }\n}"
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
@@ -436,7 +422,7 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentIndentationBadedOnIncludeNode {
+    def configDocumentIndentationBasedOnIncludeNode {
         val origText = "a : b\n      include \"foo\"\n"
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
