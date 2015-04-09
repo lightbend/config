@@ -27,7 +27,7 @@ final class SimpleConfigDocument implements ConfigDocument {
     }
 
     public ConfigDocument setValue(String path, ConfigValue newValue) {
-        return setValue(path, newValue.render());
+        return setValue(path, newValue.render().trim());
     }
 
     public ConfigDocument removeValue(String path) {
