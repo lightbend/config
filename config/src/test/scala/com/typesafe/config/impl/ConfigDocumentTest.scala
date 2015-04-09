@@ -429,4 +429,12 @@ class ConfigDocumentTest extends TestUtils {
         assertEquals("a : b\n      include \"foo\"\n      c : d\n", configDocument.setValue("c", "d").render())
     }
 
+    @Test
+    def configDocumentEmptyTest {
+        val origText = ""
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals(" a : 1", configDocument.setValue("a", "1").render)
+    }
+
 }
