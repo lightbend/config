@@ -58,6 +58,7 @@ to merge it in.
   - [Immutability](#immutability)
   - [Schemas and Validation](#schemas-and-validation)
   - [Standard behavior](#standard-behavior)
+    - [Note about resolving substitutions in `reference.conf` and `application.conf`](#note-about-resolving-substitutions-in-referenceconf-and-applicationconf)
   - [Merging config trees](#merging-config-trees)
   - [How to handle defaults](#how-to-handle-defaults)
   - [Understanding `Config` and `ConfigObject`](#understanding-config-and-configobject)
@@ -70,12 +71,14 @@ to merge it in.
     - [Inheritance](#inheritance)
     - [Optional system or env variable overrides](#optional-system-or-env-variable-overrides)
   - [Concatenation](#concatenation)
+  - [`reference.conf` can't refer to `application.conf`](#referenceconf-cant-refer-to-applicationconf)
 - [Miscellaneous Notes](#miscellaneous-notes)
   - [Debugging Your Configuration](#debugging-your-configuration)
   - [Supports Java 8 and Later](#supports-java-8-and-later)
   - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
   - [Other APIs (Wrappers and Ports)](#other-apis-wrappers-and-ports)
     - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
+    - [Clojure wrappers for the Java library](#clojure-wrappers-for-the-java-library)
     - [Ruby port](#ruby-port)
     - [Python port](#python-port)
 
@@ -253,6 +256,29 @@ configuration. In the replacement config file, you can use
 `include "application"` to include the original default config
 file; after the include statement you could go on to override
 certain settings.
+
+#### Note about resolving substitutions in `reference.conf` and `application.conf`
+
+The substitution syntax `${foo.bar}` will be resolved
+twice. First, all the `reference.conf` files are merged and then
+the result gets resolved. Second, all the `application.conf` are
+layered over the `reference.conf` and the result of that gets
+resolved again.
+
+The implication of this is that the `reference.conf` stack has to
+be self-contained; you can't leave an undefined value `${foo.bar}`
+to be provided by `application.conf`, or refer to `${foo.bar}` in
+a way that you want to allow `application.conf` to
+override. However, `application.conf` can refer to a `${foo.bar}`
+in `reference.conf`.
+
+This can be frustrating at times, but possible workarounds
+include:
+
+  * putting an `application.conf` in a library jar, alongside the
+`reference.conf`, with values intended for later resolution.
+  * putting some logic in code instead of building up values in the
+    config itself.
 
 ### Merging config trees
 
@@ -695,6 +721,14 @@ Note: Play/Akka 2.0 have an earlier version that supports string
 concatenation, but not object/array concatenation. `+=` does not
 work in Play/Akka 2.0 either. Post-2.0 versions support these
 features.
+
+### `reference.conf` can't refer to `application.conf`
+
+Please see <a
+href="#note-about-resolving-substitutions-in-referenceconf-and-applicationconf">this
+earlier section</a>; all `reference.conf` have substitutions
+resolved first, without `application.conf` in the stack, so the
+reference stack has to be self-contained.
 
 ## Miscellaneous Notes
 
