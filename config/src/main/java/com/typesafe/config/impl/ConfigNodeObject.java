@@ -194,7 +194,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         }
 
         // Otherwise, construct the new setting
-        boolean startsWithBrace = super.children.get(0) instanceof ConfigNodeSingleToken &&
+        boolean startsWithBrace = !super.children.isEmpty() && super.children.get(0) instanceof ConfigNodeSingleToken &&
                 ((ConfigNodeSingleToken) super.children.get(0)).token() == Tokens.OPEN_CURLY;
         ArrayList<AbstractConfigNode> newNodes = new ArrayList<AbstractConfigNode>();
         newNodes.addAll(indentation);
@@ -260,7 +260,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
             }
         }
         if (!startsWithBrace) {
-            if (childrenCopy.get(childrenCopy.size() - 1) instanceof ConfigNodeSingleToken &&
+            if (!childrenCopy.isEmpty() && childrenCopy.get(childrenCopy.size() - 1) instanceof ConfigNodeSingleToken &&
                  Tokens.isNewline(((ConfigNodeSingleToken) childrenCopy.get(childrenCopy.size() - 1)).token()))
                 childrenCopy.add(childrenCopy.size() - 1, new ConfigNodeField(newNodes));
             else
