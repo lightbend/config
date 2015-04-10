@@ -1,13 +1,14 @@
 package com.typesafe.config.impl
 
 import java.io.{ BufferedReader, FileReader }
-import java.nio.charset.StandardCharsets
 import java.nio.file.{ Paths, Files }
 
 import com.typesafe.config._
 import com.typesafe.config.parser._
 import org.junit.Assert._
 import org.junit.Test
+
+import scala.collection.JavaConverters._
 
 class ConfigDocumentTest extends TestUtils {
     private def configDocumentReplaceJsonTest(origText: String, finalText: String, newValue: String, replacePath: String) {
@@ -435,6 +436,18 @@ class ConfigDocumentTest extends TestUtils {
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
         assertEquals(" a : 1", configDocument.setValue("a", "1").render)
+    }
+
+    @Test
+    def configDocumentConfigObjectInsertion {
+        val origText = "{ a : b }"
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        val configVal = ConfigValueFactory.fromAnyRef(Map("a" -> 1, "b" -> 2).asJava)
+
+        assertEquals("{ a : {\n     # hardcoded value\n     \"a\" : 1,\n     # hardcoded value\n     \"b\" : 2\n } }",
+            configDocument.setValue("a", configVal).render)
+
     }
 
 }
