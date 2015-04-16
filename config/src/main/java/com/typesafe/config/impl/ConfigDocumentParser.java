@@ -629,7 +629,7 @@ final class ConfigDocumentParser {
 
             t = nextToken();
             if (Tokens.isIgnoredWhitespace(t) || Tokens.isNewline(t) || isUnquotedWhitespace(t) || Tokens.isComment(t)) {
-                throw parseError("The value from setValue cannot have leading or trailing newlines, whitespace, or comments");
+                throw parseError("The value from withValueText cannot have leading or trailing newlines, whitespace, or comments");
             }
             if (t == Tokens.END) {
                 throw parseError("Empty value");
@@ -640,7 +640,7 @@ final class ConfigDocumentParser {
                 if (t == Tokens.END) {
                     return node;
                 } else {
-                    throw parseError("Parsing JSON and the value set in setValue was either a concatenation or " +
+                    throw parseError("Parsing JSON and the value set in withValueText was either a concatenation or " +
                                         "had trailing whitespace, newlines, or comments");
                 }
             } else {
@@ -651,7 +651,7 @@ final class ConfigDocumentParser {
                 if (t == Tokens.END) {
                     return node;
                 } else {
-                    throw parseError("The value from setValue cannot have leading or trailing newlines, whitespace, or comments");
+                    throw parseError("The value from withValueText cannot have leading or trailing newlines, whitespace, or comments");
                 }
             }
         }

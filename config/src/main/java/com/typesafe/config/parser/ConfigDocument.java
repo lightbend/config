@@ -38,11 +38,12 @@ public interface ConfigDocument {
      *                 into the ConfigDocument.
      * @return a copy of the ConfigDocument with the desired value at the desired path
      */
-    ConfigDocument setValue(String path, String newValue);
+    ConfigDocument withValueText(String path, String newValue);
 
     /**
-     * Returns a new ConfigDocument that is a copy of the current ConfigDocument,
-     * but with the desired value set at the desired path as with {@link #setValue(String, String)},
+     * Returns a new ConfigDocument that is a copy of the current
+     * ConfigDocument, but with the desired value set at the
+     * desired path. Works like {@link #withValueText(String, String)},
      * but takes a ConfigValue instead of a string.
      *
      * @param path the path at which to set the desired value
@@ -51,25 +52,26 @@ public interface ConfigDocument {
      *                 ConfigDocument.
      * @return a copy of the ConfigDocument with the desired value at the desired path
      */
-    ConfigDocument setValue(String path, ConfigValue newValue);
+    ConfigDocument withValue(String path, ConfigValue newValue);
 
     /**
      * Returns a new ConfigDocument that is a copy of the current ConfigDocument, but with
-     * the value at the desired path removed. If the desired path does not exist in the document,
+     * all values at the desired path removed. If the path does not exist in the document,
      * a copy of the current document will be returned. If there is an array at the root, an exception
      * will be thrown.
      *
      * @param path the path to remove from the document
      * @return a copy of the ConfigDocument with the desired value removed from the document.
      */
-    ConfigDocument removeValue(String path);
+    ConfigDocument withoutPath(String path);
 
     /**
      * Returns a boolean indicating whether or not a ConfigDocument has a value at the desired path.
+     * null counts as a value for purposes of this check.
      * @param path the path to check
      * @return true if the path exists in the document, otherwise false
      */
-    boolean hasValue(String path);
+    boolean hasPath(String path);
 
     /**
      * The original text of the input, modified if necessary with
