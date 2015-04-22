@@ -190,10 +190,10 @@ final class ConfigParser {
             // we really should make this work, but for now throwing an
             // exception is better than producing an incorrect result.
             // See https://github.com/typesafehub/config/issues/160
-            if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
-                throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
-                        + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
-                        + "remove the ${} statements from the included file.");
+//            if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
+//                throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
+//                        + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
+//                        + "remove the ${} statements from the included file.");
 
             if (!pathStack.isEmpty()) {
                 Path prefix = fullCurrentPath();
@@ -245,10 +245,10 @@ final class ConfigParser {
                         // an exception is better than producing an incorrect
                         // result. See
                         // https://github.com/typesafehub/config/issues/160
-                        if (arrayCount > 0)
-                            throw parseError("Due to current limitations of the config parser, += does not work nested inside a list. "
-                                    + "+= expands to a ${} substitution and the path in ${} cannot currently refer to list elements. "
-                                    + "You might be able to move the += outside of the list and then refer to it from inside the list with ${}.");
+//                        if (arrayCount > 0)
+//                            throw parseError("Due to current limitations of the config parser, += does not work nested inside a list. "
+//                                    + "+= expands to a ${} substitution and the path in ${} cannot currently refer to list elements. "
+//                                    + "You might be able to move the += outside of the list and then refer to it from inside the list with ${}.");
 
                         // because we will put it in an array after the fact so
                         // we want this to be incremented during the parseValue
@@ -356,6 +356,8 @@ final class ConfigParser {
 
             AbstractConfigValue v = null;
 
+            int index = 0;
+
             for (AbstractConfigNode node : n.children()) {
                 if (node instanceof ConfigNodeComment) {
                     comments.add(((ConfigNodeComment) node).commentText());
@@ -376,7 +378,9 @@ final class ConfigParser {
                         values.add(v.withOrigin(v.origin().appendComments(new ArrayList<String>(comments))));
                         comments.clear();
                     }
+                    pathStack.push(new Path(Integer.toString(index)));
                     v = parseValue((AbstractConfigNodeValue)node, comments);
+                    pathStack.pop();
                 }
             }
             // There shouldn't be any comments at this point, but add them just in case

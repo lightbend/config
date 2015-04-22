@@ -55,11 +55,15 @@ final class ResolveSource {
         }
     }
 
-    static private ValueWithPath findInObject(AbstractConfigObject obj, Path path) {
+    static private ValueWithPath findInObject(AbstractConfigValue obj, Path path) {
         try {
             // we'll fail if anything along the path can't
             // be looked at without resolving.
-            return findInObject(obj, path, null);
+            if (obj instanceof AbstractConfigObject) {
+                return findInObject((AbstractConfigObject) obj, path, null);
+            } else {
+                return findInList((SimpleConfigList) obj, path, null);
+            }
         } catch (ConfigException.NotResolved e) {
             throw ConfigImpl.improveNotResolved(path, e);
         }
@@ -78,6 +82,29 @@ final class ResolveSource {
         } else {
             if (v instanceof AbstractConfigObject) {
                 return findInObject((AbstractConfigObject) v, next, newParents);
+            } else if (v instanceof SimpleConfigList) {
+                return findInList((SimpleConfigList) v, next, newParents);
+            } else {
+                return new ValueWithPath(null, newParents);
+            }
+        }
+    }
+
+    static private ValueWithPath findInList(SimpleConfigList list, Path path, Node<Container> parents) {
+        String key = path.first();
+        Path next = path.remainder();
+        if (ConfigImpl.traceSubstitutionsEnabled())
+            ConfigImpl.trace("*** looking up '" + key + "' in " + list);
+        AbstractConfigValue v = list.get(Integer.parseInt(key));
+        Node<Container> newParents = parents == null ? new Node<Container>(list) : parents.prepend(list);
+
+        if (next == null) {
+            return new ValueWithPath(v, newParents);
+        } else {
+            if (v instanceof AbstractConfigObject) {
+                return findInObject((AbstractConfigObject) v, next, newParents);
+            } else if (v instanceof SimpleConfigList) {
+                return findInList((SimpleConfigList) v, next, newParents);
             } else {
                 return new ValueWithPath(null, newParents);
             }
