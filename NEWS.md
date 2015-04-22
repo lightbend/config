@@ -1,3 +1,23 @@
+# 1.3.0-M3: April 21, 2015
+
+- this is an ABI-not-guaranteed beta release in advance
+  of 1.3.0. Please see the notes for 1.3.0-M1 below for warnings,
+  caveats, and the bulk of what's changed since 1.2.1.
+
+API changes (since 1.3.0-M2):
+
+- renamed some methods in the new ConfigDocument for consistency
+  with Config (breaks ABI vs. 1.3.0-M2, but not vs. any stable
+  release)
+
+Fixes:
+
+- couple of bugfixes in ConfigDocument
+
+Thank you to contributors with commits since v1.3.0-M2 tag:
+
+- Preben Ingvaldsen
+
 # 1.3.0-M2: April 1, 2015
 
 - not in fact an April Fool's joke. Unless it's broken. Then it
