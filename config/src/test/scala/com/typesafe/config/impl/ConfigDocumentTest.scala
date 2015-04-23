@@ -14,7 +14,7 @@ class ConfigDocumentTest extends TestUtils {
     private def configDocumentReplaceJsonTest(origText: String, finalText: String, newValue: String, replacePath: String) {
         val configDocument = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
         assertEquals(origText, configDocument.render())
-        val newDocument = configDocument.setValue(replacePath, newValue)
+        val newDocument = configDocument.withValueText(replacePath, newValue)
         assertTrue(newDocument.isInstanceOf[SimpleConfigDocument])
         assertEquals(finalText, newDocument.render())
     }
@@ -22,7 +22,7 @@ class ConfigDocumentTest extends TestUtils {
     private def configDocumentReplaceConfTest(origText: String, finalText: String, newValue: String, replacePath: String) {
         val configDocument = ConfigDocumentFactory.parseString(origText)
         assertEquals(origText, configDocument.render())
-        val newDocument = configDocument.setValue(replacePath, newValue)
+        val newDocument = configDocument.withValueText(replacePath, newValue)
         assertTrue(newDocument.isInstanceOf[SimpleConfigDocument])
         assertEquals(finalText, newDocument.render())
     }
@@ -141,15 +141,15 @@ class ConfigDocumentTest extends TestUtils {
     def configDocumentMultiElementDuplicatesRemoved {
         var origText = "{a: b, a.b.c: d, a: e}"
         var configDoc = ConfigDocumentFactory.parseString(origText)
-        assertEquals("{a: 2}", configDoc.setValue("a", "2").render())
+        assertEquals("{a: 2}", configDoc.withValueText("a", "2").render())
 
         origText = "{a: b, a: e, a.b.c: d}"
         configDoc = ConfigDocumentFactory.parseString(origText)
-        assertEquals("{a: 2, }", configDoc.setValue("a", "2").render())
+        assertEquals("{a: 2, }", configDoc.withValueText("a", "2").render())
 
         origText = "{a.b.c: d}"
         configDoc = ConfigDocumentFactory.parseString(origText)
-        assertEquals("{ a : 2}", configDoc.setValue("a", "2").render())
+        assertEquals("{ a : 2}", configDoc.withValueText("a", "2").render())
     }
 
     @Test
@@ -191,8 +191,8 @@ class ConfigDocumentTest extends TestUtils {
         val newValue = ConfigValueFactory.fromAnyRef(12)
         assertEquals(origText, configDocHOCON.render())
         assertEquals(origText, configDocJSON.render())
-        assertEquals(finalText, configDocHOCON.setValue("a", newValue).render())
-        assertEquals(finalText, configDocJSON.setValue("a", newValue).render())
+        assertEquals(finalText, configDocHOCON.withValue("a", newValue).render())
+        assertEquals(finalText, configDocJSON.withValue("a", newValue).render())
     }
 
     @Test
@@ -200,12 +200,12 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "{a: b, a.b.c.d: e, c: {a: {b: c}}}"
         val configDoc = ConfigDocumentFactory.parseString(origText)
 
-        assertTrue(configDoc.hasValue("a"))
-        assertTrue(configDoc.hasValue("a.b.c"))
-        assertTrue(configDoc.hasValue("c.a.b"))
-        assertFalse(configDoc.hasValue("c.a.b.c"))
-        assertFalse(configDoc.hasValue("a.b.c.d.e"))
-        assertFalse(configDoc.hasValue("this.does.not.exist"))
+        assertTrue(configDoc.hasPath("a"))
+        assertTrue(configDoc.hasPath("a.b.c"))
+        assertTrue(configDoc.hasPath("c.a.b"))
+        assertFalse(configDoc.hasPath("c.a.b.c"))
+        assertFalse(configDoc.hasPath("a.b.c.d.e"))
+        assertFalse(configDoc.hasPath("this.does.not.exist"))
     }
 
     @Test
@@ -213,9 +213,9 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "{a: b, a.b.c.d: e, c: {a: {b: c}}}"
         val configDoc = ConfigDocumentFactory.parseString(origText)
 
-        assertEquals("{c: {a: {b: c}}}", configDoc.removeValue("a").render())
-        assertEquals("{a: b, a.b.c.d: e, }", configDoc.removeValue("c").render())
-        assertEquals(configDoc, configDoc.removeValue("this.does.not.exist"))
+        assertEquals("{c: {a: {b: c}}}", configDoc.withoutPath("a").render())
+        assertEquals("{a: b, a.b.c.d: e, }", configDoc.withoutPath("c").render())
+        assertEquals(configDoc, configDoc.withoutPath("this.does.not.exist"))
     }
 
     @Test
@@ -224,14 +224,14 @@ class ConfigDocumentTest extends TestUtils {
         val configDoc = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
 
         // Ensure that removing a value in JSON does not leave us with a trailing comma
-        assertEquals("""{"a": "b" }""", configDoc.removeValue("c").render())
+        assertEquals("""{"a": "b" }""", configDoc.withoutPath("c").render())
     }
 
     @Test
     def configDocumentRemoveMultiple {
         val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }"
         val configDoc = ConfigDocumentFactory.parseString(origText)
-        val removed = configDoc.removeValue("a.b")
+        val removed = configDoc.withoutPath("a.b")
         assertEquals("a { }, a { }", removed.render())
     }
 
@@ -239,7 +239,7 @@ class ConfigDocumentTest extends TestUtils {
     def configDocumentRemoveOverridden {
         val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }, a : 57 "
         val configDoc = ConfigDocumentFactory.parseString(origText)
-        val removed = configDoc.removeValue("a.b")
+        val removed = configDoc.withoutPath("a.b")
         assertEquals("a { }, a { }, a : 57 ", removed.render())
     }
 
@@ -247,7 +247,7 @@ class ConfigDocumentTest extends TestUtils {
     def configDocumentRemoveNested {
         val origText = "a { b: 42 }, a.b = 43, a { b: { c: 44 } }"
         val configDoc = ConfigDocumentFactory.parseString(origText)
-        val removed = configDoc.removeValue("a.b.c")
+        val removed = configDoc.withoutPath("a.b.c")
         assertEquals("a { b: 42 }, a.b = 43, a { b: { } }", removed.render())
     }
 
@@ -257,13 +257,13 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "[1, 2, 3, 4, 5]"
         val document = ConfigDocumentFactory.parseString(origText)
 
-        val e1 = intercept[ConfigException] { document.setValue("a", "1") }
+        val e1 = intercept[ConfigException] { document.withValueText("a", "1") }
         assertTrue(e1.getMessage.contains("ConfigDocument had an array at the root level"))
 
-        val e2 = intercept[ConfigException] { document.hasValue("a") }
+        val e2 = intercept[ConfigException] { document.hasPath("a") }
         assertTrue(e2.getMessage.contains("ConfigDocument had an array at the root level"))
 
-        val e3 = intercept[ConfigException] { document.removeValue("a") }
+        val e3 = intercept[ConfigException] { document.withoutPath("a") }
         assertTrue(e3.getMessage.contains("ConfigDocument had an array at the root level"))
     }
 
@@ -274,7 +274,7 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "{\"foo\": \"bar\", \"baz\": \"qux\"}"
         val document = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
 
-        val e = intercept[ConfigException] { document.setValue("foo", "unquoted") }
+        val e = intercept[ConfigException] { document.withValueText("foo", "unquoted") }
         assertTrue(e.getMessage.contains("Token not allowed in valid JSON"))
     }
 
@@ -285,8 +285,8 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "{\"foo\": \"bar\", \"baz\": \"qux\"}"
         val document = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
 
-        val e = intercept[ConfigException] { document.setValue("foo", "1 2 3 concatenation") }
-        assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
+        val e = intercept[ConfigException] { document.withValueText("foo", "1 2 3 concatenation") }
+        assertTrue("got correct exception for concat value", e.getMessage.contains("Parsing JSON and the value set in withValueText was either a concatenation or had trailing whitespace, newlines, or comments"))
     }
 
     @Test
@@ -317,60 +317,60 @@ class ConfigDocumentTest extends TestUtils {
         // Proper insertion for single-line objects
         var origText = "a { b: c }"
         var configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a { b: c, d : e }", configDocument.setValue("a.d", "e").render())
+        assertEquals("a { b: c, d : e }", configDocument.withValueText("a.d", "e").render())
 
         origText = "a { b: c }, d: e"
         configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a { b: c }, d: e, f : g", configDocument.setValue("f", "g").render())
+        assertEquals("a { b: c }, d: e, f : g", configDocument.withValueText("f", "g").render())
 
         origText = "a { b: c }, d: e,"
         configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a { b: c }, d: e, f : g", configDocument.setValue("f", "g").render())
+        assertEquals("a { b: c }, d: e, f : g", configDocument.withValueText("f", "g").render())
 
-        assertEquals("a { b: c }, d: e, f : { g : { h : i } }", configDocument.setValue("f.g.h", "i").render())
+        assertEquals("a { b: c }, d: e, f : { g : { h : i } }", configDocument.withValueText("f.g.h", "i").render())
 
         origText = "{a { b: c }, d: e}"
         configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("{a { b: c }, d: e, f : g}", configDocument.setValue("f", "g").render())
+        assertEquals("{a { b: c }, d: e, f : g}", configDocument.withValueText("f", "g").render())
 
-        assertEquals("{a { b: c }, d: e, f : { g : { h : i } }}", configDocument.setValue("f.g.h", "i").render())
+        assertEquals("{a { b: c }, d: e, f : { g : { h : i } }}", configDocument.withValueText("f.g.h", "i").render())
     }
 
     @Test
     def configDocumentIndentationMultiLineObject {
         var origText = "a {\n  b: c\n}"
         var configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a {\n  b: c\n  e : f\n}", configDocument.setValue("a.e", "f").render())
+        assertEquals("a {\n  b: c\n  e : f\n}", configDocument.withValueText("a.e", "f").render())
 
-        assertEquals("a {\n  b: c\n  d : { e : { f : g } }\n}", configDocument.setValue("a.d.e.f", "g").render())
+        assertEquals("a {\n  b: c\n  d : { e : { f : g } }\n}", configDocument.withValueText("a.d.e.f", "g").render())
 
         origText = "a {\n b: c\n}\n"
         configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a {\n b: c\n}\nd : e\n", configDocument.setValue("d", "e").render())
+        assertEquals("a {\n b: c\n}\nd : e\n", configDocument.withValueText("d", "e").render())
 
-        assertEquals("a {\n b: c\n}\nd : { e : { f : g } }\n", configDocument.setValue("d.e.f", "g").render())
+        assertEquals("a {\n b: c\n}\nd : { e : { f : g } }\n", configDocument.withValueText("d.e.f", "g").render())
     }
 
     @Test
     def configDocumentIndentationNested {
         var origText = "a { b { c { d: e } } }"
         var configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a { b { c { d: e, f : g } } }", configDocument.setValue("a.b.c.f", "g").render())
+        assertEquals("a { b { c { d: e, f : g } } }", configDocument.withValueText("a.b.c.f", "g").render())
 
         origText = "a {\n  b {\n    c {\n      d: e\n    }\n  }\n}"
         configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a {\n  b {\n    c {\n      d: e\n      f : g\n    }\n  }\n}", configDocument.setValue("a.b.c.f", "g").render())
+        assertEquals("a {\n  b {\n    c {\n      d: e\n      f : g\n    }\n  }\n}", configDocument.withValueText("a.b.c.f", "g").render())
     }
 
     @Test
     def configDocumentIndentationEmptyObject {
         var origText = "a { }"
         var configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a { b : c }", configDocument.setValue("a.b", "c").render())
+        assertEquals("a { b : c }", configDocument.withValueText("a.b", "c").render())
 
         origText = "a {\n  b {\n  }\n}"
         configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a {\n  b {\n    c : d\n  }\n}", configDocument.setValue("a.b.c", "d").render())
+        assertEquals("a {\n  b {\n    c : d\n  }\n}", configDocument.withValueText("a.b.c", "d").render())
     }
 
     @Test
@@ -378,10 +378,10 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "a {\n  b {\n    c {\n      d: e\n    }\n  }\n}"
         val configDocument = ConfigDocumentFactory.parseString(origText)
         assertEquals("a {\n  b {\n    c {\n      d: e\n      f : {\n        g: h\n        i: j\n        k: {\n          l: m\n        }\n      }\n    }\n  }\n}",
-            configDocument.setValue("a.b.c.f", "{\n  g: h\n  i: j\n  k: {\n    l: m\n  }\n}").render())
+            configDocument.withValueText("a.b.c.f", "{\n  g: h\n  i: j\n  k: {\n    l: m\n  }\n}").render())
 
         assertEquals("a {\n  b {\n    c {\n      d: e\n      f : 12 13 [1,\n      2,\n      3,\n      {\n        a:b\n      }]\n    }\n  }\n}",
-            configDocument.setValue("a.b.c.f", "12 13 [1,\n2,\n3,\n{\n  a:b\n}]").render())
+            configDocument.withValueText("a.b.c.f", "12 13 [1,\n2,\n3,\n{\n  a:b\n}]").render())
     }
 
     @Test
@@ -389,7 +389,7 @@ class ConfigDocumentTest extends TestUtils {
         // Weird indentation occurs when adding a multi-line value to a single-line object
         val origText = "a { b { } }"
         val configDocument = ConfigDocumentFactory.parseString(origText)
-        assertEquals("a { b { c : {\n   c:d\n } } }", configDocument.setValue("a.b.c", "{\n  c:d\n}").render())
+        assertEquals("a { b { c : {\n   c:d\n } } }", configDocument.withValueText("a.b.c", "{\n  c:d\n}").render())
     }
 
     @Test
@@ -397,7 +397,7 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "a { b {\n  c: d\n} }"
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
-        assertEquals("a { b {\n  c: d\n}, e : f }", configDocument.setValue("a.e", "f").render())
+        assertEquals("a { b {\n  c: d\n}, e : f }", configDocument.withValueText("a.e", "f").render())
     }
 
     @Test
@@ -405,12 +405,12 @@ class ConfigDocumentTest extends TestUtils {
         var origText = "a {\n  b {\n    c : 22\n  }\n}"
         var configDocument = ConfigDocumentFactory.parseString(origText)
 
-        assertEquals("a {\n  b {\n    c : {\n      d:e\n    }\n  }\n}", configDocument.setValue("a.b.c", "{\n  d:e\n}").render())
+        assertEquals("a {\n  b {\n    c : {\n      d:e\n    }\n  }\n}", configDocument.withValueText("a.b.c", "{\n  d:e\n}").render())
 
         origText = "a {\n  b {\n                f : 10\n    c : 22\n  }\n}"
         configDocument = ConfigDocumentFactory.parseString(origText)
 
-        assertEquals("a {\n  b {\n                f : 10\n    c : {\n      d:e\n    }\n  }\n}", configDocument.setValue("a.b.c", "{\n  d:e\n}").render())
+        assertEquals("a {\n  b {\n                f : 10\n    c : {\n      d:e\n    }\n  }\n}", configDocument.withValueText("a.b.c", "{\n  d:e\n}").render())
     }
 
     @Test
@@ -419,7 +419,7 @@ class ConfigDocumentTest extends TestUtils {
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
         assertEquals("a {\n  b {\n    c : 22\n    d : {\n      include \"foo\"\n      e:f\n    }\n  }\n}",
-            configDocument.setValue("a.b.d", "{\n  include \"foo\"\n  e:f\n}").render())
+            configDocument.withValueText("a.b.d", "{\n  include \"foo\"\n  e:f\n}").render())
     }
 
     @Test
@@ -427,7 +427,7 @@ class ConfigDocumentTest extends TestUtils {
         val origText = "a : b\n      include \"foo\"\n"
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
-        assertEquals("a : b\n      include \"foo\"\n      c : d\n", configDocument.setValue("c", "d").render())
+        assertEquals("a : b\n      include \"foo\"\n      c : d\n", configDocument.withValueText("c", "d").render())
     }
 
     @Test
@@ -435,7 +435,7 @@ class ConfigDocumentTest extends TestUtils {
         val origText = ""
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
-        assertEquals(" a : 1", configDocument.setValue("a", "1").render)
+        assertEquals(" a : 1", configDocument.withValueText("a", "1").render)
     }
 
     @Test
@@ -446,7 +446,7 @@ class ConfigDocumentTest extends TestUtils {
         val configVal = ConfigValueFactory.fromAnyRef(Map("a" -> 1, "b" -> 2).asJava)
 
         assertEquals("{ a : {\n     # hardcoded value\n     \"a\" : 1,\n     # hardcoded value\n     \"b\" : 2\n } }",
-            configDocument.setValue("a", configVal).render)
+            configDocument.withValue("a", configVal).render)
 
     }
 

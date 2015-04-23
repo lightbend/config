@@ -54,7 +54,7 @@ class ConfigDocumentParserTest extends TestUtils {
         val e = intercept[ConfigException] {
             ConfigDocumentParser.parseValue(tokenize(toReplace), fakeOrigin(), ConfigParseOptions.defaults())
         }
-        assertTrue(e.getMessage.contains("The value from setValue cannot have leading or trailing newlines, whitespace, or comments"))
+        assertTrue("expected message parsing leading trailing", e.getMessage.contains("The value from withValueText cannot have leading or trailing newlines, whitespace, or comments"))
     }
 
     @Test
@@ -268,12 +268,12 @@ class ConfigDocumentParserTest extends TestUtils {
         // Check that concatenations in JSON will throw an error
         var origText = "123 456 \"abc\""
         var e = intercept[ConfigException] { ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON)) }
-        assertTrue(e.getMessage.contains("Parsing JSON and the value set in setValue was either a concatenation or had trailing whitespace, newlines, or comments"))
+        assertTrue("expected message for parsing concat as json", e.getMessage.contains("Parsing JSON and the value set in withValueText was either a concatenation or had trailing whitespace, newlines, or comments"))
 
         // Check that keys with no separators and object values in JSON will throw an error
         origText = """{"foo" { "bar" : 12 } }"""
         e = intercept[ConfigException] { ConfigDocumentParser.parseValue(tokenize(origText), fakeOrigin(), ConfigParseOptions.defaults().setSyntax((ConfigSyntax.JSON))) }
-        assertTrue(e.getMessage.contains("""Key '"foo"' may not be followed by token: '{'"""))
+        assertTrue("expected failure for key foo followed by token", e.getMessage.contains("""Key '"foo"' may not be followed by token: '{'"""))
     }
 
     @Test
