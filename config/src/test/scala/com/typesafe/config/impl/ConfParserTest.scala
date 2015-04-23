@@ -802,7 +802,7 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
-    def includeWithSubstitutionsInArray() {
+    def includeWithSubstitutionsFromList() {
         val conf = ConfigFactory.parseString("include file(" + jsonQuotedResourceFile("include-from-list") + ")")
 
         val resolved = conf.resolve()
