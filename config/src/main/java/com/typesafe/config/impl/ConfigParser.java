@@ -187,14 +187,6 @@ final class ConfigParser {
                     throw new ConfigException.BugOrBroken("should not be reached");
             }
 
-            // we really should make this work, but for now throwing an
-            // exception is better than producing an incorrect result.
-            // See https://github.com/typesafehub/config/issues/160
-//            if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
-//                throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
-//                        + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
-//                        + "remove the ${} statements from the included file.");
-
             if (!pathStack.isEmpty()) {
                 Path prefix = fullCurrentPath();
                 obj = obj.relativized(prefix);
@@ -241,18 +233,6 @@ final class ConfigParser {
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
                     if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
-                        // we really should make this work, but for now throwing
-                        // an exception is better than producing an incorrect
-                        // result. See
-                        // https://github.com/typesafehub/config/issues/160
-//                        if (arrayCount > 0)
-//                            throw parseError("Due to current limitations of the config parser, += does not work nested inside a list. "
-//                                    + "+= expands to a ${} substitution and the path in ${} cannot currently refer to list elements. "
-//                                    + "You might be able to move the += outside of the list and then refer to it from inside the list with ${}.");
-
-                        // because we will put it in an array after the fact so
-                        // we want this to be incremented during the parseValue
-                        // below in order to throw the above exception.
                         arrayCount += 1;
                     }
 

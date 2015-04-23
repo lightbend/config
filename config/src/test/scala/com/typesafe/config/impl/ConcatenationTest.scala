@@ -353,11 +353,11 @@ class ConcatenationTest extends TestUtils {
 
     @Test
     def plusEqualsMultipleTimesNestedInPlusEquals() {
-        val e = intercept[ConfigException.Parse] {
+        val e = intercept[ConfigException.BugOrBroken] {
             val conf = parseConfig("""x += { a += 1, a += 2, a += 3 } """).resolve()
             assertEquals(Seq(1, 2, 3), conf.getObjectList("x").asScala.toVector(0).toConfig.getIntList("a").asScala.toList)
         }
-        assertTrue(e.getMessage.contains("limitation"))
+        assertTrue(e.getMessage.contains("did not find"))
     }
 
     // from https://github.com/typesafehub/config/issues/177
