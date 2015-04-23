@@ -34,11 +34,6 @@ final class ConfigParser {
         final private ConfigOrigin baseOrigin;
         final private LinkedList<Path> pathStack;
 
-        // the number of lists we are inside; this is used to detect the "cannot
-        // generate a reference to a list element" problem, and once we fix that
-        // problem we should be able to get rid of this variable.
-        int arrayCount;
-
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin, ConfigNodeRoot document,
                 FullIncluder includer, ConfigIncludeContext includeContext) {
             lineNumber = 1;
@@ -48,7 +43,6 @@ final class ConfigParser {
             this.includer = includer;
             this.includeContext = includeContext;
             this.pathStack = new LinkedList<Path>();
-            this.arrayCount = 0;
         }
 
         // merge a bunch of adjacent values into one
@@ -95,8 +89,6 @@ final class ConfigParser {
         private AbstractConfigValue parseValue(AbstractConfigNodeValue n, List<String> comments) {
             AbstractConfigValue v;
 
-            int startingArrayCount = arrayCount;
-
             if (n instanceof ConfigNodeSimpleValue) {
                 v = ((ConfigNodeSimpleValue) n).value();
             } else if (n instanceof ConfigNodeObject) {
@@ -113,9 +105,6 @@ final class ConfigParser {
                 v = v.withOrigin(v.origin().prependComments(new ArrayList<String>(comments)));
                 comments.clear();
             }
-
-            if (arrayCount != startingArrayCount)
-                throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced array count");
 
             return v;
         }
@@ -232,9 +221,6 @@ final class ConfigParser {
 
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
-                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
-                        arrayCount += 1;
-                    }
 
                     AbstractConfigNodeValue valueNode;
                     AbstractConfigValue newValue;
@@ -245,7 +231,6 @@ final class ConfigParser {
                     newValue = parseValue(valueNode, comments);
 
                     if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
-                        arrayCount -= 1;
 
                         List<AbstractConfigValue> concat = new ArrayList<AbstractConfigValue>(2);
                         AbstractConfigValue previousRef = new ConfigReference(newValue.origin(),
@@ -326,7 +311,6 @@ final class ConfigParser {
         }
 
         private SimpleConfigList parseArray(ConfigNodeArray n) {
-            arrayCount += 1;
 
             SimpleConfigOrigin arrayOrigin = lineOrigin();
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
@@ -367,7 +351,6 @@ final class ConfigParser {
             if (v != null) {
                 values.add(v.withOrigin(v.origin().appendComments(new ArrayList<String>(comments))));
             }
-            arrayCount -= 1;
             return new SimpleConfigList(arrayOrigin, values);
         }
 
