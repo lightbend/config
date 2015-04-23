@@ -345,19 +345,12 @@ class ConcatenationTest extends TestUtils {
         assertEquals(Seq(1, 2, 3), conf.getObjectList("x.a").asScala.toList.map(_.toConfig.getInt("b")))
     }
 
-    // We would ideally make this case NOT throw an exception but we need to do some work
-    // to get there, see https://github.com/typesafehub/config/issues/160
     @Test
     def plusEqualsMultipleTimesNestedInArray() {
-        val e = intercept[ConfigException.Parse] {
-            val conf = parseConfig("""x = [ { a += 1, a += 2, a += 3 } ] """).resolve()
-            assertEquals(Seq(1, 2, 3), conf.getObjectList("x").asScala.toVector(0).toConfig.getIntList("a").asScala.toList)
-        }
-        assertTrue(e.getMessage.contains("limitation"))
+        val conf = parseConfig("""x = [ { a += 1, a += 2, a += 3 } ] """).resolve()
+        assertEquals(Seq(1, 2, 3), conf.getObjectList("x").asScala.toVector(0).toConfig.getIntList("a").asScala.toList)
     }
 
-    // We would ideally make this case NOT throw an exception but we need to do some work
-    // to get there, see https://github.com/typesafehub/config/issues/160
     @Test
     def plusEqualsMultipleTimesNestedInPlusEquals() {
         val e = intercept[ConfigException.Parse] {

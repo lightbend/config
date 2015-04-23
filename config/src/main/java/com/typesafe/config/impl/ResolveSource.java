@@ -59,52 +59,40 @@ final class ResolveSource {
         try {
             // we'll fail if anything along the path can't
             // be looked at without resolving.
-            if (obj instanceof AbstractConfigObject) {
-                return findInObject((AbstractConfigObject) obj, path, null);
-            } else {
-                return findInList((SimpleConfigList) obj, path, null);
-            }
+            return findInObject(obj, path, null);
         } catch (ConfigException.NotResolved e) {
             throw ConfigImpl.improveNotResolved(path, e);
         }
     }
 
-    static private ValueWithPath findInObject(AbstractConfigObject obj, Path path, Node<Container> parents) {
+    static private ValueWithPath findInObject(AbstractConfigValue obj, Path path, Node<Container> parents) {
         String key = path.first();
         Path next = path.remainder();
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace("*** looking up '" + key + "' in " + obj);
-        AbstractConfigValue v = obj.attemptPeekWithPartialResolve(key);
-        Node<Container> newParents = parents == null ? new Node<Container>(obj) : parents.prepend(obj);
 
-        if (next == null) {
-            return new ValueWithPath(v, newParents);
-        } else {
-            if (v instanceof AbstractConfigObject) {
-                return findInObject((AbstractConfigObject) v, next, newParents);
-            } else if (v instanceof SimpleConfigList) {
-                return findInList((SimpleConfigList) v, next, newParents);
-            } else {
-                return new ValueWithPath(null, newParents);
+        AbstractConfigValue v = null;
+        Node<Container> newParents = null;
+
+        if (obj instanceof AbstractConfigObject) {
+            v = ((AbstractConfigObject) obj).attemptPeekWithPartialResolve(key);
+            newParents = parents == null ? new Node<Container>((AbstractConfigObject) obj) : parents.prepend((AbstractConfigObject) obj);
+        } else if (obj instanceof SimpleConfigList) {
+            int ix;
+            try {
+                ix = Integer.parseInt(key);
+            } catch(Exception e) {
+                throw new ConfigException.BadPath(key, "path for list must be numeric index");
             }
+            v = ((SimpleConfigList) obj).get(ix);
+            newParents = parents == null ? new Node<Container>((SimpleConfigList) obj) : parents.prepend((SimpleConfigList) obj);
         }
-    }
-
-    static private ValueWithPath findInList(SimpleConfigList list, Path path, Node<Container> parents) {
-        String key = path.first();
-        Path next = path.remainder();
-        if (ConfigImpl.traceSubstitutionsEnabled())
-            ConfigImpl.trace("*** looking up '" + key + "' in " + list);
-        AbstractConfigValue v = list.get(Integer.parseInt(key));
-        Node<Container> newParents = parents == null ? new Node<Container>(list) : parents.prepend(list);
 
         if (next == null) {
             return new ValueWithPath(v, newParents);
         } else {
-            if (v instanceof AbstractConfigObject) {
-                return findInObject((AbstractConfigObject) v, next, newParents);
-            } else if (v instanceof SimpleConfigList) {
-                return findInList((SimpleConfigList) v, next, newParents);
+            if (v instanceof AbstractConfigObject || v instanceof SimpleConfigList) {
+                return findInObject(v, next, newParents);
             } else {
                 return new ValueWithPath(null, newParents);
             }
