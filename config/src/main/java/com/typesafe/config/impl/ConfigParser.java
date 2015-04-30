@@ -343,6 +343,7 @@ final class ConfigParser {
                         comments.clear();
                     }
                     pathStack.push(new Path(Integer.toString(index)));
+                    index ++;
                     v = parseValue((AbstractConfigNodeValue)node, comments);
                     pathStack.pop();
                 }
