@@ -135,6 +135,10 @@ Typesafe Contributor License Agreement online, using your GitHub
 account - it takes 30 seconds.  You can do this at
 http://www.typesafe.com/contribute/cla
 
+Please see
+[CONTRIBUTING](https://github.com/typesafehub/config/blob/master/CONTRIBUTING.md)
+for more including how to make a release.
+
 ### Build
 
 The build uses sbt and the tests are written in Scala; however,
