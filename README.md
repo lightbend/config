@@ -93,19 +93,19 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 ### Binary Releases
 
 Version 1.2.1 and earlier were built for Java 6, while newer
-versions (1.3.0-M1 is the current beta) will be built for Java 8.
+versions (1.3.0 and above) will be built for Java 8.
 
 You can find published releases on Maven Central.
 
     <dependency>
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
-        <version>1.2.1</version>
+        <version>1.3.0</version>
     </dependency>
 
 sbt dependency:
 
-    libraryDependencies += "com.typesafe" % "config" % "1.2.1"
+    libraryDependencies += "com.typesafe" % "config" % "1.3.0"
 
 Link for direct download if you don't use a dependency manager:
 
@@ -751,6 +751,14 @@ If you have trouble with your configuration, some useful tips.
 
 Currently the library is maintained against Java 8, but
 version 1.2.1 and earlier will work with Java 6.
+
+Please use 1.2.1 if you need Java 6 support, though some people
+have expressed interest in a branch off of 1.3.0 supporting
+Java 7. If you want to work on that branch you might bring it up
+on [chat](https://gitter.im/typesafehub/config). We can release a
+jar for Java 7 if someone(s) steps up to maintain the branch. The
+master branch does not use Java 8 "gratuitously" but some APIs
+that use Java 8 types will need to be removed.
 
 ### Rationale for Supported File Formats
 

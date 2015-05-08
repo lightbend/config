@@ -1,3 +1,13 @@
+# 1.3.0: May 8, 2015
+
+- no changes from 1.3.0-M3
+- this is an ABI-guaranteed stable release.
+- 1.3.0 should be ABI-compatible with 1.2.x for most applications,
+  though there are enough changes to corner cases and
+  implementation that some obscure things could break. Please see
+  the notes for the 1.3.0 milestones below for details, especially
+  for 1.3.0-M1.
+
 # 1.3.0-M3: April 21, 2015
 
 - this is an ABI-not-guaranteed beta release in advance
