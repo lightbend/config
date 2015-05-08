@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/**<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *   Copyright (C) 2011-2012 Typesafe Inc. &lt;http://typesafe.com&gt;<a name="line.2"></a>
+<span class="sourceLineNo">003</span> */<a name="line.3"></a>
+<span class="sourceLineNo">004</span>package com.typesafe.config;<a name="line.4"></a>
+<span class="sourceLineNo">005</span><a name="line.5"></a>
+<span class="sourceLineNo">006</span>/**<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * A set of options related to resolving substitutions. Substitutions use the<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * &lt;code&gt;${foo.bar}&lt;/code&gt; syntax and are documented in the &lt;a<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * href="https://github.com/typesafehub/config/blob/master/HOCON.md"&gt;HOCON&lt;/a&gt;<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * spec.<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * &lt;p&gt;<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * Typically this class would be used with the method<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * {@link Config#resolve(ConfigResolveOptions)}.<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * &lt;p&gt;<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * This object is immutable, so the "setters" return a new object.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * &lt;p&gt;<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * Here is an example of creating a custom {@code ConfigResolveOptions}:<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * <a name="line.18"></a>
+<span class="sourceLineNo">019</span> * &lt;pre&gt;<a name="line.19"></a>
+<span class="sourceLineNo">020</span> *     ConfigResolveOptions options = ConfigResolveOptions.defaults()<a name="line.20"></a>
+<span class="sourceLineNo">021</span> *         .setUseSystemEnvironment(false)<a name="line.21"></a>
+<span class="sourceLineNo">022</span> * &lt;/pre&gt;<a name="line.22"></a>
+<span class="sourceLineNo">023</span> * &lt;p&gt;<a name="line.23"></a>
+<span class="sourceLineNo">024</span> * In addition to {@link ConfigResolveOptions#defaults}, there's a prebuilt<a name="line.24"></a>
+<span class="sourceLineNo">025</span> * {@link ConfigResolveOptions#noSystem} which avoids looking at any system<a name="line.25"></a>
+<span class="sourceLineNo">026</span> * environment variables or other external system information. (Right now,<a name="line.26"></a>
+<span class="sourceLineNo">027</span> * environment variables are the only example.)<a name="line.27"></a>
+<span class="sourceLineNo">028</span> */<a name="line.28"></a>
+<span class="sourceLineNo">029</span>public final class ConfigResolveOptions {<a name="line.29"></a>
+<span class="sourceLineNo">030</span>    private final boolean useSystemEnvironment;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>    private final boolean allowUnresolved;<a name="line.31"></a>
+<span class="sourceLineNo">032</span><a name="line.32"></a>
+<span class="sourceLineNo">033</span>    private ConfigResolveOptions(boolean useSystemEnvironment, boolean allowUnresolved) {<a name="line.33"></a>
+<span class="sourceLineNo">034</span>        this.useSystemEnvironment = useSystemEnvironment;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>        this.allowUnresolved = allowUnresolved;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    }<a name="line.36"></a>
+<span class="sourceLineNo">037</span><a name="line.37"></a>
+<span class="sourceLineNo">038</span>    /**<a name="line.38"></a>
+<span class="sourceLineNo">039</span>     * Returns the default resolve options. By default the system environment<a name="line.39"></a>
+<span class="sourceLineNo">040</span>     * will be used and unresolved substitutions are not allowed.<a name="line.40"></a>
+<span class="sourceLineNo">041</span>     * <a name="line.41"></a>
+<span class="sourceLineNo">042</span>     * @return the default resolve options<a name="line.42"></a>
+<span class="sourceLineNo">043</span>     */<a name="line.43"></a>
+<span class="sourceLineNo">044</span>    public static ConfigResolveOptions defaults() {<a name="line.44"></a>
+<span class="sourceLineNo">045</span>        return new ConfigResolveOptions(true, false);<a name="line.45"></a>
+<span class="sourceLineNo">046</span>    }<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>    /**<a name="line.48"></a>
+<span class="sourceLineNo">049</span>     * Returns resolve options that disable any reference to "system" data<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * (currently, this means environment variables).<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     *<a name="line.51"></a>
+<span class="sourceLineNo">052</span>     * @return the resolve options with env variables disabled<a name="line.52"></a>
+<span class="sourceLineNo">053</span>     */<a name="line.53"></a>
+<span class="sourceLineNo">054</span>    public static ConfigResolveOptions noSystem() {<a name="line.54"></a>
+<span class="sourceLineNo">055</span>        return defaults().setUseSystemEnvironment(false);<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    }<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>    /**<a name="line.58"></a>
+<span class="sourceLineNo">059</span>     * Returns options with use of environment variables set to the given value.<a name="line.59"></a>
+<span class="sourceLineNo">060</span>     *<a name="line.60"></a>
+<span class="sourceLineNo">061</span>     * @param value<a name="line.61"></a>
+<span class="sourceLineNo">062</span>     *            true to resolve substitutions falling back to environment<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     *            variables.<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * @return options with requested setting for use of environment variables<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     */<a name="line.65"></a>
+<span class="sourceLineNo">066</span>    public ConfigResolveOptions setUseSystemEnvironment(boolean value) {<a name="line.66"></a>
+<span class="sourceLineNo">067</span>        return new ConfigResolveOptions(value, allowUnresolved);<a name="line.67"></a>
+<span class="sourceLineNo">068</span>    }<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    /**<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * Returns whether the options enable use of system environment variables.<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     * This method is mostly used by the config lib internally, not by<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     * applications.<a name="line.73"></a>
+<span class="sourceLineNo">074</span>     *<a name="line.74"></a>
+<span class="sourceLineNo">075</span>     * @return true if environment variables should be used<a name="line.75"></a>
+<span class="sourceLineNo">076</span>     */<a name="line.76"></a>
+<span class="sourceLineNo">077</span>    public boolean getUseSystemEnvironment() {<a name="line.77"></a>
+<span class="sourceLineNo">078</span>        return useSystemEnvironment;<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    }<a name="line.79"></a>
+<span class="sourceLineNo">080</span><a name="line.80"></a>
+<span class="sourceLineNo">081</span>    /**<a name="line.81"></a>
+<span class="sourceLineNo">082</span>     * Returns options with "allow unresolved" set to the given value. By<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * default, unresolved substitutions are an error. If unresolved<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * substitutions are allowed, then a future attempt to use the unresolved<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     * value may fail, but {@link Config#resolve(ConfigResolveOptions)} itself<a name="line.85"></a>
+<span class="sourceLineNo">086</span>     * will not throw.<a name="line.86"></a>
+<span class="sourceLineNo">087</span>     * <a name="line.87"></a>
+<span class="sourceLineNo">088</span>     * @param value<a name="line.88"></a>
+<span class="sourceLineNo">089</span>     *            true to silently ignore unresolved substitutions.<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * @return options with requested setting for whether to allow substitutions<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * @since 1.2.0<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     */<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    public ConfigResolveOptions setAllowUnresolved(boolean value) {<a name="line.93"></a>
+<span class="sourceLineNo">094</span>        return new ConfigResolveOptions(useSystemEnvironment, value);<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    }<a name="line.95"></a>
+<span class="sourceLineNo">096</span><a name="line.96"></a>
+<span class="sourceLineNo">097</span>    /**<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     * Returns whether the options allow unresolved substitutions. This method<a name="line.98"></a>
+<span class="sourceLineNo">099</span>     * is mostly used by the config lib internally, not by applications.<a name="line.99"></a>
+<span class="sourceLineNo">100</span>     * <a name="line.100"></a>
+<span class="sourceLineNo">101</span>     * @return true if unresolved substitutions are allowed<a name="line.101"></a>
+<span class="sourceLineNo">102</span>     * @since 1.2.0<a name="line.102"></a>
+<span class="sourceLineNo">103</span>     */<a name="line.103"></a>
+<span class="sourceLineNo">104</span>    public boolean getAllowUnresolved() {<a name="line.104"></a>
+<span class="sourceLineNo">105</span>        return allowUnresolved;<a name="line.105"></a>
+<span class="sourceLineNo">106</span>    }<a name="line.106"></a>
+<span class="sourceLineNo">107</span>}<a name="line.107"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
