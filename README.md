@@ -812,6 +812,9 @@ your wrapper, just send a pull request for this README. We would
 love to know what you're doing with this library or with the HOCON
 format.
 
+#### Guice integration
+  * Typesafe Config Guice https://github.com/racc/typesafeconfig-guice
+
 #### Scala wrappers for the Java library
 
   * Ficus https://github.com/ceedubs/ficus
