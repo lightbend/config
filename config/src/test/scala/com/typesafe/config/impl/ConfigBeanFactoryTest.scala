@@ -46,10 +46,10 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigBeanFactory.create(config, classOf[ValidationBeanConfig])
         }
 
-        val expecteds = Seq(Missing("propNotListedInConfig", 67, "string"),
-            WrongType("shouldBeInt", 68, "number", "boolean"),
-            WrongType("should-be-boolean", 69, "boolean", "number"),
-            WrongType("should-be-list", 70, "list", "string"))
+        val expecteds = Seq(Missing("propNotListedInConfig", 77, "string"),
+            WrongType("shouldBeInt", 78, "number", "boolean"),
+            WrongType("should-be-boolean", 79, "boolean", "number"),
+            WrongType("should-be-list", 80, "list", "string"))
 
         checkValidationException(e, expecteds)
     }
@@ -111,15 +111,15 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigMemorySize.ofBytes(1048576),
             ConfigMemorySize.ofBytes(1073741824)),
             beanConfig.getOfMemorySize.asScala)
-            
+
         val stringsConfigOne = new StringsConfig();
         stringsConfigOne.setAbcd("testAbcdOne")
         stringsConfigOne.setYes("testYesOne")
         val stringsConfigTwo = new StringsConfig();
         stringsConfigTwo.setAbcd("testAbcdTwo")
         stringsConfigTwo.setYes("testYesTwo")
-        
-        assertEquals(List(stringsConfigOne, stringsConfigTwo), beanConfig.getOfStringBean)
+
+        assertEquals(List(stringsConfigOne, stringsConfigTwo).asJava, beanConfig.getOfStringBean)
     }
 
     @Test
