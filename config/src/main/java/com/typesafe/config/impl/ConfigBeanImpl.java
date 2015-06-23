@@ -170,7 +170,7 @@ public class ConfigBeanImpl {
 
     private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
         Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
-
+        
         if (elementType == Boolean.class) {
             return config.getBooleanList(configPropName);
         } else if (elementType == Integer.class) {
@@ -193,6 +193,13 @@ public class ConfigBeanImpl {
             return config.getObjectList(configPropName);
         } else if (elementType == ConfigValue.class) {
             return config.getList(configPropName);
+        } else if (hasAtLeastOneBeanProperty((Class<?>) elementType)) {
+        	List<Object> beanList = new ArrayList<>();
+        	List<? extends Config> configList = config.getConfigList(configPropName);
+        	for (Config listMember : configList) {
+        		beanList.add(createInternal(listMember, (Class<?>) elementType));
+        	}
+        	return beanList;
         } else {
             throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported list element type " + elementType);
         }

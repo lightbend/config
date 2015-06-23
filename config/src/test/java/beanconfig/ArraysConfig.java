@@ -23,6 +23,7 @@ public class ArraysConfig {
     List<ConfigValue> ofConfigValue;
     List<Duration> ofDuration;
     List<ConfigMemorySize> ofMemorySize;
+    List<StringsConfig> ofStringBean;
 
     public List<Integer> getEmpty() {
         return empty;
@@ -127,4 +128,12 @@ public class ArraysConfig {
     public void setOfMemorySize(List<ConfigMemorySize> ofMemorySize) {
         this.ofMemorySize = ofMemorySize;
     }
+    
+    public List<StringsConfig> getOfStringBean() {
+		return ofStringBean;
+	}
+    
+    public void setOfStringBean(List<StringsConfig> ofStringBean) {
+		this.ofStringBean = ofStringBean;
+	}
 }

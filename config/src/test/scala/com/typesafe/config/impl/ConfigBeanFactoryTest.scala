@@ -111,6 +111,15 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigMemorySize.ofBytes(1048576),
             ConfigMemorySize.ofBytes(1073741824)),
             beanConfig.getOfMemorySize.asScala)
+            
+        val stringsConfigOne = new StringsConfig();
+        stringsConfigOne.setAbcd("testAbcdOne")
+        stringsConfigOne.setYes("testYesOne")
+        val stringsConfigTwo = new StringsConfig();
+        stringsConfigTwo.setAbcd("testAbcdTwo")
+        stringsConfigTwo.setYes("testYesTwo")
+        
+        assertEquals(List(stringsConfigOne, stringsConfigTwo), beanConfig.getOfStringBean)
     }
 
     @Test
