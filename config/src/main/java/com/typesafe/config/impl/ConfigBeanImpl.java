@@ -193,6 +193,13 @@ public class ConfigBeanImpl {
             return config.getObjectList(configPropName);
         } else if (elementType == ConfigValue.class) {
             return config.getList(configPropName);
+        } else if (hasAtLeastOneBeanProperty((Class<?>) elementType)) {
+            List<Object> beanList = new ArrayList<Object>();
+            List<? extends Config> configList = config.getConfigList(configPropName);
+            for (Config listMember : configList) {
+                beanList.add(createInternal(listMember, (Class<?>) elementType));
+            }
+            return beanList;
         } else {
             throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported list element type " + elementType);
         }
