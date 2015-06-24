@@ -128,12 +128,12 @@ public class ArraysConfig {
     public void setOfMemorySize(List<ConfigMemorySize> ofMemorySize) {
         this.ofMemorySize = ofMemorySize;
     }
-    
+
     public List<StringsConfig> getOfStringBean() {
-		return ofStringBean;
-	}
-    
+        return ofStringBean;
+    }
+
     public void setOfStringBean(List<StringsConfig> ofStringBean) {
-		this.ofStringBean = ofStringBean;
-	}
+        this.ofStringBean = ofStringBean;
+    }
 }
