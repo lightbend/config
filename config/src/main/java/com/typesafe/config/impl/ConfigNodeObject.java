@@ -121,6 +121,9 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
     private Collection<AbstractConfigNode> indentation() {
         boolean seenNewLine = false;
         ArrayList<AbstractConfigNode> indentation = new ArrayList<AbstractConfigNode>();
+        if (children.isEmpty()) {
+            return indentation;
+        }
         for (int i = 0; i < children.size(); i++) {
             if (!seenNewLine) {
                 if (children.get(i) instanceof ConfigNodeSingleToken &&
@@ -141,19 +144,18 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         }
         if (indentation.isEmpty()) {
             indentation.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
-            return indentation;
         } else {
             // Calculate the indentation of the ending curly-brace to get the indentation of the root object
             AbstractConfigNode last = children.get(children.size() - 1);
             if (last instanceof ConfigNodeSingleToken && ((ConfigNodeSingleToken) last).token() == Tokens.CLOSE_CURLY) {
                 AbstractConfigNode beforeLast = children.get(children.size() - 2);
+                String indent = "";
                 if (beforeLast instanceof ConfigNodeSingleToken &&
-                        Tokens.isIgnoredWhitespace(((ConfigNodeSingleToken) beforeLast).token())) {
-                    String indent = ((ConfigNodeSingleToken) beforeLast).token().tokenText();
-                    indent += "  ";
-                    indentation.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, indent)));
-                    return indentation;
-                }
+                        Tokens.isIgnoredWhitespace(((ConfigNodeSingleToken) beforeLast).token()))
+                    indent = ((ConfigNodeSingleToken) beforeLast).token().tokenText();
+                indent += "  ";
+                indentation.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, indent)));
+                return indentation;
             }
         }
 
@@ -173,7 +175,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         } else {
             indentedValue = value;
         }
-        boolean sameLine = !(indentation.get(0) instanceof ConfigNodeSingleToken &&
+        boolean sameLine = !(indentation.size() > 0 && indentation.get(0) instanceof ConfigNodeSingleToken &&
                                 Tokens.isNewline(((ConfigNodeSingleToken) indentation.get(0)).token()));
 
         // If the path is of length greater than one, see if the value needs to be added further down
@@ -209,7 +211,10 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
             // If the path is of length greater than one add the required new objects along the path
             ArrayList<AbstractConfigNode> newObjectNodes = new ArrayList<AbstractConfigNode>();
             newObjectNodes.add(new ConfigNodeSingleToken(Tokens.OPEN_CURLY));
-            newObjectNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
+            if (indentation.isEmpty()) {
+                newObjectNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
+            }
+            newObjectNodes.addAll(indentation);
             newObjectNodes.add(new ConfigNodeSingleToken(Tokens.CLOSE_CURLY));
             ConfigNodeObject newObject = new ConfigNodeObject(newObjectNodes);
             newNodes.add(newObject.addValueOnPath(desiredPath.subPath(1), indentedValue, flavor));
