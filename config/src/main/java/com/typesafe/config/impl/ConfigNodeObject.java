@@ -170,7 +170,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
 
         // If the value we're inserting is a complex value, we'll need to indent it for insertion
         AbstractConfigNodeValue indentedValue;
-        if (value instanceof ConfigNodeComplexValue) {
+        if (value instanceof ConfigNodeComplexValue && !indentation.isEmpty()) {
             indentedValue = ((ConfigNodeComplexValue) value).indentText(indentation.get(indentation.size() - 1));
         } else {
             indentedValue = value;
