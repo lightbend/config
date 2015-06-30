@@ -436,6 +436,13 @@ class ConfigDocumentTest extends TestUtils {
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
         assertEquals("a : 1", configDocument.withValueText("a", "1").render)
+
+        val mapVal = ConfigValueFactory.fromAnyRef(Map("a" -> 1, "b" -> 2).asJava)
+        assertEquals("a : {\n    # hardcoded value\n    \"a\" : 1,\n    # hardcoded value\n    \"b\" : 2\n}",
+            configDocument.withValue("a", mapVal).render)
+
+        val arrayVal = ConfigValueFactory.fromAnyRef(List(1, 2).asJava)
+        assertEquals("a : [\n    # hardcoded value\n    1,\n    # hardcoded value\n    2\n]", configDocument.withValue("a", arrayVal).render)
     }
 
     @Test
