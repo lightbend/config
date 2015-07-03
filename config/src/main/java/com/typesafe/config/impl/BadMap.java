@@ -46,13 +46,12 @@ final class BadMap<K,V> {
     BadMap<K,V> copyingPut(K k, V v) {
         int newSize = size + 1;
         Entry[] newEntries;
-        // The "- 1" is so we pick size 2 when newSize is 1.
-        int threshold = (newSize * 2) - 1;
-        if (threshold > (entries.length * 2)) {
+        if (newSize > entries.length) {
             // nextPrime doesn't always return a prime larger than
             // we passed in, so this block may not actually change
-            // the entries size.
-            newEntries = new Entry[nextPrime(threshold)];
+            // the entries size. the "-1" is to ensure we use
+            // array length 2 when going from 0 to 1.
+            newEntries = new Entry[nextPrime((newSize*2) - 1)];
         } else {
             newEntries = new Entry[entries.length];
         }
@@ -126,7 +125,7 @@ final class BadMap<K,V> {
         811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929, 937, 941,
         947, 953, 967, 971, 977, 983, 991, 997, 1009,
         /* now we start skipping some, this is arbitrary */
-        2053, 3079, 4057, 7103
+        2053, 3079, 4057, 7103, 10949, 16069, 32609, 65867, 104729
     };
 
     private final static int nextPrime(int i) {
