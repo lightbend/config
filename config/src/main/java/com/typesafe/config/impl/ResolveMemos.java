@@ -11,14 +11,14 @@ import java.util.Map;
 final class ResolveMemos {
     // note that we can resolve things to undefined (represented as Java null,
     // rather than ConfigNull) so this map can have null values.
-    final private Map<MemoKey, AbstractConfigValue> memos;
+    final private BadMap<MemoKey, AbstractConfigValue> memos;
 
-    private ResolveMemos(Map<MemoKey, AbstractConfigValue> memos) {
+    private ResolveMemos(BadMap<MemoKey, AbstractConfigValue> memos) {
         this.memos = memos;
     }
 
     ResolveMemos() {
-        this(new HashMap<MemoKey, AbstractConfigValue>());
+        this(new BadMap<MemoKey, AbstractConfigValue>());
     }
 
     AbstractConfigValue get(MemoKey key) {
@@ -26,10 +26,6 @@ final class ResolveMemos {
     }
 
     ResolveMemos put(MemoKey key, AbstractConfigValue value) {
-        // completely inefficient, but so far nobody cares about resolve()
-        // performance, we can clean it up someday...
-        Map<MemoKey, AbstractConfigValue> copy = new HashMap<MemoKey, AbstractConfigValue>(memos);
-        copy.put(key, value);
-        return new ResolveMemos(copy);
+        return new ResolveMemos(memos.copyingPut(key, value));
     }
 }
