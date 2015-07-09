@@ -32,11 +32,7 @@ final public class ConfigImplUtil {
             return a.equals(b);
     }
 
-    public static boolean isC0Control(final char ch) {
-      return isC0Control((int)ch);
-    }
-
-    public static boolean isC0Control(int codepoint) {
+    static boolean isC0Control(int codepoint) {
       return (codepoint >= 0x0000 && codepoint <= 0x001F);
     }
 
