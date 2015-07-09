@@ -32,6 +32,14 @@ final public class ConfigImplUtil {
             return a.equals(b);
     }
 
+    public static boolean isC0Control(final char ch) {
+      return isC0Control((int)ch);
+    }
+
+    public static boolean isC0Control(int codepoint) {
+      return (codepoint >= 0x0000 && codepoint <= 0x001F);
+    }
+
     public static String renderJsonString(String s) {
         StringBuilder sb = new StringBuilder();
         sb.append('"');
@@ -60,7 +68,7 @@ final public class ConfigImplUtil {
                 sb.append("\\t");
                 break;
             default:
-                if (Character.isISOControl(c))
+                if (isC0Control(c))
                     sb.append(String.format("\\u%04x", (int) c));
                 else
                     sb.append(c);
