@@ -1,9 +1,7 @@
 package com.typesafe.config.impl;
 
+import com.typesafe.config.*;
 import com.typesafe.config.parser.ConfigDocument;
-import com.typesafe.config.ConfigParseOptions;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.ConfigException;
 
 import java.io.StringReader;
 import java.util.Iterator;
@@ -34,7 +32,9 @@ final class SimpleConfigDocument implements ConfigDocument {
     public ConfigDocument withValue(String path, ConfigValue newValue) {
         if (newValue == null)
             throw new ConfigException.BugOrBroken("null value for " + path + " passed to withValue");
-        return withValueText(path, newValue.render().trim());
+        ConfigRenderOptions options = ConfigRenderOptions.defaults();
+        options = options.setOriginComments(false);
+        return withValueText(path, newValue.render(options).trim());
     }
 
     @Override
