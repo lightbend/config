@@ -261,6 +261,13 @@ configuration. In the replacement config file, you can use
 file; after the include statement you could go on to override
 certain settings.
 
+If you set `config.resource`, `config.file`, or `config.url`
+on-the-fly from inside your program (for example with
+`System.setProperty()`), be aware that `ConfigFactory` has some
+internal caches and may not see new values for system
+properties. Use `ConfigFactory.invalidateCaches()` to force-reload
+system properties.
+
 #### Note about resolving substitutions in `reference.conf` and `application.conf`
 
 The substitution syntax `${foo.bar}` will be resolved
