@@ -270,11 +270,6 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         render(stack, sb, indent, atRoot, atKey, options);
     }
 
-    @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
-        render(sb, indent, atRoot, null, options);
-    }
-
     // static method also used by ConfigDelayedMergeObject.
     static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, boolean atRoot, String atKey,
             ConfigRenderOptions options) {

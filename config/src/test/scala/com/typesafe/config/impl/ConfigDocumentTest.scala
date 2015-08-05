@@ -171,14 +171,14 @@ class ConfigDocumentTest extends TestUtils {
     @Test
     def configDocumentSetNewValueMultiLevelConf {
         val origText = "a:b\nc:d"
-        val finalText = "a:b\nc:d\ne : {\n  f : {\n    g : 12\n  }\n}"
+        val finalText = "a:b\nc:d\ne : { f : { g : 12 } }"
         configDocumentReplaceConfTest(origText, finalText, "12", "e.f.g")
     }
 
     @Test
     def configDocumentSetNewValueMultiLevelJson {
         val origText = "{\"a\":\"b\",\n\"c\":\"d\"}"
-        val finalText = "{\"a\":\"b\",\n\"c\":\"d\",\n  \"e\" : {\n    \"f\" : {\n      \"g\" : 12\n    }\n  }}"
+        val finalText = "{\"a\":\"b\",\n\"c\":\"d\",\n\"e\" : { \"f\" : { \"g\" : 12 } }}"
         configDocumentReplaceJsonTest(origText, finalText, "12", "e.f.g")
     }
 
@@ -342,13 +342,13 @@ class ConfigDocumentTest extends TestUtils {
         var configDocument = ConfigDocumentFactory.parseString(origText)
         assertEquals("a {\n  b: c\n  e : f\n}", configDocument.withValueText("a.e", "f").render())
 
-        assertEquals("a {\n  b: c\n  d : {\n    e : {\n      f : g\n    }\n  }\n}", configDocument.withValueText("a.d.e.f", "g").render())
+        assertEquals("a {\n  b: c\n  d : { e : { f : g } }\n}", configDocument.withValueText("a.d.e.f", "g").render())
 
         origText = "a {\n b: c\n}\n"
         configDocument = ConfigDocumentFactory.parseString(origText)
         assertEquals("a {\n b: c\n}\nd : e\n", configDocument.withValueText("d", "e").render())
 
-        assertEquals("a {\n b: c\n}\nd : {\n  e : {\n    f : g\n  }\n}\n", configDocument.withValueText("d.e.f", "g").render())
+        assertEquals("a {\n b: c\n}\nd : { e : { f : g } }\n", configDocument.withValueText("d.e.f", "g").render())
     }
 
     @Test
@@ -435,14 +435,7 @@ class ConfigDocumentTest extends TestUtils {
         val origText = ""
         val configDocument = ConfigDocumentFactory.parseString(origText)
 
-        assertEquals("a : 1", configDocument.withValueText("a", "1").render)
-
-        val mapVal = ConfigValueFactory.fromAnyRef(Map("a" -> 1, "b" -> 2).asJava)
-        assertEquals("a : {\n    \"a\" : 1,\n    \"b\" : 2\n}",
-            configDocument.withValue("a", mapVal).render)
-
-        val arrayVal = ConfigValueFactory.fromAnyRef(List(1, 2).asJava)
-        assertEquals("a : [\n    1,\n    2\n]", configDocument.withValue("a", arrayVal).render)
+        assertEquals(" a : 1", configDocument.withValueText("a", "1").render)
     }
 
     @Test
@@ -452,7 +445,9 @@ class ConfigDocumentTest extends TestUtils {
 
         val configVal = ConfigValueFactory.fromAnyRef(Map("a" -> 1, "b" -> 2).asJava)
 
-        assertEquals("{ a : {\n     \"a\" : 1,\n     \"b\" : 2\n } }",
+        assertEquals("{ a : {\n     # hardcoded value\n     \"a\" : 1,\n     # hardcoded value\n     \"b\" : 2\n } }",
             configDocument.withValue("a", configVal).render)
+
     }
+
 }

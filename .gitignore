@@ -1,6 +1,7 @@
 .classpath
 .project
 .cache
+.DS_Store
 .settings
 .idea
 .idea_modules
