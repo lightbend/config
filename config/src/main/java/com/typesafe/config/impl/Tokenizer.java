@@ -38,7 +38,7 @@ final class Tokenizer {
             return "tab";
         else if (codepoint == -1)
             return "end of file";
-        else if (Character.isISOControl(codepoint))
+        else if (ConfigImplUtil.isC0Control(codepoint))
             return String.format("control character 0x%x", codepoint);
         else
             return String.format("%c", codepoint);
@@ -424,9 +424,6 @@ final class Tokenizer {
             case 't':
                 sb.append('\t');
                 break;
-            case '$':
-                sb.append("\\$");
-                break;
             case 'u': {
                 // kind of absurdly slow, but screw it for now
                 char[] a = new char[4];
@@ -537,7 +534,7 @@ final class Tokenizer {
                     // Reset and continue
                     sb = new StringBuilder();
                     sbOrig = new StringBuilder();
-                } else if (Character.isISOControl(c)) {
+                } else if (ConfigImplUtil.isC0Control(c)) {
                     throw problem(asString(c), "JSON does not allow unescaped " + asString(c)
                             + " in quoted strings, use a backslash escape");
                 } else {
