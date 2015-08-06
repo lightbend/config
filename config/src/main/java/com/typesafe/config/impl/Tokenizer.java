@@ -38,7 +38,7 @@ final class Tokenizer {
             return "tab";
         else if (codepoint == -1)
             return "end of file";
-        else if (ConfigImplUtil.isC0Control(codepoint))
+        else if (Character.isISOControl(codepoint))
             return String.format("control character 0x%x", codepoint);
         else
             return String.format("%c", codepoint);
@@ -170,6 +170,12 @@ final class Tokenizer {
                         "bug: putBack() three times, undesirable look-ahead");
             }
             buffer.push(c);
+        }
+
+        private int peekNextCharRaw() {
+            int c = nextCharRaw();
+            putBack(c);
+            return c;
         }
 
         static boolean isWhitespace(int c) {
@@ -418,6 +424,9 @@ final class Tokenizer {
             case 't':
                 sb.append('\t');
                 break;
+            case '$':
+                sb.append("\\$");
+                break;
             case 'u': {
                 // kind of absurdly slow, but screw it for now
                 char[] a = new char[4];
@@ -477,7 +486,9 @@ final class Tokenizer {
             }
         }
 
-        private Token pullQuotedString() throws ProblemException {
+        private List<Token> pullQuotedString() throws ProblemException {
+            List<Token> tokens = new ArrayList<Token>();
+
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
 
@@ -488,6 +499,23 @@ final class Tokenizer {
             StringBuilder sbOrig = new StringBuilder();
             sbOrig.appendCodePoint('"');
 
+            // First, check for triple quotes
+            if (peekNextCharRaw() == '"') { // Double quotes
+                int second = nextCharRaw();
+                if (peekNextCharRaw() == '"') { // Triple quotes! Append and return token
+                    int third = nextCharRaw();
+                    sbOrig.appendCodePoint(second);
+                    sbOrig.appendCodePoint(third);
+                    appendTripleQuotedString(sb, sbOrig);
+
+                    tokens.add(Tokens.newString(lineOrigin, sb.toString(), sbOrig.toString()));
+                    return tokens;
+                } else { // Empty string, handled by normal string termination case below
+                    putBack(second);
+                }
+            }
+
+            // Single quoted string with possible substitutions
             while (true) {
                 int c = nextCharRaw();
                 if (c == -1)
@@ -497,8 +525,19 @@ final class Tokenizer {
                     pullEscapeSequence(sb, sbOrig);
                 } else if (c == '"') {
                     sbOrig.appendCodePoint(c);
+                    tokens.add(Tokens.newString(lineOrigin, sb.toString(), sbOrig.toString()));
                     break;
-                } else if (ConfigImplUtil.isC0Control(c)) {
+                } else if (c == '$' && peekNextCharRaw() == '{') { // Substition
+                    // Tokenize what we have so far
+                    tokens.add(Tokens.newString(lineOrigin, sb.toString(), sbOrig.toString()));
+
+                    // Add substition
+                    tokens.add(pullSubstitution());
+
+                    // Reset and continue
+                    sb = new StringBuilder();
+                    sbOrig = new StringBuilder();
+                } else if (Character.isISOControl(c)) {
                     throw problem(asString(c), "JSON does not allow unescaped " + asString(c)
                             + " in quoted strings, use a backslash escape");
                 } else {
@@ -507,18 +546,7 @@ final class Tokenizer {
                 }
             }
 
-            // maybe switch to triple-quoted string, sort of hacky...
-            if (sb.length() == 0) {
-                int third = nextCharRaw();
-                if (third == '"') {
-                    sbOrig.appendCodePoint(third);
-                    appendTripleQuotedString(sb, sbOrig);
-                } else {
-                    putBack(third);
-                }
-
-            }
-            return Tokens.newString(lineOrigin, sb.toString(), sbOrig.toString());
+            return tokens;
         }
 
         private Token pullPlusEquals() throws ProblemException {
@@ -575,7 +603,17 @@ final class Tokenizer {
             return Tokens.newSubstitution(origin, optional, expression);
         }
 
+        // Occasionally pullNextToken will encounter a situation where it needs to
+        // parse multiple tokens. When that happens it will populate this queue and pop
+        // from it until empty before attempting to parse a new token.
+        // Substitutions within quoted strings are an example of this.
+        private static Queue<Token> nextTokensQueue = new LinkedList<Token>();
+
         private Token pullNextToken(WhitespaceSaver saver) throws ProblemException {
+            if (!nextTokensQueue.isEmpty()) {
+                return nextTokensQueue.remove();
+            }
+
             int c = nextCharAfterWhitespace(saver);
             if (c == -1) {
                 return Tokens.END;
@@ -592,7 +630,11 @@ final class Tokenizer {
                 } else {
                     switch (c) {
                     case '"':
-                        t = pullQuotedString();
+                        List<Token> all = pullQuotedString();
+                        t = all.remove(0);
+                        for (Token n: all) {
+                            nextTokensQueue.add(n);
+                        }
                         break;
                     case '$':
                         t = pullSubstitution();
