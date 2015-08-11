@@ -62,6 +62,7 @@ class ConfigDocumentParserTest extends TestUtils {
         parseTest("foo:bar")
         parseTest(" foo : bar ")
         parseTest("""include "foo.conf" """)
+        parseTest("if [${foo} == bar] { key: value }");
         parseTest("   \nfoo:bar\n    ")
 
         // Can parse a map with all simple types

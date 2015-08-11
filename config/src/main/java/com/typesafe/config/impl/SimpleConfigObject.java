@@ -28,12 +28,15 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     // this map should never be modified - assume immutable
     final private Map<String, AbstractConfigValue> value;
+    final private List<ConfigConditional> conditionals;
     final private boolean resolved;
     final private boolean ignoresFallbacks;
 
     SimpleConfigObject(ConfigOrigin origin,
-            Map<String, AbstractConfigValue> value, ResolveStatus status,
-            boolean ignoresFallbacks) {
+            Map<String, AbstractConfigValue> value,
+            ResolveStatus status,
+            boolean ignoresFallbacks,
+            List<ConfigConditional> conditionals) {
         super(origin);
         if (value == null)
             throw new ConfigException.BugOrBroken(
@@ -41,6 +44,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         this.value = value;
         this.resolved = status == ResolveStatus.RESOLVED;
         this.ignoresFallbacks = ignoresFallbacks;
+        this.conditionals = conditionals;
 
         // Kind of an expensive debug check. Comment out?
         if (status != ResolveStatus.fromValues(value.values()))
@@ -48,8 +52,21 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     SimpleConfigObject(ConfigOrigin origin,
+                       Map<String, AbstractConfigValue> value,
+                       ResolveStatus resolveStatus,
+                       boolean ignoresFallbacks) {
+        this(origin, value, resolveStatus, ignoresFallbacks, new ArrayList<ConfigConditional>());
+    }
+
+    SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value) {
-        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */);
+        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */, new ArrayList<ConfigConditional>());
+    }
+
+    SimpleConfigObject(ConfigOrigin origin,
+                       Map<String, AbstractConfigValue> value,
+                       List<ConfigConditional> conditionals) {
+        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */, conditionals);
     }
 
     @Override

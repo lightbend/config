@@ -810,6 +810,18 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
+    def conditionals() {
+        val conf = ConfigFactory.parseResources("conditional.conf")
+        val resolved = conf.resolve()
+
+        assertEquals(resolved.getConfig("a").getString("b"), "b")
+        assertEquals(resolved.getConfig("a").getConfig("c").getString("d"), "d")
+        intercept[Exception] {
+            resolved.getConfig("a").getString("e")
+        }
+    }
+
+    @Test
     def acceptBOMStartingFile() {
         // BOM at start of file should be ignored
         val conf = ConfigFactory.parseResources("bom.conf")

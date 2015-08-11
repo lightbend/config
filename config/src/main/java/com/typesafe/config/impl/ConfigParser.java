@@ -94,7 +94,7 @@ final class ConfigParser {
             } else if (n instanceof ConfigNodeObject) {
                 v = parseObject((ConfigNodeObject)n);
             } else if (n instanceof ConfigNodeArray) {
-                v = parseArray((ConfigNodeArray)n);
+                v = parseArray((ConfigNodeArray) n);
             } else if (n instanceof ConfigNodeConcatenation) {
                 v = parseConcatenation((ConfigNodeConcatenation)n);
             } else {
@@ -192,10 +192,39 @@ final class ConfigParser {
             }
         }
 
+        private ConfigConditional parseConditional(ConfigNodeConditional n) {
+            SubstitutionExpression left = null;
+            AbstractConfigValue right = null;
+
+            AbstractConfigObject body = parseObject((ConfigNodeObject) n.body());
+
+            for(AbstractConfigNode child: n.children()) {
+                if (child instanceof ConfigNodeSingleToken) {
+                    Token token = ((ConfigNodeSingleToken) child).token();
+
+                    if (Tokens.isSubstitution(token)) {
+                        List<Token> pathTokens = Tokens.getSubstitutionPathExpression(token);
+                        Path path = PathParser.parsePathExpression(pathTokens.iterator(), token.origin());
+                        left = new SubstitutionExpression(path, false);
+                    }
+                } else if (child instanceof AbstractConfigNodeValue) {
+                    right = parseValue((AbstractConfigNodeValue)child, null);
+                }
+            }
+
+            if (left == null)
+                throw new ConfigException.BugOrBroken("Conditional expression did not have a left hand substitution");
+            if (right == null)
+                throw new ConfigException.BugOrBroken("Conditional expression did not have a right hand value");
+
+            return new ConfigConditional(left, right, (SimpleConfigObject) body);
+        }
+
         private AbstractConfigObject parseObject(ConfigNodeObject n) {
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
             SimpleConfigOrigin objectOrigin = lineOrigin();
             boolean lastWasNewline = false;
+            List<ConfigConditional> conditionals = new ArrayList<ConfigConditional>();
 
             ArrayList<AbstractConfigNode> nodes = new ArrayList<AbstractConfigNode>(n.children());
             List<String> comments = new ArrayList<String>();
@@ -212,8 +241,10 @@ final class ConfigParser {
                     }
                     lastWasNewline = true;
                 } else if (flavor != ConfigSyntax.JSON && node instanceof ConfigNodeInclude) {
-                    parseInclude(values, (ConfigNodeInclude)node);
+                    parseInclude(values, (ConfigNodeInclude) node);
                     lastWasNewline = false;
+                } else if (flavor != ConfigSyntax.JSON && node instanceof ConfigNodeConditional) {
+                    conditionals.add(parseConditional((ConfigNodeConditional) node));
                 } else if (node instanceof ConfigNodeField) {
                     lastWasNewline = false;
                     Path path = ((ConfigNodeField) node).path().value();
