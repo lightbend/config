@@ -20,15 +20,17 @@ public class ConfigConditional {
         }
     }
 
-    public SimpleConfigObject resolve(Map<String, AbstractConfigValue> values) {
-        AbstractConfigValue val = values.get(left.path().first());
-        if (val == null) {
-            throw new ConfigException.BugOrBroken("Could not resolve substitution " + this.left.toString() + " in conditional expression");
-        }
-        if (val.equals(this.right)) {
-            return this.body;
-        } else {
-            return null;
+    public SimpleConfigObject resolve(ResolveContext context, ResolveSource source) {
+        try {
+            AbstractConfigValue val = source.lookupSubst(context, this.left, 0).result.value;
+
+            if (val.equals(this.right)) {
+                return this.body;
+            } else {
+                return SimpleConfigObject.empty();
+            }
+        } catch (AbstractConfigValue.NotPossibleToResolve e){
+            throw new ConfigException.BugOrBroken("Could not resolve left side of conditional expression: " + this.left.toString());
         }
     }
 }

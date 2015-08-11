@@ -338,7 +338,7 @@ final class ConfigParser {
                 }
             }
 
-            return new SimpleConfigObject(objectOrigin, values);
+            return new SimpleConfigObject(objectOrigin, values, conditionals);
         }
 
         private SimpleConfigList parseArray(ConfigNodeArray n) {

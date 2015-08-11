@@ -47,7 +47,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         this.conditionals = conditionals;
 
         // Kind of an expensive debug check. Comment out?
-        if (status != ResolveStatus.fromValues(value.values()))
+        if (status != ResolveStatus.fromValues(value.values(), conditionals))
             throw new ConfigException.BugOrBroken("Wrong resolved status on " + this);
     }
 
@@ -60,13 +60,13 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value) {
-        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */, new ArrayList<ConfigConditional>());
+        this(origin, value, ResolveStatus.fromValues(value.values(), new ArrayList<ConfigConditional>()), false /* ignoresFallbacks */, new ArrayList<ConfigConditional>());
     }
 
     SimpleConfigObject(ConfigOrigin origin,
                        Map<String, AbstractConfigValue> value,
                        List<ConfigConditional> conditionals) {
-        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */, conditionals);
+        this(origin, value, ResolveStatus.fromValues(value.values(), conditionals), false /* ignoresFallbacks */, conditionals);
     }
 
     @Override
@@ -131,8 +131,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             Map<String, AbstractConfigValue> updated = new HashMap<String, AbstractConfigValue>(
                     value);
             updated.put(key, v);
-            return new SimpleConfigObject(origin(), updated, ResolveStatus.fromValues(updated
-                    .values()), ignoresFallbacks);
+            return new SimpleConfigObject(origin(), updated,
+                    ResolveStatus.fromValues(updated.values(), conditionals), ignoresFallbacks);
         } else if (next != null || v == null) {
             // can't descend, nothing to remove
             return this;
@@ -143,8 +143,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 if (!old.getKey().equals(key))
                     smaller.put(old.getKey(), old.getValue());
             }
-            return new SimpleConfigObject(origin(), smaller, ResolveStatus.fromValues(smaller
-                    .values()), ignoresFallbacks);
+            return new SimpleConfigObject(origin(), smaller,
+                    ResolveStatus.fromValues(smaller.values(), conditionals), ignoresFallbacks);
         }
     }
 
@@ -162,7 +162,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             newMap.put(key, (AbstractConfigValue) v);
         }
 
-        return new SimpleConfigObject(origin(), newMap, ResolveStatus.fromValues(newMap.values()),
+        return new SimpleConfigObject(origin(), newMap, ResolveStatus.fromValues(newMap.values(), conditionals),
                 ignoresFallbacks);
     }
 
@@ -225,7 +225,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 else
                     newChildren.remove(old.getKey());
 
-                return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
+                return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values(), conditionals),
                         ignoresFallbacks);
             }
         }
@@ -322,6 +322,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     private SimpleConfigObject modifyMayThrow(Modifier modifier) throws Exception {
         Map<String, AbstractConfigValue> changes = null;
+
         for (String k : keySet()) {
             AbstractConfigValue v = value.get(k);
             // "modified" may be null, which means remove the child;
@@ -413,6 +414,14 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             ResolveModifier modifier = new ResolveModifier(context, sourceWithParent);
 
             AbstractConfigValue value = modifyMayThrow(modifier);
+
+            for (ConfigConditional cond: this.conditionals) {
+                SimpleConfigObject body = cond.resolve(context, sourceWithParent);
+                AbstractConfigObject resolvedBody = body.resolveSubstitutions(context, source).value;
+                value = this.mergedWithObject(resolvedBody);
+            }
+            this.conditionals.clear();
+
             return ResolveResult.make(modifier.context, value).asObjectResult();
         } catch (NotPossibleToResolve e) {
             throw e;

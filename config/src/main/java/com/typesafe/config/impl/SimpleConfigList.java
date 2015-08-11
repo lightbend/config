@@ -26,8 +26,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     final private boolean resolved;
 
     SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value) {
-        this(origin, value, ResolveStatus
-                .fromValues(value));
+        this(origin, value, ResolveStatus.fromValues(value, new ArrayList<ConfigConditional>()));
     }
 
     SimpleConfigList(ConfigOrigin origin, List<AbstractConfigValue> value,
@@ -37,7 +36,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         this.resolved = status == ResolveStatus.RESOLVED;
 
         // kind of an expensive debug check (makes this constructor pointless)
-        if (status != ResolveStatus.fromValues(value))
+        if (status != ResolveStatus.fromValues(value, new ArrayList<ConfigConditional>()))
             throw new ConfigException.BugOrBroken(
                     "SimpleConfigList created with wrong resolve status: " + this);
     }
