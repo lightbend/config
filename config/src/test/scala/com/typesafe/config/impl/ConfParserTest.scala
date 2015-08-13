@@ -815,9 +815,10 @@ class ConfParserTest extends TestUtils {
         val resolved = conf.resolve()
 
         assertEquals(resolved.getConfig("a").getString("b"), "b")
-        assertEquals(resolved.getConfig("a").getConfig("c").getString("d"), "d")
+        assertEquals(resolved.getConfig("a").getString("c"), "c")
+        assertEquals(resolved.getConfig("a").getConfig("nested").getBoolean("works"), true)
         intercept[Exception] {
-            resolved.getConfig("a").getString("e")
+            resolved.getConfig("a").getConfig("d")
         }
     }
 

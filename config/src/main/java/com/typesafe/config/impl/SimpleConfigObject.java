@@ -28,7 +28,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     // this map should never be modified - assume immutable
     final private Map<String, AbstractConfigValue> value;
-    final private List<ConfigConditional> conditionals;
+    final private Collection<ConfigConditional> conditionals;
     final private boolean resolved;
     final private boolean ignoresFallbacks;
 
@@ -36,7 +36,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             Map<String, AbstractConfigValue> value,
             ResolveStatus status,
             boolean ignoresFallbacks,
-            List<ConfigConditional> conditionals) {
+            Collection<ConfigConditional> conditionals) {
         super(origin);
         if (value == null)
             throw new ConfigException.BugOrBroken(
@@ -193,13 +193,13 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     private SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin,
-            boolean newIgnoresFallbacks) {
-        return new SimpleConfigObject(newOrigin, value, newStatus, newIgnoresFallbacks);
+            boolean newIgnoresFallbacks, Collection<ConfigConditional> conditionals) {
+        return new SimpleConfigObject(newOrigin, value, newStatus, newIgnoresFallbacks, conditionals);
     }
 
     @Override
     protected SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin) {
-        return newCopy(newStatus, newOrigin, ignoresFallbacks);
+        return newCopy(newStatus, newOrigin, ignoresFallbacks, conditionals);
     }
 
     @Override
@@ -207,7 +207,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         if (ignoresFallbacks)
             return this;
         else
-            return newCopy(resolveStatus(), origin(), true /* ignoresFallbacks */);
+            return newCopy(resolveStatus(), origin(), true /* ignoresFallbacks */, conditionals);
     }
 
     @Override
@@ -305,7 +305,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             return new SimpleConfigObject(mergeOrigins(this, fallback), merged, newResolveStatus,
                     newIgnoresFallbacks);
         else if (newResolveStatus != resolveStatus() || newIgnoresFallbacks != ignoresFallbacks())
-            return newCopy(newResolveStatus, origin(), newIgnoresFallbacks);
+            return newCopy(newResolveStatus, origin(), newIgnoresFallbacks, new ArrayList<ConfigConditional>());
         else
             return this;
     }
@@ -418,9 +418,9 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             for (ConfigConditional cond: this.conditionals) {
                 SimpleConfigObject body = cond.resolve(context, sourceWithParent);
                 AbstractConfigObject resolvedBody = body.resolveSubstitutions(context, source).value;
-                value = this.mergedWithObject(resolvedBody);
+//                if (resolvedBody != SimpleConfigObject.empty())
+                    value = value.mergedWithObject(resolvedBody);
             }
-            this.conditionals.clear();
 
             return ResolveResult.make(modifier.context, value).asObjectResult();
         } catch (NotPossibleToResolve e) {
