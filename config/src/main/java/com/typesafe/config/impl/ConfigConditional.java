@@ -16,7 +16,7 @@ public class ConfigConditional {
         this.body = body;
 
         if (this.left.optional()) {
-            throw new ConfigException.BugOrBroken("Substitutions in conditional expressions cannot be optional");
+            throw new ConfigException.BugOrBroken("Substitution " + this.left.toString() + " in conditional expression cannot be optional");
         }
     }
 

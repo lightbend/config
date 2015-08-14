@@ -94,7 +94,7 @@ final class ConfigParser {
             } else if (n instanceof ConfigNodeObject) {
                 v = parseObject((ConfigNodeObject)n);
             } else if (n instanceof ConfigNodeArray) {
-                v = parseArray((ConfigNodeArray) n);
+                v = parseArray((ConfigNodeArray)n);
             } else if (n instanceof ConfigNodeConcatenation) {
                 v = parseConcatenation((ConfigNodeConcatenation)n);
             } else {

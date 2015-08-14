@@ -28,14 +28,5 @@ final class ConfigNodeConditional extends AbstractConfigNode {
         }
         return tokens;
     }
-//
-//    protected String name() {
-//        for (AbstractConfigNode n : children) {
-//            if (n instanceof ConfigNodeSimpleValue) {
-//                return (String)Tokens.getValue(((ConfigNodeSimpleValue) n).token()).unwrapped();
-//            }
-//        }
-//        return null;
-//    }
 }
 
