@@ -80,7 +80,10 @@ to merge it in.
     - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
     - [Clojure wrappers for the Java library](#clojure-wrappers-for-the-java-library)
     - [Ruby port](#ruby-port)
+    - [Puppet module](#puppet-module)
     - [Python port](#python-port)
+    - [C++ port](#c++-port)
+
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -835,8 +838,17 @@ format.
 
 #### Ruby port
 
-   * https://github.com/cprice404/ruby-hocon
+   * https://github.com/puppetlabs/ruby-hocon
+
+#### Puppet module
+
+   * Manage your HOCON configuration files with Puppet!: https://forge.puppetlabs.com/puppetlabs/hocon
 
 #### Python port
 
    * pyhocon https://github.com/chimpler/pyhocon
+
+#### C++ port
+
+   * https://github.com/puppetlabs/cpp-hocon
+
