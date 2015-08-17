@@ -57,8 +57,6 @@ class UtilTest extends TestUtils {
         assertTrue(ConfigImplUtil.equalsHandlingNull("", ""))
     }
 
-    val lotsOfStrings = (invalidJson ++ validConf).map(_.test)
-
     private def roundtripJson(s: String) {
         val rendered = ConfigImplUtil.renderJsonString(s)
         val parsed = parseConfig("{ foo: " + rendered + "}").getString("foo")
@@ -76,6 +74,11 @@ class UtilTest extends TestUtils {
             " parsed '" + parsed + "' " + parsed.length,
             s == parsed)
     }
+
+    // These strings are used in many different ways, but for testing how things
+    // render we don't want to have any substitutions because this render code
+    // does not resolve the configs.
+    val lotsOfStrings = (invalidJson ++ validConf).map(_.test).filter(_.indexOf("${") == -1)
 
     @Test
     def renderJsonString() {

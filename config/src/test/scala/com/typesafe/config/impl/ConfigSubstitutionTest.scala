@@ -40,6 +40,7 @@ class ConfigSubstitutionTest extends TestUtils {
        "bool" : true,
        "null" : null,
        "string" : "hello",
+       "stringwsub": "hello ${foo} bar",
        "double" : 3.14
     }
 }
@@ -86,6 +87,13 @@ class ConfigSubstitutionTest extends TestUtils {
         val s = subst("bar.string")
         val v = resolveWithoutFallbacks(s, simpleObject)
         assertEquals(stringValue("hello"), v)
+    }
+
+    @Test
+    def resolveStringWSub() {
+        val s = subst("bar.stringwsub")
+        val v = resolveWithoutFallbacks(s, simpleObject)
+        assertEquals(stringValue("hello 42 bar"), v)
     }
 
     @Test

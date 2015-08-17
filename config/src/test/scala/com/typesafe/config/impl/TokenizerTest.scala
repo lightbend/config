@@ -153,6 +153,31 @@ class TokenizerTest extends TestUtils {
     }
 
     @Test
+    def tokenizeSubstitutionsInQuoted() {
+        val source = "\"foo${bar}baz\"\n"
+        val expected = List(tokenString("foo"), tokenSubstitution(tokenUnquoted("bar")),
+            tokenString("baz"),
+            tokenLine(1))
+        tokenizerTest(expected, source)
+    }
+
+    @Test
+    def tokenizeSubstitutionsInQuotedAtBeg() {
+        val source = "\"${bar}baz\"\n"
+        val expected = List(tokenString(""), tokenSubstitution(tokenUnquoted("bar")),
+            tokenString("baz"),
+            tokenLine(1))
+        tokenizerTest(expected, source)
+    }
+
+    @Test
+    def tokenizeSubstitutionsInQuotedAtEnd() {
+        val source = "\"foo${bar}\""
+        val expected = List(tokenString("foo"), tokenSubstitution(tokenUnquoted("bar")), tokenString(""))
+        tokenizerTest(expected, source)
+    }
+
+    @Test
     def tokenizerUnescapeStrings(): Unit = {
         case class UnescapeTest(escaped: String, result: ConfigString)
         implicit def pair2unescapetest(pair: (String, String)): UnescapeTest = UnescapeTest(pair._1, new ConfigString.Quoted(fakeOrigin(), pair._2))
