@@ -22,6 +22,7 @@
       - [Note: Arrays without commas or newlines](#note-arrays-without-commas-or-newlines)
     - [Path expressions](#path-expressions)
     - [Paths as keys](#paths-as-keys)
+    - [Conditional expressions](#conditional-expressions)
     - [Substitutions](#substitutions)
       - [Self-Referential Substitutions](#self-referential-substitutions)
       - [The `+=` field separator](#the--field-separator)
@@ -718,6 +719,23 @@ Cycles should be treated the same as a missing value when
 resolving an optional substitution (i.e. the `${?foo}` syntax).
 If `${?foo}` refers to itself then it's as if it referred to a
 nonexistent value.
+
+### Conditional expressions
+
+Conditional expressions allow for a block of configuration to be
+included or omitted based on the value of a substitution.
+
+Example conditional expression:
+
+  - `if [${a} == "a"] { b: true }`
+
+In this case, if the substitution ${a} was equal to the string "a"
+then the object { b: true } would be merged into the object that
+the conditional expression was declared inside. If it was not
+equal to "a" nothing would be merged.
+
+The left hand side substitution cannot be optional. Currently, only equality comparisons are supported. The right hand side
+of the expression can be any string, quoted or unquoted, or a boolean.
 
 #### The `+=` field separator
 
