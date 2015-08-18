@@ -289,6 +289,11 @@ final class ConfigDocumentParser {
                     && Tokens.getUnquotedText(t).equals("include");
         }
 
+        private static boolean isIfKeyword(Token t) {
+            return Tokens.isUnquotedText(t)
+                    && Tokens.getUnquotedText(t).equals("if");
+        }
+
         private static boolean isUnquotedWhitespace(Token t) {
             if (!Tokens.isUnquotedText(t))
                 return false;
@@ -309,6 +314,47 @@ final class ConfigDocumentParser {
             } else {
                 return t == Tokens.COLON || t == Tokens.EQUALS || t == Tokens.PLUS_EQUALS;
             }
+        }
+
+        private ConfigNodeConditional parseConditional(ArrayList<AbstractConfigNode> children) {
+            Token openToken = nextTokenCollectingWhitespace(children);
+            if (openToken != Tokens.OPEN_SQUARE)
+                throw parseError("expecting [ after if");
+            children.add(new ConfigNodeSingleToken(openToken));
+
+            Token subToken = nextTokenCollectingWhitespace(children);
+            if (!Tokens.isSubstitution(subToken))
+                throw parseError("left side of conditional expression must be a variable substitution");
+            children.add(new ConfigNodeSingleToken(subToken));
+
+            Token eqToken = nextTokenCollectingWhitespace(children);
+            Token eq2Token = nextTokenCollectingWhitespace(children);
+            if (eqToken != Tokens.EQUALS || eq2Token != Tokens.EQUALS)
+                throw parseError("conditional check must be `==`");
+            children.add(new ConfigNodeSingleToken(eqToken));
+            children.add(new ConfigNodeSingleToken(eq2Token));
+
+            Token valToken = nextTokenCollectingWhitespace(children);
+            if (!Tokens.isValueWithType(valToken, ConfigValueType.STRING)
+                    && !Tokens.isUnquotedText(valToken)
+                    && !Tokens.isValueWithType(valToken, ConfigValueType.BOOLEAN))
+                throw parseError("right side of conditional expression must be a string or boolean");
+            children.add(new ConfigNodeSimpleValue(valToken));
+
+            Token closeToken = nextTokenCollectingWhitespace(children);
+            if (closeToken != Tokens.CLOSE_SQUARE)
+                throw parseError("expecting ] after conditional expression");
+            children.add(new ConfigNodeSingleToken(closeToken));
+
+            Token openCurlyToken = nextTokenCollectingWhitespace(children);
+            if (openCurlyToken != Tokens.OPEN_CURLY)
+                throw parseError("must open a conditional body using {");
+
+            ArrayList<AbstractConfigNode> importantChildren = new ArrayList<AbstractConfigNode>(children);
+
+            ConfigNodeComplexValue body = parseObject(true);
+
+            return new ConfigNodeConditional(importantChildren, body);
         }
 
         private ConfigNodeInclude parseInclude(ArrayList<AbstractConfigNode> children) {
@@ -391,6 +437,11 @@ final class ConfigDocumentParser {
                     includeNodes.add(new ConfigNodeSingleToken(t));
                     objectNodes.add(parseInclude(includeNodes));
                     afterComma = false;
+                } else if (flavor != ConfigSyntax.JSON && isIfKeyword(t)) {
+                    ArrayList<AbstractConfigNode> ifNodes = new ArrayList<AbstractConfigNode>();
+                    ifNodes.add(new ConfigNodeSingleToken(t));
+                    objectNodes.add(parseConditional(ifNodes));
+
                 } else {
                     keyValueNodes = new ArrayList<AbstractConfigNode>();
                     Token keyToken = t;

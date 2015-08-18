@@ -28,12 +28,15 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     // this map should never be modified - assume immutable
     final private Map<String, AbstractConfigValue> value;
+    final private Collection<ConfigConditional> conditionals;
     final private boolean resolved;
     final private boolean ignoresFallbacks;
 
     SimpleConfigObject(ConfigOrigin origin,
-            Map<String, AbstractConfigValue> value, ResolveStatus status,
-            boolean ignoresFallbacks) {
+            Map<String, AbstractConfigValue> value,
+            ResolveStatus status,
+            boolean ignoresFallbacks,
+            Collection<ConfigConditional> conditionals) {
         super(origin);
         if (value == null)
             throw new ConfigException.BugOrBroken(
@@ -41,15 +44,29 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         this.value = value;
         this.resolved = status == ResolveStatus.RESOLVED;
         this.ignoresFallbacks = ignoresFallbacks;
+        this.conditionals = conditionals;
 
         // Kind of an expensive debug check. Comment out?
-        if (status != ResolveStatus.fromValues(value.values()))
+        if (status != ResolveStatus.fromValues(value.values(), conditionals))
             throw new ConfigException.BugOrBroken("Wrong resolved status on " + this);
     }
 
     SimpleConfigObject(ConfigOrigin origin,
+                       Map<String, AbstractConfigValue> value,
+                       ResolveStatus resolveStatus,
+                       boolean ignoresFallbacks) {
+        this(origin, value, resolveStatus, ignoresFallbacks, new ArrayList<ConfigConditional>());
+    }
+
+    SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value) {
-        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */);
+        this(origin, value, ResolveStatus.fromValues(value.values(), new ArrayList<ConfigConditional>()), false /* ignoresFallbacks */, new ArrayList<ConfigConditional>());
+    }
+
+    SimpleConfigObject(ConfigOrigin origin,
+                       Map<String, AbstractConfigValue> value,
+                       List<ConfigConditional> conditionals) {
+        this(origin, value, ResolveStatus.fromValues(value.values(), conditionals), false /* ignoresFallbacks */, conditionals);
     }
 
     @Override
@@ -114,8 +131,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             Map<String, AbstractConfigValue> updated = new HashMap<String, AbstractConfigValue>(
                     value);
             updated.put(key, v);
-            return new SimpleConfigObject(origin(), updated, ResolveStatus.fromValues(updated
-                    .values()), ignoresFallbacks);
+            return new SimpleConfigObject(origin(), updated,
+                    ResolveStatus.fromValues(updated.values(), conditionals), ignoresFallbacks);
         } else if (next != null || v == null) {
             // can't descend, nothing to remove
             return this;
@@ -126,8 +143,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 if (!old.getKey().equals(key))
                     smaller.put(old.getKey(), old.getValue());
             }
-            return new SimpleConfigObject(origin(), smaller, ResolveStatus.fromValues(smaller
-                    .values()), ignoresFallbacks);
+            return new SimpleConfigObject(origin(), smaller,
+                    ResolveStatus.fromValues(smaller.values(), conditionals), ignoresFallbacks);
         }
     }
 
@@ -145,7 +162,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             newMap.put(key, (AbstractConfigValue) v);
         }
 
-        return new SimpleConfigObject(origin(), newMap, ResolveStatus.fromValues(newMap.values()),
+        return new SimpleConfigObject(origin(), newMap, ResolveStatus.fromValues(newMap.values(), conditionals),
                 ignoresFallbacks);
     }
 
@@ -176,13 +193,13 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     private SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin,
-            boolean newIgnoresFallbacks) {
-        return new SimpleConfigObject(newOrigin, value, newStatus, newIgnoresFallbacks);
+            boolean newIgnoresFallbacks, Collection<ConfigConditional> conditionals) {
+        return new SimpleConfigObject(newOrigin, value, newStatus, newIgnoresFallbacks, conditionals);
     }
 
     @Override
     protected SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin) {
-        return newCopy(newStatus, newOrigin, ignoresFallbacks);
+        return newCopy(newStatus, newOrigin, ignoresFallbacks, conditionals);
     }
 
     @Override
@@ -190,7 +207,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         if (ignoresFallbacks)
             return this;
         else
-            return newCopy(resolveStatus(), origin(), true /* ignoresFallbacks */);
+            return newCopy(resolveStatus(), origin(), true /* ignoresFallbacks */, conditionals);
     }
 
     @Override
@@ -208,7 +225,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 else
                     newChildren.remove(old.getKey());
 
-                return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
+                return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values(), conditionals),
                         ignoresFallbacks);
             }
         }
@@ -288,7 +305,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             return new SimpleConfigObject(mergeOrigins(this, fallback), merged, newResolveStatus,
                     newIgnoresFallbacks);
         else if (newResolveStatus != resolveStatus() || newIgnoresFallbacks != ignoresFallbacks())
-            return newCopy(newResolveStatus, origin(), newIgnoresFallbacks);
+            return newCopy(newResolveStatus, origin(), newIgnoresFallbacks, new ArrayList<ConfigConditional>());
         else
             return this;
     }
@@ -305,6 +322,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     private SimpleConfigObject modifyMayThrow(Modifier modifier) throws Exception {
         Map<String, AbstractConfigValue> changes = null;
+
         for (String k : keySet()) {
             AbstractConfigValue v = value.get(k);
             // "modified" may be null, which means remove the child;
@@ -396,6 +414,13 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             ResolveModifier modifier = new ResolveModifier(context, sourceWithParent);
 
             AbstractConfigValue value = modifyMayThrow(modifier);
+
+            for (ConfigConditional cond: this.conditionals) {
+                SimpleConfigObject body = cond.resolve(context, sourceWithParent);
+                AbstractConfigObject resolvedBody = body.resolveSubstitutions(context, source).value;
+                value = value.mergedWithObject(resolvedBody);
+            }
+
             return ResolveResult.make(modifier.context, value).asObjectResult();
         } catch (NotPossibleToResolve e) {
             throw e;
