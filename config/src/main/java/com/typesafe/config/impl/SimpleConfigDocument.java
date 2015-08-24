@@ -1,7 +1,7 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
-import com.typesafe.config.*;
-import com.typesafe.config.parser.ConfigDocument;
+import com.twitter_typesafe.config.*;
+import com.twitter_typesafe.config.parser.ConfigDocument;
 
 import java.io.StringReader;
 import java.util.Iterator;

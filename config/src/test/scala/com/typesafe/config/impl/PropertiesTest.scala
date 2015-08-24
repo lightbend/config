@@ -1,16 +1,16 @@
 /**
  *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
 import java.util.{ Date, Properties }
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigException
-import com.typesafe.config.ConfigResolveOptions
+import com.twitter_typesafe.config.Config
+import com.twitter_typesafe.config.ConfigParseOptions
+import com.twitter_typesafe.config.ConfigFactory
+import com.twitter_typesafe.config.ConfigException
+import com.twitter_typesafe.config.ConfigResolveOptions
 
 class PropertiesTest extends TestUtils {
     @Test

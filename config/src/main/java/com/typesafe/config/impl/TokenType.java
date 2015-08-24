@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 enum TokenType {
     START,

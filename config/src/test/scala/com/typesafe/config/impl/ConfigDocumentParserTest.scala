@@ -1,6 +1,6 @@
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
-import com.typesafe.config.{ ConfigException, ConfigSyntax, ConfigParseOptions }
+import com.twitter_typesafe.config.{ ConfigException, ConfigSyntax, ConfigParseOptions }
 import org.junit.Assert._
 import org.junit.Test
 

@@ -1,13 +1,13 @@
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
 import org.junit.BeforeClass
 import java.net.URL
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.ConfigSyntax
-import com.typesafe.config.ConfigException
+import com.twitter_typesafe.config.ConfigFactory
+import com.twitter_typesafe.config.ConfigParseOptions
+import com.twitter_typesafe.config.ConfigSyntax
+import com.twitter_typesafe.config.ConfigException
 
 class HttpTest extends TestUtils {
     import HttpTest._

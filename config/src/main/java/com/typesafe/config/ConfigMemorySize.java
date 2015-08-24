@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 /**
  * An immutable class representing an amount of memory.  Use

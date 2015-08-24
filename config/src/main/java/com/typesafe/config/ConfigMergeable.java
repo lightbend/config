@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 /**
  * Marker for types whose instances can be merged, that is {@link Config} and
@@ -27,7 +27,7 @@ public interface ConfigMergeable {
      * 
      * <p>
      * The semantics of merging are described in the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">spec
+     * href="https://github.com.twitter_typesafehub/config/blob/master/HOCON.md">spec
      * for HOCON</a>. Merging typically occurs when either the same object is
      * created twice in the same file, or two config files are both loaded. For
      * example:

@@ -1,13 +1,13 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 
-import com.typesafe.config.impl.ConfigImplUtil;
+import com.twitter_typesafe.config.impl.ConfigImplUtil;
 
 /**
  * All exceptions thrown by the library are subclasses of

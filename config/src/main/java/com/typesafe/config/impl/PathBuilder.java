@@ -1,11 +1,11 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.Stack;
 
-import com.typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigException;
 
 final class PathBuilder {
     // the keys are kept "backward" (top of stack is end of path)

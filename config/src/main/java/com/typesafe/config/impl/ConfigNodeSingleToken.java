@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.Collection;
 import java.util.Collections;

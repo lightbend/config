@@ -1,17 +1,17 @@
 /**
  *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import com.typesafe.config.ConfigOrigin
+import com.twitter_typesafe.config.ConfigOrigin
 import java.io.Reader
 import java.io.StringReader
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigSyntax
-import com.typesafe.config.ConfigFactory
+import com.twitter_typesafe.config.ConfigParseOptions
+import com.twitter_typesafe.config.Config
+import com.twitter_typesafe.config.ConfigSyntax
+import com.twitter_typesafe.config.ConfigFactory
 import java.io.File
 import java.io.ByteArrayOutputStream
 import java.io.ObjectOutputStream
@@ -22,7 +22,7 @@ import scala.annotation.tailrec
 import java.net.URL
 import java.util.concurrent.Executors
 import java.util.concurrent.Callable
-import com.typesafe.config._
+import com.twitter_typesafe.config._
 import scala.reflect.ClassTag
 import scala.reflect.classTag
 import scala.collection.JavaConverters._

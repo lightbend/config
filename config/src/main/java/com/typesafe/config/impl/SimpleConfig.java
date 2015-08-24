@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -17,16 +17,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigMemorySize;
-import com.typesafe.config.ConfigMergeable;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigResolveOptions;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.ConfigValueType;
+import com.twitter_typesafe.config.Config;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigList;
+import com.twitter_typesafe.config.ConfigMemorySize;
+import com.twitter_typesafe.config.ConfigMergeable;
+import com.twitter_typesafe.config.ConfigObject;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigResolveOptions;
+import com.twitter_typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.ConfigValueType;
 
 /**
  * One thing to keep in mind in the future: as Collection-like APIs are added

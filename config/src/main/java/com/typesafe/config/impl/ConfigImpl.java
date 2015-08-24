@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -16,20 +16,20 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigIncluder;
-import com.typesafe.config.ConfigMemorySize;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigParseOptions;
-import com.typesafe.config.ConfigParseable;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.impl.SimpleIncluder.NameSource;
+import com.twitter_typesafe.config.Config;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigIncluder;
+import com.twitter_typesafe.config.ConfigMemorySize;
+import com.twitter_typesafe.config.ConfigObject;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigParseOptions;
+import com.twitter_typesafe.config.ConfigParseable;
+import com.twitter_typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.impl.SimpleIncluder.NameSource;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
- * For use only by the {@link com.typesafe.config} package.
+ * For use only by the {@link com.twitter_typesafe.config} package.
  */
 public class ConfigImpl {
 

@@ -1,9 +1,9 @@
 /**
  *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
  */
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigException
+import com.twitter_typesafe.config.Config
+import com.twitter_typesafe.config.ConfigFactory
+import com.twitter_typesafe.config.ConfigException
 import java.util.concurrent.TimeUnit
 import scala.annotation.tailrec
 

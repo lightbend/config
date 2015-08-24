@@ -1,6 +1,6 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
-import com.typesafe.config.ConfigSyntax;
+import com.twitter_typesafe.config.ConfigSyntax;
 
 import java.util.ArrayList;
 import java.util.Collection;

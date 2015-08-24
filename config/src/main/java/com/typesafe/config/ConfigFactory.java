@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 import java.io.File;
 import java.io.Reader;
@@ -11,8 +11,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
-import com.typesafe.config.impl.ConfigImpl;
-import com.typesafe.config.impl.Parseable;
+import com.twitter_typesafe.config.impl.ConfigImpl;
+import com.twitter_typesafe.config.impl.Parseable;
 
 /**
  * Contains static methods for creating {@link Config} instances.
@@ -29,7 +29,7 @@ import com.typesafe.config.impl.Parseable;
  * from a resource and nothing else.
  *
  * <p> You can find an example app and library <a
- * href="https://github.com/typesafehub/config/tree/master/examples">on
+ * href="https://github.com.twitter_typesafehub/config/tree/master/examples">on
  * GitHub</a>.  Also be sure to read the <a
  * href="package-summary.html#package_description">package
  * overview</a> which describes the big picture as shown in those
@@ -615,7 +615,7 @@ public final class ConfigFactory {
     /**
      * Converts a Java {@link java.util.Properties} object to a
      * {@link ConfigObject} using the rules documented in the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">HOCON
+     * href="https://github.com.twitter_typesafehub/config/blob/master/HOCON.md">HOCON
      * spec</a>. The keys in the <code>Properties</code> object are split on the
      * period character '.' and treated as paths. The values will all end up as
      * string values. If you have both "a=foo" and "a.b=bar" in your properties

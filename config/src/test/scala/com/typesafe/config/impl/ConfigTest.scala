@@ -1,25 +1,25 @@
 /**
  *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import com.typesafe.config.ConfigValue
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigObject
-import com.typesafe.config.ConfigException
+import com.twitter_typesafe.config.ConfigValue
+import com.twitter_typesafe.config.Config
+import com.twitter_typesafe.config.ConfigObject
+import com.twitter_typesafe.config.ConfigException
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
-import com.typesafe.config.ConfigResolveOptions
+import com.twitter_typesafe.config.ConfigResolveOptions
 import java.io.File
 import java.util.concurrent.TimeUnit.{ SECONDS, NANOSECONDS, MICROSECONDS, MILLISECONDS, MINUTES, DAYS, HOURS }
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigMergeable
-import com.typesafe.config.ConfigRenderOptions
-import com.typesafe.config.ConfigSyntax
-import com.typesafe.config.ConfigValueFactory
+import com.twitter_typesafe.config.ConfigParseOptions
+import com.twitter_typesafe.config.ConfigFactory
+import com.twitter_typesafe.config.ConfigMergeable
+import com.twitter_typesafe.config.ConfigRenderOptions
+import com.twitter_typesafe.config.ConfigSyntax
+import com.twitter_typesafe.config.ConfigValueFactory
 
 class ConfigTest extends TestUtils {
 

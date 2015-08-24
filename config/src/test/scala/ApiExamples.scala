@@ -3,7 +3,7 @@
  */
 import org.junit.Assert._
 import org.junit._
-import com.typesafe.config._
+import com.twitter_typesafe.config._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import language.implicitConversions

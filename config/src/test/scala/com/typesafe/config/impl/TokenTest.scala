@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._

@@ -3,10 +3,10 @@ package beanconfig;
 import java.util.List;
 import java.time.Duration;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigMemorySize;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.Config;
+import com.twitter_typesafe.config.ConfigMemorySize;
+import com.twitter_typesafe.config.ConfigObject;
+import com.twitter_typesafe.config.ConfigValue;
 
 public class ArraysConfig {
 

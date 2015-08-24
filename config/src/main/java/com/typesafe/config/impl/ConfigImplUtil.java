@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.DataOutputStream;
 import java.io.File;
@@ -13,12 +13,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigOrigin;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
- * For use only by the {@link com.typesafe.config} package.
+ * For use only by the {@link com.twitter_typesafe.config} package.
  */
 final public class ConfigImplUtil {
     static boolean equalsHandlingNull(Object a, Object b) {

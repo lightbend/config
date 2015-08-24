@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -11,9 +11,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigSyntax;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigSyntax;
 
 final class Tokenizer {
     // this exception should not leave this file

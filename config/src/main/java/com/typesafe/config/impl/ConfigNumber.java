@@ -1,13 +1,13 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigOrigin;
 
 abstract class ConfigNumber extends AbstractConfigValue implements Serializable {
 

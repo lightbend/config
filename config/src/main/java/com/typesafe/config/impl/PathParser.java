@@ -1,12 +1,12 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigSyntax;
-import com.typesafe.config.ConfigValueType;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigSyntax;
+import com.twitter_typesafe.config.ConfigValueType;
 
 import java.io.StringReader;
 import java.util.*;

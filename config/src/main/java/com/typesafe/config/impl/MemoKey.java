@@ -1,4 +1,4 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 /** The key used to memoize already-traversed nodes when resolving substitutions */
 final class MemoKey {

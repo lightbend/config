@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.File;
 import java.net.MalformedURLException;
@@ -9,17 +9,17 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigIncludeContext;
-import com.typesafe.config.ConfigIncluder;
-import com.typesafe.config.ConfigIncluderClasspath;
-import com.typesafe.config.ConfigIncluderFile;
-import com.typesafe.config.ConfigIncluderURL;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigParseOptions;
-import com.typesafe.config.ConfigParseable;
-import com.typesafe.config.ConfigSyntax;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigFactory;
+import com.twitter_typesafe.config.ConfigIncludeContext;
+import com.twitter_typesafe.config.ConfigIncluder;
+import com.twitter_typesafe.config.ConfigIncluderClasspath;
+import com.twitter_typesafe.config.ConfigIncluderFile;
+import com.twitter_typesafe.config.ConfigIncluderURL;
+import com.twitter_typesafe.config.ConfigObject;
+import com.twitter_typesafe.config.ConfigParseOptions;
+import com.twitter_typesafe.config.ConfigParseable;
+import com.twitter_typesafe.config.ConfigSyntax;
 
 class SimpleIncluder implements FullIncluder {
 

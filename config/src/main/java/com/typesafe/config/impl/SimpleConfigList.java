@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
@@ -11,12 +11,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.ConfigValueType;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigList;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigRenderOptions;
+import com.twitter_typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.ConfigValueType;
 
 final class SimpleConfigList extends AbstractConfigValue implements ConfigList, Container, Serializable {
 

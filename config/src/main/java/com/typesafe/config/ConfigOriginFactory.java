@@ -1,8 +1,8 @@
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 import java.net.URL;
 
-import com.typesafe.config.impl.ConfigImpl;
+import com.twitter_typesafe.config.impl.ConfigImpl;
 
 /**
  * This class contains some static factory methods for building a {@link

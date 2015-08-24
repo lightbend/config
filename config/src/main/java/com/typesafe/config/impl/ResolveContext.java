@@ -1,4 +1,4 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigResolveOptions;
-import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigResolveOptions;
+import com.twitter_typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 
 final class ResolveContext {
     final private ResolveMemos memos;

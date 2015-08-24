@@ -1,5 +1,5 @@
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigRenderOptions
+import com.twitter_typesafe.config.ConfigFactory
+import com.twitter_typesafe.config.ConfigRenderOptions
 
 object RenderExample extends App {
     val formatted = args.contains("--formatted")

@@ -1,6 +1,6 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
-import com.typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigException;
 
 // value is allowed to be null
 final class ResolveResult<V extends AbstractConfigValue> {

@@ -1,4 +1,4 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -14,17 +14,17 @@ import java.util.List;
 import java.util.Map;
 import java.time.Duration;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigMemorySize;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.ConfigValueType;
+import com.twitter_typesafe.config.Config;
+import com.twitter_typesafe.config.ConfigObject;
+import com.twitter_typesafe.config.ConfigList;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigMemorySize;
+import com.twitter_typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.ConfigValueType;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
- * For use only by the {@link com.typesafe.config} package.
+ * For use only by the {@link com.twitter_typesafe.config} package.
  */
 public class ConfigBeanImpl {
 

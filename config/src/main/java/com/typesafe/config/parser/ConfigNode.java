@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.parser;
+package com.twitter_typesafe.config.parser;
 
 /**
  * A node in the syntax tree for a HOCON or JSON document.
@@ -10,8 +10,8 @@ package com.typesafe.config.parser;
  * Note: at present there is no way to obtain an instance of this interface, so
  * please ignore it. A future release will make syntax tree nodes available in
  * the public API. If you are interested in working on it, please see: <a
- * href="https://github.com/typesafehub/config/issues/300"
- * >https://github.com/typesafehub/config/issues/300</a>
+ * href="https://github.com.twitter_typesafehub/config/issues/300"
+ * >https://github.com.twitter_typesafehub/config/issues/300</a>
  *
  * <p>
  * Because this object is immutable, it is safe to use from multiple threads and

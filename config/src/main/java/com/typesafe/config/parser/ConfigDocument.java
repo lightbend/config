@@ -1,6 +1,6 @@
-package com.typesafe.config.parser;
+package com.twitter_typesafe.config.parser;
 
-import com.typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.ConfigValue;
 
 /**
  * Represents an individual HOCON or JSON file, preserving all

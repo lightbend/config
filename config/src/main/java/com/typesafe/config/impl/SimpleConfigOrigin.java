@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.File;
 import java.io.IOException;
@@ -15,9 +15,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.impl.SerializedConfigValue.SerializedField;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.impl.SerializedConfigValue.SerializedField;
 
 // it would be cleaner to have a class hierarchy for various origin types,
 // but was hoping this would be enough simpler to be a little messy. eh.

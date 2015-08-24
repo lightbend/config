@@ -1,11 +1,11 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 import java.util.Map;
 
-import com.typesafe.config.impl.ConfigImpl;
+import com.twitter_typesafe.config.impl.ConfigImpl;
 
 /**
  * This class holds some static factory methods for building {@link ConfigValue}

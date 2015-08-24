@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2014 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 /**
  * An AbstractConfigValue which contains other values. Java has no way to
@@ -9,7 +9,7 @@ package com.typesafe.config.impl;
  * AbstractConfigValue an interface which would be aggravating. But we can say
  * we are a ConfigValue.
  */
-interface Container extends com.typesafe.config.ConfigValue {
+interface Container extends com.twitter_typesafe.config.ConfigValue {
     /**
      * Replace a child of this value. CAUTION if replacement is null, delete the
      * child, which may also delete the parent, or make the parent into a

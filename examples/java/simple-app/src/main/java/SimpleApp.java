@@ -1,4 +1,4 @@
-import com.typesafe.config.*;
+import com.twitter_typesafe.config.*;
 import simplelib.*;
 
 class SimpleApp {

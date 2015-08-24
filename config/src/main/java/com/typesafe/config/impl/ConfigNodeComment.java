@@ -1,7 +1,7 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 
-import com.typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigException;
 
 final class ConfigNodeComment extends ConfigNodeSingleToken {
     ConfigNodeComment(Token comment) {

@@ -2,10 +2,10 @@ package beanconfig;
 
 import java.util.Map;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.Config;
+import com.twitter_typesafe.config.ConfigList;
+import com.twitter_typesafe.config.ConfigObject;
+import com.twitter_typesafe.config.ConfigValue;
 
 // test bean for various "uncooked" values
 public class ValuesConfig {

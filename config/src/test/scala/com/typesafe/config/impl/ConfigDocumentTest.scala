@@ -1,10 +1,10 @@
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import java.io.{ BufferedReader, FileReader }
 import java.nio.file.{ Paths, Files }
 
-import com.typesafe.config._
-import com.typesafe.config.parser._
+import com.twitter_typesafe.config._
+import com.twitter_typesafe.config.parser._
 import org.junit.Assert._
 import org.junit.Test
 

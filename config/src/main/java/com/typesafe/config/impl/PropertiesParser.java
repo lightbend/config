@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -15,8 +15,8 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigOrigin;
 
 final class PropertiesParser {
     static AbstractConfigObject parse(Reader reader,

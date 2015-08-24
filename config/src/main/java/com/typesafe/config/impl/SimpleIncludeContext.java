@@ -1,11 +1,11 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
-import com.typesafe.config.ConfigIncludeContext;
-import com.typesafe.config.ConfigParseOptions;
-import com.typesafe.config.ConfigParseable;
+import com.twitter_typesafe.config.ConfigIncludeContext;
+import com.twitter_typesafe.config.ConfigParseOptions;
+import com.twitter_typesafe.config.ConfigParseable;
 
 class SimpleIncludeContext implements ConfigIncludeContext {
 

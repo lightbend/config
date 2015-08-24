@@ -18,11 +18,11 @@ object ConfigBuild extends Build {
     )
 
     object sonatype extends PublishToSonatype {
-        def projectUrl    = "https://github.com/typesafehub/config"
+        def projectUrl    = "https://github.com.typesafehub/config"
         def developerId   = "havocp"
         def developerName = "Havoc Pennington"
         def developerUrl  = "http://ometer.com/"
-        def scmUrl        = "git://github.com/typesafehub/config.git"
+        def scmUrl        = "git://github.com.typesafehub/config.git"
     }
 
     override val settings = super.settings ++ Seq(isSnapshot <<= isSnapshot or version(_ endsWith "-SNAPSHOT"))
@@ -48,7 +48,7 @@ object ConfigBuild extends Build {
                                    sonatype.settings ++
                                    osgiSettings ++
                                    Seq(
-                                     OsgiKeys.exportPackage := Seq("com.typesafe.config", "com.typesafe.config.impl"),
+                                     OsgiKeys.exportPackage := Seq("com.twitter_typesafe.config", "com.twitter_typesafe.config.impl"),
                                      packagedArtifact in (Compile, packageBin) <<= (artifact in (Compile, packageBin), OsgiKeys.bundle).identityMap,
                                      artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") },
                                      publish := sys.error("use publishSigned instead of plain publish"),

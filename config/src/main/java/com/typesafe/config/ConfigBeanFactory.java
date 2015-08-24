@@ -1,6 +1,6 @@
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
-import com.typesafe.config.impl.ConfigBeanImpl;
+import com.twitter_typesafe.config.impl.ConfigBeanImpl;
 
 /**
  * Factory for automatically creating a Java class from a {@link Config}.

@@ -1,11 +1,11 @@
 /**
  *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import com.typesafe.config._
+import com.twitter_typesafe.config._
 import java.util.concurrent.TimeUnit
 
 class UnitParserTest extends TestUtils {
@@ -40,7 +40,7 @@ class UnitParserTest extends TestUtils {
         assertTrue(e2.getMessage().contains("duration number"))
     }
 
-    // https://github.com/typesafehub/config/issues/117
+    // https://github.com.twitter_typesafehub/config/issues/117
     // this broke because "1d" is a valid double for parseDouble
     @Test
     def parseOneDayAsMilliseconds(): Unit = {

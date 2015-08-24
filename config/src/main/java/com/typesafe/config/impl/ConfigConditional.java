@@ -1,10 +1,10 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
-import com.typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigException;
 
 import java.util.Map;
 
-public class ConfigConditional {
+final class ConfigConditional {
 
     private SubstitutionExpression left;
     private AbstractConfigValue right;

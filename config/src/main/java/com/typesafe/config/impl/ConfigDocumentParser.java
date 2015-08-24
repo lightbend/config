@@ -1,11 +1,11 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.*;
 
-import com.typesafe.config.*;
+import com.twitter_typesafe.config.*;
 
 final class ConfigDocumentParser {
     static ConfigNodeRoot parse(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {

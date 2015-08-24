@@ -1,9 +1,9 @@
 /**
  * Copyright (C) 2013 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
-import com.typesafe.config._
+import com.twitter_typesafe.config._
 
 import java.io.{ InputStream, InputStreamReader }
 import java.time.Duration;

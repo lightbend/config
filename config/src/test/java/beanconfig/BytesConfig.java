@@ -1,6 +1,6 @@
 package beanconfig;
 
-import com.typesafe.config.ConfigMemorySize;
+import com.twitter_typesafe.config.ConfigMemorySize;
 
 public class BytesConfig {
 

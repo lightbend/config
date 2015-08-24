@@ -1,8 +1,8 @@
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 import java.util.List;
 
-import com.typesafe.config.impl.ConfigImplUtil;
+import com.twitter_typesafe.config.impl.ConfigImplUtil;
 
 /**
  * Contains static utility methods.

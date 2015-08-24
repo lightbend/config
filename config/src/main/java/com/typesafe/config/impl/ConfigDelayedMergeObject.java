@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,12 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigList;
-import com.typesafe.config.ConfigMergeable;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigList;
+import com.twitter_typesafe.config.ConfigMergeable;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigRenderOptions;
+import com.twitter_typesafe.config.ConfigValue;
 
 // This is just like ConfigDelayedMerge except we know statically
 // that it will turn out to be an object.

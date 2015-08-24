@@ -1,12 +1,12 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.twitter_typesafe.config;
 
 /**
  * A set of options related to resolving substitutions. Substitutions use the
  * <code>${foo.bar}</code> syntax and are documented in the <a
- * href="https://github.com/typesafehub/config/blob/master/HOCON.md">HOCON</a>
+ * href="https://github.com.twitter_typesafehub/config/blob/master/HOCON.md">HOCON</a>
  * spec.
  * <p>
  * Typically this class would be used with the method

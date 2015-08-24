@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -21,12 +21,12 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.*;
 
-import com.typesafe.config.*;
-import com.typesafe.config.parser.*;
+import com.twitter_typesafe.config.*;
+import com.twitter_typesafe.config.parser.*;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
- * For use only by the {@link com.typesafe.config} package.
+ * For use only by the {@link com.twitter_typesafe.config} package.
  * The point of this class is to avoid "propagating" each
  * overload on "thing which can be parsed" through multiple
  * interfaces. Most interfaces can have just one overload that

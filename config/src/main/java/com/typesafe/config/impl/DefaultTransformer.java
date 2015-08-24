@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.typesafe.config.ConfigValueType;
+import com.twitter_typesafe.config.ConfigValueType;
 
 /**
  * Default automatic type transformations.

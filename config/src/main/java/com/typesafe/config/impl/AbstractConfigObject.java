@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,13 +9,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigMergeable;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValue;
-import com.typesafe.config.ConfigValueType;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigMergeable;
+import com.twitter_typesafe.config.ConfigObject;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigRenderOptions;
+import com.twitter_typesafe.config.ConfigValue;
+import com.twitter_typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements ConfigObject, Container {
     final private SimpleConfig config;

@@ -1,14 +1,14 @@
 /**
  *   Copyright (C) 2011 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl
+package com.twitter_typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
 import net.liftweb.{ json => lift }
 import java.io.Reader
 import java.io.StringReader
-import com.typesafe.config._
+import com.twitter_typesafe.config._
 import java.util.HashMap
 import java.util.Collections
 

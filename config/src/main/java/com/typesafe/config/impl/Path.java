@@ -1,11 +1,11 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.*;
 
-import com.typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigException;
 
 final class Path {
 

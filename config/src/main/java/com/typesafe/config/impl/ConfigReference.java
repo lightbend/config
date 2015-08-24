@@ -1,12 +1,12 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValueType;
+import com.twitter_typesafe.config.ConfigException;
+import com.twitter_typesafe.config.ConfigOrigin;
+import com.twitter_typesafe.config.ConfigRenderOptions;
+import com.twitter_typesafe.config.ConfigValueType;
 
 /**
  * ConfigReference replaces ConfigReference (the older class kept for back

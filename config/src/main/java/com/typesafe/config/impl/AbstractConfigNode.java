@@ -1,9 +1,9 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
-import com.typesafe.config.parser.ConfigNode;
+import com.twitter_typesafe.config.parser.ConfigNode;
 import java.util.Collection;
 
 abstract class AbstractConfigNode implements ConfigNode {

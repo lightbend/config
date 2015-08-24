@@ -1,4 +1,4 @@
-package com.typesafe.config.impl;
+package com.twitter_typesafe.config.impl;
 
 import java.util.HashMap;
 import java.util.Map;
