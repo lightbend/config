@@ -830,7 +830,8 @@ format.
   * Ficus https://github.com/ceedubs/ficus
   * configz https://github.com/arosien/configz
   * configs https://github.com/kxbmap/configs
-  * connfig-annotation https://github.com/wacai/config-annotation
+  * config-annotation https://github.com/wacai/config-annotation
+  * PureConfig https://github.com/melrief/pureconfig
 
 #### Clojure wrappers for the Java library
 
