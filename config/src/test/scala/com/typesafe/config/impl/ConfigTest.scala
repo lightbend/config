@@ -565,6 +565,8 @@ class ConfigTest extends TestUtils {
         assertEquals(42L, conf.getLong("ints.fortyTwoAgain"))
         assertEquals(42.1, conf.getDouble("floats.fortyTwoPointOne"), 1e-6)
         assertEquals(42.1, conf.getDouble("floats.fortyTwoPointOneAgain"), 1e-6)
+        assertEquals(0.33, conf.getDouble("floats.pointThirtyThree"), 1e-6)
+        assertEquals(0.33, conf.getDouble("floats.pointThirtyThreeAgain"), 1e-6)
         assertEquals("abcd", conf.getString("strings.abcd"))
         assertEquals("abcd", conf.getString("strings.abcdAgain"))
         assertEquals("null bar 42 baz true 3.14 hi", conf.getString("strings.concatenated"))
@@ -721,10 +723,12 @@ class ConfigTest extends TestUtils {
         // should convert numbers to string
         assertEquals("42", conf.getString("ints.fortyTwo"))
         assertEquals("42.1", conf.getString("floats.fortyTwoPointOne"))
+        assertEquals(".33", conf.getString("floats.pointThirtyThree"))
 
         // should convert string to number
         assertEquals(57, conf.getInt("strings.number"))
         assertEquals(3.14, conf.getDouble("strings.double"), 1e-6)
+        assertEquals(0.33, conf.getDouble("strings.doubleStartingWithDot"), 1e-6)
 
         // should convert strings to boolean
         assertEquals(true, conf.getBoolean("strings.true"))
