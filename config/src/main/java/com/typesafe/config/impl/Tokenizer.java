@@ -295,7 +295,7 @@ final class Tokenizer {
         }
 
         // chars JSON allows a number to start with
-        static final String firstNumberChars = "0123456789-";
+        static final String firstNumberChars = "0123456789-.";
         // chars JSON allows to be part of a number
         static final String numberChars = "0123456789eE+-.";
         // chars that stop an unquoted string
@@ -350,7 +350,7 @@ final class Tokenizer {
         private Token pullNumber(int firstChar) throws ProblemException {
             StringBuilder sb = new StringBuilder();
             sb.appendCodePoint(firstChar);
-            boolean containedDecimalOrE = false;
+            boolean containedDecimalOrE = firstChar == '.';
             int c = nextCharRaw();
             while (c != -1 && numberChars.indexOf(c) >= 0) {
                 if (c == '.' || c == 'e' || c == 'E')

@@ -5,21 +5,11 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import com.typesafe.config.ConfigValue
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigObject
-import com.typesafe.config.ConfigException
+import com.typesafe.config._
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
-import java.io.File
 import java.util.concurrent.TimeUnit.{ SECONDS, NANOSECONDS, MICROSECONDS, MILLISECONDS, MINUTES, DAYS, HOURS }
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigMergeable
-import com.typesafe.config.ConfigRenderOptions
-import com.typesafe.config.ConfigSyntax
-import com.typesafe.config.ConfigValueFactory
 
 class ConfigTest extends TestUtils {
 
@@ -615,6 +605,9 @@ class ConfigTest extends TestUtils {
         // plain getList should work
         assertEquals(Seq(intValue(1), intValue(2), intValue(3)), conf.getList("arrays.ofInt").asScala)
         assertEquals(Seq(stringValue("a"), stringValue("b"), stringValue("c")), conf.getList("arrays.ofString").asScala)
+
+        // make sure floats starting with a '.' are parsed as numbers
+        assertEquals(ConfigValueType.NUMBER, conf.getValue("floats.pointThirtyThree").valueType())
     }
 
     @Test
