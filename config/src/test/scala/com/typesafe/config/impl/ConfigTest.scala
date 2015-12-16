@@ -606,8 +606,8 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(intValue(1), intValue(2), intValue(3)), conf.getList("arrays.ofInt").asScala)
         assertEquals(Seq(stringValue("a"), stringValue("b"), stringValue("c")), conf.getList("arrays.ofString").asScala)
 
-        // make sure floats starting with a '.' are parsed as numbers
-        assertEquals(ConfigValueType.NUMBER, conf.getValue("floats.pointThirtyThree").valueType())
+        // make sure floats starting with a '.' are parsed as strings (they will be converted to double on demand)
+        assertEquals(ConfigValueType.STRING, conf.getValue("floats.pointThirtyThree").valueType())
     }
 
     @Test
