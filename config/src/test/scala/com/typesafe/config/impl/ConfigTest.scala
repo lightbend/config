@@ -5,21 +5,11 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import com.typesafe.config.ConfigValue
-import com.typesafe.config.Config
-import com.typesafe.config.ConfigObject
-import com.typesafe.config.ConfigException
+import com.typesafe.config._
 import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
-import java.io.File
 import java.util.concurrent.TimeUnit.{ SECONDS, NANOSECONDS, MICROSECONDS, MILLISECONDS, MINUTES, DAYS, HOURS }
-import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigMergeable
-import com.typesafe.config.ConfigRenderOptions
-import com.typesafe.config.ConfigSyntax
-import com.typesafe.config.ConfigValueFactory
 
 class ConfigTest extends TestUtils {
 
@@ -565,6 +555,8 @@ class ConfigTest extends TestUtils {
         assertEquals(42L, conf.getLong("ints.fortyTwoAgain"))
         assertEquals(42.1, conf.getDouble("floats.fortyTwoPointOne"), 1e-6)
         assertEquals(42.1, conf.getDouble("floats.fortyTwoPointOneAgain"), 1e-6)
+        assertEquals(0.33, conf.getDouble("floats.pointThirtyThree"), 1e-6)
+        assertEquals(0.33, conf.getDouble("floats.pointThirtyThreeAgain"), 1e-6)
         assertEquals("abcd", conf.getString("strings.abcd"))
         assertEquals("abcd", conf.getString("strings.abcdAgain"))
         assertEquals("null bar 42 baz true 3.14 hi", conf.getString("strings.concatenated"))
@@ -613,6 +605,9 @@ class ConfigTest extends TestUtils {
         // plain getList should work
         assertEquals(Seq(intValue(1), intValue(2), intValue(3)), conf.getList("arrays.ofInt").asScala)
         assertEquals(Seq(stringValue("a"), stringValue("b"), stringValue("c")), conf.getList("arrays.ofString").asScala)
+
+        // make sure floats starting with a '.' are parsed as strings (they will be converted to double on demand)
+        assertEquals(ConfigValueType.STRING, conf.getValue("floats.pointThirtyThree").valueType())
     }
 
     @Test
@@ -721,10 +716,12 @@ class ConfigTest extends TestUtils {
         // should convert numbers to string
         assertEquals("42", conf.getString("ints.fortyTwo"))
         assertEquals("42.1", conf.getString("floats.fortyTwoPointOne"))
+        assertEquals(".33", conf.getString("floats.pointThirtyThree"))
 
         // should convert string to number
         assertEquals(57, conf.getInt("strings.number"))
         assertEquals(3.14, conf.getDouble("strings.double"), 1e-6)
+        assertEquals(0.33, conf.getDouble("strings.doubleStartingWithDot"), 1e-6)
 
         // should convert strings to boolean
         assertEquals(true, conf.getBoolean("strings.true"))
