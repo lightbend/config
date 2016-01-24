@@ -825,6 +825,10 @@ format.
 #### Guice integration
   * Typesafe Config Guice https://github.com/racc/typesafeconfig-guice
 
+#### Java (yep!) wrappers for the Java library
+
+  * tscfg https://github.com/carueda/tscfg
+
 #### Scala wrappers for the Java library
 
   * Ficus https://github.com/ceedubs/ficus
