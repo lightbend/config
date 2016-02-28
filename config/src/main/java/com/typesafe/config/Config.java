@@ -6,6 +6,7 @@ package com.typesafe.config;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -1061,4 +1062,11 @@ public interface Config extends ConfigMergeable {
      * @return the new instance with the new map entry
      */
     Config withValue(String path, ConfigValue value);
+
+    /**
+     * Returns a {@code java.util.Properties} object for each entry in this Config instance.
+     *
+     * @return a new Properties instance
+     */
+    Properties toProperties();
 }
