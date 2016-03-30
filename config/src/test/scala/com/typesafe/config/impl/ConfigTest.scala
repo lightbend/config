@@ -674,6 +674,10 @@ class ConfigTest extends TestUtils {
         }
 
         intercept[ConfigException.WrongType] {
+            conf.getList("strings.abcd")
+        }
+
+        intercept[ConfigException.WrongType] {
             conf.getMilliseconds("ints")
         }
 
