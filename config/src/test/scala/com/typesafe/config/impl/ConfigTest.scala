@@ -588,6 +588,18 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(), conf.getBooleanList("arrays.empty").asScala)
         assertEquals(Seq(), conf.getNumberList("arrays.empty").asScala)
         assertEquals(Seq(), conf.getList("arrays.empty").asScala)
+        
+        // get empty array from empty string as any type of array
+        assertEquals(Seq(), conf.getAnyRefList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getIntList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getLongList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getStringList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getLongList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getDoubleList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getObjectList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getBooleanList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getNumberList("strings.empty").asScala)
+        assertEquals(Seq(), conf.getList("strings.empty").asScala)
 
         // get typed arrays
         assertEquals(Seq(1, 2, 3), conf.getIntList("arrays.ofInt").asScala)
