@@ -1,5 +1,6 @@
 import sbt._
 import Keys._
+import com.etsy.sbt.checkstyle.CheckstylePlugin.autoImport._
 import com.typesafe.sbt.osgi.SbtOsgi
 import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 import com.typesafe.sbt.JavaVersionCheckPlugin.autoImport._
@@ -35,7 +36,9 @@ object ConfigBuild extends Build {
       Seq(aggregate in doc := false,
           doc := (doc in (configLib, Compile)).value,
           aggregate in packageDoc := false,
-          packageDoc := (packageDoc in (configLib, Compile)).value)
+          packageDoc := (packageDoc in (configLib, Compile)).value,
+          aggregate in checkstyle := false,
+          checkstyle := (checkstyle in (configLib, Compile)).value)
 
     lazy val root = Project(id = "root",
                             base = file("."),
