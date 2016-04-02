@@ -1,4 +1,3 @@
-import com.typesafe.sbt.SbtGit
 import com.typesafe.sbt.SbtPgp.PgpKeys.{ useGpg, publishSigned, publishLocalSigned }
 
 // to release, bump major/minor/micro as appropriate,
@@ -6,8 +5,8 @@ import com.typesafe.sbt.SbtPgp.PgpKeys.{ useGpg, publishSigned, publishLocalSign
 // publishSigned.
 // Release tags should follow: http://semver.org/
 
-SbtGit.versionWithGit
-SbtGit.git.baseVersion := "1.3.0"
+enablePlugins(GitVersioning)
+git.baseVersion := "1.3.0"
 
 organization in GlobalScope := "com.typesafe"
 
