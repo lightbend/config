@@ -37,6 +37,8 @@ public interface ConfigList extends List<ConfigValue>, ConfigValue {
     /**
      * Recursively unwraps the list, returning a list of plain Java values such
      * as Integer or String or whatever is in the list.
+     *
+     * @return a {@link java.util.List} containing plain Java objects
      */
     @Override
     List<Object> unwrapped();
