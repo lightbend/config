@@ -765,6 +765,9 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(asNanos(1), asNanos(2), asNanos(3), asNanos(4)),
             conf.getNanosecondsList("durations.secondsList").asScala)
         assertEquals(500L, conf.getMilliseconds("durations.halfSecond"))
+        assertEquals(4878955355435272204L, conf.getNanoseconds("durations.largeNanos"))
+        assertEquals(4878955355435272204L, conf.getNanoseconds("durations.plusLargeNanos"))
+        assertEquals(-4878955355435272204L, conf.getNanoseconds("durations.minusLargeNanos"))
 
         // get durations as java.time.Duration
         assertEquals(1000L, conf.getDuration("durations.second").toMillis)
@@ -776,8 +779,12 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(asNanos(1), asNanos(2), asNanos(3), asNanos(4)),
             conf.getDurationList("durations.secondsList").asScala.map(_.toNanos))
         assertEquals(500L, conf.getDuration("durations.halfSecond").toMillis)
+        assertEquals(4878955355435272204L, conf.getDuration("durations.largeNanos").toNanos)
+        assertEquals(4878955355435272204L, conf.getDuration("durations.plusLargeNanos").toNanos)
+        assertEquals(-4878955355435272204L, conf.getDuration("durations.minusLargeNanos").toNanos)
 
         def assertDurationAsTimeUnit(unit: TimeUnit): Unit = {
+            def ns2unit(l: Long) = unit.convert(l, NANOSECONDS)
             def ms2unit(l: Long) = unit.convert(l, MILLISECONDS)
             def s2unit(i: Int) = unit.convert(i, SECONDS)
             assertEquals(ms2unit(1000L), conf.getDuration("durations.second", unit))
@@ -791,6 +798,9 @@ class ConfigTest extends TestUtils {
             assertEquals(ms2unit(500L), conf.getDuration("durations.halfSecond", unit))
             assertEquals(ms2unit(1L), conf.getDuration("durations.millis", unit))
             assertEquals(ms2unit(2L), conf.getDuration("durations.micros", unit))
+            assertEquals(ns2unit(4878955355435272204L), conf.getDuration("durations.largeNanos", unit))
+            assertEquals(ns2unit(4878955355435272204L), conf.getDuration("durations.plusLargeNanos", unit))
+            assertEquals(ns2unit(-4878955355435272204L), conf.getDuration("durations.minusLargeNanos", unit))
         }
 
         assertDurationAsTimeUnit(NANOSECONDS)
