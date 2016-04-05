@@ -4,7 +4,6 @@ import de.johoop.jacoco4sbt.JacocoPlugin.jacoco
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
-import com.etsy.sbt.Checkstyle._
 
 SbtScalariform.scalariformSettings
 
@@ -26,14 +25,12 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
 
 externalResolvers += "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
 
-checkstyleSettings
+checkstyleConfigLocation := CheckstyleConfigLocation.File((baseDirectory.value / "checkstyle-config.xml").toString)
 
-CheckstyleTasks.checkstyleConfig := baseDirectory.value / "checkstyle-config.xml"
-
-CheckstyleTasks.checkstyle in Compile := {
+checkstyle in Compile := {
   val log = streams.value.log
-  (CheckstyleTasks.checkstyle in Compile).value
-  val resultFile = (target in Compile).value / "checkstyle-report.xml"
+  (checkstyle in Compile).value
+  val resultFile = (checkstyleOutputFile in Compile).value
   val results = scala.xml.XML.loadFile(resultFile)
   val errorFiles = results \\ "checkstyle" \\ "file"
 
@@ -61,10 +58,7 @@ CheckstyleTasks.checkstyle in Compile := {
 }
 
 // add checkstyle as a dependency of doc
-doc in Compile := {
-  (CheckstyleTasks.checkstyle in Compile).value
-  (doc in Compile).value
-}
+doc in Compile <<= (doc in Compile).dependsOn(checkstyle in Compile)
 
 findbugsSettings
 findbugsReportType := Some(ReportType.Html)

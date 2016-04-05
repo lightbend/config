@@ -1,6 +1,8 @@
 import sbt._
 import Keys._
-import com.typesafe.sbt.osgi.SbtOsgi.{ OsgiKeys, osgiSettings }
+import com.etsy.sbt.checkstyle.CheckstylePlugin.autoImport._
+import com.typesafe.sbt.osgi.SbtOsgi
+import com.typesafe.sbt.osgi.SbtOsgi.autoImport._
 import com.typesafe.sbt.JavaVersionCheckPlugin.autoImport._
 
 object ConfigBuild extends Build {
@@ -34,7 +36,9 @@ object ConfigBuild extends Build {
       Seq(aggregate in doc := false,
           doc := (doc in (configLib, Compile)).value,
           aggregate in packageDoc := false,
-          packageDoc := (packageDoc in (configLib, Compile)).value)
+          packageDoc := (packageDoc in (configLib, Compile)).value,
+          aggregate in checkstyle := false,
+          checkstyle := (checkstyle in (configLib, Compile)).value)
 
     lazy val root = Project(id = "root",
                             base = file("."),
@@ -49,11 +53,9 @@ object ConfigBuild extends Build {
                                    osgiSettings ++
                                    Seq(
                                      OsgiKeys.exportPackage := Seq("com.typesafe.config", "com.typesafe.config.impl"),
-                                     packagedArtifact in (Compile, packageBin) <<= (artifact in (Compile, packageBin), OsgiKeys.bundle).identityMap,
-                                     artifact in (Compile, packageBin) ~= { _.copy(`type` = "bundle") },
                                      publish := sys.error("use publishSigned instead of plain publish"),
                                      publishLocal := sys.error("use publishLocalSigned instead of plain publishLocal")
-                                   )) dependsOn testLib % "test->test"
+                                   )).enablePlugins(SbtOsgi) dependsOn testLib % "test->test"
 
     def project(id: String, base: File) = Project(id, base, settings = commonSettings)
 

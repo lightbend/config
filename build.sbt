@@ -1,13 +1,10 @@
-import com.typesafe.sbt.SbtGit
-import com.typesafe.sbt.SbtPgp.PgpKeys.{ useGpg, publishSigned, publishLocalSigned }
-
 // to release, bump major/minor/micro as appropriate,
 // update NEWS, update version in README.md, tag, then
 // publishSigned.
 // Release tags should follow: http://semver.org/
 
-SbtGit.versionWithGit
-SbtGit.git.baseVersion := "1.3.0"
+enablePlugins(GitVersioning)
+git.baseVersion := "1.3.0"
 
 organization in GlobalScope := "com.typesafe"
 
@@ -16,10 +13,10 @@ scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation", "-feat
 
 scalaVersion in ThisBuild := "2.10.4"
 
-useGpg in GlobalScope := true
+useGpg := true
 
-aggregate in publishSigned := false
-publishSigned := (publishSigned in configLib).value
+aggregate in PgpKeys.publishSigned := false
+PgpKeys.publishSigned := (PgpKeys.publishSigned in configLib).value
 
-aggregate in publishLocalSigned := false
-publishLocalSigned := (publishLocalSigned in configLib).value
+aggregate in PgpKeys.publishLocalSigned := false
+PgpKeys.publishLocalSigned := (PgpKeys.publishLocalSigned in configLib).value
