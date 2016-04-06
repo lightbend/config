@@ -5,15 +5,12 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import java.io.Reader
 import java.io.StringReader
 import com.typesafe.config._
-import java.util.HashMap
 import scala.collection.JavaConverters._
 import java.io.File
 import java.net.URL
 import java.util.Properties
-import java.io.ByteArrayInputStream
 
 class ConfParserTest extends TestUtils {
 
@@ -714,7 +711,7 @@ class ConfParserTest extends TestUtils {
     def includeFileNotQuoted() {
         // this test cannot work on Windows
         val f = resourceFile("test01")
-        if (f.toString.contains("\\")) {
+        if (isWindows) {
             System.err.println("includeFileNotQuoted test skipped on Windows")
         } else {
             val e = intercept[ConfigException.Parse] {
@@ -727,7 +724,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def includeFileNotQuotedAndSpecialChar() {
         val f = resourceFile("test01")
-        if (f.toString.contains("\\")) {
+        if (isWindows) {
             System.err.println("includeFileNotQuoted test skipped on Windows")
         } else {
             val e = intercept[ConfigException.Parse] {

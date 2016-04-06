@@ -4,12 +4,10 @@
 package com.typesafe.config.impl
 
 import org.junit.Assert._
-import org.junit._
 import com.typesafe.config.ConfigOrigin
 import java.io.Reader
 import java.io.StringReader
 import com.typesafe.config.ConfigParseOptions
-import com.typesafe.config.Config
 import com.typesafe.config.ConfigSyntax
 import com.typesafe.config.ConfigFactory
 import java.io.File
@@ -20,6 +18,7 @@ import java.io.ObjectInputStream
 import java.io.NotSerializableException
 import scala.annotation.tailrec
 import java.net.URL
+import java.util.Locale
 import java.util.concurrent.Executors
 import java.util.concurrent.Callable
 import com.typesafe.config._
@@ -711,6 +710,9 @@ abstract trait TestUtils {
     def nodeKeySubstitution(s: String) = new ConfigNodeSimpleValue(tokenKeySubstitution(s))
     def nodeOptionalSubstitution(expression: Token*) = new ConfigNodeSimpleValue(tokenOptionalSubstitution(expression: _*))
     def nodeSubstitution(expression: Token*) = new ConfigNodeSimpleValue(tokenSubstitution(expression: _*))
+
+    def isWindows: Boolean = sys.props.get("os.name").exists(_.toLowerCase(Locale.ROOT).contains("windows"))
+    def userDrive: String = if (isWindows) sys.props.get("user.dir").fold("")(_.takeWhile(_ != File.separatorChar)) else ""
 
     // this is importantly NOT using Path.newPath, which relies on
     // the parser; in the test suite we are often testing the parser,
