@@ -275,7 +275,8 @@ class PublicApiTest extends TestUtils {
     private def assertNotFound(e: ConfigException) {
         assertTrue("Message text: " + e.getMessage, e.getMessage.contains("No such") ||
             e.getMessage.contains("not found") ||
-            e.getMessage.contains("were found"))
+            e.getMessage.contains("were found") ||
+            e.getMessage.contains("java.io.FileNotFoundException"))
     }
 
     @Test
