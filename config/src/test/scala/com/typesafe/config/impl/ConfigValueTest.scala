@@ -13,7 +13,6 @@ import com.typesafe.config.ConfigObject
 import com.typesafe.config.ConfigList
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigValueType
-import com.typesafe.config.ConfigOrigin
 import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.ConfigValueFactory
 import com.typesafe.config.ConfigFactory
@@ -721,7 +720,9 @@ class ConfigValueTest extends TestUtils {
         // the filename is made absolute when converting to url
         assertTrue(hasFilename.url.toExternalForm.contains("foo"))
         assertNull(noFilename.url)
-        assertEquals("file:/baz", SimpleConfigOrigin.newFile("/baz").url.toExternalForm)
+        val rootFile = SimpleConfigOrigin.newFile("/baz")
+        val rootFileURL = if (isWindows) s"file:/$userDrive/baz" else "file:/baz"
+        assertEquals(rootFileURL, rootFile.url.toExternalForm)
 
         val urlOrigin = SimpleConfigOrigin.newURL(new URL("file:/foo"))
         assertEquals("/foo", urlOrigin.filename)
