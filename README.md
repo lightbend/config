@@ -836,6 +836,7 @@ format.
   * configs https://github.com/kxbmap/configs
   * config-annotation https://github.com/wacai/config-annotation
   * PureConfig https://github.com/melrief/pureconfig
+  * Simple Scala Config https://github.com/ElderResearch/ssc
 
 #### Clojure wrappers for the Java library
 
