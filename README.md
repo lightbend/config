@@ -815,7 +815,7 @@ Two alternatives to HOCON syntax could be:
     allow mixing true JSON files into the config but also support
     a nicer format.
 
-### Other APIs (Wrappers and Ports)
+### Other APIs (Wrappers, Ports and Utilities)
 
 This may not be comprehensive - if you'd like to add mention of
 your wrapper, just send a pull request for this README. We would
@@ -857,3 +857,6 @@ format.
 
    * https://github.com/puppetlabs/cpp-hocon
 
+#### Linting tool
+   
+   * A web based linting tool http://www.hoconlint.com/ 
