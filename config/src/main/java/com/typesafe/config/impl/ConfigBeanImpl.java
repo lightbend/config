@@ -24,7 +24,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
-import com.typesafe.config.Nullable;
+import com.typesafe.config.Optional;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -136,7 +136,7 @@ public class ConfigBeanImpl {
 
     private static boolean isOptionalProperty(Class clazz, PropertyDescriptor beanProp) {
         Field field = FieldUtils.getField(clazz, beanProp.getName(), true);
-        return (field.getAnnotationsByType(Nullable.class).length > 0);
+        return (field.getAnnotationsByType(Optional.class).length > 0);
     }
 
     // we could magically make this work in many cases by doing

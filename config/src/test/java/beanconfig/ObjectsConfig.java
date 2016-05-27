@@ -1,11 +1,11 @@
 package beanconfig;
 
 
-import com.typesafe.config.Nullable;
+import com.typesafe.config.Optional;
 
 public class ObjectsConfig {
     public static class ValueObject {
-        @Nullable
+        @Optional
         private String nullableValue;
         private String nonNullableValue;
 
