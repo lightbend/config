@@ -1,9 +1,12 @@
 package com.typesafe.config.impl;
 
+import org.apache.commons.lang3.reflect.FieldUtils;
+
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -21,6 +24,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.Nullable;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -90,7 +94,9 @@ public class ConfigBeanImpl {
                     if (configValue != null) {
                         SimpleConfig.checkValid(path, expectedType, configValue, problems);
                     } else {
-                        SimpleConfig.addMissing(problems, expectedType, path, config.origin());
+                        if (!isOptionalProperty(clazz, beanProp)) {
+                            SimpleConfig.addMissing(problems, expectedType, path, config.origin());
+                        }
                     }
                 }
             }
@@ -105,8 +111,18 @@ public class ConfigBeanImpl {
                 Method setter = beanProp.getWriteMethod();
                 Type parameterType = setter.getGenericParameterTypes()[0];
                 Class<?> parameterClass = setter.getParameterTypes()[0];
-                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, originalNames.get(beanProp.getName()));
-                setter.invoke(bean, unwrapped);
+                String configPropName = originalNames.get(beanProp.getName());
+                if (configPropName == null) {
+                    configPropName = beanProp.getName();
+                }
+                try {
+                    Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName);
+                    setter.invoke(bean, unwrapped);
+                } catch (ConfigException.Missing e) {
+                    if (!isOptionalProperty(clazz, beanProp)) {
+                        throw e;
+                    }
+                }
             }
             return bean;
         } catch (InstantiationException e) {
@@ -116,6 +132,11 @@ public class ConfigBeanImpl {
         } catch (InvocationTargetException e) {
             throw new ConfigException.BadBean("Calling bean method on " + clazz.getName() + " caused an exception", e);
         }
+    }
+
+    private static boolean isOptionalProperty(Class clazz, PropertyDescriptor beanProp) {
+        Field field = FieldUtils.getField(clazz, beanProp.getName(), true);
+        return (field.getAnnotationsByType(Nullable.class).length > 0);
     }
 
     // we could magically make this work in many cases by doing

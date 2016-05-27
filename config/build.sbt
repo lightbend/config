@@ -20,6 +20,8 @@ fork in run in Test := true
 autoScalaLibrary := false
 crossPaths := false
 
+libraryDependencies += "org.apache.commons" % "commons-lang3" % "3.3.2"
+libraryDependencies += "javax.annotation" % "javax.annotation-api" % "1.2"
 libraryDependencies += "net.liftweb" %% "lift-json" % "2.5" % "test"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
 

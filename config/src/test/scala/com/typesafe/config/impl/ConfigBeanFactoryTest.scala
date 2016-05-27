@@ -163,6 +163,15 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
+    def testOptionalProperties() {
+        val beanConfig: ObjectsConfig = ConfigBeanFactory.create(loadConfig().getConfig("objects"), classOf[ObjectsConfig])
+        assertNotNull(beanConfig)
+        assertNotNull(beanConfig.getValueObject)
+        assertNull(beanConfig.getValueObject.getNullableValue)
+        assertEquals("nonNullValue", beanConfig.getValueObject.getNonNullableValue)
+    }
+
+    @Test
     def testNotABeanField() {
         val e = intercept[ConfigException.BadBean] {
             ConfigBeanFactory.create(parseConfig("notBean=42"), classOf[NotABeanFieldConfig])
