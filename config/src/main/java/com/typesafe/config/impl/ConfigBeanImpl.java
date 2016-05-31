@@ -269,9 +269,6 @@ public class ConfigBeanImpl {
 
     private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
         Field field = getField(beanClass, beanProp.getName());
-        if (field == null) {
-            throw new ConfigException.BadBean("Bean property '" + beanProp + "' of class " + beanClass.getName() + " does not exist");
-        }
         return (field.getAnnotationsByType(Optional.class).length > 0);
     }
 
