@@ -110,17 +110,17 @@ public class ConfigBeanImpl {
                 Type parameterType = setter.getGenericParameterTypes()[0];
                 Class<?> parameterClass = setter.getParameterTypes()[0];
                 String configPropName = originalNames.get(beanProp.getName());
+                // Is the property key missing in the config?
                 if (configPropName == null) {
-                    configPropName = beanProp.getName();
-                }
-                try {
-                    Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName);
-                    setter.invoke(bean, unwrapped);
-                } catch (ConfigException.Missing e) {
-                    if (!isOptionalProperty(clazz, beanProp)) {
-                        throw e;
+                    // If so, continue if the field is marked as @{link Optional}
+                    if (isOptionalProperty(clazz, beanProp)) {
+                        continue;
                     }
+                    // Otherwise, raise a {@link Missing} exception right here
+                    throw new ConfigException.Missing(beanProp.getName());
                 }
+                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName);
+                setter.invoke(bean, unwrapped);
             }
             return bean;
         } catch (InstantiationException e) {
