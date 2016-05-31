@@ -1,7 +1,5 @@
 package com.typesafe.config.impl;
 
-import org.apache.commons.lang3.reflect.FieldUtils;
-
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -132,11 +130,6 @@ public class ConfigBeanImpl {
         } catch (InvocationTargetException e) {
             throw new ConfigException.BadBean("Calling bean method on " + clazz.getName() + " caused an exception", e);
         }
-    }
-
-    private static boolean isOptionalProperty(Class clazz, PropertyDescriptor beanProp) {
-        Field field = FieldUtils.getField(clazz, beanProp.getName(), true);
-        return (field.getAnnotationsByType(Optional.class).length > 0);
     }
 
     // we could magically make this work in many cases by doing
@@ -272,5 +265,28 @@ public class ConfigBeanImpl {
         }
 
         return false;
+    }
+
+    private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
+        Field field = getField(beanClass, beanProp.getName());
+        if (field == null) {
+            throw new ConfigException.BadBean("Bean property '" + beanProp + "' of class " + beanClass.getName() + " does not exist");
+        }
+        return (field.getAnnotationsByType(Optional.class).length > 0);
+    }
+
+    private static Field getField(Class beanClass, String fieldName) {
+        try {
+            Field field = beanClass.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field;
+        } catch (NoSuchFieldException e) {
+            // Don't give up yet. Try to look for field in super class, if any.
+        }
+        beanClass = beanClass.getSuperclass();
+        if (beanClass == null) {
+            return null;
+        }
+        return getField(beanClass, fieldName);
     }
 }

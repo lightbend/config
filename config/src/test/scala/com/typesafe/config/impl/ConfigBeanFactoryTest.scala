@@ -167,8 +167,8 @@ class ConfigBeanFactoryTest extends TestUtils {
         val beanConfig: ObjectsConfig = ConfigBeanFactory.create(loadConfig().getConfig("objects"), classOf[ObjectsConfig])
         assertNotNull(beanConfig)
         assertNotNull(beanConfig.getValueObject)
-        assertNull(beanConfig.getValueObject.getNullableValue)
-        assertEquals("nonNullValue", beanConfig.getValueObject.getNonNullableValue)
+        assertNull(beanConfig.getValueObject.getOptionalValue)
+        assertEquals("notNull", beanConfig.getValueObject.getMandatoryValue)
     }
 
     @Test

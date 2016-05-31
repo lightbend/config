@@ -6,23 +6,23 @@ import com.typesafe.config.Optional;
 public class ObjectsConfig {
     public static class ValueObject {
         @Optional
-        private String nullableValue;
-        private String nonNullableValue;
+        private String optionalValue;
+        private String mandatoryValue;
 
-        public String getNonNullableValue() {
-          return nonNullableValue;
+        public String getMandatoryValue() {
+          return mandatoryValue;
         }
 
-        public void setNonNullableValue(String nonNullableValue) {
-          this.nonNullableValue = nonNullableValue;
+        public void setMandatoryValue(String mandatoryValue) {
+          this.mandatoryValue = mandatoryValue;
         }
 
-        public String getNullableValue() {
-          return nullableValue;
+        public String getOptionalValue() {
+          return optionalValue;
         }
 
-        public void setNullableValue(String nullableValue) {
-          this.nullableValue = nullableValue;
+        public void setOptionalValue(String optionalValue) {
+          this.optionalValue = optionalValue;
         }
     }
 
