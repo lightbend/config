@@ -163,6 +163,25 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
+    def testOptionalProperties() {
+        val beanConfig: ObjectsConfig = ConfigBeanFactory.create(loadConfig().getConfig("objects"), classOf[ObjectsConfig])
+        assertNotNull(beanConfig)
+        assertNotNull(beanConfig.getValueObject)
+        assertNull(beanConfig.getValueObject.getOptionalValue)
+        assertEquals("notNull", beanConfig.getValueObject.getMandatoryValue)
+    }
+
+    @Test
+    def testNotAnOptionalProperty(): Unit = {
+        val e = intercept[ConfigException.ValidationFailed] {
+            ConfigBeanFactory.create(parseConfig("{valueObject: {}}"), classOf[ObjectsConfig])
+        }
+        assertTrue("missing value error", e.getMessage.contains("No setting"))
+        assertTrue("error about the right property", e.getMessage.contains("mandatoryValue"))
+
+    }
+
+    @Test
     def testNotABeanField() {
         val e = intercept[ConfigException.BadBean] {
             ConfigBeanFactory.create(parseConfig("notBean=42"), classOf[NotABeanFieldConfig])
