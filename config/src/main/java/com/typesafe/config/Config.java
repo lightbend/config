@@ -598,6 +598,22 @@ public interface Config extends ConfigMergeable {
     String getString(String path);
 
     /**
+     * @param enumClass
+     *            an enum class
+     * @param <T>
+     *            a generic denoting a specific type of enum
+     * @param path
+     *            path expression
+     * @return the {@code Enum} value at the requested path
+     *              of the requested enum class
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to an Enum
+     */
+    public <T extends Enum<T>> T getEnum(Class<T> enumClass, String path);
+
+    /**
      * @param path
      *            path expression
      * @return the {@link ConfigObject} value at the requested path
@@ -881,6 +897,25 @@ public interface Config extends ConfigMergeable {
      *             if value is not convertible to a list of strings
      */
     List<String> getStringList(String path);
+
+    /**
+     * Gets a list value with {@code Enum} elements.  Throws if the
+     * path is unset or null or not a list or contains values not
+     * convertible to {@code Enum}.
+     *
+     * @param enumClass
+     *            the enum class
+     * @param <T>
+     *            a generic denoting a specific type of enum
+     * @param path
+     *            the path to the list value.
+     * @return the list at the path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to a list of {@code Enum}
+     */
+    <T extends Enum<T>> List<T> getEnumList(Class<T> enumClass, String path);
 
     /**
      * Gets a list value with object elements.  Throws if the

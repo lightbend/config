@@ -175,6 +175,10 @@ public class ConfigBeanImpl {
             return config.getValue(configPropName);
         } else if (parameterClass == ConfigList.class) {
             return config.getList(configPropName);
+        } else if (parameterClass.isEnum()) {
+            @SuppressWarnings("unchecked")
+            Enum enumValue = config.getEnum((Class<Enum>) parameterClass, configPropName);
+            return enumValue;
         } else if (hasAtLeastOneBeanProperty(parameterClass)) {
             return createInternal(config.getConfig(configPropName), parameterClass);
         } else {
@@ -207,6 +211,10 @@ public class ConfigBeanImpl {
             return config.getObjectList(configPropName);
         } else if (elementType == ConfigValue.class) {
             return config.getList(configPropName);
+        } else if (((Class<?>) elementType).isEnum()) {
+            @SuppressWarnings("unchecked")
+            List<Enum> enumValues = config.getEnumList((Class<Enum>) elementType, configPropName);
+            return enumValues;
         } else if (hasAtLeastOneBeanProperty((Class<?>) elementType)) {
             List<Object> beanList = new ArrayList<Object>();
             List<? extends Config> configList = config.getConfigList(configPropName);

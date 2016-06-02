@@ -248,6 +248,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     @Override
+    public <T extends Enum<T>> T getEnum(Class<T> enumClass, String path) {
+        ConfigValue v = find(path, ConfigValueType.STRING);
+        return getEnumValue(path, enumClass, v);
+    }
+
+    @Override
     public ConfigList getList(String path) {
         AbstractConfigValue v = find(path, ConfigValueType.LIST);
         return (ConfigList) v;
@@ -379,6 +385,35 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     @Override
     public List<String> getStringList(String path) {
         return getHomogeneousUnwrappedList(path, ConfigValueType.STRING);
+    }
+
+    @Override
+    public <T extends Enum<T>> List<T> getEnumList(Class<T> enumClass, String path) {
+        List<ConfigString> enumNames = getHomogeneousWrappedList(path, ConfigValueType.STRING);
+        List<T> enumList = new ArrayList<T>();
+        for (ConfigString enumName : enumNames) {
+            enumList.add(getEnumValue(path, enumClass, enumName));
+        }
+        return enumList;
+    }
+
+    private <T extends Enum<T>> T getEnumValue(String path, Class<T> enumClass, ConfigValue enumConfigValue) {
+        String enumName = (String) enumConfigValue.unwrapped();
+        try {
+            return Enum.valueOf(enumClass, enumName);
+        } catch (IllegalArgumentException e) {
+            List<String> enumNames = new ArrayList<String>();
+            Enum[] enumConstants = enumClass.getEnumConstants();
+            if (enumConstants != null) {
+                for (Enum enumConstant : enumConstants) {
+                    enumNames.add(enumConstant.name());
+                }
+            }
+            throw new ConfigException.BadValue(
+              enumConfigValue.origin(), path,
+              String.format("The enum class %s has no constant of the name '%s' (should be one of %s.)",
+                enumClass.getSimpleName(), enumName, enumNames));
+        }
     }
 
     @SuppressWarnings("unchecked")
