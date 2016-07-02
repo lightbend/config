@@ -17,17 +17,21 @@ package com.typesafe.config;
  * </pre>
  */
 public final class ConfigRenderOptions {
+    private final static String DEFAULT_INDENTATION = "    ";
+
     private final boolean originComments;
     private final boolean comments;
     private final boolean formatted;
     private final boolean json;
+    private final String indentation;
 
     private ConfigRenderOptions(boolean originComments, boolean comments, boolean formatted,
-            boolean json) {
+            boolean json, String indentation) {
         this.originComments = originComments;
         this.comments = comments;
         this.formatted = formatted;
         this.json = json;
+        this.indentation = indentation;
     }
 
     /**
@@ -38,7 +42,7 @@ public final class ConfigRenderOptions {
      * @return the default render options
      */
     public static ConfigRenderOptions defaults() {
-        return new ConfigRenderOptions(true, true, true, true);
+        return new ConfigRenderOptions(true, true, true, true, DEFAULT_INDENTATION);
     }
 
     /**
@@ -48,7 +52,7 @@ public final class ConfigRenderOptions {
      * @return the concise render options
      */
     public static ConfigRenderOptions concise() {
-        return new ConfigRenderOptions(false, false, false, true);
+        return new ConfigRenderOptions(false, false, false, true, DEFAULT_INDENTATION);
     }
 
     /**
@@ -64,7 +68,7 @@ public final class ConfigRenderOptions {
         if (value == comments)
             return this;
         else
-            return new ConfigRenderOptions(originComments, value, formatted, json);
+            return new ConfigRenderOptions(originComments, value, formatted, json, indentation);
     }
 
     /**
@@ -97,7 +101,7 @@ public final class ConfigRenderOptions {
         if (value == originComments)
             return this;
         else
-            return new ConfigRenderOptions(value, comments, formatted, json);
+            return new ConfigRenderOptions(value, comments, formatted, json, indentation);
     }
 
     /**
@@ -122,7 +126,7 @@ public final class ConfigRenderOptions {
         if (value == formatted)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, value, json);
+            return new ConfigRenderOptions(originComments, comments, value, json, indentation);
     }
 
     /**
@@ -150,7 +154,7 @@ public final class ConfigRenderOptions {
         if (value == json)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, formatted, value);
+            return new ConfigRenderOptions(originComments, comments, formatted, value, indentation);
     }
 
     /**
@@ -161,6 +165,29 @@ public final class ConfigRenderOptions {
      */
     public boolean getJson() {
         return json;
+    }
+
+    /**
+     * Returns options with indentation changed. The default value is 4 spaces.
+     *
+     * @param value
+     *            characters to use for one level of indentation
+     * @return options with requested indentation setting
+     */
+    public ConfigRenderOptions setIndentation(String value) {
+        if (value.equals(indentation))
+            return this;
+        else
+            return new ConfigRenderOptions(originComments, comments, formatted, json, value);
+    }
+
+    /**
+     * Returns indentation characters.
+     *
+     * @return characters used for one level of indentation
+     */
+    public String getIndentation() {
+        return indentation;
     }
 
     @Override

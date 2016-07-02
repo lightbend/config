@@ -3,18 +3,9 @@
  */
 package com.typesafe.config.impl;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import com.typesafe.config.*;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigMergeable;
-import com.typesafe.config.ConfigObject;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValue;
+import java.util.*;
 
 /**
  *
@@ -322,7 +313,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         if (options.getFormatted()) {
             int remaining = indent;
             while (remaining > 0) {
-                sb.append("    ");
+                sb.append(options.getIndentation());
                 --remaining;
             }
         }
