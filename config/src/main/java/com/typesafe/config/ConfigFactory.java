@@ -3,16 +3,15 @@
  */
 package com.typesafe.config;
 
+import com.typesafe.config.impl.ConfigImpl;
+import com.typesafe.config.impl.Parseable;
+
 import java.io.File;
 import java.io.Reader;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
-
-import com.typesafe.config.impl.ConfigImpl;
-import com.typesafe.config.impl.Parseable;
 
 /**
  * Contains static methods for creating {@link Config} instances.
@@ -36,6 +35,8 @@ import com.typesafe.config.impl.Parseable;
  * examples.
  */
 public final class ConfigFactory {
+    private static final String STRATEGY_PROPERTY_NAME = "config.strategy";
+
     private ConfigFactory() {
     }
 
@@ -213,54 +214,7 @@ public final class ConfigFactory {
                 .resolve(resolveOptions);
     }
 
-    private static Config parseApplicationConfig(ConfigParseOptions parseOptions) {
-        ClassLoader loader = parseOptions.getClassLoader();
-        if (loader == null)
-            throw new ConfigException.BugOrBroken(
-                    "ClassLoader should have been set here; bug in ConfigFactory. "
-                            + "(You can probably work around this bug by passing in a class loader or calling currentThread().setContextClassLoader() though.)");
 
-        int specified = 0;
-
-        // override application.conf with config.file, config.resource,
-        // config.url if requested.
-        String resource = System.getProperty("config.resource");
-        if (resource != null)
-            specified += 1;
-        String file = System.getProperty("config.file");
-        if (file != null)
-            specified += 1;
-        String url = System.getProperty("config.url");
-        if (url != null)
-            specified += 1;
-
-        if (specified == 0) {
-            return ConfigFactory.parseResourcesAnySyntax("application", parseOptions);
-        } else if (specified > 1) {
-            throw new ConfigException.Generic("You set more than one of config.file='" + file
-                    + "', config.url='" + url + "', config.resource='" + resource
-                    + "'; don't know which one to use!");
-        } else {
-            // the override file/url/resource MUST be present or it's an error
-            ConfigParseOptions overrideOptions = parseOptions.setAllowMissing(false);
-            if (resource != null) {
-                if (resource.startsWith("/"))
-                    resource = resource.substring(1);
-                // this deliberately does not parseResourcesAnySyntax; if
-                // people want that they can use an include statement.
-                return parseResources(loader, resource, overrideOptions);
-            } else if (file != null) {
-                return parseFile(new File(file), overrideOptions);
-            } else {
-                try {
-                    return parseURL(new URL(url), overrideOptions);
-                } catch (MalformedURLException e) {
-                    throw new ConfigException.Generic("Bad URL in config.url system property: '"
-                            + url + "': " + e.getMessage(), e);
-                }
-            }
-        }
-    }
 
     /**
      * Loads a default configuration, equivalent to {@link #load(Config)
@@ -516,7 +470,7 @@ public final class ConfigFactory {
      * @return the default application configuration
      */
     public static Config defaultApplication(ConfigParseOptions options) {
-        return parseApplicationConfig(ensureClassLoader(options, "defaultApplication"));
+        return getConfigLoadingStrategy().parseApplicationConfig(ensureClassLoader(options, "defaultApplication"));
     }
 
     /**
@@ -1093,5 +1047,19 @@ public final class ConfigFactory {
      */
     public static Config parseMap(Map<String, ? extends Object> values) {
         return parseMap(values, null);
+    }
+
+    private static ConfigLoadingStrategy getConfigLoadingStrategy() {
+        String className = System.getProperties().getProperty(STRATEGY_PROPERTY_NAME);
+
+        if (className != null) {
+            try {
+                return ConfigLoadingStrategy.class.cast(Class.forName(className).newInstance());
+            } catch (Throwable e) {
+                throw new IllegalArgumentException("Failed to load strategy: " + className, e);
+            }
+        } else {
+            return new DefaultConfigLoadingStrategy();
+        }
     }
 }
