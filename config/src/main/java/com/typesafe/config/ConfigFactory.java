@@ -1056,7 +1056,7 @@ public final class ConfigFactory {
             try {
                 return ConfigLoadingStrategy.class.cast(Class.forName(className).newInstance());
             } catch (Throwable e) {
-                throw new IllegalArgumentException("Failed to load strategy: " + className, e);
+                throw new ConfigException.BugOrBroken("Failed to load strategy: " + className, e);
             }
         } else {
             return new DefaultConfigLoadingStrategy();
