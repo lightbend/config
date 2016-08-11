@@ -299,7 +299,7 @@ final class Tokenizer {
         // chars JSON allows to be part of a number
         static final String numberChars = "0123456789eE+-.";
         // chars that stop an unquoted string
-        static final String notInUnquotedText = "$\"{}[]:=,+#`^?!@*&\\";
+        static final String notInUnquotedText = "$\"{}()[]:=,+#`^?!@*&\\";
 
         // The rules here are intended to maximize convenience while
         // avoiding confusion with real valid JSON. Basically anything
@@ -481,7 +481,7 @@ final class Tokenizer {
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
 
-            // We need a second string builder to keep track of escape characters.
+            // We need a sec ond string builder to keep track of escape characters.
             // We want to return them exactly as they appeared in the original text,
             // which means we will need a new StringBuilder to escape escape characters
             // so we can also keep the actual value of the string. This is gross.
@@ -605,6 +605,12 @@ final class Tokenizer {
                         break;
                     case '=':
                         t = Tokens.EQUALS;
+                        break;
+                    case '(':
+                        t = Tokens.OPEN_ROUND;
+                        break;
+                    case ')':
+                        t = Tokens.CLOSE_ROUND;
                         break;
                     case '{':
                         t = Tokens.OPEN_CURLY;

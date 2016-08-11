@@ -6,10 +6,12 @@ import java.util.Collection;
 final class ConfigNodeInclude extends AbstractConfigNode {
     final private ArrayList<AbstractConfigNode> children;
     final private ConfigIncludeKind kind;
+    final private boolean isRequired;
 
-    ConfigNodeInclude(Collection<AbstractConfigNode> children, ConfigIncludeKind kind) {
+    ConfigNodeInclude(Collection<AbstractConfigNode> children, ConfigIncludeKind kind, boolean isRequired) {
         this.children = new ArrayList<AbstractConfigNode>(children);
         this.kind = kind;
+        this.isRequired = isRequired;
     }
 
     final public Collection<AbstractConfigNode> children() {
@@ -27,6 +29,10 @@ final class ConfigNodeInclude extends AbstractConfigNode {
 
     protected ConfigIncludeKind kind() {
         return kind;
+    }
+
+    protected boolean isRequired() {
+        return isRequired;
     }
 
     protected String name() {

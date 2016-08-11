@@ -10,9 +10,16 @@ import com.typesafe.config.ConfigParseable;
 class SimpleIncludeContext implements ConfigIncludeContext {
 
     private final Parseable parseable;
+    private final ConfigParseOptions options;
 
     SimpleIncludeContext(Parseable parseable) {
         this.parseable = parseable;
+        this.options = SimpleIncluder.clearForInclude(parseable.options());
+    }
+
+    private SimpleIncludeContext(Parseable parseable, ConfigParseOptions options) {
+        this.parseable = parseable;
+        this.options = options;
     }
 
     SimpleIncludeContext withParseable(Parseable parseable) {
@@ -34,6 +41,11 @@ class SimpleIncludeContext implements ConfigIncludeContext {
 
     @Override
     public ConfigParseOptions parseOptions() {
-        return SimpleIncluder.clearForInclude(parseable.options());
+        return options;
+    }
+
+    @Override
+    public ConfigIncludeContext setParseOptions(ConfigParseOptions options) {
+        return new SimpleIncludeContext(parseable, options.setSyntax(null).setOriginDescription(null));
     }
 }

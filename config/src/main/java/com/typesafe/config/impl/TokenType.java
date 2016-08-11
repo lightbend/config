@@ -9,6 +9,8 @@ enum TokenType {
     COMMA,
     EQUALS,
     COLON,
+    OPEN_ROUND,
+    CLOSE_ROUND,
     OPEN_CURLY,
     CLOSE_CURLY,
     OPEN_SQUARE,

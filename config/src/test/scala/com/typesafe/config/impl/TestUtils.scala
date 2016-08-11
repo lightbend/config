@@ -721,8 +721,10 @@ abstract trait TestUtils {
 
     val resourceDir = {
         val f = new File("config/src/test/resources")
-        if (!f.exists())
-            throw new Exception("Tests must be run from the root project directory containing " + f.getPath())
+        if (!f.exists()) {
+            val here = new File(".").getAbsolutePath
+            throw new Exception(s"Tests must be run from the root project directory containing ${f.getPath()}, however the current director is $here")
+        }
         f
     }
 

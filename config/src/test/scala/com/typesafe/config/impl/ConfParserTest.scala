@@ -5,10 +5,11 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
-import java.io.StringReader
+import java.io.{ File, IOException, StringReader }
+
 import com.typesafe.config._
+
 import scala.collection.JavaConverters._
-import java.io.File
 import java.net.URL
 import java.util.Properties
 
@@ -739,7 +740,7 @@ class ConfParserTest extends TestUtils {
         val e = intercept[ConfigException.Parse] {
             ConfigFactory.parseString("include file(" + jsonQuotedResourceFile("test01") + " something")
         }
-        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close paren"))
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting the closing parentheses"))
     }
 
     @Test
@@ -777,6 +778,45 @@ class ConfParserTest extends TestUtils {
         assertEquals(42, conf.getInt("ints.fortyTwo"))
         assertEquals(1, conf.getInt("fromJson1"))
         assertEquals("abc", conf.getString("fromProps.abc"))
+    }
+
+    @Test
+    def includeRequiredMissing() {
+        // set this to allowMissing=true to demonstrate that the missing inclusion causes failure despite this setting
+        val missing = ConfigParseOptions.defaults().setAllowMissing(true)
+
+        val ex = intercept[Exception] {
+            ConfigFactory.parseString("include required(classpath( \"nonexistant\") )", missing)
+        }
+
+        val actual = ex.getMessage
+        val expected = ".*resource not found on classpath.*"
+        assertTrue(s"expected match for <$expected> but got <$actual>", actual.matches(expected))
+    }
+
+    @Test
+    def includeRequiredFound() {
+        val confs = Seq(
+            "include required(\"test01\")",
+            "include required( \"test01\" )",
+            "include required( classpath(\"test01\") )",
+            "include required(classpath(\"test01\"))",
+            "include required( classpath(\"test01\"))",
+            "include required(classpath(\"test01\") )")
+
+        // should have loaded conf, json, properties
+        confs.foreach { c =>
+            try {
+                val conf = ConfigFactory.parseString(c)
+                assertEquals(42, conf.getInt("ints.fortyTwo"))
+                assertEquals(1, conf.getInt("fromJson1"))
+                assertEquals("abc", conf.getString("fromProps.abc"))
+            } catch {
+                case ex: Exception =>
+                    System.err.println(s"failed parsing: $c")
+                    throw ex
+            }
+        }
     }
 
     @Test

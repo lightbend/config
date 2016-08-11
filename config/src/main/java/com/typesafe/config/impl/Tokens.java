@@ -449,6 +449,8 @@ final class Tokens {
     final static Token COMMA = Token.newWithoutOrigin(TokenType.COMMA, "','", ",");
     final static Token EQUALS = Token.newWithoutOrigin(TokenType.EQUALS, "'='", "=");
     final static Token COLON = Token.newWithoutOrigin(TokenType.COLON, "':'", ":");
+    final static Token OPEN_ROUND = Token.newWithoutOrigin(TokenType.OPEN_ROUND, "'('", "(");
+    final static Token CLOSE_ROUND = Token.newWithoutOrigin(TokenType.CLOSE_ROUND, "')'", ")");
     final static Token OPEN_CURLY = Token.newWithoutOrigin(TokenType.OPEN_CURLY, "'{'", "{");
     final static Token CLOSE_CURLY = Token.newWithoutOrigin(TokenType.CLOSE_CURLY, "'}'", "}");
     final static Token OPEN_SQUARE = Token.newWithoutOrigin(TokenType.OPEN_SQUARE, "'['", "[");
