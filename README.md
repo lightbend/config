@@ -840,6 +840,7 @@ format.
   * config-annotation https://github.com/wacai/config-annotation
   * PureConfig https://github.com/melrief/pureconfig
   * Simple Scala Config https://github.com/ElderResearch/ssc
+  * konfig https://github.com/vpon/konfig
 
 #### Clojure wrappers for the Java library
 
