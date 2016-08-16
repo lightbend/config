@@ -1582,7 +1582,7 @@ The only way to ensure that your environment variables have the desired case
 is to first undefine all the env vars that you will depend on then redefine
 them with the required case.
 
-For example, the the ambient environment might have this defition ...
+For example, the the ambient environment might have this definition ...
 
 ```
 set Path=A;B;C
