@@ -294,7 +294,7 @@ class ConfigDocumentTest extends TestUtils {
         val configDocument = ConfigDocumentFactory.parseFile(resourceFile("/test03.conf"))
         val fileReader = new BufferedReader(new FileReader("config/src/test/resources/test03.conf"))
         var line = fileReader.readLine()
-        var sb = new StringBuilder()
+        val sb = new StringBuilder()
         while (line != null) {
             sb.append(line)
             sb.append("\n")
@@ -302,8 +302,10 @@ class ConfigDocumentTest extends TestUtils {
         }
         fileReader.close()
         val fileText = sb.toString()
-        assertEquals(fileText, configDocument.render())
+        assertEquals(fileText, defaultLineEndingsToUnix(configDocument.render()))
     }
+
+    private def defaultLineEndingsToUnix(s: String): String = s.replaceAll(System.lineSeparator(), "\n")
 
     @Test
     def configDocumentReaderParse {
