@@ -509,8 +509,6 @@ final class ConfigDocumentParser {
                     // continue looping
                     afterComma = true;
                 } else {
-                    // FIXME JL: Do ) balance check perhaps?
-
                     t = nextTokenCollectingWhitespace(objectNodes);
                     if (t == Tokens.CLOSE_CURLY) {
                         if (!hadOpenCurly) {
