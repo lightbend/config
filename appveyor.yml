@@ -1,0 +1,14 @@
+version: '{build}'
+os: Windows Server 2012
+install:
+  - cmd: choco install sbt -ia "INSTALLDIR=""C:\sbt"""
+  - cmd: SET PATH=C:\sbt\bin;%JAVA_HOME%\bin;%PATH%
+  - cmd: SET SBT_OPTS=-XX:MaxPermSize=2g -Xmx4g
+build_script:
+  - sbt clean compile
+test_script:
+  - sbt test
+  - sbt doc
+cache:
+  - C:\sbt\
+  - C:\Users\appveyor\.ivy2
