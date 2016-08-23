@@ -428,6 +428,7 @@ abstract trait TestUtils {
         "# bar\n", // just a comment with a newline
         "# foo\n//bar", // comment then another with no newline
         """{ "foo" = 42 }""", // equals rather than colon
+        """{ "foo" = (42) }""", // equals rather than colon
         """{ foo { "bar" : 42 } }""", // omit the colon for object value
         """{ foo baz { "bar" : 42 } }""", // omit the colon with unquoted key with spaces
         """ "foo" : 42 """, // omit braces on root object
@@ -528,6 +529,7 @@ abstract trait TestUtils {
             body
         } catch {
             case t: Throwable =>
+                println(t)
                 val tokens = try {
                     "tokens: " + tokenizeAsList(s)
                 } catch {
@@ -723,7 +725,7 @@ abstract trait TestUtils {
         val f = new File("config/src/test/resources")
         if (!f.exists()) {
             val here = new File(".").getAbsolutePath
-            throw new Exception(s"Tests must be run from the root project directory containing ${f.getPath()}, however the current director is $here")
+            throw new Exception(s"Tests must be run from the root project directory containing ${f.getPath()}, however the current directory is $here")
         }
         f
     }

@@ -481,7 +481,7 @@ final class Tokenizer {
             // the open quote has already been consumed
             StringBuilder sb = new StringBuilder();
 
-            // We need a sec ond string builder to keep track of escape characters.
+            // We need a second string builder to keep track of escape characters.
             // We want to return them exactly as they appeared in the original text,
             // which means we will need a new StringBuilder to escape escape characters
             // so we can also keep the actual value of the string. This is gross.
