@@ -645,7 +645,7 @@ class ConfParserTest extends TestUtils {
         // properties-like syntax
         val conf8 = parseConfig("""
                 # ignored comment
-                
+
                 # x.y comment
                 x.y = 10
                 # x.z comment
@@ -710,29 +710,22 @@ class ConfParserTest extends TestUtils {
 
     @Test
     def includeFileNotQuoted() {
-        // this test cannot work on Windows
         val f = resourceFile("test01")
-        if (isWindows) {
-            System.err.println("includeFileNotQuoted test skipped on Windows")
-        } else {
-            val e = intercept[ConfigException.Parse] {
-                ConfigFactory.parseString("include file(" + f + ")")
-            }
-            assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting include parameter"))
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString("include file(" + f + ")")
         }
+        assertTrue("wrong exception: " + e.getMessage,
+          e.getMessage.contains("expecting include parameter to be a quoted string"))
     }
 
     @Test
     def includeFileNotQuotedAndSpecialChar() {
         val f = resourceFile("test01")
-        if (isWindows) {
-            System.err.println("includeFileNotQuoted test skipped on Windows")
-        } else {
-            val e = intercept[ConfigException.Parse] {
-                ConfigFactory.parseString("include file(:" + f + ")")
-            }
-            assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a quoted string"))
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString("include file(:" + f + ")")
         }
+        assertTrue("wrong exception: " + e.getMessage,
+          e.getMessage.contains("expecting include parameter to be a quoted string"))
     }
 
     @Test

@@ -384,7 +384,7 @@ final class ConfigDocumentParser {
 
                 // quoted string
                 if (!Tokens.isValueWithType(t, ConfigValueType.STRING)) {
-                    throw parseError("expecting a quoted string inside file(), classpath(), or url(), rather than: "
+                    throw parseError("expecting include parameter to be a quoted string inside file(), classpath(), or url(), rather than: "
                             + t);
                 }
                 children.add(new ConfigNodeSimpleValue(t));
