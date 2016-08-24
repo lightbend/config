@@ -98,6 +98,13 @@ class TokenizerTest extends TestUtils {
     }
 
     @Test
+    def tokenizeUnquotedTextContainingRoundBrace() {
+        val source = """(footrue)"""
+        val expected = List(tokenUnquoted("(footrue)"))
+        tokenizerTest(expected, source)
+    }
+
+    @Test
     def tokenizeUnquotedTextContainingTrue() {
         val source = """footrue"""
         val expected = List(tokenUnquoted("footrue"))

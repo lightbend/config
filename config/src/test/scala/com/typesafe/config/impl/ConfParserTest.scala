@@ -788,6 +788,18 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
+    def includeRequiredFoundButNestedIncludeMissing() {
+        // set this to allowMissing=true to demonstrate that the missing inclusion causes failure despite this setting
+        val missing = ConfigParseOptions.defaults().setAllowMissing(true)
+
+        val conf = ConfigFactory.parseString("include required(classpath( \"test03\") )", missing)
+
+        val expected = "This is in the included file"
+        val actual = conf.getString("foo")
+        assertTrue(s"expected match for <$expected> but got <$actual>", actual.matches(expected))
+    }
+
+    @Test
     def includeRequiredFound() {
         val confs = Seq(
             "include required(\"test01\")",

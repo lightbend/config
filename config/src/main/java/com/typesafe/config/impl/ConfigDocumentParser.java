@@ -241,7 +241,7 @@ final class ConfigDocumentParser {
             AbstractConfigNodeValue v = null;
             int startingEqualsCount = equalsCount;
 
-            if (Tokens.isValue(t) || Tokens.isUnquotedText(t) || Tokens.isSubstitution(t)) {
+            if (Tokens.isValue(t) || Tokens.isUnquotedText(t) || Tokens.isSubstitution(t)|| t == Tokens.OPEN_ROUND) {
                 v = new ConfigNodeSimpleValue(t);
             } else if (t == Tokens.OPEN_CURLY) {
                 v = parseObject(true);
