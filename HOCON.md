@@ -1031,11 +1031,23 @@ get a value from a system property or from the reference
 configuration. So it's not enough to only look up the "fixed up"
 path, it's necessary to look up the original path as well.
 
-#### Include semantics: missing files
+#### Include semantics: missing files and required files
 
-If an included file does not exist, the include statement should
+By default, if an included file does not exist then the include statement should
 be silently ignored (as if the included file contained only an
 empty object).
+
+If however an included resource is mandatory then the name of the
+included resource may be wrapped with `required()`, in which case
+file parsing will fail with an error if the resource cannot be resolved.
+
+The syntax for this is
+
+    include required("foo.conf")
+    include required(file("foo.conf"))
+    include required(classpath("foo.conf"))
+    include required(url("http://localhost/foo.conf"))
+
 
 Other IO errors probably should not be ignored but implementations
 will have to make a judgment which IO errors reflect an ignorable
@@ -1570,7 +1582,7 @@ The only way to ensure that your environment variables have the desired case
 is to first undefine all the env vars that you will depend on then redefine
 them with the required case.
 
-For example, the the ambient environment might have this defition ...
+For example, the the ambient environment might have this definition ...
 
 ```
 set Path=A;B;C

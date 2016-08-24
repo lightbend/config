@@ -241,7 +241,7 @@ final class ConfigDocumentParser {
             AbstractConfigNodeValue v = null;
             int startingEqualsCount = equalsCount;
 
-            if (Tokens.isValue(t) || Tokens.isUnquotedText(t) || Tokens.isSubstitution(t)) {
+            if (Tokens.isValue(t) || Tokens.isUnquotedText(t) || Tokens.isSubstitution(t)|| t == Tokens.OPEN_ROUND) {
                 v = new ConfigNodeSimpleValue(t);
             } else if (t == Tokens.OPEN_CURLY) {
                 v = parseObject(true);
@@ -312,6 +312,44 @@ final class ConfigDocumentParser {
         }
 
         private ConfigNodeInclude parseInclude(ArrayList<AbstractConfigNode> children) {
+
+            Token t = nextTokenCollectingWhitespace(children);
+
+            // we either have a 'required(' or one of quoted string or the "file()" syntax
+            if (Tokens.isUnquotedText(t)) {
+                String kindText = Tokens.getUnquotedText(t);
+
+                if (kindText.equals("required")) {
+                    Token tOpen = nextToken();
+                    if (tOpen != Tokens.OPEN_ROUND) {
+                        throw parseError("expecting include parameter to be quoted filename, file(), classpath(), url() or required(). No spaces are allowed before the open paren. Not expecting: "
+                                + tOpen);
+                    }
+
+                    children.add(new ConfigNodeSingleToken(t));
+                    children.add(new ConfigNodeSingleToken(tOpen));
+
+                    ConfigNodeInclude res = parseIncludeResource(children, true);
+
+                    Token tClose = nextTokenCollectingWhitespace(children);
+                    if (tClose != Tokens.CLOSE_ROUND) {
+                        throw parseError("expecting the closing parentheses ')' of required() here, not: " + tClose);
+                    }
+                    children.add(new ConfigNodeSingleToken(tClose));
+
+                    return res;
+                } else {
+                    putBack(t);
+                    return parseIncludeResource(children, false);
+                }
+            }
+            else {
+                putBack(t);
+                return parseIncludeResource(children, false);
+            }
+        }
+
+        private ConfigNodeInclude parseIncludeResource(ArrayList<AbstractConfigNode> children, boolean isRequired) {
             Token t = nextTokenCollectingWhitespace(children);
 
             // we either have a quoted string or the "file()" syntax
@@ -320,11 +358,11 @@ final class ConfigDocumentParser {
                 String kindText = Tokens.getUnquotedText(t);
                 ConfigIncludeKind kind;
 
-                if (kindText.equals("url(")) {
+                if (kindText.equals("url")) {
                     kind = ConfigIncludeKind.URL;
-                } else if (kindText.equals("file(")) {
+                } else if (kindText.equals("file")) {
                     kind = ConfigIncludeKind.FILE;
-                } else if (kindText.equals("classpath(")) {
+                } else if (kindText.equals("classpath")) {
                     kind = ConfigIncludeKind.CLASSPATH;
                 } else {
                     throw parseError("expecting include parameter to be quoted filename, file(), classpath(), or url(). No spaces are allowed before the open paren. Not expecting: "
@@ -334,27 +372,35 @@ final class ConfigDocumentParser {
                 children.add(new ConfigNodeSingleToken(t));
 
                 // skip space inside parens
+                t = nextToken();
+
+                if (t != Tokens.OPEN_ROUND) {
+                    throw parseError("expecting include parameter to be quoted filename, file(), classpath(), or url(). No spaces are allowed before the open paren. Not expecting: " + kindText + " followed by "
+                            + t);
+                }
+
+                // skip space inside parens
                 t = nextTokenCollectingWhitespace(children);
 
                 // quoted string
                 if (!Tokens.isValueWithType(t, ConfigValueType.STRING)) {
-                    throw parseError("expecting a quoted string inside file(), classpath(), or url(), rather than: "
+                    throw parseError("expecting include parameter to be a quoted string inside file(), classpath(), or url(), rather than: "
                             + t);
                 }
                 children.add(new ConfigNodeSimpleValue(t));
+
                 // skip space after string, inside parens
                 t = nextTokenCollectingWhitespace(children);
 
-                if (Tokens.isUnquotedText(t) && Tokens.getUnquotedText(t).equals(")")) {
-                    // OK, close paren
-                } else {
-                    throw parseError("expecting a close parentheses ')' here, not: " + t);
+                if (t != Tokens.CLOSE_ROUND) {
+                    throw parseError("expecting the closing parentheses ')' of " + kindText + "() here, not: " + t);
                 }
-                return new ConfigNodeInclude(children, kind);
+
+                return new ConfigNodeInclude(children, kind, isRequired);
 
             } else if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
                 children.add(new ConfigNodeSimpleValue(t));
-                return new ConfigNodeInclude(children, ConfigIncludeKind.HEURISTIC);
+                return new ConfigNodeInclude(children, ConfigIncludeKind.HEURISTIC, isRequired);
             } else {
                 throw parseError("include keyword is not followed by a quoted string, but by: " + t);
             }

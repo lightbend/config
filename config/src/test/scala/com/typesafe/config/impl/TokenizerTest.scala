@@ -98,6 +98,13 @@ class TokenizerTest extends TestUtils {
     }
 
     @Test
+    def tokenizeUnquotedTextContainingRoundBrace() {
+        val source = """(footrue)"""
+        val expected = List(tokenUnquoted("(footrue)"))
+        tokenizerTest(expected, source)
+    }
+
+    @Test
     def tokenizeUnquotedTextContainingTrue() {
         val source = """footrue"""
         val expected = List(tokenUnquoted("footrue"))
@@ -196,7 +203,7 @@ class TokenizerTest extends TestUtils {
         for (t <- invalidTests) {
             val tokenized = tokenizeAsList(t)
             val maybeProblem = tokenized.find(Tokens.isProblem(_))
-            assertTrue(maybeProblem.isDefined)
+            assertTrue(s"expected failure for <$t> but got ${t}", maybeProblem.isDefined)
         }
     }
 
@@ -304,5 +311,48 @@ class TokenizerTest extends TestUtils {
             else
                 assertEquals("" + invalid, Tokens.getProblemWhat(problem))
         }
+    }
+
+    @Test
+    def tokenizeFunctionLikeUnquotedText() {
+        val source = """fn(TheURL)"""
+        val expected = List(tokenUnquoted("fn"), Tokens.OPEN_ROUND, tokenUnquoted("TheURL"), Tokens.CLOSE_ROUND)
+        tokenizerTest(expected, source)
+    }
+
+    @Test
+    def tokenizeNestedFunctionLikeUnquotedText() {
+        val source = """fn1(fn2(TheURL))"""
+        val expected = List(tokenUnquoted("fn1"), Tokens.OPEN_ROUND, tokenUnquoted("fn2"), Tokens.OPEN_ROUND, tokenUnquoted("TheURL"), Tokens.CLOSE_ROUND, Tokens.CLOSE_ROUND)
+        tokenizerTest(expected, source)
+    }
+
+    @Test
+    def tokenizeNestedFunctionLikeUnquotedTextWithWhitespace() {
+        val source = """fn1 ( fn2 ( TheURL ) ) """
+        val expected = List(
+            tokenUnquoted("fn1"),
+            tokenWhitespace(" "),
+            Tokens.OPEN_ROUND,
+            tokenWhitespace(" "),
+            tokenUnquoted("fn2"),
+            tokenWhitespace(" "),
+            Tokens.OPEN_ROUND,
+            tokenWhitespace(" "),
+            tokenUnquoted("TheURL"),
+            tokenWhitespace(" "),
+            Tokens.CLOSE_ROUND,
+            tokenWhitespace(" "),
+            Tokens.CLOSE_ROUND,
+            tokenWhitespace(" "))
+
+        tokenizerTest(expected, source)
+    }
+
+    @Test
+    def tokenizeFunctionLikeUnquotedTextWithNestedString() {
+        val source = """fn("TheURL")"""
+        val expected = List(tokenUnquoted("fn"), Tokens.OPEN_ROUND, tokenString("TheURL"), Tokens.CLOSE_ROUND)
+        tokenizerTest(expected, source)
     }
 }

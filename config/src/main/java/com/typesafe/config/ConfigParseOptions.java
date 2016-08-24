@@ -111,7 +111,8 @@ public final class ConfigParseOptions {
     /**
      * Set to false to throw an exception if the item being parsed (for example
      * a file) is missing. Set to true to just return an empty document in that
-     * case.
+     * case. Note that this setting applies on only to fetching the root document,
+     * it has no effect on any nested includes.
      *
      * @param allowMissing true to silently ignore missing item
      * @return options with the "allow missing" flag set
