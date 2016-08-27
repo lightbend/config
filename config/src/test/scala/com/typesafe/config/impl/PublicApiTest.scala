@@ -625,6 +625,27 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
+    def supportsConfigLoadingStrategyAlteration(): Unit = {
+        assertEquals("config.strategy is not set", null, System.getProperty("config.strategy"))
+        System.setProperty("config.strategy", classOf[TestStrategy].getCanonicalName)
+
+        try {
+            val incovationsBeforeTest = TestStrategy.getIncovations()
+            val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
+                Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+
+            val configA1 = withContextClassLoader(loaderA1) {
+                ConfigFactory.load()
+            }
+            ConfigFactory.load()
+            assertEquals(1, configA1.getInt("a"))
+            assertEquals(2, TestStrategy.getIncovations() - incovationsBeforeTest)
+        } finally {
+            System.clearProperty("config.strategy")
+        }
+    }
+
+    @Test
     def usesContextClassLoaderForApplicationConf() {
         val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
             Map("application.conf" -> resourceFile("a_1.conf").toURI.toURL()))
@@ -1103,4 +1124,17 @@ include "onclasspath"
         // missing underneath missing
         intercept[ConfigException.Missing] { conf.getIsNull("x.c.y") }
     }
+}
+
+class TestStrategy extends DefaultConfigLoadingStrategy {
+    override def parseApplicationConfig(parseOptions: ConfigParseOptions): Config = {
+        TestStrategy.increment()
+        super.parseApplicationConfig(parseOptions)
+    }
+}
+
+object TestStrategy {
+    private var invocations = 0
+    def getIncovations() = invocations
+    def increment() = invocations += 1
 }

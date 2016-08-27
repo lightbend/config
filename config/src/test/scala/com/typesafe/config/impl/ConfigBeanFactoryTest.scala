@@ -3,6 +3,7 @@
  */
 package com.typesafe.config.impl
 
+import beanconfig.EnumsConfig.{ Solution, Problem }
 import com.typesafe.config._
 
 import java.io.{ InputStream, InputStreamReader }
@@ -13,6 +14,7 @@ import org.junit.Assert._
 import org.junit._
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ArrayBuffer
 
 class ConfigBeanFactoryTest extends TestUtils {
 
@@ -68,6 +70,14 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertNotNull(beanConfig)
         assertEquals("abcd", beanConfig.getAbcd)
         assertEquals("yes", beanConfig.getYes)
+    }
+
+    @Test
+    def testCreateEnum() {
+        val beanConfig: EnumsConfig = ConfigBeanFactory.create(loadConfig().getConfig("enums"), classOf[EnumsConfig])
+        assertNotNull(beanConfig)
+        assertEquals(Problem.P1, beanConfig.getProblem)
+        assertEquals(ArrayBuffer(Solution.S1, Solution.S3), beanConfig.getSolutions.asScala)
     }
 
     @Test
@@ -163,12 +173,41 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
+    def testOptionalProperties() {
+        val beanConfig: ObjectsConfig = ConfigBeanFactory.create(loadConfig().getConfig("objects"), classOf[ObjectsConfig])
+        assertNotNull(beanConfig)
+        assertNotNull(beanConfig.getValueObject)
+        assertNull(beanConfig.getValueObject.getOptionalValue)
+        assertEquals("notNull", beanConfig.getValueObject.getMandatoryValue)
+    }
+
+    @Test
+    def testNotAnOptionalProperty(): Unit = {
+        val e = intercept[ConfigException.ValidationFailed] {
+            ConfigBeanFactory.create(parseConfig("{valueObject: {}}"), classOf[ObjectsConfig])
+        }
+        assertTrue("missing value error", e.getMessage.contains("No setting"))
+        assertTrue("error about the right property", e.getMessage.contains("mandatoryValue"))
+
+    }
+
+    @Test
     def testNotABeanField() {
         val e = intercept[ConfigException.BadBean] {
             ConfigBeanFactory.create(parseConfig("notBean=42"), classOf[NotABeanFieldConfig])
         }
         assertTrue("unsupported type error", e.getMessage.contains("unsupported type"))
         assertTrue("error about the right property", e.getMessage.contains("notBean"))
+    }
+
+    @Test
+    def testNotAnEnumField() {
+        val e = intercept[ConfigException.BadValue] {
+            ConfigBeanFactory.create(parseConfig("{problem=P1,solutions=[S4]}"), classOf[EnumsConfig])
+        }
+        assertTrue("invalid value error", e.getMessage.contains("Invalid value"))
+        assertTrue("error about the right property", e.getMessage.contains("solutions"))
+        assertTrue("error enumerates the enum constants", e.getMessage.contains("should be one of [S1, S2, S3]"))
     }
 
     @Test

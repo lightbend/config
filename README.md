@@ -76,14 +76,17 @@ to merge it in.
   - [Debugging Your Configuration](#debugging-your-configuration)
   - [Supports Java 8 and Later](#supports-java-8-and-later)
   - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
-  - [Other APIs (Wrappers and Ports)](#other-apis-wrappers-and-ports)
+  - [Other APIs (Wrappers, Ports and Utilities)](#other-apis-wrappers-ports-and-utilities)
+    - [Guice integration](#guice-integration)
+    - [Java (yep!) wrappers for the Java library](#java-yep-wrappers-for-the-java-library)
     - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
     - [Clojure wrappers for the Java library](#clojure-wrappers-for-the-java-library)
+    - [Scala port](#scala-port)
     - [Ruby port](#ruby-port)
     - [Puppet module](#puppet-module)
     - [Python port](#python-port)
-    - [C++ port](#c++-port)
-
+    - [C++ port](#c-port)
+    - [Linting tool](#linting-tool)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -837,10 +840,15 @@ format.
   * config-annotation https://github.com/wacai/config-annotation
   * PureConfig https://github.com/melrief/pureconfig
   * Simple Scala Config https://github.com/ElderResearch/ssc
+  * konfig https://github.com/vpon/konfig
 
 #### Clojure wrappers for the Java library
 
   * beamly-core.config https://github.com/beamly/beamly-core.config
+
+#### Scala port
+
+  * SHocon https://github.com/unicredit/shocon (work with both Scala and Scala.Js)
 
 #### Ruby port
 
@@ -859,5 +867,6 @@ format.
    * https://github.com/puppetlabs/cpp-hocon
 
 #### Linting tool
-   
+
    * A web based linting tool http://www.hoconlint.com/
+

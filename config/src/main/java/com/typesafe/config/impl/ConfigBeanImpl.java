@@ -4,6 +4,7 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -21,6 +22,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.Optional;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -90,7 +92,9 @@ public class ConfigBeanImpl {
                     if (configValue != null) {
                         SimpleConfig.checkValid(path, expectedType, configValue, problems);
                     } else {
-                        SimpleConfig.addMissing(problems, expectedType, path, config.origin());
+                        if (!isOptionalProperty(clazz, beanProp)) {
+                            SimpleConfig.addMissing(problems, expectedType, path, config.origin());
+                        }
                     }
                 }
             }
@@ -105,7 +109,17 @@ public class ConfigBeanImpl {
                 Method setter = beanProp.getWriteMethod();
                 Type parameterType = setter.getGenericParameterTypes()[0];
                 Class<?> parameterClass = setter.getParameterTypes()[0];
-                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, originalNames.get(beanProp.getName()));
+                String configPropName = originalNames.get(beanProp.getName());
+                // Is the property key missing in the config?
+                if (configPropName == null) {
+                    // If so, continue if the field is marked as @{link Optional}
+                    if (isOptionalProperty(clazz, beanProp)) {
+                        continue;
+                    }
+                    // Otherwise, raise a {@link Missing} exception right here
+                    throw new ConfigException.Missing(beanProp.getName());
+                }
+                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName);
                 setter.invoke(bean, unwrapped);
             }
             return bean;
@@ -161,6 +175,10 @@ public class ConfigBeanImpl {
             return config.getValue(configPropName);
         } else if (parameterClass == ConfigList.class) {
             return config.getList(configPropName);
+        } else if (parameterClass.isEnum()) {
+            @SuppressWarnings("unchecked")
+            Enum enumValue = config.getEnum((Class<Enum>) parameterClass, configPropName);
+            return enumValue;
         } else if (hasAtLeastOneBeanProperty(parameterClass)) {
             return createInternal(config.getConfig(configPropName), parameterClass);
         } else {
@@ -193,6 +211,10 @@ public class ConfigBeanImpl {
             return config.getObjectList(configPropName);
         } else if (elementType == ConfigValue.class) {
             return config.getList(configPropName);
+        } else if (((Class<?>) elementType).isEnum()) {
+            @SuppressWarnings("unchecked")
+            List<Enum> enumValues = config.getEnumList((Class<Enum>) elementType, configPropName);
+            return enumValues;
         } else if (hasAtLeastOneBeanProperty((Class<?>) elementType)) {
             List<Object> beanList = new ArrayList<Object>();
             List<? extends Config> configList = config.getConfigList(configPropName);
@@ -251,5 +273,25 @@ public class ConfigBeanImpl {
         }
 
         return false;
+    }
+
+    private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
+        Field field = getField(beanClass, beanProp.getName());
+        return (field.getAnnotationsByType(Optional.class).length > 0);
+    }
+
+    private static Field getField(Class beanClass, String fieldName) {
+        try {
+            Field field = beanClass.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            return field;
+        } catch (NoSuchFieldException e) {
+            // Don't give up yet. Try to look for field in super class, if any.
+        }
+        beanClass = beanClass.getSuperclass();
+        if (beanClass == null) {
+            return null;
+        }
+        return getField(beanClass, fieldName);
     }
 }
