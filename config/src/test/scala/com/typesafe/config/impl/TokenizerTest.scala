@@ -98,6 +98,13 @@ class TokenizerTest extends TestUtils {
     }
 
     @Test
+    def tokenizeUnquotedTextContainingRoundBrace() {
+        val source = """(footrue)"""
+        val expected = List(tokenUnquoted("(footrue)"))
+        tokenizerTest(expected, source)
+    }
+
+    @Test
     def tokenizeUnquotedTextContainingTrue() {
         val source = """footrue"""
         val expected = List(tokenUnquoted("footrue"))
@@ -196,7 +203,7 @@ class TokenizerTest extends TestUtils {
         for (t <- invalidTests) {
             val tokenized = tokenizeAsList(t)
             val maybeProblem = tokenized.find(Tokens.isProblem(_))
-            assertTrue(maybeProblem.isDefined)
+            assertTrue(s"expected failure for <$t> but got ${t}", maybeProblem.isDefined)
         }
     }
 

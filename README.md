@@ -860,4 +860,4 @@ format.
 
 #### Linting tool
    
-   * A web based linting tool http://www.hoconlint.com/ 
+   * A web based linting tool http://www.hoconlint.com/

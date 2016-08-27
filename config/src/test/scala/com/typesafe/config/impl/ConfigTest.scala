@@ -858,7 +858,7 @@ class ConfigTest extends TestUtils {
         if (home != null) {
             assertEquals(home, conf.getString("system.home"))
         } else {
-            assertEquals(nullValue, conf.getObject("system").get("home"))
+            assertEquals(null, conf.getObject("system").get("home"))
         }
     }
 
@@ -964,7 +964,7 @@ class ConfigTest extends TestUtils {
         if (home != null) {
             assertEquals(home, conf.getString("test01.system.home"))
         } else {
-            assertEquals(nullValue, conf.getObject("test01.system").get("home"))
+            assertEquals(null, conf.getObject("test01.system").get("home"))
         }
         val concatenated = conf.getString("test01.system.concatenated")
         assertTrue(concatenated.contains("Your Java version"))

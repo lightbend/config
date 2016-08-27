@@ -235,7 +235,7 @@ class ConcatenationTest extends TestUtils {
         val e = intercept[ConfigException.Parse] {
             parseConfig("""{ { a : 1 } : "value" }""")
         }
-        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close") && e.getMessage.contains("'{'"))
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close parentheses") && e.getMessage.contains("'{'"))
     }
 
     @Test
@@ -243,7 +243,7 @@ class ConcatenationTest extends TestUtils {
         val e = intercept[ConfigException.Parse] {
             parseConfig("""{ [ "a" ] : "value" }""")
         }
-        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close") && e.getMessage.contains("'['"))
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("expecting a close parentheses") && e.getMessage.contains("'['"))
     }
 
     @Test
