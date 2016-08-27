@@ -46,7 +46,9 @@ public interface ConfigIncludeContext {
 
 
     /**
-     * Copy this {@link ConfigIncludeContext} giving it a new value for its parseOptions
+     * Copy this {@link ConfigIncludeContext} giving it a new value for its parseOptions.
+     *
+     * @param options new parse options to use
      *
      * @return the updated copy of this context
      */
