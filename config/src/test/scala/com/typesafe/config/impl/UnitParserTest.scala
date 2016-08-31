@@ -31,13 +31,13 @@ class UnitParserTest extends TestUtils {
         val e = intercept[ConfigException.BadValue] {
             SimpleConfig.parseDuration("100 dollars", fakeOrigin(), "test")
         }
-        assertTrue(e.getMessage().contains("time unit"))
+        assertTrue(e.getMessage.contains("time unit"))
 
         // bad number
         val e2 = intercept[ConfigException.BadValue] {
             SimpleConfig.parseDuration("1 00 seconds", fakeOrigin(), "test")
         }
-        assertTrue(e2.getMessage().contains("duration number"))
+        assertTrue(e2.getMessage.contains("duration number"))
     }
 
     // https://github.com/typesafehub/config/issues/117
@@ -93,7 +93,7 @@ class UnitParserTest extends TestUtils {
         var result = 1024L * 1024 * 1024
         for (unit <- Seq("tebi", "pebi", "exbi")) {
             val first = unit.substring(0, 1).toUpperCase()
-            result = result * 1024;
+            result = result * 1024
             assertEquals(result, parseMem("1" + first))
             assertEquals(result, parseMem("1" + first + "i"))
             assertEquals(result, parseMem("1" + first + "iB"))
@@ -104,7 +104,7 @@ class UnitParserTest extends TestUtils {
         result = 1000L * 1000 * 1000
         for (unit <- Seq("tera", "peta", "exa")) {
             val first = unit.substring(0, 1).toUpperCase()
-            result = result * 1000;
+            result = result * 1000
             assertEquals(result, parseMem("1" + first + "B"))
             assertEquals(result, parseMem("1" + unit + "byte"))
             assertEquals(result, parseMem("1" + unit + "bytes"))
@@ -114,13 +114,13 @@ class UnitParserTest extends TestUtils {
         val e = intercept[ConfigException.BadValue] {
             SimpleConfig.parseBytes("100 dollars", fakeOrigin(), "test")
         }
-        assertTrue(e.getMessage().contains("size-in-bytes unit"))
+        assertTrue(e.getMessage.contains("size-in-bytes unit"))
 
         // bad number
         val e2 = intercept[ConfigException.BadValue] {
             SimpleConfig.parseBytes("1 00 bytes", fakeOrigin(), "test")
         }
-        assertTrue(e2.getMessage().contains("size-in-bytes number"))
+        assertTrue(e2.getMessage.contains("size-in-bytes number"))
     }
 
     // later on we'll want to check this with BigInteger version of getBytes

@@ -157,6 +157,9 @@ final class ConfigParser {
         }
 
         private void parseInclude(Map<String, AbstractConfigValue> values, ConfigNodeInclude n) {
+            boolean isRequired = n.isRequired();
+            ConfigIncludeContext cic = includeContext.setParseOptions(includeContext.parseOptions().setAllowMissing(!isRequired));
+
             AbstractConfigObject obj;
             switch (n.kind()) {
                 case URL:
@@ -166,21 +169,21 @@ final class ConfigParser {
                     } catch (MalformedURLException e) {
                         throw parseError("include url() specifies an invalid URL: " + n.name(), e);
                     }
-                    obj = (AbstractConfigObject) includer.includeURL(includeContext, url);
+                    obj = (AbstractConfigObject) includer.includeURL(cic, url);
                     break;
 
                 case FILE:
-                    obj = (AbstractConfigObject) includer.includeFile(includeContext,
+                    obj = (AbstractConfigObject) includer.includeFile(cic,
                             new File(n.name()));
                     break;
 
                 case CLASSPATH:
-                    obj = (AbstractConfigObject) includer.includeResources(includeContext, n.name());
+                    obj = (AbstractConfigObject) includer.includeResources(cic, n.name());
                     break;
 
                 case HEURISTIC:
                     obj = (AbstractConfigObject) includer
-                            .include(includeContext, n.name());
+                            .include(cic, n.name());
                     break;
 
                 default:
