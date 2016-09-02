@@ -1,3 +1,16 @@
+# X.Y.Z: TBD
+
+- added `include required("foo")` syntax to specify includes that
+  fail if not present
+- support for more kinds of property in ConfigBeanFactory:
+  * enumerations
+  * optional fields
+  * lists of beans
+- numbers can now start with a decimal (".33" vs. "0.33"), these
+  are still parsed as strings but Config.getDouble() etc.  will
+  convert them to numbers
+- a few other small bugfixes
+
 # 1.3.0: May 8, 2015
 
 - no changes from 1.3.0-M3
