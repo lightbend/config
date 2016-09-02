@@ -814,8 +814,7 @@ class ConfParserTest extends TestUtils {
             "include required(classpath( \"test01\" ))",
             "include required( classpath( \"test01\" ))",
             "include required(classpath( \"test01\" ) )",
-            "include required( classpath( \"test01\" ) )"
-      )
+            "include required( classpath( \"test01\" ) )")
 
         // should have loaded conf, json, properties
         confs.foreach { c =>
