@@ -1,4 +1,4 @@
-# X.Y.Z: TBD
+# 1.3.1: September 24, 2016
 
 - added `include required("foo")` syntax to specify includes that
   fail if not present
