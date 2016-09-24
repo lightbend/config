@@ -106,12 +106,12 @@ You can find published releases on Maven Central.
     <dependency>
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
-        <version>1.3.0</version>
+        <version>1.3.1</version>
     </dependency>
 
 sbt dependency:
 
-    libraryDependencies += "com.typesafe" % "config" % "1.3.0"
+    libraryDependencies += "com.typesafe" % "config" % "1.3.1"
 
 Link for direct download if you don't use a dependency manager:
 
@@ -766,7 +766,7 @@ Currently the library is maintained against Java 8, but
 version 1.2.1 and earlier will work with Java 6.
 
 Please use 1.2.1 if you need Java 6 support, though some people
-have expressed interest in a branch off of 1.3.0 supporting
+have expressed interest in a branch off of 1.3.x supporting
 Java 7. If you want to work on that branch you might bring it up
 on [chat](https://gitter.im/typesafehub/config). We can release a
 jar for Java 7 if someone(s) steps up to maintain the branch. The
