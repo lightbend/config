@@ -841,6 +841,7 @@ format.
   * PureConfig https://github.com/melrief/pureconfig
   * Simple Scala Config https://github.com/ElderResearch/ssc
   * konfig https://github.com/vpon/konfig
+  * ScalaConfig https://github.com/andr83/scalaconfig
 
 #### Clojure wrappers for the Java library
 
