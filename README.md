@@ -507,7 +507,7 @@ Notation" or HOCON, and files use the suffix `.conf`.  See
 in this directory for more detail.
 
 After processing a `.conf` file, the result is always just a JSON
-tree that you could have written (less conveniently) in JSON.
+tree that you could have been written (less conveniently) in JSON.
 
 ### Features of HOCON
 
