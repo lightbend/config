@@ -310,10 +310,10 @@ public abstract class ConfigException extends RuntimeException implements Serial
      * {@link ConfigException.ValidationFailed} exception thrown from
      * <code>checkValid()</code> includes a list of problems encountered.
      */
-    public static class ValidationProblem {
+    public static class ValidationProblem implements Serializable {
 
         final private String path;
-        final private ConfigOrigin origin;
+        final private transient ConfigOrigin origin;
         final private String problem;
 
         public ValidationProblem(String path, ConfigOrigin origin, String problem) {
