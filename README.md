@@ -251,7 +251,8 @@ library examples in `examples/` show how to accept a custom config
 while defaulting to `ConfigFactory.load()`.
 
 For applications using `application.{conf,json,properties}`,
-system properties can be used to force a different config source:
+system properties can be used to force a different config source
+(e.g. from command line `-Dconfig.file=path/to/config-file`):
 
  - `config.resource` specifies a resource name - not a
    basename, i.e. `application.conf` not `application`
