@@ -844,6 +844,7 @@ format.
   * konfig https://github.com/vpon/konfig
   * ScalaConfig https://github.com/andr83/scalaconfig
   * static-config https://github.com/Krever/static-config
+  * validated-config https://github.com/carlpulley/validated-config
 
 #### Clojure wrappers for the Java library
 
