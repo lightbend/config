@@ -845,6 +845,7 @@ format.
   * ScalaConfig https://github.com/andr83/scalaconfig
   * static-config https://github.com/Krever/static-config
   * validated-config https://github.com/carlpulley/validated-config
+  * Cedi Config https://github.com/ccadllc/cedi-config
 
 #### Clojure wrappers for the Java library
 
