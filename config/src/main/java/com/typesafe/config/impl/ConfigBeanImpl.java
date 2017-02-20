@@ -69,7 +69,9 @@ public class ConfigBeanImpl {
         try {
             List<PropertyDescriptor> beanProps = new ArrayList<PropertyDescriptor>();
             for (PropertyDescriptor beanProp : beanInfo.getPropertyDescriptors()) {
-                if (beanProp.getReadMethod() == null || beanProp.getWriteMethod() == null) {
+                if (beanProp.getReadMethod() == null
+                        || beanProp.getWriteMethod() == null
+                        || getField(clazz, beanProp.getName()) == null) {
                     continue;
                 }
                 beanProps.add(beanProp);

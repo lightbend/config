@@ -237,6 +237,14 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertTrue("error about the right property", e.getMessage.contains("'map'"))
     }
 
+    @Test
+    def testDifferentFieldNameFromAccessors(): Unit = {
+        val e = intercept[ConfigException.ValidationFailed] {
+            ConfigBeanFactory.create(ConfigFactory.empty(), classOf[DifferentFieldNameFromAccessorsConfig])
+        }
+        assertTrue("only one missing value error", e.getMessage.contains("No setting"))
+    }
+
     private def loadConfig(): Config = {
         val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
         try {
