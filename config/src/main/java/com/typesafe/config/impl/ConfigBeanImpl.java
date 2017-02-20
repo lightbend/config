@@ -69,9 +69,7 @@ public class ConfigBeanImpl {
         try {
             List<PropertyDescriptor> beanProps = new ArrayList<PropertyDescriptor>();
             for (PropertyDescriptor beanProp : beanInfo.getPropertyDescriptors()) {
-                if (beanProp.getReadMethod() == null
-                        || beanProp.getWriteMethod() == null
-                        || getField(clazz, beanProp.getName()) == null) {
+                if (beanProp.getReadMethod() == null || beanProp.getWriteMethod() == null) {
                     continue;
                 }
                 beanProps.add(beanProp);
@@ -279,7 +277,7 @@ public class ConfigBeanImpl {
 
     private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
         Field field = getField(beanClass, beanProp.getName());
-        return (field.getAnnotationsByType(Optional.class).length > 0);
+        return field != null && (field.getAnnotationsByType(Optional.class).length > 0);
     }
 
     private static Field getField(Class beanClass, String fieldName) {
