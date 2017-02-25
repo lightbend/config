@@ -81,6 +81,7 @@ to merge it in.
     - [Java (yep!) wrappers for the Java library](#java-yep-wrappers-for-the-java-library)
     - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
     - [Clojure wrappers for the Java library](#clojure-wrappers-for-the-java-library)
+    - [Kotlin wrappers for the Java library](#kotlin-wrappers-for-the-java-library)
     - [Scala port](#scala-port)
     - [Ruby port](#ruby-port)
     - [Puppet module](#puppet-module)
@@ -850,7 +851,10 @@ format.
 #### Clojure wrappers for the Java library
 
   * beamly-core.config https://github.com/beamly/beamly-core.config
-
+  
+#### Kotlin wrappers for the Java library
+  * config4k https://github.com/config4k/config4k
+  
 #### Scala port
 
   * SHocon https://github.com/unicredit/shocon (work with both Scala and Scala.Js)
