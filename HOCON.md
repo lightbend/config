@@ -30,7 +30,7 @@
       - [Include syntax](#include-syntax)
       - [Include semantics: merging](#include-semantics-merging)
       - [Include semantics: substitution](#include-semantics-substitution)
-      - [Include semantics: missing files](#include-semantics-missing-files)
+      - [Include semantics: missing files and required files](#include-semantics-missing-files-and-required-files)
       - [Include semantics: file formats and extensions](#include-semantics-file-formats-and-extensions)
       - [Include semantics: locating resources](#include-semantics-locating-resources)
     - [Conversion of numerically-indexed objects to arrays](#conversion-of-numerically-indexed-objects-to-arrays)
@@ -47,6 +47,7 @@
     - [Substitution fallback to environment variables](#substitution-fallback-to-environment-variables)
     - [hyphen-separated vs. camelCase](#hyphen-separated-vs-camelcase)
   - [Note on Java properties similarity](#note-on-java-properties-similarity)
+  - [Note on Windows and case sensitivity of environment variables](#note-on-windows-and-case-sensitivity-of-environment-variables)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
