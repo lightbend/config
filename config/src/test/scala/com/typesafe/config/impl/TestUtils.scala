@@ -721,7 +721,7 @@ abstract trait TestUtils {
     def path(elements: String*) = new Path(elements: _*)
 
     val resourceDir = {
-        val f = new File("config/src/test/resources")
+        val f = new File("src/test/resources")
         if (!f.exists()) {
             val here = new File(".").getAbsolutePath
             throw new Exception(s"Tests must be run from the root project directory containing ${f.getPath()}, however the current directory is $here")
@@ -871,7 +871,7 @@ abstract trait TestUtils {
     }
 
     protected def withScratchDirectory[T](testcase: String)(body: File => T): Unit = {
-        val target = new File("config/target")
+        val target = new File("target")
         if (!target.isDirectory)
             throw new RuntimeException(s"Expecting $target to exist")
         val suffix = java.lang.Integer.toHexString(java.util.concurrent.ThreadLocalRandom.current.nextInt)
