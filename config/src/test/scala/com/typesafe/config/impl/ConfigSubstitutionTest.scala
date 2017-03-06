@@ -10,6 +10,7 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigResolveOptions
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import scala.collection.JavaConverters._
 
 class ConfigSubstitutionTest extends TestUtils {
 
@@ -721,6 +722,35 @@ class ConfigSubstitutionTest extends TestUtils {
     @Test
     def doNotSerializeUnresolvedObject() {
         checkNotSerializable(substComplexObject)
+    }
+
+    @Test
+    def resolveListFromSystemProps() {
+        val props = parseObject(
+            """
+            |"a": ${testList}
+            """.stripMargin)
+
+        System.setProperty("testList.0", "0")
+        System.setProperty("testList.1", "1")
+        ConfigImpl.reloadSystemPropertiesConfig()
+
+        val resolved = resolve(ConfigFactory.systemProperties().withFallback(props).root.asInstanceOf[AbstractConfigObject])
+
+        assertEquals(List("0", "1"), resolved.getList("a").unwrapped().asScala)
+    }
+
+    @Test
+    def resolveListFromEnvVars() {
+        val props = parseObject(
+            """
+            |"a": ${testList}
+            """.stripMargin)
+
+        //"testList.0" and "testList.1" are defined as envVars in build.sbt
+        val resolved = resolve(props)
+
+        assertEquals(List("0", "1"), resolved.getList("a").unwrapped().asScala)
     }
 
     // this is a weird test, it used to test fallback to system props which made more sense.

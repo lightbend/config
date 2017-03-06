@@ -292,7 +292,7 @@ class ConfigDocumentTest extends TestUtils {
     @Test
     def configDocumentFileParse {
         val configDocument = ConfigDocumentFactory.parseFile(resourceFile("/test03.conf"))
-        val fileReader = new BufferedReader(new FileReader("config/src/test/resources/test03.conf"))
+        val fileReader = new BufferedReader(new FileReader("src/test/resources/test03.conf"))
         var line = fileReader.readLine()
         val sb = new StringBuilder()
         while (line != null) {

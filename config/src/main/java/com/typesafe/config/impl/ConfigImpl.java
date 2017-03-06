@@ -335,16 +335,7 @@ public class ConfigImpl {
     }
 
     private static AbstractConfigObject loadEnvVariables() {
-        Map<String, String> env = System.getenv();
-        Map<String, AbstractConfigValue> m = new HashMap<String, AbstractConfigValue>();
-        for (Map.Entry<String, String> entry : env.entrySet()) {
-            String key = entry.getKey();
-            m.put(key,
-                    new ConfigString.Quoted(SimpleConfigOrigin.newSimple("env var " + key), entry
-                            .getValue()));
-        }
-        return new SimpleConfigObject(SimpleConfigOrigin.newSimple("env variables"),
-                m, ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
+        return PropertiesParser.fromStringMap(newSimpleOrigin("env variables"), System.getenv());
     }
 
     private static class EnvVariablesHolder {

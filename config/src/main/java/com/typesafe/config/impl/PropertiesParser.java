@@ -56,15 +56,28 @@ final class PropertiesParser {
 
     static AbstractConfigObject fromProperties(ConfigOrigin origin,
             Properties props) {
+        return fromEntrySet(origin, props.entrySet());
+    }
+
+    private static <K, V> AbstractConfigObject fromEntrySet(ConfigOrigin origin, Set<Map.Entry<K, V>> entries) {
+        final Map<Path, Object> pathMap = getPathMap(entries);
+        return fromPathMap(origin, pathMap, true /* from properties */);
+    }
+
+    private static <K, V> Map<Path, Object> getPathMap(Set<Map.Entry<K, V>> entries) {
         Map<Path, Object> pathMap = new HashMap<Path, Object>();
-        for (Map.Entry<Object, Object> entry : props.entrySet()) {
+        for (Map.Entry<K, V> entry : entries) {
             Object key = entry.getKey();
             if (key instanceof String) {
                 Path path = pathFromPropertyKey((String) key);
                 pathMap.put(path, entry.getValue());
             }
         }
-        return fromPathMap(origin, pathMap, true /* from properties */);
+        return pathMap;
+    }
+
+    static AbstractConfigObject fromStringMap(ConfigOrigin origin, Map<String, String> stringMap) {
+        return fromEntrySet(origin, stringMap.entrySet());
     }
 
     static AbstractConfigObject fromPathMap(ConfigOrigin origin,
