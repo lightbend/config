@@ -16,6 +16,8 @@ import java.io.ObjectOutputStream
 import java.io.ByteArrayInputStream
 import java.io.ObjectInputStream
 import java.io.NotSerializableException
+import java.io.OutputStream
+import java.io.InputStream
 import scala.annotation.tailrec
 import java.net.URL
 import java.util.Locale
@@ -881,6 +883,34 @@ abstract trait TestUtils {
             body(scratch)
         } finally {
             deleteRecursive(scratch)
+        }
+    }
+
+    protected def checkSerializableWithCustomSerializer[T: Manifest](o: T): T = {
+        val byteStream = new ByteArrayOutputStream()
+        val objectStream = new CustomObjectOutputStream(byteStream)
+        objectStream.writeObject(o)
+        objectStream.close()
+        val inStream = new ByteArrayInputStream(byteStream.toByteArray)
+        val inObjectStream = new CustomObjectInputStream(inStream)
+        val copy = inObjectStream.readObject()
+        inObjectStream.close()
+        copy.asInstanceOf[T]
+    }
+
+    class CustomObjectOutputStream(out: OutputStream) extends ObjectOutputStream(out) {
+        override def writeUTF(str: String): Unit = {
+            val bytes = str.getBytes
+            writeLong(bytes.length)
+            write(bytes)
+        }
+    }
+
+    class CustomObjectInputStream(in: InputStream) extends ObjectInputStream(in) {
+        override def readUTF(): String = {
+            val bytes = new Array[Byte](readLong().toByte)
+            read(bytes)
+            new String(bytes)
         }
     }
 }
