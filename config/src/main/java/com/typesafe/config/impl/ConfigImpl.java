@@ -339,7 +339,7 @@ public class ConfigImpl {
     }
 
     private static class EnvVariablesHolder {
-        static final AbstractConfigObject envVariables = loadEnvVariables();
+        static volatile AbstractConfigObject envVariables = loadEnvVariables();
     }
 
     static AbstractConfigObject envVariablesAsConfigObject() {
@@ -352,6 +352,12 @@ public class ConfigImpl {
 
     public static Config envVariablesAsConfig() {
         return envVariablesAsConfigObject().toConfig();
+    }
+
+    public static void reloadEnvVariablesConfig() {
+        // ConfigFactory.invalidateCaches() relies on this having the side
+        // effect that it drops all caches
+        EnvVariablesHolder.envVariables = loadEnvVariables();
     }
 
     public static Config defaultReference(final ClassLoader loader) {
