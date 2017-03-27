@@ -87,6 +87,7 @@ to merge it in.
     - [Puppet module](#puppet-module)
     - [Python port](#python-port)
     - [C++ port](#c-port)
+    - [JavaScript port](#javascript-port)
     - [Linting tool](#linting-tool)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -875,7 +876,10 @@ format.
 
    * https://github.com/puppetlabs/cpp-hocon
 
+#### JavaScript port
+ 
+  * https://github.com/yellowblood/hocon-js (missing features, under development)
+  
 #### Linting tool
 
    * A web based linting tool http://www.hoconlint.com/
-
