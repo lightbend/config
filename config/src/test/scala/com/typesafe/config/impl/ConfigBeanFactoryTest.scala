@@ -206,12 +206,23 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
-    def testOptionalProperties() {
-        val beanConfig: ObjectsConfig = ConfigBeanFactory.create(loadConfig().getConfig("objects"), classOf[ObjectsConfig])
+    def testOptionalMissingProperties() {
+        val beanConfig: ObjectsConfig = ConfigBeanFactory.create(loadConfig().getConfig("objectsMissing"), classOf[ObjectsConfig])
         assertNotNull(beanConfig)
         assertNotNull(beanConfig.getValueObject)
         assertNull(beanConfig.getValueObject.getOptionalValue)
-        assertEquals("notNull", beanConfig.getValueObject.getMandatoryValue)
+        assertNull(beanConfig.getValueObject.getDefaultedValue)
+        assertEquals("hello", beanConfig.getValueObject.getMandatoryValue)
+    }
+
+    @Test
+    def testOptionalPresentProperties() {
+        val beanConfig: ObjectsConfig = ConfigBeanFactory.create(loadConfig().getConfig("objectsPresent"), classOf[ObjectsConfig])
+        assertNotNull(beanConfig)
+        assertNotNull(beanConfig.getValueObject)
+        assertEquals("hello", beanConfig.getValueObject.getOptionalValue)
+        assertEquals("hello", beanConfig.getValueObject.getDefaultedValue)
+        assertEquals("hello", beanConfig.getValueObject.getMandatoryValue)
     }
 
     @Test

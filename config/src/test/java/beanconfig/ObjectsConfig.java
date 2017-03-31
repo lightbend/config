@@ -5,9 +5,11 @@ import com.typesafe.config.Optional;
 
 public class ObjectsConfig {
     public static class ValueObject {
+        private String mandatoryValue;
         @Optional
         private String optionalValue;
-        private String mandatoryValue;
+        @Optional
+        private String defaultedValue = "hello";
 
         public String getMandatoryValue() {
           return mandatoryValue;
@@ -23,6 +25,14 @@ public class ObjectsConfig {
 
         public void setOptionalValue(String optionalValue) {
           this.optionalValue = optionalValue;
+        }
+
+        public String getDefaultedValue() {
+          return defaultedValue;
+        }
+
+        public void setDefaultedValue(String defaultedValue) {
+          this.defaultedValue = defaultedValue;
         }
     }
 
