@@ -116,8 +116,15 @@ public class ConfigBeanImpl {
                     if (isOptionalProperty(clazz, beanProp)) {
                         continue;
                     }
-                    // Otherwise, raise a {@link Missing} exception right here
-                    throw new ConfigException.Missing(beanProp.getName());
+                    // Otherwise, raise a {@link BugOrBroken} exception
+                    throw new ConfigException.BugOrBroken("Should have detected missing props earlier");
+                } else if (isOptionalProperty(clazz, beanProp)) {
+                    // Is the property null in the config?
+                    if (config.getIsNull(configPropName)) {
+                        // If so, set it as such in the bean.
+                        setter.invoke(bean, (Object) null);
+                        continue;
+                    }
                 }
                 Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName);
                 setter.invoke(bean, unwrapped);
