@@ -198,7 +198,7 @@ There isn't a schema language or anything like that. However, two
 suggested tools are:
 
  - use the
-   [checkValid() method](http://typesafehub.github.com/config/latest/api/com/typesafe/config/Config.html#checkValid%28com.typesafe.config.Config,%20java.lang.String...%29)
+   [checkValid() method](http://typesafehub.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
  - access your config through a Settings class with a field for
    each setting, and instantiate it on startup (immediately
    throwing an exception if any settings are missing)
