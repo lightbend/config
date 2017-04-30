@@ -9,6 +9,8 @@ curious, please feel welcome to join the chat room:
 
 ## Overview
 
+[![Join the chat at https://gitter.im/typesafehub/config](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/typesafehub/config?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
  - implemented in plain Java with no dependencies
  - supports files in three formats: Java properties, JSON, and a
    human-friendly JSON superset
