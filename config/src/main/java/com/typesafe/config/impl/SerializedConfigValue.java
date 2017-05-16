@@ -3,8 +3,10 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
+import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.Externalizable;
@@ -465,17 +467,21 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             SerializedField code = readCode(in);
             if (code == SerializedField.END_MARKER) {
                 return;
-            } else if (code == SerializedField.ROOT_VALUE) {
-                in.readInt(); // discard length
-                this.value = readValue(in, null /* baseOrigin */);
+            }
+            
+            DataInput input = fieldIn(in);
+            if (code == SerializedField.ROOT_VALUE) {
+                this.value = readValue(input, null /* baseOrigin */);
             } else if (code == SerializedField.ROOT_WAS_CONFIG) {
-                in.readInt(); // discard length
-                this.wasConfig = in.readBoolean();
-            } else {
-                // ignore unknown field
-                skipField(in);
+                this.wasConfig = input.readBoolean();
             }
         }
+    }
+
+    private DataInput fieldIn(ObjectInput in) throws IOException {
+        byte[] bytes = new byte[in.readInt()];
+        in.readFully(bytes);
+        return new DataInputStream(new ByteArrayInputStream(bytes));
     }
 
     private static ConfigException shouldNotBeUsed() {
