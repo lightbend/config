@@ -255,6 +255,8 @@ public abstract class Parseable implements ConfigParseable {
             ConfigParseOptions finalOptions) throws IOException {
         if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
             return PropertiesParser.parse(reader, origin);
+        } else if( finalOptions.getSyntax() == ConfigSyntax.YAML ) {
+            return YAMLParser.parse(reader, origin);
         } else {
             Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
             ConfigNodeRoot document = ConfigDocumentParser.parse(tokens, origin, finalOptions);

@@ -27,6 +27,8 @@ crossPaths := false
 libraryDependencies += "net.liftweb" %% "lift-json" % "2.5" % "test"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test"
 
+libraryDependencies += "org.yaml" % "snakeyaml" % "1.12"
+
 externalResolvers += "Scala Tools Snapshots" at "http://scala-tools.org/repo-snapshots/"
 
 checkstyleConfigLocation := CheckstyleConfigLocation.File((baseDirectory.value / "checkstyle-config.xml").toString)
