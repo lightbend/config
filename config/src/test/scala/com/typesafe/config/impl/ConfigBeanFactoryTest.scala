@@ -48,10 +48,9 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigBeanFactory.create(config, classOf[ValidationBeanConfig])
         }
 
-        val expecteds = Seq(Missing("propNotListedInConfig", 77, "string"),
-            WrongType("shouldBeInt", 78, "number", "boolean"),
-            WrongType("should-be-boolean", 79, "boolean", "number"),
-            WrongType("should-be-list", 80, "list", "string"))
+        val expecteds = Seq(Missing("propNotListedInConfig", 78, "string"),
+            WrongType("shouldBeInt", 79, "number", "boolean"),
+            WrongType("should-be-boolean", 80, "boolean", "number"))
 
         checkValidationException(e, expecteds)
     }
@@ -100,6 +99,7 @@ class ConfigBeanFactoryTest extends TestUtils {
         val beanConfig: ArraysConfig = ConfigBeanFactory.create(loadConfig().getConfig("arrays"), classOf[ArraysConfig])
         assertNotNull(beanConfig)
         assertEquals(List().asJava, beanConfig.getEmpty)
+        assertEquals(List().asJava, beanConfig.getFromEmptyString)
         assertEquals(List(1, 2, 3).asJava, beanConfig.getOfInt)
         assertEquals(List(32L, 42L, 52L).asJava, beanConfig.getOfLong)
         assertEquals(List("a", "b", "c").asJava, beanConfig.getOfString)

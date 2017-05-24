@@ -873,7 +873,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             }
         } else if (referenceType == ConfigValueType.LIST) {
             // objects may be convertible to lists if they have numeric keys
-            if (value instanceof SimpleConfigList || value instanceof SimpleConfigObject) {
+            // strings may also be convertible to lists if empty
+            if (value instanceof SimpleConfigList || value instanceof SimpleConfigObject || value instanceof ConfigString) {
                 return true;
             } else {
                 return false;

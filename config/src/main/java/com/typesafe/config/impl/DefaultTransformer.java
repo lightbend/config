@@ -48,7 +48,12 @@ final class DefaultTransformer {
                 }
                 break;
             case LIST:
-                // can't go STRING to LIST automatically
+                // can't go STRING to LIST automatically unless the string is empty
+                if (s.equals("")) {
+                    // Convert empty string to empty list
+                    ArrayList<AbstractConfigValue> emptyList = new ArrayList<AbstractConfigValue>();
+                    return new SimpleConfigList(value.origin(), emptyList);
+                }
                 break;
             case OBJECT:
                 // can't go STRING to OBJECT automatically

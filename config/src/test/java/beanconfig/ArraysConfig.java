@@ -11,6 +11,7 @@ import com.typesafe.config.ConfigValue;
 public class ArraysConfig {
 
     List<Integer> empty;
+    List<Integer> fromEmptyString;
     List<Integer> ofInt;
     List<String> ofString;
     List<Double> ofDouble;
@@ -32,6 +33,10 @@ public class ArraysConfig {
     public void setEmpty(List<Integer> empty) {
         this.empty = empty;
     }
+
+    public List<Integer> getFromEmptyString() { return fromEmptyString; }
+
+    public void setFromEmptyString(List<Integer> fromEmptyString) { this.fromEmptyString = fromEmptyString; }
 
     public List<Integer> getOfInt() {
         return ofInt;
