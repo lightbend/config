@@ -905,17 +905,6 @@ class PublicApiTest extends TestUtils {
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("include statements nested"))
     }
 
-    // We would ideally make this case NOT throw an exception but we need to do some work
-    // to get there, see https://github.com/typesafehub/config/issues/160
-    @Test
-    def detectIncludeFromList() {
-        val e = intercept[ConfigException.Parse] {
-            ConfigFactory.load("include-from-list.conf")
-        }
-
-        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("limitation"))
-    }
-
     @Test
     def missingOverrideResourceFails() {
         assertEquals("config.file is not set", null, System.getProperty("config.file"))

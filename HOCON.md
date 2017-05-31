@@ -1027,6 +1027,19 @@ Then the `${x}` in "foo.conf", which has been fixed up to
 `${a.x}`, would evaluate to `42` rather than to `10`.
 Substitution happens _after_ parsing the whole configuration.
 
+Includes inside of lists use the list index as a path segment when
+fixing up substitutions.
+
+Example:
+
+    {
+        a : [ { include "foo.conf" } ]
+        a.0.x : 42
+    }
+
+Since the `${x}` in "foo.conf" would be fixed up to `${a.0.x}' we
+get our expected value of 42.
+
 However, there are plenty of cases where the included file might
 intend to refer to the application's root config. For example, to
 get a value from a system property or from the reference

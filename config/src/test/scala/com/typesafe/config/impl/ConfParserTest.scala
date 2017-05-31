@@ -851,6 +851,14 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
+    def includeWithSubstitutionsFromList() {
+        val conf = ConfigFactory.parseString("include file(" + jsonQuotedResourceFile("include-from-list") + ")")
+
+        val resolved = conf.resolve()
+        assertEquals(resolved.getConfigList("a").get(0).getString("replace-me"), "replaced")
+    }
+
+    @Test
     def acceptBOMStartingFile() {
         // BOM at start of file should be ignored
         val conf = ConfigFactory.parseResources("bom.conf")

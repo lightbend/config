@@ -34,11 +34,6 @@ final class ConfigParser {
         final private ConfigOrigin baseOrigin;
         final private LinkedList<Path> pathStack;
 
-        // the number of lists we are inside; this is used to detect the "cannot
-        // generate a reference to a list element" problem, and once we fix that
-        // problem we should be able to get rid of this variable.
-        int arrayCount;
-
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin, ConfigNodeRoot document,
                 FullIncluder includer, ConfigIncludeContext includeContext) {
             lineNumber = 1;
@@ -48,7 +43,6 @@ final class ConfigParser {
             this.includer = includer;
             this.includeContext = includeContext;
             this.pathStack = new LinkedList<Path>();
-            this.arrayCount = 0;
         }
 
         // merge a bunch of adjacent values into one
@@ -95,8 +89,6 @@ final class ConfigParser {
         private AbstractConfigValue parseValue(AbstractConfigNodeValue n, List<String> comments) {
             AbstractConfigValue v;
 
-            int startingArrayCount = arrayCount;
-
             if (n instanceof ConfigNodeSimpleValue) {
                 v = ((ConfigNodeSimpleValue) n).value();
             } else if (n instanceof ConfigNodeObject) {
@@ -113,9 +105,6 @@ final class ConfigParser {
                 v = v.withOrigin(v.origin().prependComments(new ArrayList<String>(comments)));
                 comments.clear();
             }
-
-            if (arrayCount != startingArrayCount)
-                throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced array count");
 
             return v;
         }
@@ -190,14 +179,6 @@ final class ConfigParser {
                     throw new ConfigException.BugOrBroken("should not be reached");
             }
 
-            // we really should make this work, but for now throwing an
-            // exception is better than producing an incorrect result.
-            // See https://github.com/typesafehub/config/issues/160
-            if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
-                throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
-                        + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
-                        + "remove the ${} statements from the included file.");
-
             if (!pathStack.isEmpty()) {
                 Path prefix = fullCurrentPath();
                 obj = obj.relativized(prefix);
@@ -243,21 +224,6 @@ final class ConfigParser {
 
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
-                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
-                        // we really should make this work, but for now throwing
-                        // an exception is better than producing an incorrect
-                        // result. See
-                        // https://github.com/typesafehub/config/issues/160
-                        if (arrayCount > 0)
-                            throw parseError("Due to current limitations of the config parser, += does not work nested inside a list. "
-                                    + "+= expands to a ${} substitution and the path in ${} cannot currently refer to list elements. "
-                                    + "You might be able to move the += outside of the list and then refer to it from inside the list with ${}.");
-
-                        // because we will put it in an array after the fact so
-                        // we want this to be incremented during the parseValue
-                        // below in order to throw the above exception.
-                        arrayCount += 1;
-                    }
 
                     AbstractConfigNodeValue valueNode;
                     AbstractConfigValue newValue;
@@ -268,7 +234,6 @@ final class ConfigParser {
                     newValue = parseValue(valueNode, comments);
 
                     if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
-                        arrayCount -= 1;
 
                         List<AbstractConfigValue> concat = new ArrayList<AbstractConfigValue>(2);
                         AbstractConfigValue previousRef = new ConfigReference(newValue.origin(),
@@ -349,7 +314,6 @@ final class ConfigParser {
         }
 
         private SimpleConfigList parseArray(ConfigNodeArray n) {
-            arrayCount += 1;
 
             SimpleConfigOrigin arrayOrigin = lineOrigin();
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
@@ -358,6 +322,8 @@ final class ConfigParser {
             List<String> comments = new ArrayList<String>();
 
             AbstractConfigValue v = null;
+
+            int index = 0;
 
             for (AbstractConfigNode node : n.children()) {
                 if (node instanceof ConfigNodeComment) {
@@ -379,14 +345,16 @@ final class ConfigParser {
                         values.add(v.withOrigin(v.origin().appendComments(new ArrayList<String>(comments))));
                         comments.clear();
                     }
+                    pathStack.push(new Path(Integer.toString(index)));
+                    index ++;
                     v = parseValue((AbstractConfigNodeValue)node, comments);
+                    pathStack.pop();
                 }
             }
             // There shouldn't be any comments at this point, but add them just in case
             if (v != null) {
                 values.add(v.withOrigin(v.origin().appendComments(new ArrayList<String>(comments))));
             }
-            arrayCount -= 1;
             return new SimpleConfigList(arrayOrigin, values);
         }
 
