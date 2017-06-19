@@ -840,7 +840,7 @@ format.
   * Ficus https://github.com/ceedubs/ficus
   * configz https://github.com/arosien/configz
   * configs https://github.com/kxbmap/configs
-  * config-annotation https://github.com/wacai/config-annotation
+  * config-annotation https://github.com/zhongl/config-annotation
   * PureConfig https://github.com/pureconfig/pureconfig
   * Simple Scala Config https://github.com/ElderResearch/ssc
   * konfig https://github.com/vpon/konfig
