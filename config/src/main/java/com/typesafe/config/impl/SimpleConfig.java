@@ -332,6 +332,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return parsePeriod((String) v.unwrapped(), v.origin(), path);
     }
 
+    @Override
     public TemporalAmount getTemporal(String path){
         try{
             return getDuration(path);
