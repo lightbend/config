@@ -1296,7 +1296,27 @@ must be lowercase. Exactly these strings are supported:
  - `m`, `minute`, `minutes`
  - `h`, `hour`, `hours`
  - `d`, `day`, `days`
+ 
+### Period Format
+ 
+Similar to the `getDuration()` method, there is a `getPeriod()` method 
+available for getting time units as a `java.time.Period`. 
 
+This can use the general "units format" described above; bare
+numbers are taken to be in days, while strings are
+parsed as a number plus an optional unit string.
+
+The supported unit strings for period are case sensitive and
+must be lowercase. Exactly these strings are supported:
+
+ - `d`, `day`, `days`
+ - `w`, `week`, `weeks`
+ - `m`, `mo`, `month`, `months` (note that if you are using `getTemporal()`
+ which may return either a `java.time.Duration` or a `java.time.Period`
+ you will want to use `mo` rather than `m` to prevent your unit being 
+ parsed as minutes)
+ - `y`, `year`, `years`
+ 
 ### Size in bytes format
 
 Implementations may wish to support a `getBytes()` returning a
