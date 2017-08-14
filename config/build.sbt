@@ -62,7 +62,7 @@ checkstyle in Compile := {
 }
 
 // add checkstyle as a dependency of doc
-doc in Compile <<= (doc in Compile).dependsOn(checkstyle in Compile)
+doc in Compile := ((doc in Compile).dependsOn(checkstyle in Compile)).value
 
 findbugsSettings
 findbugsReportType := Some(ReportType.Html)
