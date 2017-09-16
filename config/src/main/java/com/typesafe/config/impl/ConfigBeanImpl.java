@@ -11,9 +11,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.time.Duration;
+import java.util.Set;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigObject;
@@ -160,6 +162,8 @@ public class ConfigBeanImpl {
             return config.getAnyRef(configPropName);
         } else if (parameterClass == List.class) {
             return getListValue(beanClass, parameterType, parameterClass, config, configPropName);
+        } else if (parameterClass == Set.class) {
+            return getSetValue(beanClass, parameterType, parameterClass, config, configPropName);
         } else if (parameterClass == Map.class) {
             // we could do better here, but right now we don't.
             Type[] typeArgs = ((ParameterizedType)parameterType).getActualTypeArguments();
@@ -184,6 +188,10 @@ public class ConfigBeanImpl {
         } else {
             throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
         }
+    }
+
+    private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
+        return new HashSet((List) getListValue(beanClass, parameterType, parameterClass, config, configPropName));
     }
 
     private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
