@@ -29,10 +29,13 @@ package com.typesafe.config;
 public final class ConfigResolveOptions {
     private final boolean useSystemEnvironment;
     private final boolean allowUnresolved;
+    private final ConfigResolver resolver;
 
-    private ConfigResolveOptions(boolean useSystemEnvironment, boolean allowUnresolved) {
+    private ConfigResolveOptions(boolean useSystemEnvironment, boolean allowUnresolved,
+                                 ConfigResolver resolver) {
         this.useSystemEnvironment = useSystemEnvironment;
         this.allowUnresolved = allowUnresolved;
+        this.resolver = resolver;
     }
 
     /**
@@ -42,7 +45,7 @@ public final class ConfigResolveOptions {
      * @return the default resolve options
      */
     public static ConfigResolveOptions defaults() {
-        return new ConfigResolveOptions(true, false);
+        return new ConfigResolveOptions(true, false, NULL_RESOLVER);
     }
 
     /**
@@ -64,7 +67,7 @@ public final class ConfigResolveOptions {
      * @return options with requested setting for use of environment variables
      */
     public ConfigResolveOptions setUseSystemEnvironment(boolean value) {
-        return new ConfigResolveOptions(value, allowUnresolved);
+        return new ConfigResolveOptions(value, allowUnresolved, resolver);
     }
 
     /**
@@ -91,7 +94,55 @@ public final class ConfigResolveOptions {
      * @since 1.2.0
      */
     public ConfigResolveOptions setAllowUnresolved(boolean value) {
-        return new ConfigResolveOptions(useSystemEnvironment, value);
+        return new ConfigResolveOptions(useSystemEnvironment, value, resolver);
+    }
+
+    /**
+     * Returns options where the given resolver used as a fallback if a
+     * reference cannot be otherwise resolved. This resolver will only be called
+     * after resolution has failed to substitute with a value from within the
+     * config itself and with any other resolvers that have been appended before
+     * this one. Multiple resolvers can be added using,
+     *
+     *  <pre>
+     *     ConfigResolveOptions options = ConfigResolveOptions.defaults()
+     *         .appendResolver(primary)
+     *         .appendResolver(secondary)
+     *         .appendResolver(tertiary);
+     * </pre>
+     *
+     * With this config unresolved references will first be resolved with the
+     * primary resolver, if that fails then the secondary, and finally if that
+     * also fails the tertiary.
+     *
+     * If all fallbacks fail to return a substitution "allow unresolved"
+     * determines whether resolution fails or continues.
+     *`
+     * @param value the resolver to fall back to
+     * @return options that use the given resolver as a fallback
+     * @since 1.3.2
+     */
+    public ConfigResolveOptions appendResolver(ConfigResolver value) {
+        if (value == null) {
+            throw new ConfigException.BugOrBroken("null resolver passed to appendResolver");
+        } else if (value == this.resolver) {
+            return this;
+        } else {
+            return new ConfigResolveOptions(useSystemEnvironment, allowUnresolved,
+                    this.resolver.withFallback(value));
+        }
+    }
+
+    /**
+     * Returns the resolver to use as a fallback if a substitution cannot be
+     * otherwise resolved. Never returns null. This method is mostly used by the
+     * config lib internally, not by applications.
+     *
+     * @return the non-null fallback resolver
+     * @since 1.3.2
+     */
+    public ConfigResolver getResolver() {
+        return this.resolver;
     }
 
     /**
@@ -104,4 +155,22 @@ public final class ConfigResolveOptions {
     public boolean getAllowUnresolved() {
         return allowUnresolved;
     }
+
+    /**
+     * Singleton resolver that never resolves paths.
+     */
+    private static final ConfigResolver NULL_RESOLVER = new ConfigResolver() {
+
+        @Override
+        public ConfigValue lookup(String path) {
+            return null;
+        }
+
+        @Override
+        public ConfigResolver withFallback(ConfigResolver fallback) {
+            return fallback;
+        }
+
+    };
+
 }
