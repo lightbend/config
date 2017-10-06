@@ -1,6 +1,7 @@
 Configuration library for JVM languages.
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config)
+[![Javadoc](https://javadoc-emblem.rhcloud.com/doc/com.typesafe/config/badge.svg)](http://typesafehub.github.com/config/latest/api)
 [![Build Status](https://travis-ci.org/typesafehub/config.svg?branch=master)](https://travis-ci.org/typesafehub/config)
 
 If you have questions or are working on a pull request or just
