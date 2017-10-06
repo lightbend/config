@@ -711,10 +711,11 @@ public final class ConfigFactory {
      * with all known extensions and merges whatever is found.
      *
      * <p>
-     * In the current implementation, the extension ".conf" forces
+     * In the current implementation, the extension ".conf" or ".hocon" forces
      * {@link ConfigSyntax#CONF}, ".json" forces {@link ConfigSyntax#JSON}, and
      * ".properties" forces {@link ConfigSyntax#PROPERTIES}. When merging files,
-     * ".conf" falls back to ".json" falls back to ".properties".
+     * ".conf" falls back to ".hocon" fall back to ".json" falls back to 
+     * ".properties".
      *
      * <p>
      * Future versions of the implementation may add additional syntaxes or
@@ -821,8 +822,9 @@ public final class ConfigFactory {
      * classpath order. To keep it simple, the lists are simply concatenated,
      * with the same syntax priorities as
      * {@link #parseFileAnySyntax(File,ConfigParseOptions) parseFileAnySyntax()}
-     * - all ".conf" resources are ahead of all ".json" resources which are
-     * ahead of all ".properties" resources.
+     * - all ".conf" resources are ahead of all ".hocon" resources which are
+     * ahead of all ".json" resources which are ahead of all ".properties" 
+     * resources.
      *
      * @param klass
      *            class which determines the <code>ClassLoader</code> and the

@@ -24,7 +24,8 @@ class EquivalentsTest extends TestUtils {
 
     private def filesForEquiv(equiv: File) = {
         val rawFiles = equiv.listFiles()
-        val files = rawFiles.filter({ f => f.getName().endsWith(".json") || f.getName().endsWith(".conf") })
+        val files = rawFiles.filter({ f => f.getName().endsWith(".json") || f.getName().endsWith(".conf")
+                                               || f.getName().endsWith(".hocon") })
         files
     }
 

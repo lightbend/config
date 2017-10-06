@@ -327,7 +327,7 @@ public abstract class Parseable implements ConfigParseable {
     private static ConfigSyntax syntaxFromExtension(String name) {
         if (name.endsWith(".json"))
             return ConfigSyntax.JSON;
-        else if (name.endsWith(".conf"))
+        else if (name.endsWith(".conf") || name.endsWith(".hocon"))
             return ConfigSyntax.CONF;
         else if (name.endsWith(".properties"))
             return ConfigSyntax.PROPERTIES;
