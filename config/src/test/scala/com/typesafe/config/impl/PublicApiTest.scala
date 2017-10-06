@@ -7,8 +7,7 @@ import org.junit.Assert._
 import org.junit._
 import scala.collection.JavaConverters._
 import com.typesafe.config._
-import java.util.Collections
-import java.util.TreeSet
+import java.util.{ Collections, TimeZone, TreeSet }
 import java.io.File
 import scala.collection.mutable
 import equiv03.SomethingInEquiv03
@@ -17,6 +16,15 @@ import java.net.URL
 import java.time.Duration
 
 class PublicApiTest extends TestUtils {
+
+    @Before
+    def before(): Unit = {
+        // TimeZone.getDefault internally invokes System.setProperty("user.timezone", <default time zone>) and it may
+        // cause flaky tests depending on tests order and jvm options. This method is invoked
+        // eg. by URLConnection.getContentType (it reads headers and gets default time zone).
+        TimeZone.getDefault
+    }
+
     @Test
     def basicLoadAndGet() {
         val conf = ConfigFactory.load("test01")
@@ -1016,8 +1024,8 @@ class PublicApiTest extends TestUtils {
         assertTrue("invalidate caches works on changed system props sys", sys2 ne sys3)
         assertTrue("invalidate caches works on changed system props conf", conf2 ne conf3)
 
-        assertTrue("invalidate caches doesn't change value if no system prop changes sys", sys1 == sys2)
-        assertTrue("invalidate caches doesn't change value if no system prop changes conf", conf1 == conf2)
+        assertEquals("invalidate caches doesn't change value if no system prop changes sys", sys1, sys2)
+        assertEquals("invalidate caches doesn't change value if no system prop changes conf", conf1, conf2)
 
         assertTrue("test system property is set sys", sys3.hasPath("invalidateCachesTest"))
         assertTrue("test system property is set conf", conf3.hasPath("invalidateCachesTest"))

@@ -81,11 +81,13 @@ to merge it in.
     - [Java (yep!) wrappers for the Java library](#java-yep-wrappers-for-the-java-library)
     - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
     - [Clojure wrappers for the Java library](#clojure-wrappers-for-the-java-library)
+    - [Kotlin wrappers for the Java library](#kotlin-wrappers-for-the-java-library)
     - [Scala port](#scala-port)
     - [Ruby port](#ruby-port)
     - [Puppet module](#puppet-module)
     - [Python port](#python-port)
     - [C++ port](#c-port)
+    - [JavaScript port](#javascript-port)
     - [Linting tool](#linting-tool)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -196,7 +198,7 @@ There isn't a schema language or anything like that. However, two
 suggested tools are:
 
  - use the
-   [checkValid() method](http://typesafehub.github.com/config/latest/api/com/typesafe/config/Config.html#checkValid%28com.typesafe.config.Config,%20java.lang.String...%29)
+   [checkValid() method](http://typesafehub.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
  - access your config through a Settings class with a field for
    each setting, and instantiate it on startup (immediately
    throwing an exception if any settings are missing)
@@ -251,7 +253,8 @@ library examples in `examples/` show how to accept a custom config
 while defaulting to `ConfigFactory.load()`.
 
 For applications using `application.{conf,json,properties}`,
-system properties can be used to force a different config source:
+system properties can be used to force a different config source
+(e.g. from command line `-Dconfig.file=path/to/config-file`):
 
  - `config.resource` specifies a resource name - not a
    basename, i.e. `application.conf` not `application`
@@ -837,16 +840,23 @@ format.
   * Ficus https://github.com/ceedubs/ficus
   * configz https://github.com/arosien/configz
   * configs https://github.com/kxbmap/configs
-  * config-annotation https://github.com/wacai/config-annotation
-  * PureConfig https://github.com/melrief/pureconfig
+  * config-annotation https://github.com/zhongl/config-annotation
+  * PureConfig https://github.com/pureconfig/pureconfig
   * Simple Scala Config https://github.com/ElderResearch/ssc
   * konfig https://github.com/vpon/konfig
   * ScalaConfig https://github.com/andr83/scalaconfig
+  * static-config https://github.com/Krever/static-config
+  * validated-config https://github.com/carlpulley/validated-config
+  * Cedi Config https://github.com/ccadllc/cedi-config
+  * Cfg https://github.com/carueda/cfg
 
 #### Clojure wrappers for the Java library
 
   * beamly-core.config https://github.com/beamly/beamly-core.config
-
+  
+#### Kotlin wrappers for the Java library
+  * config4k https://github.com/config4k/config4k
+  
 #### Scala port
 
   * SHocon https://github.com/unicredit/shocon (work with both Scala and Scala.Js)
@@ -867,7 +877,10 @@ format.
 
    * https://github.com/puppetlabs/cpp-hocon
 
+#### JavaScript port
+ 
+  * https://github.com/yellowblood/hocon-js (missing features, under development)
+  
 #### Linting tool
 
    * A web based linting tool http://www.hoconlint.com/
-

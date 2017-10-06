@@ -3,6 +3,9 @@
  */
 package com.typesafe.config.impl
 
+import java.time.{ LocalDate, Period }
+import java.time.temporal.ChronoUnit
+
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config._
@@ -38,6 +41,33 @@ class UnitParserTest extends TestUtils {
             SimpleConfig.parseDuration("1 00 seconds", fakeOrigin(), "test")
         }
         assertTrue(e2.getMessage.contains("duration number"))
+    }
+
+    @Test
+    def parsePeriod() = {
+        val oneYears = List(
+            "1y", "1 y", "1year", "1 years", "   1y   ", "   1   y    ",
+            "365", "365d", "365 d", "365 days", "   365   days   ", "365day",
+            "12m", "12mo", "12 m", "   12   mo   ", "12 months", "12month")
+        val epochDate = LocalDate.ofEpochDay(0)
+        val oneYear = ChronoUnit.DAYS.between(epochDate, epochDate.plus(Period.ofYears(1)))
+        for (y <- oneYears) {
+            val period = SimpleConfig.parsePeriod(y, fakeOrigin(), "test")
+            val dayCount = ChronoUnit.DAYS.between(epochDate, epochDate.plus(period))
+            assertEquals(oneYear, dayCount)
+        }
+
+        // bad units
+        val e = intercept[ConfigException.BadValue] {
+            SimpleConfig.parsePeriod("100 dollars", fakeOrigin(), "test")
+        }
+        assertTrue(s"${e.getMessage} was not the expected error message", e.getMessage.contains("time unit"))
+
+        // bad number
+        val e2 = intercept[ConfigException.BadValue] {
+            SimpleConfig.parsePeriod("1 00 seconds", fakeOrigin(), "test")
+        }
+        assertTrue(s"${e2.getMessage} was not the expected error message", e2.getMessage.contains("time unit 'seconds'"))
     }
 
     // https://github.com/typesafehub/config/issues/117

@@ -6,6 +6,8 @@ import java.util.Collections;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigResolveOptions;
+import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 /**
@@ -88,7 +90,8 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
                 v = result.value;
                 newContext = result.context;
             } else {
-                v = null;
+                ConfigValue fallback = context.options().getResolver().lookup(expr.path().render());
+                v = (AbstractConfigValue) fallback;
             }
         } catch (NotPossibleToResolve e) {
             if (ConfigImpl.traceSubstitutionsEnabled())
