@@ -3,13 +3,16 @@
  */
 package com.typesafe.config.impl
 
+import java.time.temporal.{ ChronoUnit, TemporalUnit }
+
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config._
 import java.util.concurrent.TimeUnit
+
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
-import java.util.concurrent.TimeUnit.{ SECONDS, NANOSECONDS, MICROSECONDS, MILLISECONDS, MINUTES, DAYS, HOURS }
+import java.util.concurrent.TimeUnit.{ DAYS, HOURS, MICROSECONDS, MILLISECONDS, MINUTES, NANOSECONDS, SECONDS }
 
 class ConfigTest extends TestUtils {
 
@@ -810,6 +813,13 @@ class ConfigTest extends TestUtils {
         assertDurationAsTimeUnit(MINUTES)
         assertDurationAsTimeUnit(HOURS)
         assertDurationAsTimeUnit(DAYS)
+
+        // periods
+        assertEquals(1, conf.getPeriod("periods.day").get(ChronoUnit.DAYS))
+        assertEquals(2, conf.getPeriod("periods.dayAsNumber").getDays)
+        assertEquals(3 * 7, conf.getTemporal("periods.week").get(ChronoUnit.DAYS))
+        assertEquals(5, conf.getTemporal("periods.month").get(ChronoUnit.MONTHS))
+        assertEquals(8, conf.getTemporal("periods.year").get(ChronoUnit.YEARS))
 
         // should get size in bytes
         assertEquals(1024 * 1024L, conf.getBytes("memsizes.meg"))

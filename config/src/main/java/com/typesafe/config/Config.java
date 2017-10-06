@@ -4,6 +4,8 @@
 package com.typesafe.config;
 
 import java.time.Duration;
+import java.time.Period;
+import java.time.temporal.TemporalAmount;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -792,6 +794,44 @@ public interface Config extends ConfigMergeable {
      *             if value cannot be parsed as a number of the given TimeUnit
      */
     Duration getDuration(String path);
+
+    /**
+     * Gets a value as a java.time.Period. If the value is
+     * already a number, then it's taken as days; if it's
+     * a string, it's parsed understanding units suffixes like
+     * "10d" or "5w" as documented in the <a
+     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * spec</a>. This method never returns null.
+     *
+     * @since 1.3.0
+     *
+     * @param path
+     *            path expression
+     * @return the period value at the requested path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a number of the given TimeUnit
+     */
+    Period getPeriod(String path);
+
+    /**
+     * Gets a value as a java.time.temporal.TemporalAmount.
+     * This method will first try get get the value as a java.time.Duration, and if unsuccessful,
+     * then as a java.time.Period.
+     * This means that values like "5m" will be parsed as 5 minutes rather than 5 months
+     * @param path path expression
+     * @return the temporal value at the requested path
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a TemporalAmount
+     */
+    TemporalAmount getTemporal(String path);
 
     /**
      * Gets a list value (with any element type) as a {@link ConfigList}, which

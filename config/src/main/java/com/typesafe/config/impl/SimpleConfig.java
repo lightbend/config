@@ -7,7 +7,11 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.DateTimeException;
 import java.time.Duration;
+import java.time.Period;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAmount;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -322,6 +326,21 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return Duration.ofNanos(nanos);
     }
 
+    @Override
+    public Period getPeriod(String path){
+        ConfigValue v = find(path, ConfigValueType.STRING);
+        return parsePeriod((String) v.unwrapped(), v.origin(), path);
+    }
+
+    @Override
+    public TemporalAmount getTemporal(String path){
+        try{
+            return getDuration(path);
+        } catch (ConfigException.BadValue e){
+            return getPeriod(path);
+        }
+    }
+
     @SuppressWarnings("unchecked")
     private <T> List<T> getHomogeneousUnwrappedList(String path,
             ConfigValueType expected) {
@@ -581,6 +600,90 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             i -= 1;
         }
         return s.substring(i + 1);
+    }
+
+    /**
+     * Parses a period string. If no units are specified in the string, it is
+     * assumed to be in days. The returned period is in days.
+     * The purpose of this function is to implement the period-related methods
+     * in the ConfigObject interface.
+     *
+     * @param input
+     *            the string to parse
+     * @param originForException
+     *            origin of the value being parsed
+     * @param pathForException
+     *            path to include in exceptions
+     * @return duration in days
+     * @throws ConfigException
+     *             if string is invalid
+     */
+    public static Period parsePeriod(String input,
+                                     ConfigOrigin originForException, String pathForException) {
+        String s = ConfigImplUtil.unicodeTrim(input);
+        String originalUnitString = getUnits(s);
+        String unitString = originalUnitString;
+        String numberString = ConfigImplUtil.unicodeTrim(s.substring(0, s.length()
+                - unitString.length()));
+        ChronoUnit units;
+
+        // this would be caught later anyway, but the error message
+        // is more helpful if we check it here.
+        if (numberString.length() == 0)
+            throw new ConfigException.BadValue(originForException,
+                    pathForException, "No number in period value '" + input
+                    + "'");
+
+        if (unitString.length() > 2 && !unitString.endsWith("s"))
+            unitString = unitString + "s";
+
+        // note that this is deliberately case-sensitive
+        if (unitString.equals("") || unitString.equals("d") || unitString.equals("days")) {
+            units = ChronoUnit.DAYS;
+
+        } else if (unitString.equals("w") || unitString.equals("weeks")) {
+            units = ChronoUnit.WEEKS;
+
+        } else if (unitString.equals("m") || unitString.equals("mo") || unitString.equals("months")) {
+            units = ChronoUnit.MONTHS;
+
+        } else if (unitString.equals("y") || unitString.equals("years")) {
+            units = ChronoUnit.YEARS;
+
+        } else {
+            throw new ConfigException.BadValue(originForException,
+                    pathForException, "Could not parse time unit '"
+                    + originalUnitString
+                    + "' (try d, w, mo, y)");
+        }
+
+        try {
+           return periodOf(Integer.parseInt(numberString), units);
+        } catch (NumberFormatException e) {
+            throw new ConfigException.BadValue(originForException,
+                    pathForException, "Could not parse duration number '"
+                    + numberString + "'");
+        }
+    }
+
+
+    private static Period periodOf(int n, ChronoUnit unit){
+        if(unit.isTimeBased()){
+            throw new DateTimeException(unit + " cannot be converted to a java.time.Period");
+        }
+
+        switch (unit){
+            case DAYS:
+                return Period.ofDays(n);
+            case WEEKS:
+                return Period.ofWeeks(n);
+            case MONTHS:
+                return Period.ofMonths(n);
+            case YEARS:
+                return Period.ofYears(n);
+            default:
+                throw new DateTimeException(unit + " cannot be converted to a java.time.Period");
+        }
     }
 
     /**
