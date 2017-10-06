@@ -1,0 +1,110 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package com.typesafe.config;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>/**<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * Implement this interface and provide an instance to<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * {@link ConfigResolveOptions#appendResolver ConfigResolveOptions.appendResolver()}<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * to provide custom behavior when unresolved substitutions are encountered<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * during resolution.<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * @since 1.3.2<a name="line.8"></a>
+<span class="sourceLineNo">009</span> */<a name="line.9"></a>
+<span class="sourceLineNo">010</span>public interface ConfigResolver {<a name="line.10"></a>
+<span class="sourceLineNo">011</span><a name="line.11"></a>
+<span class="sourceLineNo">012</span>    /**<a name="line.12"></a>
+<span class="sourceLineNo">013</span>     * Returns the value to substitute for the given unresolved path. To get the<a name="line.13"></a>
+<span class="sourceLineNo">014</span>     * components of the path use {@link ConfigUtil#splitPath(String)}. If a<a name="line.14"></a>
+<span class="sourceLineNo">015</span>     * non-null value is returned that value will be substituted, otherwise<a name="line.15"></a>
+<span class="sourceLineNo">016</span>     * resolution will continue to consider the substitution as still<a name="line.16"></a>
+<span class="sourceLineNo">017</span>     * unresolved.<a name="line.17"></a>
+<span class="sourceLineNo">018</span>     *<a name="line.18"></a>
+<span class="sourceLineNo">019</span>     * @param path the unresolved path<a name="line.19"></a>
+<span class="sourceLineNo">020</span>     * @return the value to use as a substitution or null<a name="line.20"></a>
+<span class="sourceLineNo">021</span>     */<a name="line.21"></a>
+<span class="sourceLineNo">022</span>    public ConfigValue lookup(String path);<a name="line.22"></a>
+<span class="sourceLineNo">023</span><a name="line.23"></a>
+<span class="sourceLineNo">024</span>    /**<a name="line.24"></a>
+<span class="sourceLineNo">025</span>     * Returns a new resolver that falls back to the given resolver if this<a name="line.25"></a>
+<span class="sourceLineNo">026</span>     * one doesn't provide a substitution itself.<a name="line.26"></a>
+<span class="sourceLineNo">027</span>     *<a name="line.27"></a>
+<span class="sourceLineNo">028</span>     * It's important to handle the case where you already have the fallback<a name="line.28"></a>
+<span class="sourceLineNo">029</span>     * with a "return this", i.e. this method should not create a new object if<a name="line.29"></a>
+<span class="sourceLineNo">030</span>     * the fallback is the same one you already have. The same fallback may be<a name="line.30"></a>
+<span class="sourceLineNo">031</span>     * added repeatedly.<a name="line.31"></a>
+<span class="sourceLineNo">032</span>     *<a name="line.32"></a>
+<span class="sourceLineNo">033</span>     * @param fallback the previous includer for chaining<a name="line.33"></a>
+<span class="sourceLineNo">034</span>     * @return a new resolver<a name="line.34"></a>
+<span class="sourceLineNo">035</span>     */<a name="line.35"></a>
+<span class="sourceLineNo">036</span>    public ConfigResolver withFallback(ConfigResolver fallback);<a name="line.36"></a>
+<span class="sourceLineNo">037</span><a name="line.37"></a>
+<span class="sourceLineNo">038</span>}<a name="line.38"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
