@@ -14,8 +14,12 @@ ScalariformKeys.preferences in Compile := formatPrefs
 ScalariformKeys.preferences in Test := formatPrefs
 
 fork in test := true
+fork in Test := true
 fork in run := true
 fork in run in Test := true
+
+//env vars for tests
+envVars in Test ++= Map("testList.0" -> "0", "testList.1" -> "1")
 
 autoScalaLibrary := false
 crossPaths := false
@@ -58,7 +62,7 @@ checkstyle in Compile := {
 }
 
 // add checkstyle as a dependency of doc
-doc in Compile <<= (doc in Compile).dependsOn(checkstyle in Compile)
+doc in Compile := ((doc in Compile).dependsOn(checkstyle in Compile)).value
 
 findbugsSettings
 findbugsReportType := Some(ReportType.Html)

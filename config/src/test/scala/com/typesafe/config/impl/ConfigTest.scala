@@ -3,13 +3,16 @@
  */
 package com.typesafe.config.impl
 
+import java.time.temporal.{ ChronoUnit, TemporalUnit }
+
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config._
 import java.util.concurrent.TimeUnit
+
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
-import java.util.concurrent.TimeUnit.{ SECONDS, NANOSECONDS, MICROSECONDS, MILLISECONDS, MINUTES, DAYS, HOURS }
+import java.util.concurrent.TimeUnit.{ DAYS, HOURS, MICROSECONDS, MILLISECONDS, MINUTES, NANOSECONDS, SECONDS }
 
 class ConfigTest extends TestUtils {
 
@@ -811,6 +814,13 @@ class ConfigTest extends TestUtils {
         assertDurationAsTimeUnit(HOURS)
         assertDurationAsTimeUnit(DAYS)
 
+        // periods
+        assertEquals(1, conf.getPeriod("periods.day").get(ChronoUnit.DAYS))
+        assertEquals(2, conf.getPeriod("periods.dayAsNumber").getDays)
+        assertEquals(3 * 7, conf.getTemporal("periods.week").get(ChronoUnit.DAYS))
+        assertEquals(5, conf.getTemporal("periods.month").get(ChronoUnit.MONTHS))
+        assertEquals(8, conf.getTemporal("periods.year").get(ChronoUnit.YEARS))
+
         // should get size in bytes
         assertEquals(1024 * 1024L, conf.getBytes("memsizes.meg"))
         assertEquals(1024 * 1024L, conf.getBytes("memsizes.megAsNumber"))
@@ -1233,4 +1243,70 @@ class ConfigTest extends TestUtils {
         val resolved = unresolved.resolveWith(source)
         assertEquals(43, resolved.getInt("foo"))
     }
+
+    /**
+     * A resolver that replaces paths that start with a particular prefix with
+     * strings where that prefix has been replaced with another prefix.
+     */
+    class DummyResolver(prefix: String, newPrefix: String, fallback: ConfigResolver) extends ConfigResolver {
+
+        override def lookup(path: String): ConfigValue = {
+            if (path.startsWith(prefix))
+                ConfigValueFactory.fromAnyRef(newPrefix + path.substring(prefix.length))
+            else if (fallback != null)
+                fallback.lookup(path)
+            else
+                null
+        }
+
+        override def withFallback(f: ConfigResolver): ConfigResolver = {
+            if (fallback == null)
+                new DummyResolver(prefix, newPrefix, f)
+            else
+                new DummyResolver(prefix, newPrefix, fallback.withFallback(f))
+        }
+
+    }
+
+    private def runFallbackTest(expected: String, source: String,
+        allowUnresolved: Boolean, resolvers: ConfigResolver*) = {
+        val unresolved = ConfigFactory.parseString(source)
+        var options = ConfigResolveOptions.defaults().setAllowUnresolved(allowUnresolved)
+        for (resolver <- resolvers)
+            options = options.appendResolver(resolver)
+        val obj = unresolved.resolve(options).root()
+        assertEquals(expected, obj.render(ConfigRenderOptions.concise().setJson(false)))
+    }
+
+    @Test
+    def resolveFallback(): Unit = {
+        runFallbackTest(
+            "x=a,y=b",
+            "x=${a},y=${b}", false,
+            new DummyResolver("", "", null))
+        runFallbackTest(
+            "x=\"a.b.c\",y=\"a.b.d\"",
+            "x=${a.b.c},y=${a.b.d}", false,
+            new DummyResolver("", "", null))
+        runFallbackTest(
+            "x=${a.b.c},y=${a.b.d}",
+            "x=${a.b.c},y=${a.b.d}", true,
+            new DummyResolver("x.", "", null))
+        runFallbackTest(
+            "x=${a.b.c},y=\"e.f\"",
+            "x=${a.b.c},y=${d.e.f}", true,
+            new DummyResolver("d.", "", null))
+        runFallbackTest(
+            "w=\"Y.c.d\",x=${a},y=\"X.b\",z=\"Y.c\"",
+            "x=${a},y=${a.b},z=${a.b.c},w=${a.b.c.d}", true,
+            new DummyResolver("a.b.", "Y.", null),
+            new DummyResolver("a.", "X.", null))
+
+        runFallbackTest("x=${a.b.c}", "x=${a.b.c}", true, new DummyResolver("x.", "", null))
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            runFallbackTest("x=${a.b.c}", "x=${a.b.c}", false, new DummyResolver("x.", "", null))
+        }
+        assertTrue(e.getMessage.contains("${a.b.c}"))
+    }
+
 }

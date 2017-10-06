@@ -30,7 +30,7 @@
       - [Include syntax](#include-syntax)
       - [Include semantics: merging](#include-semantics-merging)
       - [Include semantics: substitution](#include-semantics-substitution)
-      - [Include semantics: missing files](#include-semantics-missing-files)
+      - [Include semantics: missing files and required files](#include-semantics-missing-files-and-required-files)
       - [Include semantics: file formats and extensions](#include-semantics-file-formats-and-extensions)
       - [Include semantics: locating resources](#include-semantics-locating-resources)
     - [Conversion of numerically-indexed objects to arrays](#conversion-of-numerically-indexed-objects-to-arrays)
@@ -47,6 +47,7 @@
     - [Substitution fallback to environment variables](#substitution-fallback-to-environment-variables)
     - [hyphen-separated vs. camelCase](#hyphen-separated-vs-camelcase)
   - [Note on Java properties similarity](#note-on-java-properties-similarity)
+  - [Note on Windows and case sensitivity of environment variables](#note-on-windows-and-case-sensitivity-of-environment-variables)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1295,7 +1296,27 @@ must be lowercase. Exactly these strings are supported:
  - `m`, `minute`, `minutes`
  - `h`, `hour`, `hours`
  - `d`, `day`, `days`
+ 
+### Period Format
+ 
+Similar to the `getDuration()` method, there is a `getPeriod()` method 
+available for getting time units as a `java.time.Period`. 
 
+This can use the general "units format" described above; bare
+numbers are taken to be in days, while strings are
+parsed as a number plus an optional unit string.
+
+The supported unit strings for period are case sensitive and
+must be lowercase. Exactly these strings are supported:
+
+ - `d`, `day`, `days`
+ - `w`, `week`, `weeks`
+ - `m`, `mo`, `month`, `months` (note that if you are using `getTemporal()`
+ which may return either a `java.time.Duration` or a `java.time.Period`
+ you will want to use `mo` rather than `m` to prevent your unit being 
+ parsed as minutes)
+ - `y`, `year`, `years`
+ 
 ### Size in bytes format
 
 Implementations may wish to support a `getBytes()` returning a

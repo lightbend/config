@@ -496,6 +496,7 @@ public final class ConfigFactory {
         // We rely on this having the side effect that it drops
         // all caches
         ConfigImpl.reloadSystemPropertiesConfig();
+        ConfigImpl.reloadEnvVariablesConfig();
     }
 
     /**

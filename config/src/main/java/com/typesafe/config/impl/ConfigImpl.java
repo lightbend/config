@@ -335,20 +335,11 @@ public class ConfigImpl {
     }
 
     private static AbstractConfigObject loadEnvVariables() {
-        Map<String, String> env = System.getenv();
-        Map<String, AbstractConfigValue> m = new HashMap<String, AbstractConfigValue>();
-        for (Map.Entry<String, String> entry : env.entrySet()) {
-            String key = entry.getKey();
-            m.put(key,
-                    new ConfigString.Quoted(SimpleConfigOrigin.newSimple("env var " + key), entry
-                            .getValue()));
-        }
-        return new SimpleConfigObject(SimpleConfigOrigin.newSimple("env variables"),
-                m, ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
+        return PropertiesParser.fromStringMap(newSimpleOrigin("env variables"), System.getenv());
     }
 
     private static class EnvVariablesHolder {
-        static final AbstractConfigObject envVariables = loadEnvVariables();
+        static volatile AbstractConfigObject envVariables = loadEnvVariables();
     }
 
     static AbstractConfigObject envVariablesAsConfigObject() {
@@ -361,6 +352,12 @@ public class ConfigImpl {
 
     public static Config envVariablesAsConfig() {
         return envVariablesAsConfigObject().toConfig();
+    }
+
+    public static void reloadEnvVariablesConfig() {
+        // ConfigFactory.invalidateCaches() relies on this having the side
+        // effect that it drops all caches
+        EnvVariablesHolder.envVariables = loadEnvVariables();
     }
 
     public static Config defaultReference(final ClassLoader loader) {

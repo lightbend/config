@@ -279,6 +279,23 @@ class ConfigValueTest extends TestUtils {
         assertTrue(b.root.toConfig eq b)
     }
 
+    /**
+      * Reproduces the issue <a href=https://github.com/typesafehub/config/issues/461>#461</a>.
+      * <p>
+      * We use a custom de-/serializer that encodes String objects in a JDK-incompatible way. Encoding used here 
+      * is rather simplistic: a long indicating the length in bytes (JDK uses a variable length integer) followed
+      * by the string's bytes. Running this test with the original SerializedConfigValue.readExternal() 
+      * implementation results in an EOFException thrown during deserialization.
+      */
+    @Test
+    def configConfigCustomSerializable() {
+        val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
+        val expected = new SimpleConfigObject(fakeOrigin(), aMap).toConfig
+        val actual = checkSerializableWithCustomSerializer(expected)
+
+        assertEquals(expected, actual)
+    }
+    
     @Test
     def configListEquality() {
         val aScalaSeq = Seq(1, 2, 3) map { intValue(_): AbstractConfigValue }

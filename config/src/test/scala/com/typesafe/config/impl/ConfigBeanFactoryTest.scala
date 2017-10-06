@@ -133,6 +133,39 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
+    def testCreateSet() {
+        val beanConfig: SetsConfig = ConfigBeanFactory.create(loadConfig().getConfig("sets"), classOf[SetsConfig])
+        assertNotNull(beanConfig)
+        assertEquals(Set().asJava, beanConfig.getEmpty)
+        assertEquals(Set(1, 2, 3).asJava, beanConfig.getOfInt)
+        assertEquals(Set(32L, 42L, 52L).asJava, beanConfig.getOfLong)
+        assertEquals(Set("a", "b", "c").asJava, beanConfig.getOfString)
+        assertEquals(3, beanConfig.getOfObject.size)
+        assertEquals(3, beanConfig.getOfDouble.size)
+        assertEquals(3, beanConfig.getOfConfig.size)
+        assertTrue(beanConfig.getOfConfig.iterator().next().isInstanceOf[Config])
+        assertEquals(3, beanConfig.getOfConfigObject.size)
+        assertTrue(beanConfig.getOfConfigObject.iterator().next().isInstanceOf[ConfigObject])
+        assertEquals(Set(intValue(1), intValue(2), stringValue("a")),
+            beanConfig.getOfConfigValue.asScala)
+        assertEquals(Set(Duration.ofMillis(1), Duration.ofHours(2), Duration.ofDays(3)),
+            beanConfig.getOfDuration.asScala)
+        assertEquals(Set(ConfigMemorySize.ofBytes(1024),
+            ConfigMemorySize.ofBytes(1048576),
+            ConfigMemorySize.ofBytes(1073741824)),
+            beanConfig.getOfMemorySize.asScala)
+
+        val stringsConfigOne = new StringsConfig();
+        stringsConfigOne.setAbcd("testAbcdOne")
+        stringsConfigOne.setYes("testYesOne")
+        val stringsConfigTwo = new StringsConfig();
+        stringsConfigTwo.setAbcd("testAbcdTwo")
+        stringsConfigTwo.setYes("testYesTwo")
+
+        assertEquals(Set(stringsConfigOne, stringsConfigTwo).asJava, beanConfig.getOfStringBean)
+    }
+
+    @Test
     def testCreateDuration() {
         val beanConfig: DurationsConfig = ConfigBeanFactory.create(loadConfig().getConfig("durations"), classOf[DurationsConfig])
         assertNotNull(beanConfig)
@@ -235,6 +268,14 @@ class ConfigBeanFactoryTest extends TestUtils {
         }
         assertTrue("unsupported map type error", e.getMessage.contains("unsupported Map"))
         assertTrue("error about the right property", e.getMessage.contains("'map'"))
+    }
+
+    @Test
+    def testDifferentFieldNameFromAccessors(): Unit = {
+        val e = intercept[ConfigException.ValidationFailed] {
+            ConfigBeanFactory.create(ConfigFactory.empty(), classOf[DifferentFieldNameFromAccessorsConfig])
+        }
+        assertTrue("only one missing value error", e.getMessage.contains("No setting"))
     }
 
     private def loadConfig(): Config = {

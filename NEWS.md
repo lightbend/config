@@ -1,3 +1,17 @@
+# 1.3.2: October 6, 2017
+
+- environment variables are now able to be resolved to lists in
+  the same fashion as system properties.
+- added `getPeriod()` which returns time units as
+  `java.time.Period`. Currently supported periods are days, weeks,
+  months and years. [More information here](HOCON.md#period-format).
+- `ConfigResolveOptions` now has `appendResolver(...)` which allows
+  having custom behavior when unresolved substitutions are encountered
+  during resolution.
+- Config Beans now support `Set` collection.
+- a few other small bugfixes. All of the fixed issues can be found
+  in the [milestone page](https://github.com/typesafehub/config/milestone/1?closed=1).
+
 # 1.3.1: September 24, 2016
 
 - added `include required("foo")` syntax to specify includes that
