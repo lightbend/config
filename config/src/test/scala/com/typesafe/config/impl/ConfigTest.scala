@@ -3,7 +3,8 @@
  */
 package com.typesafe.config.impl
 
-import java.time.temporal.{ ChronoUnit, TemporalUnit }
+import java.time.{ Duration, Period }
+import java.time.temporal.ChronoUnit
 
 import org.junit.Assert._
 import org.junit._
@@ -602,6 +603,10 @@ class ConfigTest extends TestUtils {
         val listOfLists = conf.getAnyRefList("arrays.ofArray").asScala map { _.asInstanceOf[java.util.List[_]].asScala }
         assertEquals(Seq(Seq("a", "b", "c"), Seq("a", "b", "c"), Seq("a", "b", "c")), listOfLists)
         assertEquals(3, conf.getObjectList("arrays.ofObject").asScala.length)
+        val listOfPeriods = Seq(Period.ofDays(1), Period.ofDays(2), Period.ofWeeks(3), Period.ofMonths(5), Period.ofYears(8))
+        assertEquals(listOfPeriods, conf.getPeriodList("arrays.ofPeriod").asScala)
+        val listOfTemporals = Seq(Duration.ofHours(24), Duration.ofMillis(2), Period.ofWeeks(3), Period.ofMonths(5), Period.ofYears(8), Duration.ofMinutes(13))
+        assertEquals(listOfTemporals, conf.getTemporalList("arrays.ofTemporal").asScala)
 
         assertEquals(Seq("a", "b"), conf.getStringList("arrays.firstElementNotASubst").asScala)
 

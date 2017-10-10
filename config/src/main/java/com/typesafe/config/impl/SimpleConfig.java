@@ -545,6 +545,50 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return builder;
     }
 
+    @Override
+    public List<Period> getPeriodList(String path) {
+        List<Period> l = new ArrayList<Period>();
+        List<? extends ConfigValue> list = getList(path);
+        for (ConfigValue v : list) {
+            String value;
+            if (v.valueType() == ConfigValueType.STRING) {
+                value = (String) v.unwrapped();
+            } else if (v.valueType() == ConfigValueType.NUMBER) {
+                value = "" + ((Number) v.unwrapped()).longValue();
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                        "period string",
+                        v.valueType().name());
+            }
+            l.add(parsePeriod(value, v.origin(), path));
+        }
+        return l;
+    }
+
+    @Override
+    public List<TemporalAmount> getTemporalList(String path) {
+        List<TemporalAmount> l = new ArrayList<TemporalAmount>();
+        List<? extends ConfigValue> list = getList(path);
+        for (ConfigValue v : list) {
+            String value;
+            if (v.valueType() == ConfigValueType.STRING) {
+                value = (String) v.unwrapped();
+            } else if (v.valueType() == ConfigValueType.NUMBER) {
+                value = "" + ((Number) v.unwrapped()).longValue();
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                        "duration or period string",
+                        v.valueType().name());
+            }
+            try{
+                l.add(Duration.ofNanos(parseDuration(value, v.origin(), path)));
+            } catch (ConfigException.BadValue e){
+                l.add(parsePeriod(value, v.origin(), path));
+            }
+        }
+        return l;
+    }
+
     @Deprecated
     @Override
     public List<Long> getMillisecondsList(String path) {
