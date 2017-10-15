@@ -7,6 +7,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -22,6 +23,9 @@ import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigMemorySize;
+import com.typesafe.config.ConfigSubTypes;
+import com.typesafe.config.ConfigTypeInfo;
+import com.typesafe.config.ConfigTypeName;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 import com.typesafe.config.Optional;
@@ -183,6 +187,11 @@ public class ConfigBeanImpl {
             @SuppressWarnings("unchecked")
             Enum enumValue = config.getEnum((Class<Enum>) parameterClass, configPropName);
             return enumValue;
+        } else if (hasSubTypes(parameterClass)) {
+            // resolve subtypes
+            ConfigTypeInfo configTypeInfo = parameterClass.getAnnotation(ConfigTypeInfo.class);
+            Map<String, Class<?>> subtypes = findAllSubtypes(parameterClass);
+            return createTypeValue(parameterClass, configPropName, config.getConfig(configPropName), configTypeInfo, subtypes);
         } else if (hasAtLeastOneBeanProperty(parameterClass)) {
             return createInternal(config.getConfig(configPropName), parameterClass);
         } else {
@@ -223,6 +232,20 @@ public class ConfigBeanImpl {
             @SuppressWarnings("unchecked")
             List<Enum> enumValues = config.getEnumList((Class<Enum>) elementType, configPropName);
             return enumValues;
+        } else if (hasSubTypes((Class<?>) elementType)) {
+            final Class<?> elementClass = (Class<?>) elementType;
+            // resolve subtypes
+            ConfigTypeInfo configTypeInfo = elementClass.getAnnotation(ConfigTypeInfo.class);
+            Map<String, Class<?>> subtypes = findAllSubtypes(elementClass);
+            if (subtypes != null) {
+                List<Object> beanList = new ArrayList<Object>();
+                List<? extends Config> configList = config.getConfigList(configPropName);
+                for (Config listMember : configList) {
+                    beanList.add(createTypeValue(elementClass, configPropName, listMember, configTypeInfo, subtypes));
+                }
+                return beanList;
+            }
+            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has no defined subtypes");
         } else if (hasAtLeastOneBeanProperty((Class<?>) elementType)) {
             List<Object> beanList = new ArrayList<Object>();
             List<? extends Config> configList = config.getConfigList(configPropName);
@@ -266,6 +289,32 @@ public class ConfigBeanImpl {
         }
     }
 
+    private static Object createTypeValue(Class<?> elementClass, String configPropName, Config config, ConfigTypeInfo configTypeInfo, Map<String, Class<?>> subtypes) {
+        Class<?> implClass = configTypeInfo.defaultImpl();
+        // get subtype
+        if (config.hasPath(configTypeInfo.property())) {
+            String type = config.getString(configTypeInfo.property());
+            if (subtypes.containsKey(type)) {
+                implClass = subtypes.get(type);
+            }
+        }
+
+        if (implClass == null) {
+            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + elementClass.getName() + " has no implementation");
+        } else if (implClass == ConfigTypeInfo.class) {
+            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + elementClass.getName() + " has no default implementation");
+        } else if (implClass == Void.class) {
+            return null;
+        }
+
+        if (!configTypeInfo.visible()) {
+            // remove type info config
+            config = config.withoutPath(configTypeInfo.property());
+        }
+
+        return createInternal(config, implClass);
+    }
+
     private static boolean hasAtLeastOneBeanProperty(Class<?> clazz) {
         BeanInfo beanInfo = null;
         try {
@@ -288,6 +337,10 @@ public class ConfigBeanImpl {
         return field != null && (field.getAnnotationsByType(Optional.class).length > 0);
     }
 
+    private static boolean hasSubTypes(Class<?> clazz) {
+        return clazz.isAnnotationPresent(ConfigTypeInfo.class);
+    }
+
     private static Field getField(Class beanClass, String fieldName) {
         try {
             Field field = beanClass.getDeclaredField(fieldName);
@@ -302,4 +355,55 @@ public class ConfigBeanImpl {
         }
         return getField(beanClass, fieldName);
     }
+
+    private static Map<String, Class<?>> findAllSubtypes(Class<?> clazz) {
+        Map<String, Class<?>> result = new HashMap<String, Class<?>>(4);
+
+        // add self type
+        String selfTypeName = findTypeName(clazz);
+        if (selfTypeName != null) {
+            result.put(selfTypeName, clazz);
+        }
+
+        Map<String, Class<?>> subtypes1 = findSubtypes(clazz);
+        if (subtypes1 != null) {
+            for (Map.Entry<String, Class<?>> entry : subtypes1.entrySet()) {
+                // handle abstract
+                if (Modifier.isAbstract(entry.getValue().getModifiers())) {
+                    result.putAll(findAllSubtypes(entry.getValue()));
+                    continue;
+                }
+                // add concrete type
+                String typeName = findTypeName(entry.getValue());
+                if (typeName == null) {
+                    typeName = entry.getKey();
+                }
+                result.putIfAbsent(typeName, entry.getValue());
+            }
+        }
+
+        return result;
+    }
+
+    private static Map<String, Class<?>> findSubtypes(Class<?> clazz) {
+        ConfigSubTypes t = clazz.getAnnotation(ConfigSubTypes.class);
+        if (t == null) {
+            return null;
+        }
+        ConfigSubTypes.Type[] types = t.value();
+        Map<String, Class<?>> result = new HashMap<String, Class<?>>(4);
+        for (ConfigSubTypes.Type type : types) {
+            String subTypeName = type.name().isEmpty()
+                ? type.value().getSimpleName()
+                : type.name();
+            result.put(subTypeName, type.value());
+        }
+        return result;
+    }
+
+    private static String findTypeName(Class<?> clazz) {
+        ConfigTypeName tn = clazz.getAnnotation(ConfigTypeName.class);
+        return (tn == null) ? null : tn.value();
+    }
+
 }
