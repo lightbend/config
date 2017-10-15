@@ -1,0 +1,2 @@
+logging.ConsoleAppender
+logging.SyslogAppender

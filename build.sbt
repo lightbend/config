@@ -38,8 +38,8 @@ lazy val root = (project in file("."))
   )
   .aggregate(
     testLib, configLib,
-    simpleLibScala, simpleAppScala, complexAppScala,
-    simpleLibJava, simpleAppJava, complexAppJava
+    simpleLibScala, simpleAppScala, complexAppScala, polymorphicAppScala,
+    simpleLibJava, simpleAppJava, complexAppJava, polymorphicAppJava
   )
 
 lazy val configLib =  Project("config", file("config"))
@@ -60,10 +60,12 @@ lazy val testLib = proj("config-test-lib", file("test-lib"))
 lazy val simpleLibScala  = proj("config-simple-lib-scala",  file("examples/scala/simple-lib"))  dependsOn configLib
 lazy val simpleAppScala  = proj("config-simple-app-scala",  file("examples/scala/simple-app"))  dependsOn simpleLibScala
 lazy val complexAppScala = proj("config-complex-app-scala", file("examples/scala/complex-app")) dependsOn simpleLibScala
+lazy val polymorphicAppScala = proj("config-polymorphic-app-scala", file("examples/scala/polymorphic-app")) dependsOn configLib
 
 lazy val simpleLibJava  = proj("config-simple-lib-java",  file("examples/java/simple-lib"))  dependsOn configLib
 lazy val simpleAppJava  = proj("config-simple-app-java",  file("examples/java/simple-app"))  dependsOn simpleLibJava
 lazy val complexAppJava = proj("config-complex-app-java", file("examples/java/complex-app")) dependsOn simpleLibJava
+lazy val polymorphicAppJava = proj("config-polymorphic-app-java", file("examples/java/polymorphic-app")) dependsOn configLib
 
 useGpg := true
 
