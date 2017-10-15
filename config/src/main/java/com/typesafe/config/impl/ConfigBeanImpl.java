@@ -382,6 +382,21 @@ public class ConfigBeanImpl {
             }
         }
 
+        Map<String, Class<?>> subtypes2 = discoverServices(clazz);
+        for (Map.Entry<String, Class<?>> entry : subtypes2.entrySet()) {
+            // handle abstract
+            if (Modifier.isAbstract(entry.getValue().getModifiers())) {
+                result.putAll(findAllSubtypes(entry.getValue()));
+                continue;
+            }
+            // add concrete type
+            String typeName = findTypeName(entry.getValue());
+            if (typeName == null) {
+                typeName = entry.getKey();
+            }
+            result.putIfAbsent(typeName, entry.getValue());
+        }
+
         return result;
     }
 
@@ -404,6 +419,47 @@ public class ConfigBeanImpl {
     private static String findTypeName(Class<?> clazz) {
         ConfigTypeName tn = clazz.getAnnotation(ConfigTypeName.class);
         return (tn == null) ? null : tn.value();
+    }
+
+    private static Map<String, Class<?>> discoverServices(Class<?> clazz) {
+        // using TCCL
+        java.util.ServiceLoader<?> services = java.util.ServiceLoader.load(clazz);
+        if (services.iterator().hasNext()) {
+            return extractDiscoveredServices(services.iterator());
+        } else {
+            // By default ServiceLoader.load uses the TCCL, this may not be
+            // enough in environment dealing with classloaders differently
+            // such as OSGi. So we should try to use the  classloader having
+            // loaded this class.
+            services = java.util.ServiceLoader.load(clazz, ConfigBeanImpl.class.getClassLoader());
+            if (services.iterator().hasNext()) {
+                return extractDiscoveredServices(services.iterator());
+            } else {
+                return java.util.Collections.emptyMap();
+            }
+        }
+    }
+
+    private static Map<String, Class<?>> extractDiscoveredServices(java.util.Iterator<?> servicesIterator) {
+        Map<String, Class<?>> serviceClasses = new HashMap<String, Class<?>>(4);
+        // use while(true) loop so that we can isolate all service loader
+        // errors from .next and .hasNext to a single service
+        while (true) {
+            try {
+                if (!servicesIterator.hasNext()) {
+                    break;
+                }
+                Class<?> serviceClass = servicesIterator.next().getClass();
+                String typeName = findTypeName(serviceClass);
+                if (typeName == null) {
+                    typeName = serviceClass.getSimpleName();
+                }
+                serviceClasses.put(typeName, serviceClass);
+            } catch (java.util.ServiceConfigurationError error) {
+                throw new IllegalArgumentException("Found error loading a service", error);
+            }
+        }
+        return serviceClasses;
     }
 
 }

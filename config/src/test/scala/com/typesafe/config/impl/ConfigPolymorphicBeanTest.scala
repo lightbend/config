@@ -11,6 +11,8 @@ import beanconfig.polymorphic.TypeNamesConfigs._
 import beanconfig.polymorphic.VisibleTypeId._
 import beanconfig.polymorphic.VisibleTypeIdConfigs._
 import beanconfig.polymorphic.WithGenericsConfigs._
+import beanconfig.polymorphic.WithServiceLoader._
+import beanconfig.polymorphic.WithServiceLoaderConfigs._
 import beanconfig.polymorphic.{TypeNames, WithGenerics}
 import com.typesafe.config._
 import org.junit.Assert._
@@ -173,6 +175,23 @@ class ConfigPolymorphicBeanTest extends TestUtils {
         assertTrue(beanConfig.getWrapperWithDog.getAnimal.isInstanceOf[WithGenerics.Dog])
         assertEquals("Fluffy", beanConfig.getWrapperWithDog.getAnimal.getName)
         assertEquals(3, beanConfig.getWrapperWithDog.getAnimal.asInstanceOf[WithGenerics.Dog].getBoneCount)
+    }
+
+    @Test
+    def testSimpleServiceLoader() {
+        val beanConfig: SimpleServiceLoader =
+            ConfigBeanFactory.create(loadConfig().getConfig("withServiceLoader"), classOf[SimpleServiceLoader])
+        assertNotNull(beanConfig)
+
+        assertTrue(beanConfig.getSingleTag.isInstanceOf[ImplA])
+        assertEquals("bar", beanConfig.getSingleTag.asInstanceOf[ImplA].getMessage)
+
+        assertEquals(2, beanConfig.getOtherTags.size)
+
+        assertTrue(beanConfig.getOtherTags.get(0).isInstanceOf[ImplA])
+        assertEquals("baz", beanConfig.getOtherTags.get(0).asInstanceOf[ImplA].getMessage)
+        assertTrue(beanConfig.getOtherTags.get(1).isInstanceOf[ImplB])
+        assertEquals(42, beanConfig.getOtherTags.get(1).asInstanceOf[ImplB].getValue)
     }
 
     private def loadConfig(): Config = {
