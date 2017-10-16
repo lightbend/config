@@ -10,7 +10,7 @@
   during resolution.
 - Config Beans now support `Set` collection.
 - a few other small bugfixes. All of the fixed issues can be found
-  in the [milestone page](https://github.com/typesafehub/config/milestone/1?closed=1).
+  in the [milestone page](https://github.com/lightbend/config/milestone/1?closed=1).
 
 # 1.3.1: September 24, 2016
 
@@ -222,7 +222,7 @@ Thank you to contributors with commits since v1.2.1 tag:
  - build jar using Java 1.6 (and enforce this in build)
  - change getDuration to return unboxed long instead of boxed
  - API documentation improvements
-   http://typesafehub.github.io/config/latest/api/
+   http://lightbend.github.io/config/latest/api/
 
 # 1.1.0-9f31d6308e7ebbc3d7904b64ebb9f61f7e22a968: January 6, 2014
 
@@ -240,7 +240,7 @@ Thank you to contributors with commits since v1.2.1 tag:
  - new API Config.getDuration() replaces getMilliseconds and
    getNanoseconds. (should it return `long` instead of `Long` even
    though it's been in git for a while? weigh in at
-   https://github.com/typesafehub/config/issues/119 )
+   https://github.com/lightbend/config/issues/119 )
  - new API ConfigResolveOptions.setAllowUnresolved lets you
    partially-resolve a Config
  - new API Config.isResolved lets you check on resolution status
