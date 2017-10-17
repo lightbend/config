@@ -88,7 +88,7 @@ to merge it in.
     - [Python port](#python-port)
     - [C++ port](#c-port)
     - [JavaScript port](#javascript-port)
-    - [C# port](#csharp-port)
+    - [C# port](#c-port-1)
     - [Linting tool](#linting-tool)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
