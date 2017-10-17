@@ -39,6 +39,7 @@
     - [Automatic type conversions](#automatic-type-conversions)
     - [Units format](#units-format)
     - [Duration format](#duration-format)
+    - [Period Format](#period-format)
     - [Size in bytes format](#size-in-bytes-format)
     - [Config object merging and file merging](#config-object-merging-and-file-merging)
     - [Java properties mapping](#java-properties-mapping)
@@ -46,6 +47,20 @@
     - [Conventional override by system properties](#conventional-override-by-system-properties)
     - [Substitution fallback to environment variables](#substitution-fallback-to-environment-variables)
     - [hyphen-separated vs. camelCase](#hyphen-separated-vs-camelcase)
+  - [Tools and libraries](#tools-and-libraries)
+    - [Linting tool](#linting-tool)
+    - [Libraries for various languages](#libraries-for-various-languages)
+      - [Java](#java)
+      - [Scala](#scala)
+      - [Clojure](#clojure)
+      - [Kotlin](#kotlin)
+      - [Ruby](#ruby)
+      - [Python](#python)
+      - [C++](#c)
+      - [JavaScript](#javascript)
+      - [C](#c)
+    - [Puppet module](#puppet-module)
+    - [Guice integration](#guice-integration)
   - [Note on Java properties similarity](#note-on-java-properties-similarity)
   - [Note on Windows and case sensitivity of environment variables](#note-on-windows-and-case-sensitivity-of-environment-variables)
 
@@ -1553,6 +1568,82 @@ Environment variables are interpreted as follows:
 
 Config keys are encouraged to be `hyphen-separated` rather than
 `camelCase`.
+
+## Tools and libraries
+
+This may not be comprehensive - if you'd like to add mention of
+your tool or library, just send a pull request for this README. We would
+love to know what you're doing with this library or with the HOCON
+format.
+
+### Linting tool
+
+There is a web based linting tool at http://www.hoconlint.com/
+
+### Libraries for various languages
+
+#### Java
+
+  * Typesafe Config https://github.com/lightbend/config
+  * tscfg https://github.com/carueda/tscfg (wraps Typesafe Config)
+
+#### Scala
+
+There are a number of Scala wrappers for Typesafe Config:
+
+  * Ficus https://github.com/ceedubs/ficus
+  * configz https://github.com/arosien/configz
+  * configs https://github.com/kxbmap/configs
+  * config-annotation https://github.com/zhongl/config-annotation
+  * PureConfig https://github.com/pureconfig/pureconfig
+  * Simple Scala Config https://github.com/ElderResearch/ssc
+  * konfig https://github.com/vpon/konfig
+  * ScalaConfig https://github.com/andr83/scalaconfig
+  * static-config https://github.com/Krever/static-config
+  * validated-config https://github.com/carlpulley/validated-config
+  * Cedi Config https://github.com/ccadllc/cedi-config
+  * Cfg https://github.com/carueda/cfg
+  * circe-config https://github.com/circe/circe-config
+
+And a Scala library:
+
+  * SHocon https://github.com/unicredit/shocon (work with both Scala and Scala.Js)
+
+#### Clojure
+
+  * beamly-core.config https://github.com/beamly/beamly-core.config (wraps Typesafe Config)
+
+#### Kotlin
+
+  * config4k https://github.com/config4k/config4k (wraps Typesafe Config)
+
+#### Ruby
+
+   * https://github.com/puppetlabs/ruby-hocon
+
+#### Python
+
+   * pyhocon https://github.com/chimpler/pyhocon
+
+#### C++
+
+   * https://github.com/puppetlabs/cpp-hocon
+
+#### JavaScript
+
+  * https://github.com/yellowblood/hocon-js (missing features, under development)
+
+#### C#
+
+  * https://github.com/akkadotnet/HOCON
+
+### Puppet module
+
+   * Manage your HOCON configuration files with Puppet!: https://forge.puppetlabs.com/puppetlabs/hocon
+
+### Guice integration
+
+Typesafe Config Guice https://github.com/racc/typesafeconfig-guice
 
 ## Note on Java properties similarity
 

@@ -76,20 +76,7 @@ to merge it in.
   - [Debugging Your Configuration](#debugging-your-configuration)
   - [Supports Java 8 and Later](#supports-java-8-and-later)
   - [Rationale for Supported File Formats](#rationale-for-supported-file-formats)
-  - [Other APIs (Wrappers, Ports and Utilities)](#other-apis-wrappers-ports-and-utilities)
-    - [Guice integration](#guice-integration)
-    - [Java (yep!) wrappers for the Java library](#java-yep-wrappers-for-the-java-library)
-    - [Scala wrappers for the Java library](#scala-wrappers-for-the-java-library)
-    - [Clojure wrappers for the Java library](#clojure-wrappers-for-the-java-library)
-    - [Kotlin wrappers for the Java library](#kotlin-wrappers-for-the-java-library)
-    - [Scala port](#scala-port)
-    - [Ruby port](#ruby-port)
-    - [Puppet module](#puppet-module)
-    - [Python port](#python-port)
-    - [C++ port](#c-port)
-    - [JavaScript port](#javascript-port)
-    - [C# port](#c-port-1)
-    - [Linting tool](#linting-tool)
+  - [Other tools](#other-tools)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -818,83 +805,8 @@ Two alternatives to HOCON syntax could be:
     allow mixing true JSON files into the config but also support
     a nicer format.
 
-### Other APIs (Wrappers, Ports and Utilities)
+### Other tools
 
-This may not be comprehensive - if you'd like to add mention of
-your wrapper, just send a pull request for this README. We would
-love to know what you're doing with this library or with the HOCON
-format.
+There are a number of other
+[HOCON tools and libraries](HOCON.md#tools-and-libraries) available
 
-#### Guice integration
-  * Typesafe Config Guice https://github.com/racc/typesafeconfig-guice
-
-#### Java (yep!) wrappers for the Java library
-
-  * tscfg https://github.com/carueda/tscfg
-
-#### Scala wrappers for the Java library
-
-  * Ficus https://github.com/ceedubs/ficus
-  * configz https://github.com/arosien/configz
-  * configs https://github.com/kxbmap/configs
-  * config-annotation https://github.com/zhongl/config-annotation
-  * PureConfig https://github.com/pureconfig/pureconfig
-  * Simple Scala Config https://github.com/ElderResearch/ssc
-  * konfig https://github.com/vpon/konfig
-  * ScalaConfig https://github.com/andr83/scalaconfig
-  * static-config https://github.com/Krever/static-config
-  * validated-config https://github.com/carlpulley/validated-config
-  * Cedi Config https://github.com/ccadllc/cedi-config
-  * Cfg https://github.com/carueda/cfg
-  * circe-config https://github.com/circe/circe-config
-
-#### Clojure wrappers for the Java library
-
-  * beamly-core.config https://github.com/beamly/beamly-core.config
-
-#### Kotlin wrappers for the Java library
-  * config4k https://github.com/config4k/config4k
-
-#### Scala port
-
-  * SHocon https://github.com/unicredit/shocon (work with both Scala and Scala.Js)
-
-#### Ruby port
-
-   * https://github.com/puppetlabs/ruby-hocon
-
-#### Puppet module
-
-   * Manage your HOCON configuration files with Puppet!: https://forge.puppetlabs.com/puppetlabs/hocon
-
-#### Python port
-
-   * pyhocon https://github.com/chimpler/pyhocon
-
-#### C++ port
-
-   * https://github.com/puppetlabs/cpp-hocon
-
-#### JavaScript port
-
-  * https://github.com/yellowblood/hocon-js (missing features, under development)
-
-#### C# port
-
-  * https://github.com/akkadotnet/HOCON
-
-#### Linting tool
-
-   * A web based linting tool http://www.hoconlint.com/
-   
-# Maintanance notes
-
-## License
-
-The license is Apache 2.0, see LICENSE-2.0.txt.
-
-## Maintained by 
-
-This project is maintained mostly by [@havocp](https://github.com/havocp) and [@akka-team](https://github.com/orgs/lightbend/teams/akka-team/members).
-
-Feel free to ping above maintainers for code review or discussions. Pull requests are very welcome–thanks in advance!
