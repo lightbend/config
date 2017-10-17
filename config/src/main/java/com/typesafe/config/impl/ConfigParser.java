@@ -192,7 +192,7 @@ final class ConfigParser {
 
             // we really should make this work, but for now throwing an
             // exception is better than producing an incorrect result.
-            // See https://github.com/typesafehub/config/issues/160
+            // See https://github.com/lightbend/config/issues/160
             if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
                 throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
                         + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
@@ -247,7 +247,7 @@ final class ConfigParser {
                         // we really should make this work, but for now throwing
                         // an exception is better than producing an incorrect
                         // result. See
-                        // https://github.com/typesafehub/config/issues/160
+                        // https://github.com/lightbend/config/issues/160
                         if (arrayCount > 0)
                             throw parseError("Due to current limitations of the config parser, += does not work nested inside a list. "
                                     + "+= expands to a ${} substitution and the path in ${} cannot currently refer to list elements. "

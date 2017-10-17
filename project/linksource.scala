@@ -37,7 +37,7 @@ object LinkSourcePlugin extends AutoPlugin {
 
   private def rewriteSourceLinks(dir: File, sourceBaseUrl: String, log: Logger): Unit = {
     // Convert <a href="../../../src-html/com/typesafe/config/Config.html#line.165"> to
-    // "https://github.com/typesafehub/config/blob/v1.2.1/config/src/main/java/com/typesafe/config/Config.java#L165"
+    // "https://github.com/lightbend/config/blob/v1.2.1/config/src/main/java/com/typesafe/config/Config.java#L165"
     // in all .html files found underneath dir
     val origRegex = "href=\".*src-html/([^\"]+)\"".r
     def listFiles(d: File): Seq[File] = IO.listFiles(d).toSeq.flatMap { f =>

@@ -36,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  * 
  * <p>
  * You can find an example app and library <a
- * href="https://github.com/typesafehub/config/tree/master/examples">on
+ * href="https://github.com/lightbend/config/tree/master/examples">on
  * GitHub</a>. Also be sure to read the <a
  * href="package-summary.html#package_description">package overview</a> which
  * describes the big picture as shown in those examples.
@@ -56,7 +56,7 @@ import java.util.concurrent.TimeUnit;
  * in a JSON object; it's just a string that's the key in a map. A "path" is a
  * parseable expression with a syntax and it refers to a series of keys. Path
  * expressions are described in the <a
- * href="https://github.com/typesafehub/config/blob/master/HOCON.md">spec for
+ * href="https://github.com/lightbend/config/blob/master/HOCON.md">spec for
  * Human-Optimized Config Object Notation</a>. In brief, a path is
  * period-separated so "a.b.c" looks for key c in object b in object a in the
  * root object. Sometimes double quotes are needed around special characters in
@@ -110,7 +110,7 @@ import java.util.concurrent.TimeUnit;
  * <p>
  * <em>Substitutions</em> are the <code>${foo.bar}</code> syntax in config
  * files, described in the <a href=
- * "https://github.com/typesafehub/config/blob/master/HOCON.md#substitutions"
+ * "https://github.com/lightbend/config/blob/master/HOCON.md#substitutions"
  * >specification</a>. Resolving substitutions replaces these references with real
  * values.
  * 
@@ -189,7 +189,7 @@ public interface Config extends ConfigMergeable {
     /**
      * Returns a replacement config with all substitutions (the
      * <code>${foo.bar}</code> syntax, see <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>) resolved. Substitutions are looked up using this
      * <code>Config</code> as the root object, that is, a substitution
      * <code>${foo.bar}</code> will be replaced with the result of
@@ -670,7 +670,7 @@ public interface Config extends ConfigMergeable {
      * the value is already a number, then it's left alone; if it's a string,
      * it's parsed understanding unit suffixes such as "128K", as documented in
      * the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>.
      *
      * @param path
@@ -690,7 +690,7 @@ public interface Config extends ConfigMergeable {
      * the value is already a number, then it's left alone; if it's a string,
      * it's parsed understanding unit suffixes such as "128K", as documented in
      * the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>.
      *
      * @since 1.3.0
@@ -711,7 +711,7 @@ public interface Config extends ConfigMergeable {
      * Get value as a duration in milliseconds. If the value is already a
      * number, then it's left alone; if it's a string, it's parsed understanding
      * units suffixes like "10m" or "5ns" as documented in the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>.
      *
      * @deprecated  As of release 1.1, replaced by {@link #getDuration(String, TimeUnit)}
@@ -754,7 +754,7 @@ public interface Config extends ConfigMergeable {
      * number, then it's taken as milliseconds and then converted to the
      * requested TimeUnit; if it's a string, it's parsed understanding units
      * suffixes like "10m" or "5ns" as documented in the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>.
      * 
      * @since 1.2.0
@@ -778,7 +778,7 @@ public interface Config extends ConfigMergeable {
      * already a number, then it's taken as milliseconds; if it's
      * a string, it's parsed understanding units suffixes like
      * "10m" or "5ns" as documented in the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>. This method never returns null.
      *
      * @since 1.3.0
@@ -800,7 +800,7 @@ public interface Config extends ConfigMergeable {
      * already a number, then it's taken as days; if it's
      * a string, it's parsed understanding units suffixes like
      * "10d" or "5w" as documented in the <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md">the
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>. This method never returns null.
      *
      * @since 1.3.0
