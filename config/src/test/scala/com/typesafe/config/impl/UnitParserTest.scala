@@ -70,7 +70,7 @@ class UnitParserTest extends TestUtils {
         assertTrue(s"${e2.getMessage} was not the expected error message", e2.getMessage.contains("time unit 'seconds'"))
     }
 
-    // https://github.com/typesafehub/config/issues/117
+    // https://github.com/lightbend/config/issues/117
     // this broke because "1d" is a valid double for parseDouble
     @Test
     def parseOneDayAsMilliseconds(): Unit = {

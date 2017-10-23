@@ -346,7 +346,7 @@ class ConcatenationTest extends TestUtils {
     }
 
     // We would ideally make this case NOT throw an exception but we need to do some work
-    // to get there, see https://github.com/typesafehub/config/issues/160
+    // to get there, see https://github.com/lightbend/config/issues/160
     @Test
     def plusEqualsMultipleTimesNestedInArray() {
         val e = intercept[ConfigException.Parse] {
@@ -357,7 +357,7 @@ class ConcatenationTest extends TestUtils {
     }
 
     // We would ideally make this case NOT throw an exception but we need to do some work
-    // to get there, see https://github.com/typesafehub/config/issues/160
+    // to get there, see https://github.com/lightbend/config/issues/160
     @Test
     def plusEqualsMultipleTimesNestedInPlusEquals() {
         val e = intercept[ConfigException.Parse] {
@@ -367,7 +367,7 @@ class ConcatenationTest extends TestUtils {
         assertTrue(e.getMessage.contains("limitation"))
     }
 
-    // from https://github.com/typesafehub/config/issues/177
+    // from https://github.com/lightbend/config/issues/177
     @Test
     def arrayConcatenationInDoubleNestedDelayedMerge() {
         val unresolved = parseConfig("""d { x = [] }, c : ${d}, c { x += 1, x += 2 }""")
@@ -375,7 +375,7 @@ class ConcatenationTest extends TestUtils {
         assertEquals(Seq(1, 2), conf.getIntList("c.x").asScala)
     }
 
-    // from https://github.com/typesafehub/config/issues/177
+    // from https://github.com/lightbend/config/issues/177
     @Test
     def arrayConcatenationAsPartOfDelayedMerge() {
         val unresolved = parseConfig(""" c { x: [], x : ${c.x}[1], x : ${c.x}[2] }""")
@@ -383,7 +383,7 @@ class ConcatenationTest extends TestUtils {
         assertEquals(Seq(1, 2), conf.getIntList("c.x").asScala)
     }
 
-    // from https://github.com/typesafehub/config/issues/177
+    // from https://github.com/lightbend/config/issues/177
     @Test
     def arrayConcatenationInDoubleNestedDelayedMerge2() {
         val unresolved = parseConfig("""d { x = [] }, c : ${d}, c { x : ${c.x}[1], x : ${c.x}[2] }""")
@@ -391,7 +391,7 @@ class ConcatenationTest extends TestUtils {
         assertEquals(Seq(1, 2), conf.getIntList("c.x").asScala)
     }
 
-    // from https://github.com/typesafehub/config/issues/177
+    // from https://github.com/lightbend/config/issues/177
     @Test
     def arrayConcatenationInTripleNestedDelayedMerge() {
         val unresolved = parseConfig("""{ r: { d.x=[] }, q: ${r}, q : { d { x = [] }, c : ${q.d}, c { x : ${q.c.x}[1], x : ${q.c.x}[2] } } }""")

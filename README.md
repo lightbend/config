@@ -1,11 +1,11 @@
 Configuration library for JVM languages.
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config)
-[![Build Status](https://travis-ci.org/typesafehub/config.svg?branch=master)](https://travis-ci.org/typesafehub/config)
+[![Build Status](https://travis-ci.org/lightbend/config.svg?branch=master)](https://travis-ci.org/lightbend/config)
 
 If you have questions or are working on a pull request or just
 curious, please feel welcome to join the chat room:
-[![Join chat https://gitter.im/typesafehub/config](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/typesafehub/config?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join chat https://gitter.im/lightbend/config](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lightbend/config?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Overview
 
@@ -123,15 +123,15 @@ Link for direct download if you don't use a dependency manager:
 ### Release Notes
 
 Please see NEWS.md in this directory,
-https://github.com/typesafehub/config/blob/master/NEWS.md
+https://github.com/lightbend/config/blob/master/NEWS.md
 
 ### API docs
 
- - Online: http://typesafehub.github.com/config/latest/api/
+ - Online: http://lightbend.github.com/config/latest/api/
  - also published in jar form
  - consider reading this README first for an intro
  - for questions about the `.conf` file format, read
-   [HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md)
+   [HOCON.md](https://github.com/lightbend/config/blob/master/HOCON.md)
    in this directory
 
 ### Bugs and Patches
@@ -145,7 +145,7 @@ account - it takes 30 seconds.  You can do this at
 http://www.typesafe.com/contribute/cla
 
 Please see
-[CONTRIBUTING](https://github.com/typesafehub/config/blob/master/CONTRIBUTING.md)
+[CONTRIBUTING](https://github.com/lightbend/config/blob/master/CONTRIBUTING.md)
 for more including how to make a release.
 
 ### Build
@@ -166,7 +166,7 @@ Scala dependency.
 
 ### Longer Examples
 
-See the examples in the `examples/` [directory](https://github.com/typesafehub/config/tree/master/examples).
+See the examples in the `examples/` [directory](https://github.com/lightbend/config/tree/master/examples).
 
 You can run these from the sbt console with the commands `project
 config-simple-app-java` and then `run`.
@@ -190,7 +190,7 @@ Objects are immutable, so methods on `Config` which transform the
 configuration return a new `Config`. Other types such as
 `ConfigParseOptions`, `ConfigResolveOptions`, `ConfigObject`,
 etc. are also immutable. See the
-[API docs](http://typesafehub.github.com/config/latest/api/) for
+[API docs](http://lightbend.github.com/config/latest/api/) for
 details of course.
 
 ### Schemas and Validation
@@ -199,7 +199,7 @@ There isn't a schema language or anything like that. However, two
 suggested tools are:
 
  - use the
-   [checkValid() method](http://typesafehub.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
+   [checkValid() method](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
  - access your config through a Settings class with a field for
    each setting, and instantiate it on startup (immediately
    throwing an exception if any settings are missing)
@@ -436,7 +436,7 @@ values into multiple places in your code. You have been warned!
 ### Understanding `Config` and `ConfigObject`
 
 To read and modify configuration, you'll use the
-[Config](http://typesafehub.github.io/config/latest/api/com/typesafe/config/Config.html)
+[Config](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html)
 interface. A `Config` looks at a JSON-equivalent data structure as
 a one-level map from paths to values. So if your JSON looks like
 this:
@@ -451,7 +451,7 @@ this:
 Using the `Config` interface, you could write
 `conf.getInt("foo.bar")`. The `foo.bar` string is called a _path
 expression_
-([HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md)
+([HOCON.md](https://github.com/lightbend/config/blob/master/HOCON.md)
 has the syntax details for these expressions). Iterating over this
 `Config`, you would get two entries; `"foo.bar" : 42` and
 `"foo.baz" : 43`. When iterating a `Config` you will not find
@@ -464,7 +464,7 @@ skip `null` values.
 
 You can also look at a `Config` in the way most JSON APIs would,
 through the
-[ConfigObject](http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigObject.html)
+[ConfigObject](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html)
 interface. This interface represents an object node in the JSON
 tree. `ConfigObject` instances come in multi-level trees, and the
 keys do not have any syntax (they are just strings, not path
@@ -476,15 +476,15 @@ expressions). Iterating over the above example as a
 In `ConfigObject`, `null` values are visible (distinct from
 missing values), just as they are in JSON.
 
-`ConfigObject` is a subtype of [ConfigValue](http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
+`ConfigObject` is a subtype of [ConfigValue](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
 subtypes are the other JSON types (list, string, number, boolean, null).
 
 `Config` and `ConfigObject` are two ways to look at the same
 internal data structure, and you can convert between them for free
 using
-[Config.root()](http://typesafehub.github.io/config/latest/api/com/typesafe/config/Config.html#root%28%29)
+[Config.root()](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#root%28%29)
 and
-[ConfigObject.toConfig()](http://typesafehub.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig%28%29).
+[ConfigObject.toConfig()](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig%28%29).
 
 ### ConfigBeanFactory
 
@@ -507,7 +507,7 @@ particular value manually).
 
 The JSON superset is called "Human-Optimized Config Object
 Notation" or HOCON, and files use the suffix `.conf`.  See
-[HOCON.md](https://github.com/typesafehub/config/blob/master/HOCON.md)
+[HOCON.md](https://github.com/lightbend/config/blob/master/HOCON.md)
 in this directory for more detail.
 
 After processing a `.conf` file, the result is always just a JSON
@@ -772,7 +772,7 @@ version 1.2.1 and earlier will work with Java 6.
 Please use 1.2.1 if you need Java 6 support, though some people
 have expressed interest in a branch off of 1.3.x supporting
 Java 7. If you want to work on that branch you might bring it up
-on [chat](https://gitter.im/typesafehub/config). We can release a
+on [chat](https://gitter.im/lightbend/config). We can release a
 jar for Java 7 if someone(s) steps up to maintain the branch. The
 master branch does not use Java 8 "gratuitously" but some APIs
 that use Java 8 types will need to be removed.
@@ -854,10 +854,10 @@ format.
 #### Clojure wrappers for the Java library
 
   * beamly-core.config https://github.com/beamly/beamly-core.config
-  
+
 #### Kotlin wrappers for the Java library
   * config4k https://github.com/config4k/config4k
-  
+
 #### Scala port
 
   * SHocon https://github.com/unicredit/shocon (work with both Scala and Scala.Js)
@@ -879,13 +879,13 @@ format.
    * https://github.com/puppetlabs/cpp-hocon
 
 #### JavaScript port
- 
+
   * https://github.com/yellowblood/hocon-js (missing features, under development)
 
 #### C# port
-  
+
   * https://github.com/akkadotnet/HOCON
-  
+
 #### Linting tool
 
    * A web based linting tool http://www.hoconlint.com/
