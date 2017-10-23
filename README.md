@@ -127,7 +127,7 @@ https://github.com/lightbend/config/blob/master/NEWS.md
 
 ### API docs
 
- - Online: http://lightbend.github.com/config/latest/api/
+ - Online: http://lightbend.github.io/config/latest/api/
  - also published in jar form
  - consider reading this README first for an intro
  - for questions about the `.conf` file format, read
@@ -190,7 +190,7 @@ Objects are immutable, so methods on `Config` which transform the
 configuration return a new `Config`. Other types such as
 `ConfigParseOptions`, `ConfigResolveOptions`, `ConfigObject`,
 etc. are also immutable. See the
-[API docs](http://lightbend.github.com/config/latest/api/) for
+[API docs](http://lightbend.github.io/config/latest/api/) for
 details of course.
 
 ### Schemas and Validation
