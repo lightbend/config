@@ -894,6 +894,6 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 
 ## Maintained by 
 
-This project is maintained mostly by @havocp and [@akka-team](https://github.com/orgs/lightbend/teams/akka-team/members).
+This project is maintained mostly by [@havocp](https://github.com/havocp) and [@akka-team](https://github.com/orgs/lightbend/teams/akka-team/members).
 
 Feel free to ping above maintainers for code review or discussions. Pull requests are very welcome–thanks in advance!
