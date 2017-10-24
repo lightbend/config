@@ -95,10 +95,6 @@ to merge it in.
 
 ## Essential Information
 
-### License
-
-The license is Apache 2.0, see LICENSE-2.0.txt.
-
 ### Binary Releases
 
 Version 1.2.1 and earlier were built for Java 6, while newer
@@ -889,3 +885,15 @@ format.
 #### Linting tool
 
    * A web based linting tool http://www.hoconlint.com/
+   
+# Maintanance notes
+
+## License
+
+The license is Apache 2.0, see LICENSE-2.0.txt.
+
+## Maintained by 
+
+This project is maintained mostly by [@havocp](https://github.com/havocp) and [@akka-team](https://github.com/orgs/lightbend/teams/akka-team/members).
+
+Feel free to ping above maintainers for code review or discussions. Pull requests are very welcome–thanks in advance!
