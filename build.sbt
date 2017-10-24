@@ -14,11 +14,11 @@ scalacOptions in GlobalScope in Test := Seq("-unchecked", "-deprecation", "-feat
 scalaVersion in ThisBuild := "2.10.4"
 
 val sonatype = new PublishToSonatype {
-  def projectUrl    = "https://github.com/typesafehub/config"
+  def projectUrl    = "https://github.com/lightbend/config"
   def developerId   = "havocp"
   def developerName = "Havoc Pennington"
   def developerUrl  = "http://ometer.com/"
-  def scmUrl        = "git://github.com/typesafehub/config.git"
+  def scmUrl        = "git://github.com/lightbend/config.git"
 }
 
 lazy val commonSettings: Seq[Setting[_]] = Def.settings(

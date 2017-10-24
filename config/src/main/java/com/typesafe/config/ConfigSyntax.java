@@ -5,7 +5,7 @@ package com.typesafe.config;
 
 /**
  * The syntax of a character stream (<a href="http://json.org">JSON</a>, <a
- * href="https://github.com/typesafehub/config/blob/master/HOCON.md">HOCON</a>
+ * href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>
  * aka ".conf", or <a href=
  * "http://download.oracle.com/javase/7/docs/api/java/util/Properties.html#load%28java.io.Reader%29"
  * >Java properties</a>).
@@ -21,7 +21,7 @@ public enum ConfigSyntax {
     JSON,
     /**
      * The JSON-superset <a
-     * href="https://github.com/typesafehub/config/blob/master/HOCON.md"
+     * href="https://github.com/lightbend/config/blob/master/HOCON.md"
      * >HOCON</a> format. Associated with the <code>.conf</code> file extension
      * and <code>application/hocon</code> Content-Type.
      */

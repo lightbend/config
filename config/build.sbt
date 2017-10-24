@@ -84,7 +84,7 @@ javacOptions in (Compile, doc) ++= Seq("-group", s"Public API (version ${version
 
 javadocSourceBaseUrl := {
   for (gitHead <- com.typesafe.sbt.SbtGit.GitKeys.gitHeadCommit.value)
-    yield s"https://github.com/typesafehub/config/blob/$gitHead/config/src/main/java"
+    yield s"https://github.com/lightbend/config/blob/$gitHead/config/src/main/java"
 }
 
 javaVersionPrefix in javaVersionCheck := Some("1.8")

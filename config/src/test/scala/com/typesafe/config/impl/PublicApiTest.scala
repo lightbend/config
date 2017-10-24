@@ -906,7 +906,7 @@ class PublicApiTest extends TestUtils {
     }
 
     // We would ideally make this case NOT throw an exception but we need to do some work
-    // to get there, see https://github.com/typesafehub/config/issues/160
+    // to get there, see https://github.com/lightbend/config/issues/160
     @Test
     def detectIncludeFromList() {
         val e = intercept[ConfigException.Parse] {
@@ -1070,7 +1070,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def heuristicIncludeChecksClasspath(): Unit = {
-        // from https://github.com/typesafehub/config/issues/188
+        // from https://github.com/lightbend/config/issues/188
         withScratchDirectory("heuristicIncludeChecksClasspath") { dir =>
             val f = new File(dir, "foo.conf")
             writeFile(f, """

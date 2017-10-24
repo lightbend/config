@@ -280,7 +280,7 @@ class ConfigValueTest extends TestUtils {
     }
 
     /**
-     * Reproduces the issue <a href=https://github.com/typesafehub/config/issues/461>#461</a>.
+     * Reproduces the issue <a href=https://github.com/lightbend/config/issues/461>#461</a>.
      * <p>
      * We use a custom de-/serializer that encodes String objects in a JDK-incompatible way. Encoding used here
      * is rather simplistic: a long indicating the length in bytes (JDK uses a variable length integer) followed
