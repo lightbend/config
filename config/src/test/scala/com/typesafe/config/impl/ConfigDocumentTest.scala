@@ -457,4 +457,14 @@ class ConfigDocumentTest extends TestUtils {
         assertEquals("{ a : {\n     \"a\" : 1,\n     \"b\" : 2\n } }",
             configDocument.withValue("a", configVal).render)
     }
+
+    @Test
+    def configDocumentAddValueAfterInclude {
+        val origText = "include \"application\""
+        val configDocument = ConfigDocumentFactory.parseString(origText)
+
+        assertEquals(
+          "include \"application\"\nfoo : bar",
+            configDocument.withValueText("foo", "bar").render)
+    }
 }
