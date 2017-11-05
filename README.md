@@ -846,6 +846,7 @@ format.
   * validated-config https://github.com/carlpulley/validated-config
   * Cedi Config https://github.com/ccadllc/cedi-config
   * Cfg https://github.com/carueda/cfg
+  * circe-config https://github.com/circe/circe-config
 
 #### Clojure wrappers for the Java library
 
