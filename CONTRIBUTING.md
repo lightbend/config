@@ -14,7 +14,7 @@ fine... just be willing to revise it!
 Before we can accept pull requests, you will need to agree to the
 Typesafe Contributor License Agreement online, using your GitHub
 account - it takes 30 seconds.  You can do this at
-http://www.typesafe.com/contribute/cla
+https://www.lightbend.com/contribute/cla
 
 Expect that most PRs will need revision before merge. If people
 suggest revisions, you can make them yourself or wait for a

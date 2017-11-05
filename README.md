@@ -123,7 +123,7 @@ https://github.com/lightbend/config/blob/master/NEWS.md
 
 ### API docs
 
- - Online: http://lightbend.github.io/config/latest/api/
+ - Online: https://lightbend.github.io/config/latest/api/
  - also published in jar form
  - consider reading this README first for an intro
  - for questions about the `.conf` file format, read
@@ -138,7 +138,7 @@ requests on GitHub.
 Before we can accept pull requests, you will need to agree to the
 Typesafe Contributor License Agreement online, using your GitHub
 account - it takes 30 seconds.  You can do this at
-http://www.typesafe.com/contribute/cla
+https://www.lightbend.com/contribute/cla
 
 Please see
 [CONTRIBUTING](https://github.com/lightbend/config/blob/master/CONTRIBUTING.md)
@@ -186,7 +186,7 @@ Objects are immutable, so methods on `Config` which transform the
 configuration return a new `Config`. Other types such as
 `ConfigParseOptions`, `ConfigResolveOptions`, `ConfigObject`,
 etc. are also immutable. See the
-[API docs](http://lightbend.github.io/config/latest/api/) for
+[API docs](https://lightbend.github.io/config/latest/api/) for
 details of course.
 
 ### Schemas and Validation
@@ -195,7 +195,7 @@ There isn't a schema language or anything like that. However, two
 suggested tools are:
 
  - use the
-   [checkValid() method](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
+   [checkValid() method](https://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
  - access your config through a Settings class with a field for
    each setting, and instantiate it on startup (immediately
    throwing an exception if any settings are missing)
@@ -432,7 +432,7 @@ values into multiple places in your code. You have been warned!
 ### Understanding `Config` and `ConfigObject`
 
 To read and modify configuration, you'll use the
-[Config](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html)
+[Config](https://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html)
 interface. A `Config` looks at a JSON-equivalent data structure as
 a one-level map from paths to values. So if your JSON looks like
 this:
@@ -460,7 +460,7 @@ skip `null` values.
 
 You can also look at a `Config` in the way most JSON APIs would,
 through the
-[ConfigObject](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html)
+[ConfigObject](https://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html)
 interface. This interface represents an object node in the JSON
 tree. `ConfigObject` instances come in multi-level trees, and the
 keys do not have any syntax (they are just strings, not path
@@ -472,15 +472,15 @@ expressions). Iterating over the above example as a
 In `ConfigObject`, `null` values are visible (distinct from
 missing values), just as they are in JSON.
 
-`ConfigObject` is a subtype of [ConfigValue](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
+`ConfigObject` is a subtype of [ConfigValue](https://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
 subtypes are the other JSON types (list, string, number, boolean, null).
 
 `Config` and `ConfigObject` are two ways to look at the same
 internal data structure, and you can convert between them for free
 using
-[Config.root()](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#root%28%29)
+[Config.root()](https://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#root--)
 and
-[ConfigObject.toConfig()](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig%28%29).
+[ConfigObject.toConfig()](https://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig--).
 
 ### ConfigBeanFactory
 
