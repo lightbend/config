@@ -17,40 +17,40 @@ import java.util.concurrent.TimeUnit;
  * (booleans, strings, numbers, lists, or objects), represented by
  * {@link ConfigValue} instances. Values accessed through the
  * <code>Config</code> interface are never null.
- * 
+ *
  * <p>
  * {@code Config} is an immutable object and thus safe to use from multiple
  * threads. There's never a need for "defensive copies."
- * 
+ *
  * <p>
  * Fundamental operations on a {@code Config} include getting configuration
  * values, <em>resolving</em> substitutions with {@link Config#resolve()}, and
  * merging configs using {@link Config#withFallback(ConfigMergeable)}.
- * 
+ *
  * <p>
  * All operations return a new immutable {@code Config} rather than modifying
  * the original instance.
- * 
+ *
  * <p>
  * <strong>Examples</strong>
- * 
+ *
  * <p>
  * You can find an example app and library <a
  * href="https://github.com/lightbend/config/tree/master/examples">on
  * GitHub</a>. Also be sure to read the <a
  * href="package-summary.html#package_description">package overview</a> which
  * describes the big picture as shown in those examples.
- * 
+ *
  * <p>
  * <strong>Paths, keys, and Config vs. ConfigObject</strong>
- * 
+ *
  * <p>
  * <code>Config</code> is a view onto a tree of {@link ConfigObject}; the
  * corresponding object tree can be found through {@link Config#root()}.
  * <code>ConfigObject</code> is a map from config <em>keys</em>, rather than
  * paths, to config values. Think of <code>ConfigObject</code> as a JSON object
  * and <code>Config</code> as a configuration API.
- * 
+ *
  * <p>
  * The API tries to consistently use the terms "key" and "path." A key is a key
  * in a JSON object; it's just a string that's the key in a map. A "path" is a
@@ -61,17 +61,17 @@ import java.util.concurrent.TimeUnit;
  * period-separated so "a.b.c" looks for key c in object b in object a in the
  * root object. Sometimes double quotes are needed around special characters in
  * path expressions.
- * 
+ *
  * <p>
  * The API for a {@code Config} is in terms of path expressions, while the API
  * for a {@code ConfigObject} is in terms of keys. Conceptually, {@code Config}
  * is a one-level map from <em>paths</em> to values, while a
  * {@code ConfigObject} is a tree of nested maps from <em>keys</em> to values.
- * 
+ *
  * <p>
  * Use {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath} to convert
  * between path expressions and individual path elements (keys).
- * 
+ *
  * <p>
  * Another difference between {@code Config} and {@code ConfigObject} is that
  * conceptually, {@code ConfigValue}s with a {@link ConfigValue#valueType()
@@ -82,7 +82,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>
  * <strong>Getting configuration values</strong>
- * 
+ *
  * <p>
  * The "getters" on a {@code Config} all work in the same way. They never return
  * null, nor do they return a {@code ConfigValue} with
@@ -93,35 +93,35 @@ import java.util.concurrent.TimeUnit;
  * thrown. {@link ConfigException.WrongType} will be thrown anytime you ask for
  * a type and the value has an incompatible type. Reasonable type conversions
  * are performed for you though.
- * 
+ *
  * <p>
  * <strong>Iteration</strong>
- * 
+ *
  * <p>
  * If you want to iterate over the contents of a {@code Config}, you can get its
  * {@code ConfigObject} with {@link #root()}, and then iterate over the
  * {@code ConfigObject} (which implements <code>java.util.Map</code>). Or, you
  * can use {@link #entrySet()} which recurses the object tree for you and builds
  * up a <code>Set</code> of all path-value pairs where the value is not null.
- * 
+ *
  * <p>
  * <strong>Resolving substitutions</strong>
- * 
+ *
  * <p>
  * <em>Substitutions</em> are the <code>${foo.bar}</code> syntax in config
  * files, described in the <a href=
  * "https://github.com/lightbend/config/blob/master/HOCON.md#substitutions"
  * >specification</a>. Resolving substitutions replaces these references with real
  * values.
- * 
+ *
  * <p>
  * Before using a {@code Config} it's necessary to call {@link Config#resolve()}
  * to handle substitutions (though {@link ConfigFactory#load()} and similar
  * methods will do the resolve for you already).
- * 
+ *
  * <p>
  * <strong>Merging</strong>
- * 
+ *
  * <p>
  * The full <code>Config</code> for your application can be constructed using
  * the associative operation {@link Config#withFallback(ConfigMergeable)}. If
@@ -132,10 +132,10 @@ import java.util.concurrent.TimeUnit;
  * should go either just above or just below <code>application.conf</code>,
  * keeping <code>reference.conf</code> at the bottom and system properties at
  * the top).
- * 
+ *
  * <p>
  * <strong>Serialization</strong>
- * 
+ *
  * <p>
  * Convert a <code>Config</code> to a JSON or HOCON string by calling
  * {@link ConfigObject#render()} on the root object,
@@ -145,19 +145,19 @@ import java.util.concurrent.TimeUnit;
  * that <code>Config</code> does not remember the formatting of the original
  * file, so if you load, modify, and re-save a config file, it will be
  * substantially reformatted.
- * 
+ *
  * <p>
  * As an alternative to {@link ConfigObject#render()}, the
  * <code>toString()</code> method produces a debug-output-oriented
  * representation (which is not valid JSON).
- * 
+ *
  * <p>
  * Java serialization is supported as well for <code>Config</code> and all
  * subtypes of <code>ConfigValue</code>.
- * 
+ *
  * <p>
  * <strong>This is an interface but don't implement it yourself</strong>
- * 
+ *
  * <p>
  * <em>Do not implement {@code Config}</em>; it should only be implemented by
  * the config library. Arbitrary implementations will not work because the
@@ -194,12 +194,12 @@ public interface Config extends ConfigMergeable {
      * <code>Config</code> as the root object, that is, a substitution
      * <code>${foo.bar}</code> will be replaced with the result of
      * <code>getValue("foo.bar")</code>.
-     * 
+     *
      * <p>
      * This method uses {@link ConfigResolveOptions#defaults()}, there is
      * another variant {@link Config#resolve(ConfigResolveOptions)} which lets
      * you specify non-default options.
-     * 
+     *
      * <p>
      * A given {@link Config} must be resolved before using it to retrieve
      * config values, but ideally should be resolved one time for your entire
@@ -207,7 +207,7 @@ public interface Config extends ConfigMergeable {
      * substitutions that could have resolved with all fallbacks available may
      * not resolve, which will be potentially confusing for your application's
      * users.
-     * 
+     *
      * <p>
      * <code>resolve()</code> should be invoked on root config objects, rather
      * than on a subtree (a subtree is the result of something like
@@ -217,24 +217,24 @@ public interface Config extends ConfigMergeable {
      * from the root. For example, if you did
      * <code>config.getConfig("foo").resolve()</code> on the below config file,
      * it would not work:
-     * 
+     *
      * <pre>
      *   common-value = 10
      *   foo {
      *      whatever = ${common-value}
      *   }
      * </pre>
-     * 
+     *
      * <p>
      * Many methods on {@link ConfigFactory} such as
      * {@link ConfigFactory#load()} automatically resolve the loaded
      * <code>Config</code> on the loaded stack of config files.
-     * 
+     *
      * <p>
      * Resolving an already-resolved config is a harmless no-op, but again, it
      * is best to resolve an entire stack of fallbacks (such as all your config
      * files combined) rather than resolving each one individually.
-     * 
+     *
      * @return an immutable object with substitutions resolved
      * @throws ConfigException.UnresolvedSubstitution
      *             if any substitutions refer to nonexistent paths
@@ -261,7 +261,7 @@ public interface Config extends ConfigMergeable {
      * completely resolved. A newly-loaded config may or may not be completely
      * resolved depending on whether there were substitutions present in the
      * file.
-     * 
+     *
      * @return true if there are no unresolved substitutions remaining in this
      *         configuration.
      * @since 1.2.0
@@ -283,7 +283,7 @@ public interface Config extends ConfigMergeable {
      * multiple times with multiple sources (using
      * {@link ConfigResolveOptions#setAllowUnresolved(boolean)} so the partial
      * resolves don't fail).
-     * 
+     *
      * @param source
      *            configuration to pull values from
      * @return an immutable object with substitutions resolved
@@ -299,7 +299,7 @@ public interface Config extends ConfigMergeable {
     /**
      * Like {@link Config#resolveWith(Config)} but allows you to specify
      * non-default options.
-     * 
+     *
      * @param source
      *            source configuration to pull values from
      * @param options
@@ -400,17 +400,17 @@ public interface Config extends ConfigMergeable {
      * {@link ConfigObject}: it looks for a path expression, not a key; and it
      * returns false for null values, while {@code containsKey()} returns true
      * indicating that the object contains a null value for the key.
-     * 
+     *
      * <p>
      * If a path exists according to {@link #hasPath(String)}, then
      * {@link #getValue(String)} will never throw an exception. However, the
      * typed getters, such as {@link #getInt(String)}, will still throw if the
      * value is not convertible to the requested type.
-     * 
+     *
      * <p>
      * Note that path expressions have a syntax and sometimes require quoting
      * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
-     * 
+     *
      * @param path
      *            the path expression
      * @return true if a non-null value is present at the path
@@ -485,7 +485,7 @@ public interface Config extends ConfigMergeable {
      * (OK, this is a slight lie: <code>Config</code> entries may contain
      * {@link ConfigList} and the lists may contain objects. But no objects are
      * directly included as entry values.)
-     * 
+     *
      * @return set of paths with non-null values, built up by recursing the
      *         entire tree of {@link ConfigObject} and creating an entry for
      *         each leaf value.
@@ -756,9 +756,9 @@ public interface Config extends ConfigMergeable {
      * suffixes like "10m" or "5ns" as documented in the <a
      * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>.
-     * 
+     *
      * @since 1.2.0
-     * 
+     *
      * @param path
      *            path expression
      * @param unit
@@ -803,7 +803,7 @@ public interface Config extends ConfigMergeable {
      * href="https://github.com/lightbend/config/blob/master/HOCON.md">the
      * spec</a>. This method never returns null.
      *
-     * @since 1.3.0
+     * @since 1.3.2
      *
      * @param path
      *            path expression
@@ -822,7 +822,11 @@ public interface Config extends ConfigMergeable {
      * This method will first try get get the value as a java.time.Duration, and if unsuccessful,
      * then as a java.time.Period.
      * This means that values like "5m" will be parsed as 5 minutes rather than 5 months
-     * @param path path expression
+     *
+     * @since 1.3.2
+     *
+     * @param path
+     *            path expression
      * @return the temporal value at the requested path
      * @throws ConfigException.Missing
      *             if value is absent or null
@@ -1071,12 +1075,49 @@ public interface Config extends ConfigMergeable {
     List<Duration> getDurationList(String path);
 
     /**
+     * Gets a list, converting each value in the list to a period,
+     * using same rules as {@link #getPeriod(String)}.
+     *
+     * @since 1.3.3
+     *
+     * @param path
+     *            path expression
+     * @return list of periods
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a number of the given TimeUnit
+     */
+    List<Period> getPeriodList(String path);
+
+    /**
+     * Gets a list, converting each value in the list to a temporal amount,
+     * using the same rules as {@link #getTemporal(String)}.
+     *
+     * @since 1.3.3
+     *
+     * @param path
+     *            path expression
+     * @return list of temporal values
+     * @throws ConfigException.Missing
+     *             if value is absent or null
+     * @throws ConfigException.WrongType
+     *             if value is not convertible to Long or String
+     * @throws ConfigException.BadValue
+     *             if value cannot be parsed as a TemporalAmount
+     */
+    List<TemporalAmount> getTemporalList(String path);
+
+
+    /**
      * Clone the config with only the given path (and its children) retained;
      * all sibling paths are removed.
      * <p>
      * Note that path expressions have a syntax and sometimes require quoting
      * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
-     * 
+     *
      * @param path
      *            path to keep
      * @return a copy of the config minus all paths except the one specified
@@ -1088,7 +1129,7 @@ public interface Config extends ConfigMergeable {
      * <p>
      * Note that path expressions have a syntax and sometimes require quoting
      * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
-     * 
+     *
      * @param path
      *            path expression to remove
      * @return a copy of the config minus the specified path
@@ -1100,7 +1141,7 @@ public interface Config extends ConfigMergeable {
      * <p>
      * Note that path expressions have a syntax and sometimes require quoting
      * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
-     * 
+     *
      * @param path
      *            path expression to store this config at.
      * @return a {@code Config} instance containing this config at the given
@@ -1112,7 +1153,7 @@ public interface Config extends ConfigMergeable {
      * Places the config inside a {@code Config} at the given key. See also
      * atPath(). Note that a key is NOT a path expression (see
      * {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
-     * 
+     *
      * @param key
      *            key to store this config at.
      * @return a {@code Config} instance containing this config at the given
@@ -1128,7 +1169,7 @@ public interface Config extends ConfigMergeable {
      * <p>
      * Note that path expressions have a syntax and sometimes require quoting
      * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
-     * 
+     *
      * @param path
      *            path expression for the value's new location
      * @param value
