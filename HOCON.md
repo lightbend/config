@@ -109,7 +109,7 @@ the config file to the computer program.
 ## Syntax
 
 Much of this is defined with reference to JSON; you can find the
-JSON spec at http://json.org/ of course.
+JSON spec at https://json.org/ of course.
 
 ### Unchanged from JSON
 
@@ -1337,7 +1337,7 @@ such that following the standard leads to people being confused.
 Worse, common usage varies based on whether people are talking
 about RAM or disk sizes, and various existing operating systems
 and apps do all kinds of different things.  See
-http://en.wikipedia.org/wiki/Binary_prefix#Deviation_between_powers_of_1024_and_powers_of_1000
+https://en.wikipedia.org/wiki/Binary_prefix#Deviation_between_powers_of_1024_and_powers_of_1000
 for examples. It appears impossible to sort this out without
 causing confusion for someone sometime.
 
@@ -1427,7 +1427,7 @@ way to get rid of default fallback values they don't want.
 
 It may be useful to merge Java properties data with data loaded
 from JSON or HOCON. See the Java properties spec here:
-http://download.oracle.com/javase/7/docs/api/java/util/Properties.html#load%28java.io.Reader%29
+https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html#load-java.io.Reader-
 
 Java properties parse as a one-level map from string keys to
 string values.

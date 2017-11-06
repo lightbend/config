@@ -222,7 +222,7 @@ Thank you to contributors with commits since v1.2.1 tag:
  - build jar using Java 1.6 (and enforce this in build)
  - change getDuration to return unboxed long instead of boxed
  - API documentation improvements
-   http://lightbend.github.io/config/latest/api/
+   https://lightbend.github.io/config/latest/api/
 
 # 1.1.0-9f31d6308e7ebbc3d7904b64ebb9f61f7e22a968: January 6, 2014
 
