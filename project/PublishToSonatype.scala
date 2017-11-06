@@ -11,7 +11,7 @@ abstract class PublishToSonatype {
   def developerUrl: String
 
   def licenseName         = "Apache License, Version 2.0"
-  def licenseUrl          = "http://www.apache.org/licenses/LICENSE-2.0"
+  def licenseUrl          = "https://www.apache.org/licenses/LICENSE-2.0"
   def licenseDistribution = "repo"
   def scmUrl: String
   def scmConnection       = "scm:git:" + scmUrl
