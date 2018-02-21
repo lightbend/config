@@ -1,3 +1,8 @@
+# 1.3.3: February 22, 2018
+
+- artifact now includes `Automatic-Module-Name` which makes it consumable as Java 9 module.
+- minor issue fix. All of the fixed issues can be found in the [milestone page](https://github.com/lightbend/config/milestone/3?closed=1).
+
 # 1.3.2: October 6, 2017
 
 - environment variables are now able to be resolved to lists in
