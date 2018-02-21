@@ -48,7 +48,9 @@ lazy val configLib =  Project("config", file("config"))
     osgiSettings,
     OsgiKeys.exportPackage := Seq("com.typesafe.config", "com.typesafe.config.impl"),
     publish := sys.error("use publishSigned instead of plain publish"),
-    publishLocal := sys.error("use publishLocalSigned instead of plain publishLocal")
+    publishLocal := sys.error("use publishLocalSigned instead of plain publishLocal"),
+    packageOptions in (Compile, packageBin) +=
+      Package.ManifestAttributes("Automatic-Module-Name" -> "typesafe.config" )
   )
   .enablePlugins(SbtOsgi)
   .dependsOn(testLib % "test->test")
