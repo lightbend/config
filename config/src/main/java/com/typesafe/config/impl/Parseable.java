@@ -180,6 +180,8 @@ public abstract class Parseable implements ConfigParseable {
             return rawParseValue(origin, finalOptions);
         } catch (IOException e) {
             if (finalOptions.getAllowMissing()) {
+                trace(e.getMessage() + ". Allowing Missing File, this can be turned off by setting" +
+                        " ConfigParseOptions.allowMissing = false");
                 return SimpleConfigObject.emptyMissing(origin);
             } else {
                 trace("exception loading " + origin.description() + ": " + e.getClass().getName()
