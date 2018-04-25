@@ -8,3 +8,4 @@
 target/
 /bin
 /node_modules
+*.iml
