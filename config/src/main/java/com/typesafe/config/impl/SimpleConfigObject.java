@@ -30,6 +30,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     final private Map<String, AbstractConfigValue> value;
     final private boolean resolved;
     final private boolean ignoresFallbacks;
+    private Integer mapHashValue = null;
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value, ResolveStatus status,
@@ -596,7 +597,12 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     public int hashCode() {
         // note that "origin" is deliberately NOT part of equality
         // neither are other "extras" like ignoresFallbacks or resolve status.
-        return mapHash(this);
+        if (this.mapHashValue == null) {
+            return this.mapHashValue=mapHash(this);
+        }
+        else {
+            return mapHashValue;
+        }
     }
 
     @Override
