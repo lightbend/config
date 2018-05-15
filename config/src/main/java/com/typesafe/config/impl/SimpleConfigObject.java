@@ -418,48 +418,6 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         });
     }
 
-    // this is only Serializable to chill out a findbugs warning
-    static final private class RenderComparator implements java.util.Comparator<String>, Serializable {
-        private static final long serialVersionUID = 1L;
-
-        private static boolean isAllDigits(String s) {
-            int length = s.length();
-
-            // empty string doesn't count as a number
-            if (length == 0)
-                return false;
-
-            for (int i = 0; i < length; ++i) {
-                char c = s.charAt(i);
-
-                if (Character.isDigit(c))
-                    continue;
-                else
-                    return false;
-            }
-            return true;
-        }
-
-        // This is supposed to sort numbers before strings,
-        // and sort the numbers numerically. The point is
-        // to make objects which are really list-like
-        // (numeric indices) appear in order.
-        @Override
-        public int compare(String a, String b) {
-            boolean aDigits = isAllDigits(a);
-            boolean bDigits = isAllDigits(b);
-            if (aDigits && bDigits) {
-                return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
-            } else if (aDigits) {
-                return -1;
-            } else if (bDigits) {
-                return 1;
-            } else {
-                return a.compareTo(b);
-            }
-        }
-    }
-
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (isEmpty()) {
@@ -480,7 +438,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
             int separatorCount = 0;
             String[] keys = keySet().toArray(new String[size()]);
-            Arrays.sort(keys, new RenderComparator());
+            Arrays.sort(keys, options.getComparator());
             for (String k : keys) {
                 AbstractConfigValue v;
                 v = value.get(k);

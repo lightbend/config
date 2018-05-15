@@ -3,6 +3,9 @@
  */
 package com.typesafe.config;
 
+import java.io.Serializable;
+import java.util.Comparator;
+
 /**
  * <p>
  * A set of options related to rendering a {@link ConfigValue}. Passed to
@@ -21,13 +24,15 @@ public final class ConfigRenderOptions {
     private final boolean comments;
     private final boolean formatted;
     private final boolean json;
+    private final Comparator<String> comparator;
 
     private ConfigRenderOptions(boolean originComments, boolean comments, boolean formatted,
-            boolean json) {
+            boolean json, Comparator<String> comparator) {
         this.originComments = originComments;
         this.comments = comments;
         this.formatted = formatted;
         this.json = json;
+        this.comparator = comparator;
     }
 
     /**
@@ -38,7 +43,7 @@ public final class ConfigRenderOptions {
      * @return the default render options
      */
     public static ConfigRenderOptions defaults() {
-        return new ConfigRenderOptions(true, true, true, true);
+        return new ConfigRenderOptions(true, true, true, true, new DefaultComparator());
     }
 
     /**
@@ -48,7 +53,7 @@ public final class ConfigRenderOptions {
      * @return the concise render options
      */
     public static ConfigRenderOptions concise() {
-        return new ConfigRenderOptions(false, false, false, true);
+        return new ConfigRenderOptions(false, false, false, true, new DefaultComparator());
     }
 
     /**
@@ -64,7 +69,7 @@ public final class ConfigRenderOptions {
         if (value == comments)
             return this;
         else
-            return new ConfigRenderOptions(originComments, value, formatted, json);
+            return new ConfigRenderOptions(originComments, value, formatted, json, new DefaultComparator());
     }
 
     /**
@@ -97,7 +102,7 @@ public final class ConfigRenderOptions {
         if (value == originComments)
             return this;
         else
-            return new ConfigRenderOptions(value, comments, formatted, json);
+            return new ConfigRenderOptions(value, comments, formatted, json, new DefaultComparator());
     }
 
     /**
@@ -122,7 +127,7 @@ public final class ConfigRenderOptions {
         if (value == formatted)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, value, json);
+            return new ConfigRenderOptions(originComments, comments, value, json, new DefaultComparator());
     }
 
     /**
@@ -150,7 +155,7 @@ public final class ConfigRenderOptions {
         if (value == json)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, formatted, value);
+            return new ConfigRenderOptions(originComments, comments, formatted, value, new DefaultComparator());
     }
 
     /**
@@ -161,6 +166,31 @@ public final class ConfigRenderOptions {
      */
     public boolean getJson() {
         return json;
+    }
+
+    /**
+     * Returns options with a custom comparator to sort the keys in the
+     * rendered output.
+     *
+     * @param value
+     *            the comparator used to sort the keys in the output
+     * @return options with requested setting for the comparator
+     */
+    public ConfigRenderOptions setComparator(Comparator<String> value) {
+        if (value == comparator)
+            return this;
+        else
+            return new ConfigRenderOptions(originComments, comments, formatted, json, value);
+    }
+
+    /**
+     * Returns whether the options enable a custom comparator to sort
+     * the keys in the rendered output.
+     *
+     * @return the comparator set
+     */
+    public Comparator<String> getComparator() {
+        return comparator;
     }
 
     @Override
@@ -174,9 +204,53 @@ public final class ConfigRenderOptions {
             sb.append("formatted,");
         if (json)
             sb.append("json,");
+        if (comparator != null)
+            sb.append(comparator.getClass().getSimpleName());
         if (sb.charAt(sb.length() - 1) == ',')
             sb.setLength(sb.length() - 1);
         sb.append(")");
         return sb.toString();
+    }
+
+    // this is only Serializable to chill out a findbugs warning
+    static final private class DefaultComparator implements java.util.Comparator<String>, Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private static boolean isAllDigits(String s) {
+            int length = s.length();
+
+            // empty string doesn't count as a number
+            if (length == 0)
+                return false;
+
+            for (int i = 0; i < length; ++i) {
+                char c = s.charAt(i);
+
+                if (Character.isDigit(c))
+                    continue;
+                else
+                    return false;
+            }
+            return true;
+        }
+
+        // This is supposed to sort numbers before strings,
+        // and sort the numbers numerically. The point is
+        // to make objects which are really list-like
+        // (numeric indices) appear in order.
+        @Override
+        public int compare(String a, String b) {
+            boolean aDigits = isAllDigits(a);
+            boolean bDigits = isAllDigits(b);
+            if (aDigits && bDigits) {
+                return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
+            } else if (aDigits) {
+                return -1;
+            } else if (bDigits) {
+                return 1;
+            } else {
+                return a.compareTo(b);
+            }
+        }
     }
 }
