@@ -6,7 +6,8 @@ package com.typesafe.config.impl
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config.ConfigValue
-import java.util.Collections
+import java.util.{Collections, Comparator}
+import java.text.RuleBasedCollator
 import java.net.URL
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigObject
@@ -981,9 +982,17 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
-    def renderSorting(): Unit = {
+    def renderDefaultSorting(): Unit = {
         val config = parseConfig("""0=a,1=b,2=c,3=d,10=e,20=f,30=g""")
         val rendered = config.root.render(ConfigRenderOptions.concise())
         assertEquals("""{"0":"a","1":"b","2":"c","3":"d","10":"e","20":"f","30":"g"}""", rendered)
+    }
+
+    @Test
+    def renderCustomSorting(): Unit = {
+        val comparator = new RuleBasedCollator("< 1< 2< 3< 0").asInstanceOf[Comparator[String]]
+        val config = parseConfig("""0=a,1=b,2=c,3=d,10=e,20=f,30=g""")
+        val rendered = config.root.render(ConfigRenderOptions.concise().setComparator(comparator))
+        assertEquals("""{"1":"b","10":"e","2":"c","20":"f","3":"d","30":"g","0":"a"}""", rendered)
     }
 }
