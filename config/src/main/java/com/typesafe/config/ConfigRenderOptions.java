@@ -4,6 +4,7 @@
 package com.typesafe.config;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.Comparator;
 
 /**
@@ -69,7 +70,7 @@ public final class ConfigRenderOptions {
         if (value == comments)
             return this;
         else
-            return new ConfigRenderOptions(originComments, value, formatted, json, new DefaultComparator());
+            return new ConfigRenderOptions(originComments, value, formatted, json, comparator);
     }
 
     /**
@@ -102,7 +103,7 @@ public final class ConfigRenderOptions {
         if (value == originComments)
             return this;
         else
-            return new ConfigRenderOptions(value, comments, formatted, json, new DefaultComparator());
+            return new ConfigRenderOptions(value, comments, formatted, json, comparator);
     }
 
     /**
@@ -127,7 +128,7 @@ public final class ConfigRenderOptions {
         if (value == formatted)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, value, json, new DefaultComparator());
+            return new ConfigRenderOptions(originComments, comments, value, json, comparator);
     }
 
     /**
@@ -155,7 +156,7 @@ public final class ConfigRenderOptions {
         if (value == json)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, formatted, value, new DefaultComparator());
+            return new ConfigRenderOptions(originComments, comments, formatted, value, comparator);
     }
 
     /**
@@ -204,8 +205,7 @@ public final class ConfigRenderOptions {
             sb.append("formatted,");
         if (json)
             sb.append("json,");
-        if (comparator != null)
-            sb.append(comparator.getClass().getSimpleName());
+        sb.append(comparator.getClass().getSimpleName());
         if (sb.charAt(sb.length() - 1) == ',')
             sb.setLength(sb.length() - 1);
         sb.append(")");
@@ -243,7 +243,7 @@ public final class ConfigRenderOptions {
             boolean aDigits = isAllDigits(a);
             boolean bDigits = isAllDigits(b);
             if (aDigits && bDigits) {
-                return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
+                return new BigInteger(a).compareTo(new BigInteger(b));
             } else if (aDigits) {
                 return -1;
             } else if (bDigits) {
