@@ -22,8 +22,7 @@ val sonatype = new PublishToSonatype {
 }
 
 lazy val commonSettings: Seq[Setting[_]] = Def.settings(
-  unpublished,
-  javaVersionPrefix in javaVersionCheck := None
+  unpublished
 )
 
 lazy val root = (project in file("."))

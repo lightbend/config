@@ -26,14 +26,15 @@ object LinkSourcePlugin extends AutoPlugin {
 
       val dir = (target in doc in Compile).value
 
-      javadocSourceBaseUrl.value.foreach { url =>
-        rewriteSourceLinks(dir, url, streams.value.log)
+      (javadocSourceBaseUrl.value, streams.value) match {
+        case (Some(url), streamz) =>
+          rewriteSourceLinks(dir, url, streamz.log)
+        case _ =>
       }
 
       result
     }
   )
-
 
   private def rewriteSourceLinks(dir: File, sourceBaseUrl: String, log: Logger): Unit = {
     // Convert <a href="../../../src-html/com/typesafe/config/Config.html#line.165"> to

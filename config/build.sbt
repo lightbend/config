@@ -1,11 +1,6 @@
-import de.johoop.findbugs4sbt.FindBugs._
-import de.johoop.findbugs4sbt.{ Effort, ReportType }
-import de.johoop.jacoco4sbt.JacocoPlugin.jacoco
 import com.typesafe.sbt.SbtScalariform
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
 import scalariform.formatter.preferences._
-
-SbtScalariform.scalariformSettings
 
 val formatPrefs = FormattingPreferences()
   .setPreference(IndentSpaces, 4)
@@ -64,15 +59,12 @@ checkstyle in Compile := {
 // add checkstyle as a dependency of doc
 doc in Compile := ((doc in Compile).dependsOn(checkstyle in Compile)).value
 
-findbugsSettings
-findbugsReportType := Some(ReportType.Html)
+findbugsReportType := Some(FindbugsReport.Html)
 findbugsReportPath := Some(crossTarget.value / "findbugs.html")
-findbugsEffort := Effort.Maximum
+findbugsEffort := FindbugsEffort.Maximum
 findbugsMaxMemory := 2000
 
-jacoco.settings
-
-javacOptions in (Compile, compile) ++= Seq("-source", "1.6", "-target", "1.8",
+javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8",
                                            "-g", "-Xlint:unchecked")
 
 // because we test some global state such as singleton caches,
@@ -86,5 +78,3 @@ javadocSourceBaseUrl := {
   for (gitHead <- com.typesafe.sbt.SbtGit.GitKeys.gitHeadCommit.value)
     yield s"https://github.com/lightbend/config/blob/$gitHead/config/src/main/java"
 }
-
-javaVersionPrefix in javaVersionCheck := Some("1.8")
