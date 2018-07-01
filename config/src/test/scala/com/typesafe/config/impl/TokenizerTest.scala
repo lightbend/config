@@ -198,7 +198,7 @@ class TokenizerTest extends TestUtils {
             """\"\""", // file ends with a backslash
             "$", // file ends with a $
             "${" // file ends with a ${
-            )
+        )
 
         for (t <- invalidTests) {
             val tokenized = tokenizeAsList(t)
