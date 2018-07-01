@@ -1,13 +1,3 @@
-import com.typesafe.sbt.SbtScalariform
-import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-import scalariform.formatter.preferences._
-
-val formatPrefs = FormattingPreferences()
-  .setPreference(IndentSpaces, 4)
-
-ScalariformKeys.preferences in Compile := formatPrefs
-ScalariformKeys.preferences in Test := formatPrefs
-
 fork in test := true
 fork in Test := true
 fork in run := true
