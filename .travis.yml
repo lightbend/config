@@ -4,13 +4,7 @@ sudo: false
 cache:
   directories:
     - $HOME/.ivy2/cache
-    # Cache the sbt launcher, currently the Travis VM preinstalls 0.13.5
-    - $HOME/.sbt/launchers/0.13.7
-    # Cache scala, currently the Travis VM preinstalls 2.11.2 & 2.10.4
-    #- $HOME/.sbt/boot/scala-$TRAVIS_SCALA_VERSION
-
-    # Updates regarding Travis VM preinstalls:
-    # https://github.com/travis-ci/travis-cookbooks/blob/master/changes.md
+    - $HOME/.sbt/boot
 
 language: scala
 

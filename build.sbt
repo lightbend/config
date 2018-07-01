@@ -2,6 +2,7 @@
 // update NEWS, update version in README.md, tag, then
 // publishSigned.
 // Release tags should follow: http://semver.org/
+import scalariform.formatter.preferences._
 
 enablePlugins(GitVersioning)
 git.baseVersion := "1.3.0"
@@ -23,7 +24,9 @@ val sonatype = new PublishToSonatype {
 
 lazy val commonSettings: Seq[Setting[_]] = Def.settings(
   unpublished,
-  javaVersionPrefix in javaVersionCheck := None
+  scalariformPreferences := scalariformPreferences.value
+    .setPreference(IndentSpaces, 4)
+    .setPreference(FirstArgumentOnNewline, Preserve)
 )
 
 lazy val root = (project in file("."))
@@ -50,7 +53,10 @@ lazy val configLib =  Project("config", file("config"))
     publish := sys.error("use publishSigned instead of plain publish"),
     publishLocal := sys.error("use publishLocalSigned instead of plain publishLocal"),
     packageOptions in (Compile, packageBin) +=
-      Package.ManifestAttributes("Automatic-Module-Name" -> "typesafe.config" )
+      Package.ManifestAttributes("Automatic-Module-Name" -> "typesafe.config" ),
+    scalariformPreferences := scalariformPreferences.value
+      .setPreference(IndentSpaces, 4)
+      .setPreference(FirstArgumentOnNewline, Preserve)
   )
   .enablePlugins(SbtOsgi)
   .dependsOn(testLib % "test->test")
