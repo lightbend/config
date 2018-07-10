@@ -982,8 +982,8 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def renderSorting(): Unit = {
-        val config = parseConfig("""0=a,1=b,2=c,3=d,10=e,20=f,30=g""")
+        val config = parseConfig("""0=a,1=b,2=c,999999999999999999999999999999999999999999999=0,3=d,10=e,20a=f,20=g,30=h""")
         val rendered = config.root.render(ConfigRenderOptions.concise())
-        assertEquals("""{"0":"a","1":"b","2":"c","3":"d","10":"e","20":"f","30":"g"}""", rendered)
+        assertEquals("""{"0":"a","1":"b","2":"c","3":"d","10":"e","20":"g","30":"h","999999999999999999999999999999999999999999999":0,"20a":"f"}""", rendered)
     }
 }

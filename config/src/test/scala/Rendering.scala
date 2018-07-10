@@ -33,6 +33,7 @@ object RenderExample extends App {
     render("test01")
     render("test06")
     render("test05")
+    render("test12")
 }
 
 object RenderOptions extends App {
