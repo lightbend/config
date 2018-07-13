@@ -758,8 +758,10 @@ If you have trouble with your configuration, some useful tips.
    output on stderr describing each file that is loaded.
    Note: this feature is not included in the older version in
    Play/Akka 2.0.
- - Use `myConfig.root().render()` to get a `Config` printed out as a
+ - Use `myConfig.root().render()` to get a `Config` as a
    string with comments showing where each value came from.
+   This string can be printed out on console or logged to 
+   a file etc.
 
 ### Supports Java 8 and Later
 
