@@ -8,6 +8,7 @@ public class ObjectsConfig {
         @Optional
         private String optionalValue;
         private String mandatoryValue;
+        private String Default;
 
         public String getMandatoryValue() {
           return mandatoryValue;
@@ -23,6 +24,15 @@ public class ObjectsConfig {
 
         public void setOptionalValue(String optionalValue) {
           this.optionalValue = optionalValue;
+        }
+
+        @Optional
+        public String getDefault() {
+          return Default;
+        }
+
+        public void setDefault(String Default) {
+          this.Default = Default;
         }
     }
 

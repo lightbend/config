@@ -211,6 +211,7 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertNotNull(beanConfig)
         assertNotNull(beanConfig.getValueObject)
         assertNull(beanConfig.getValueObject.getOptionalValue)
+        assertNull(beanConfig.getValueObject.getDefault)
         assertEquals("notNull", beanConfig.getValueObject.getMandatoryValue)
     }
 
