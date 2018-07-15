@@ -24,16 +24,18 @@ public final class ConfigParseOptions {
     final ConfigSyntax syntax;
     final String originDescription;
     final boolean allowMissing;
+    final boolean allowConflictingValues;
     final ConfigIncluder includer;
     final ClassLoader classLoader;
 
     private ConfigParseOptions(ConfigSyntax syntax, String originDescription, boolean allowMissing,
-            ConfigIncluder includer, ClassLoader classLoader) {
+            ConfigIncluder includer, ClassLoader classLoader, boolean allowConflictingValues) {
         this.syntax = syntax;
         this.originDescription = originDescription;
         this.allowMissing = allowMissing;
         this.includer = includer;
         this.classLoader = classLoader;
+        this.allowConflictingValues = allowConflictingValues;
     }
 
     /**
@@ -43,7 +45,7 @@ public final class ConfigParseOptions {
      * @return the default parse options
      */
     public static ConfigParseOptions defaults() {
-        return new ConfigParseOptions(null, null, true, null, null);
+        return new ConfigParseOptions(null, null, true, null, null, false);
     }
 
     /**
@@ -59,7 +61,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(syntax, this.originDescription, this.allowMissing,
-                    this.includer, this.classLoader);
+                    this.includer, this.classLoader, this.allowConflictingValues);
     }
 
     /**
@@ -89,7 +91,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, originDescription, this.allowMissing,
-                    this.includer, this.classLoader);
+                    this.includer, this.classLoader, this.allowConflictingValues);
     }
 
     /**
@@ -122,7 +124,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, this.originDescription, allowMissing,
-                    this.includer, this.classLoader);
+                    this.includer, this.classLoader, this.allowConflictingValues);
     }
 
     /**
@@ -145,7 +147,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
-                    includer, this.classLoader);
+                    includer, this.classLoader, this.allowConflictingValues);
     }
 
     /**
@@ -209,7 +211,7 @@ public final class ConfigParseOptions {
             return this;
         else
             return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
-                    this.includer, loader);
+                    this.includer, loader, this.allowConflictingValues);
     }
 
     /**
@@ -225,4 +227,30 @@ public final class ConfigParseOptions {
         else
             return this.classLoader;
     }
+
+    /**
+     * Set the path conflicts handling policy for {@link ConfigSyntax#PROPERTIES} syntax.
+     * Set to false to drop the conflicting value if object present at the same property key
+     * (i.e., a.b=xxx, a.b.c=yyy). Set to true to preserve the value. Preserved values could
+     * be obtained with {@code Config.getXxx()} methods not returning an object or by 
+     * {@link ConfigObject#getConflictingValue()}. Default value is false.
+     * @param allowConflictingValues to preserve the conflicting value
+     * @return options with the "allow conflictingValues" flag set
+     */
+    public ConfigParseOptions setAllowConflictingValues(boolean allowConflictingValues) {
+        if (this.allowConflictingValues == allowConflictingValues)
+            return this;
+        else
+            return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
+                    this.includer, this.classLoader, allowConflictingValues);
+    }
+
+    /**
+     * Gets the current "allow conflictingValues" flag. 
+     * @return whether we allow to preserve the conflicting values
+     */
+    public boolean isAllowConflictingValues() {
+        return allowConflictingValues;
+    }
+
 }

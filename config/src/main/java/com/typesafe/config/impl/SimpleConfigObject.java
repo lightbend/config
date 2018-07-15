@@ -33,8 +33,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value, ResolveStatus status,
-            boolean ignoresFallbacks) {
-        super(origin);
+            boolean ignoresFallbacks, ConfigValue conflictingValue) {
+        super(origin, conflictingValue);
         if (value == null)
             throw new ConfigException.BugOrBroken(
                     "creating config object with null map");
@@ -49,7 +49,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value) {
-        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */);
+        this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */, null);
     }
 
     @Override
@@ -87,7 +87,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             return null;
         } else {
             return new SimpleConfigObject(origin(), Collections.singletonMap(key, v),
-                    v.resolveStatus(), ignoresFallbacks);
+                    v.resolveStatus(), ignoresFallbacks, getConflictingValue());
         }
     }
 
@@ -97,7 +97,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         if (o == null) {
             return new SimpleConfigObject(origin(),
                     Collections.<String, AbstractConfigValue> emptyMap(), ResolveStatus.RESOLVED,
-                    ignoresFallbacks);
+                    ignoresFallbacks, getConflictingValue());
         } else {
             return o;
         }
@@ -115,7 +115,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                     value);
             updated.put(key, v);
             return new SimpleConfigObject(origin(), updated, ResolveStatus.fromValues(updated
-                    .values()), ignoresFallbacks);
+                    .values()), ignoresFallbacks, getConflictingValue());
         } else if (next != null || v == null) {
             // can't descend, nothing to remove
             return this;
@@ -127,7 +127,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                     smaller.put(old.getKey(), old.getValue());
             }
             return new SimpleConfigObject(origin(), smaller, ResolveStatus.fromValues(smaller
-                    .values()), ignoresFallbacks);
+                    .values()), ignoresFallbacks, getConflictingValue());
         }
     }
 
@@ -146,7 +146,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         }
 
         return new SimpleConfigObject(origin(), newMap, ResolveStatus.fromValues(newMap.values()),
-                ignoresFallbacks);
+                ignoresFallbacks, getConflictingValue());
     }
 
     @Override
@@ -177,7 +177,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     private SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin,
             boolean newIgnoresFallbacks) {
-        return new SimpleConfigObject(newOrigin, value, newStatus, newIgnoresFallbacks);
+        return new SimpleConfigObject(newOrigin, value, newStatus, newIgnoresFallbacks, getConflictingValue());
     }
 
     @Override
@@ -209,7 +209,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                     newChildren.remove(old.getKey());
 
                 return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
-                        ignoresFallbacks);
+                        ignoresFallbacks, getConflictingValue());
             }
         }
         throw new ConfigException.BugOrBroken("SimpleConfigObject.replaceChild did not find " + child + " in " + this);
@@ -284,10 +284,13 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         ResolveStatus newResolveStatus = ResolveStatus.fromBoolean(allResolved);
         boolean newIgnoresFallbacks = fallback.ignoresFallbacks();
 
-        if (changed)
+        if (changed) {
+            ConfigValue conflictingValue = getConflictingValue();
+            if (conflictingValue == null)
+                conflictingValue = abstractFallback.getConflictingValue();
             return new SimpleConfigObject(mergeOrigins(this, fallback), merged, newResolveStatus,
-                    newIgnoresFallbacks);
-        else if (newResolveStatus != resolveStatus() || newIgnoresFallbacks != ignoresFallbacks())
+                    newIgnoresFallbacks, conflictingValue);
+        } else if (newResolveStatus != resolveStatus() || newIgnoresFallbacks != ignoresFallbacks())
             return newCopy(newResolveStatus, origin(), newIgnoresFallbacks);
         else
             return this;
@@ -340,7 +343,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             }
             return new SimpleConfigObject(origin(), modified,
                     sawUnresolved ? ResolveStatus.UNRESOLVED : ResolveStatus.RESOLVED,
-                    ignoresFallbacks());
+                    ignoresFallbacks(), getConflictingValue());
         }
     }
 
@@ -532,10 +535,24 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                         indent(sb, indent, options);
                 }
                 sb.append("}");
+                if (options.getConflictingValues() && (getConflictingValue() != null)) {
+                    if (options.getFormatted())
+                        sb.append(" | ");
+                    else
+                        sb.append('|');
+                    ((AbstractConfigValue) getConflictingValue()).render(sb, innerIndent, false /* atRoot */, null, options);
+                }
             }
         }
         if (atRoot && options.getFormatted())
             sb.append('\n');
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        render(sb, 0, true /* atRoot */, null /* atKey */, ConfigRenderOptions.concise().setConflictingValues(true));
+        return getClass().getSimpleName() + "(" + sb.toString() + ")";
     }
 
     @Override

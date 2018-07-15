@@ -461,6 +461,60 @@ public interface Config extends ConfigMergeable {
     boolean hasPathOrNull(String path);
 
     /**
+     * Checks whether a value is present and is object at the given path.
+     * 
+     * <p>
+     * If a path exists according to {@link #hasPath(String)}, then
+     * {@link #getObject(String)} and {@link #getConfig(String)} will never
+     * throw an exception. The typed getters, such as {@link #getInt(String)}
+     * generally will throw an exception due to type mismatch. But if this
+     * config was parsed from {@link ConfigSyntax#PROPERTIES} format with
+     * {@link ConfigParseOptions#isAllowConflictingValues()} set to true,
+     * the typed getters may return without exception. Use 
+     * {@link #hasPathAndNoObject(String)} to determine the presence of
+     * typed value.
+     * 
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
+     * @param path
+     *            the path expression
+     * @return true if an object is present at the path
+     * @throws ConfigException.BadPath
+     *             if the path expression is invalid
+     */
+    public boolean hasPathAndObject(String pathExpression);
+
+    /**
+     * Checks whether a value is present and is non-object at the given path.
+     * 
+     * <p>
+     * If a path exists according to {@link #hasPath(String)}, then the typed
+     * getters, such as {@link #getInt(String)} should not throw an exception
+     * due to absence of value and type mismatch with object. However, getters
+     * will still throw if the value is not convertible to the requested type.
+     * Routines {@link #getObject(String)} and {@link #getConfig(String)}
+     * generally will throw an exception due to type mismatch. But if this
+     * config was parsed from {@link ConfigSyntax#PROPERTIES} format with 
+     * {@link ConfigParseOptions#isAllowConflictingValues()} set to true,
+     * {@link #getObject(String)} and {@link #getConfig(String)} may return
+     * without exception. Use {@link #hasPathAndObject(String)} to determine
+     * the presence of object.
+     * 
+     * <p>
+     * Note that path expressions have a syntax and sometimes require quoting
+     * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
+     * 
+     * @param path
+     *            the path expression
+     * @return true if a non-null non-object value is present at the path
+     * @throws ConfigException.BadPath
+     *             if the path expression is invalid
+     */
+    public boolean hasPathAndNoObject(String pathExpression);
+
+    /**
      * Returns true if the {@code Config}'s root object contains no key-value
      * pairs.
      *

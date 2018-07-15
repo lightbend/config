@@ -20,10 +20,10 @@ import com.typesafe.config.ConfigOrigin;
 
 final class PropertiesParser {
     static AbstractConfigObject parse(Reader reader,
-            ConfigOrigin origin) throws IOException {
+            ConfigOrigin origin, boolean allowConflictingValues) throws IOException {
         Properties props = new Properties();
         props.load(reader);
-        return fromProperties(origin, props);
+        return fromProperties(origin, props, allowConflictingValues);
     }
 
     static String lastElement(String path) {
@@ -55,13 +55,14 @@ final class PropertiesParser {
     }
 
     static AbstractConfigObject fromProperties(ConfigOrigin origin,
-            Properties props) {
-        return fromEntrySet(origin, props.entrySet());
+            Properties props, boolean allowConflictingValues) {
+        return fromEntrySet(origin, props.entrySet(), allowConflictingValues);
     }
 
-    private static <K, V> AbstractConfigObject fromEntrySet(ConfigOrigin origin, Set<Map.Entry<K, V>> entries) {
+    private static <K, V> AbstractConfigObject fromEntrySet(ConfigOrigin origin, Set<Map.Entry<K, V>> entries,
+            boolean allowConflictingValues) {
         final Map<Path, Object> pathMap = getPathMap(entries);
-        return fromPathMap(origin, pathMap, true /* from properties */);
+        return fromPathMap(origin, pathMap, true /* from properties */, allowConflictingValues);
     }
 
     private static <K, V> Map<Path, Object> getPathMap(Set<Map.Entry<K, V>> entries) {
@@ -77,7 +78,7 @@ final class PropertiesParser {
     }
 
     static AbstractConfigObject fromStringMap(ConfigOrigin origin, Map<String, String> stringMap) {
-        return fromEntrySet(origin, stringMap.entrySet());
+        return fromEntrySet(origin, stringMap.entrySet(), false);
     }
 
     static AbstractConfigObject fromPathMap(ConfigOrigin origin,
@@ -92,11 +93,11 @@ final class PropertiesParser {
             Path path = Path.newPath((String) keyObj);
             pathMap.put(path, entry.getValue());
         }
-        return fromPathMap(origin, pathMap, false /* from properties */);
+        return fromPathMap(origin, pathMap, false /* from properties */, false);
     }
 
     private static AbstractConfigObject fromPathMap(ConfigOrigin origin,
-            Map<Path, Object> pathMap, boolean convertedFromProperties) {
+            Map<Path, Object> pathMap, boolean convertedFromProperties, boolean allowConflictingValues) {
         /*
          * First, build a list of paths that will have values, either string or
          * object values.
@@ -116,11 +117,13 @@ final class PropertiesParser {
         }
 
         if (convertedFromProperties) {
-            /*
-             * If any string values are also objects containing other values,
-             * drop those string values - objects "win".
-             */
-            valuePaths.removeAll(scopePaths);
+            if (!allowConflictingValues) {
+                /*
+                 * If any string values are also objects containing other values,
+                 * drop those string values - objects "win"
+                 */
+                valuePaths.removeAll(scopePaths);
+            }
         } else {
             /* If we didn't start out as properties, then this is an error. */
             for (Path path : valuePaths) {
@@ -132,6 +135,7 @@ final class PropertiesParser {
                                     + "Because Map has no defined ordering, this is a broken situation.");
                 }
             }
+            allowConflictingValues = false;
         }
 
         /*
@@ -139,6 +143,7 @@ final class PropertiesParser {
          */
         Map<String, AbstractConfigValue> root = new HashMap<String, AbstractConfigValue>();
         Map<Path, Map<String, AbstractConfigValue>> scopes = new HashMap<Path, Map<String, AbstractConfigValue>>();
+        Map<Path, AbstractConfigValue> conflictingValues = new HashMap<Path, AbstractConfigValue>();
 
         for (Path path : scopePaths) {
             Map<String, AbstractConfigValue> scope = new HashMap<String, AbstractConfigValue>();
@@ -147,11 +152,6 @@ final class PropertiesParser {
 
         /* Store string values in the associated scope maps */
         for (Path path : valuePaths) {
-            Path parentPath = path.parent();
-            Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
-                    .get(parentPath) : root;
-
-            String last = path.last();
             Object rawValue = pathMap.get(path);
             AbstractConfigValue value;
             if (convertedFromProperties) {
@@ -165,8 +165,16 @@ final class PropertiesParser {
                 value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
                         FromMapMode.KEYS_ARE_PATHS);
             }
-            if (value != null)
-                parent.put(last, value);
+            if (value != null) {
+                if (allowConflictingValues && scopePaths.contains(path))
+                    conflictingValues.put(path, value);
+                else {
+                    Path parentPath = path.parent();
+                    Map<String, AbstractConfigValue> parent = parentPath != null ? scopes
+                            .get(parentPath) : root;
+                    parent.put(path.last(), value);
+                }
+            }
         }
 
         /*
@@ -199,12 +207,12 @@ final class PropertiesParser {
                     .get(parentPath) : root;
 
             AbstractConfigObject o = new SimpleConfigObject(origin, scope,
-                    ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
+                    ResolveStatus.RESOLVED, false /* ignoresFallbacks */, conflictingValues.get(scopePath));
             parent.put(scopePath.last(), o);
         }
 
         // return root config object
         return new SimpleConfigObject(origin, root, ResolveStatus.RESOLVED,
-                false /* ignoresFallbacks */);
+                false /* ignoresFallbacks */, null);
     }
 }

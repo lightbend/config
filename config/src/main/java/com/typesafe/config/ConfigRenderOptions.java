@@ -21,13 +21,15 @@ public final class ConfigRenderOptions {
     private final boolean comments;
     private final boolean formatted;
     private final boolean json;
+    private final boolean conflictingValues;
 
     private ConfigRenderOptions(boolean originComments, boolean comments, boolean formatted,
-            boolean json) {
+            boolean json, boolean conflictingValues) {
         this.originComments = originComments;
         this.comments = comments;
         this.formatted = formatted;
         this.json = json;
+        this.conflictingValues = conflictingValues;
     }
 
     /**
@@ -38,7 +40,7 @@ public final class ConfigRenderOptions {
      * @return the default render options
      */
     public static ConfigRenderOptions defaults() {
-        return new ConfigRenderOptions(true, true, true, true);
+        return new ConfigRenderOptions(true, true, true, true, false);
     }
 
     /**
@@ -48,7 +50,7 @@ public final class ConfigRenderOptions {
      * @return the concise render options
      */
     public static ConfigRenderOptions concise() {
-        return new ConfigRenderOptions(false, false, false, true);
+        return new ConfigRenderOptions(false, false, false, true, false);
     }
 
     /**
@@ -64,7 +66,7 @@ public final class ConfigRenderOptions {
         if (value == comments)
             return this;
         else
-            return new ConfigRenderOptions(originComments, value, formatted, json);
+            return new ConfigRenderOptions(originComments, value, formatted, json, conflictingValues);
     }
 
     /**
@@ -97,7 +99,7 @@ public final class ConfigRenderOptions {
         if (value == originComments)
             return this;
         else
-            return new ConfigRenderOptions(value, comments, formatted, json);
+            return new ConfigRenderOptions(value, comments, formatted, json, conflictingValues);
     }
 
     /**
@@ -122,7 +124,7 @@ public final class ConfigRenderOptions {
         if (value == formatted)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, value, json);
+            return new ConfigRenderOptions(originComments, comments, value, json, conflictingValues);
     }
 
     /**
@@ -150,7 +152,7 @@ public final class ConfigRenderOptions {
         if (value == json)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, formatted, value);
+            return new ConfigRenderOptions(originComments, comments, formatted, value, conflictingValues);
     }
 
     /**
@@ -161,6 +163,33 @@ public final class ConfigRenderOptions {
      */
     public boolean getJson() {
         return json;
+    }
+
+    /**
+     * Returns options with conflictingValues toggled. conflictingValues means that
+     * conflicting values parsed from {@link ConfigSyntax#PROPERTIES} format
+     * will be rendered after the conflicting objects, separated by vertical dash.
+     * Setting this to true will produce invalid HOCON.
+     *
+     * @param value
+     *            true to include conflicting values in the render
+     * @return options with requested setting for conflictingValues
+     */
+    public ConfigRenderOptions setConflictingValues(boolean value) {
+        if (value == conflictingValues)
+            return this;
+        else
+            return new ConfigRenderOptions(originComments, comments, formatted, json, value);
+    }
+
+    /**
+     * Returns whether the options enable conflictingValues. This method is mostly used by
+     * the config lib internally, not by applications.
+     *
+     * @return true if conflicting values should be rendered
+     */
+    public boolean getConflictingValues() {
+        return conflictingValues;
     }
 
     @Override

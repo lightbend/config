@@ -132,4 +132,14 @@ public interface ConfigObject extends ConfigValue, Map<String, ConfigValue> {
 
     @Override
     ConfigObject withOrigin(ConfigOrigin origin);
+
+    /**
+     * Returns a {@code ConfigValue} conflicting with this object in property file,
+     * or returns null if there was no conflicting value during property file parse.
+     * Conflicting value appears only for {@link ConfigSyntax#PROPERTIES} syntax if
+     * file contains value for some keys and child keys (i.e., a.b=xxx, a.b.c=yyy).
+     * 
+     * @return the conflicting value or null if none
+     */
+    ConfigValue getConflictingValue();
 }

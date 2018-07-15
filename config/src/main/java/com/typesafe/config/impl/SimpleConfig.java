@@ -107,6 +107,20 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     @Override
+    public boolean hasPathAndObject(String pathExpression) {
+        ConfigValue peeked = hasPathPeek(pathExpression);
+        return peeked != null && peeked.valueType() == ConfigValueType.OBJECT;
+    }
+
+    @Override
+    public boolean hasPathAndNoObject(String pathExpression) {
+        ConfigValue peeked = hasPathPeek(pathExpression);
+        if (peeked != null && peeked.valueType() == ConfigValueType.OBJECT)
+            peeked = ((AbstractConfigObject)peeked).getConflictingValue();
+        return peeked != null && peeked.valueType() != ConfigValueType.NULL;
+    }
+
+    @Override
     public boolean isEmpty() {
         return object.isEmpty();
     }

@@ -57,6 +57,10 @@ final class DefaultTransformer {
                 // no-op STRING to STRING
                 break;
             }
+        } else if (requested != ConfigValueType.OBJECT && value.valueType() == ConfigValueType.OBJECT && 
+                ((AbstractConfigObject) value).getConflictingValue() != null) {
+            // requested key with provided conflictingValue, try transform it
+            return transform((AbstractConfigValue) ((AbstractConfigObject) value).getConflictingValue(), requested);
         } else if (requested == ConfigValueType.STRING) {
             // if we converted null to string here, then you wouldn't properly
             // get a missing-value error if you tried to get a null value
