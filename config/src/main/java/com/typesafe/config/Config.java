@@ -478,7 +478,7 @@ public interface Config extends ConfigMergeable {
      * Note that path expressions have a syntax and sometimes require quoting
      * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
      * 
-     * @param path
+     * @param pathExpression
      *            the path expression
      * @return true if an object is present at the path
      * @throws ConfigException.BadPath
@@ -506,7 +506,7 @@ public interface Config extends ConfigMergeable {
      * Note that path expressions have a syntax and sometimes require quoting
      * (see {@link ConfigUtil#joinPath} and {@link ConfigUtil#splitPath}).
      * 
-     * @param path
+     * @param pathExpression
      *            the path expression
      * @return true if a non-null non-object value is present at the path
      * @throws ConfigException.BadPath
