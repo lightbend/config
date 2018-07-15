@@ -33,7 +33,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value, ResolveStatus status,
-            boolean ignoresFallbacks, ConfigValue conflictingValue) {
+            boolean ignoresFallbacks, AbstractConfigValue conflictingValue) {
         super(origin, conflictingValue);
         if (value == null)
             throw new ConfigException.BugOrBroken(
@@ -285,7 +285,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         boolean newIgnoresFallbacks = fallback.ignoresFallbacks();
 
         if (changed) {
-            ConfigValue conflictingValue = getConflictingValue();
+            AbstractConfigValue conflictingValue = getConflictingValue();
             if (conflictingValue == null)
                 conflictingValue = abstractFallback.getConflictingValue();
             return new SimpleConfigObject(mergeOrigins(this, fallback), merged, newResolveStatus,

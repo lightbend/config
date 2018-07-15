@@ -19,7 +19,7 @@ import com.typesafe.config.ConfigValueType;
 
 abstract class AbstractConfigObject extends AbstractConfigValue implements ConfigObject, Container {
     final private SimpleConfig config;
-    final private ConfigValue conflictingValue;
+    final private AbstractConfigValue conflictingValue;
 
     protected AbstractConfigObject(ConfigOrigin origin) {
         super(origin);
@@ -27,7 +27,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
         this.conflictingValue = null;
     }
 
-    protected AbstractConfigObject(ConfigOrigin origin, ConfigValue conflictingValue) {
+    protected AbstractConfigObject(ConfigOrigin origin, AbstractConfigValue conflictingValue) {
         super(origin);
         assert(conflictingValue == null || conflictingValue.valueType() != ConfigValueType.OBJECT);
         this.config = new SimpleConfig(this);
@@ -228,7 +228,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
         return (AbstractConfigObject) super.withOrigin(origin);
     }
 
-    public ConfigValue getConflictingValue() {
+    public AbstractConfigValue getConflictingValue() {
         return conflictingValue;
     }
 }
