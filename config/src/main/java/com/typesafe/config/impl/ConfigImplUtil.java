@@ -244,7 +244,7 @@ final public class ConfigImplUtil {
     public static ConfigSyntax syntaxFromExtension(String filename) {
         if (filename == null)
             return null;
-        if (filename.endsWith(".json"))
+        else if (filename.endsWith(".json"))
             return ConfigSyntax.JSON;
         else if (filename.endsWith(".conf"))
             return ConfigSyntax.CONF;
