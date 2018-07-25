@@ -15,6 +15,7 @@ import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigSyntax;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -232,5 +233,24 @@ final public class ConfigImplUtil {
             }
         }
         return nameBuilder.toString();
+    }
+
+    /**
+     * Guess configuration syntax from given filename.
+     *
+     * @param filename configuration filename
+     * @return configuration syntax if a match is found. Otherwise, null.
+     */
+    public static ConfigSyntax syntaxFromExtension(String filename) {
+        if (filename == null)
+            return null;
+        if (filename.endsWith(".json"))
+            return ConfigSyntax.JSON;
+        else if (filename.endsWith(".conf"))
+            return ConfigSyntax.CONF;
+        else if (filename.endsWith(".properties"))
+            return ConfigSyntax.PROPERTIES;
+        else
+            return null;
     }
 }

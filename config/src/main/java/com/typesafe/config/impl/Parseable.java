@@ -326,17 +326,6 @@ public abstract class Parseable implements ConfigParseable {
         return getClass().getSimpleName();
     }
 
-    private static ConfigSyntax syntaxFromExtension(String name) {
-        if (name.endsWith(".json"))
-            return ConfigSyntax.JSON;
-        else if (name.endsWith(".conf"))
-            return ConfigSyntax.CONF;
-        else if (name.endsWith(".properties"))
-            return ConfigSyntax.PROPERTIES;
-        else
-            return null;
-    }
-
     private static Reader readerFromStream(InputStream input) {
         return readerFromStream(input, "UTF-8");
     }
@@ -574,7 +563,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigSyntax guessSyntax() {
-            return syntaxFromExtension(input.getPath());
+            return ConfigImplUtil.syntaxFromExtension(input.getPath());
         }
 
         @Override
@@ -643,7 +632,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigSyntax guessSyntax() {
-            return syntaxFromExtension(input.getName());
+            return ConfigImplUtil.syntaxFromExtension(input.getName());
         }
 
         @Override
@@ -756,7 +745,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigSyntax guessSyntax() {
-            return syntaxFromExtension(resource);
+            return ConfigImplUtil.syntaxFromExtension(resource);
         }
 
         static String parent(String resource) {
