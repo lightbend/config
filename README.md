@@ -233,9 +233,6 @@ The idea is that libraries and frameworks should ship with a
 `application.conf`, or if they want to create multiple
 configurations in a single JVM, they could use
 `ConfigFactory.load("myapp")` to load their own `myapp.conf`.
-(Applications _can_ provide a `reference.conf` also if they want,
-but you may not find it necessary to separate it from
-`application.conf`.)
 
 Libraries and frameworks should default to `ConfigFactory.load()`
 if the application does not provide a custom `Config` object. This
