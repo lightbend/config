@@ -1,8 +1,5 @@
 package com.typesafe.config.impl;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * This exists because we have to memoize resolved substitutions as we go
  * through the config tree; otherwise we could end up creating multiple copies
@@ -18,7 +15,7 @@ final class ResolveMemos {
     }
 
     ResolveMemos() {
-        this(new BadMap<MemoKey, AbstractConfigValue>());
+        this(new BadMap<>());
     }
 
     AbstractConfigValue get(MemoKey key) {
