@@ -29,13 +29,13 @@ final class BadMap<K,V> {
         }
     }
 
-    final int size;
-    final Entry[] entries;
+    private final int size;
+    private final Entry[] entries;
 
     private final static Entry[] emptyEntries = {};
 
     BadMap() {
-        this(0, (Entry[]) emptyEntries);
+        this(0, emptyEntries);
     }
 
     private BadMap(int size, Entry[] entries) {
@@ -51,19 +51,20 @@ final class BadMap<K,V> {
             // we passed in, so this block may not actually change
             // the entries size. the "-1" is to ensure we use
             // array length 2 when going from 0 to 1.
-            newEntries = new Entry[nextPrime((newSize*2) - 1)];
+            newEntries = new Entry[nextPrime((newSize * 2) - 1)];
         } else {
             newEntries = new Entry[entries.length];
         }
 
-        if (newEntries.length == entries.length)
+        if (newEntries.length == entries.length) {
             System.arraycopy(entries, 0, newEntries, 0, entries.length);
-        else
+        } else {
             rehash(entries, newEntries);
+        }
 
         int hash = Math.abs(k.hashCode());
         store(newEntries, hash, k, v);
-        return new BadMap<K,V>(newSize, newEntries);
+        return new BadMap<>(newSize, newEntries);
     }
 
     private static <K,V> void store(Entry[] entries, int hash, K k, V v) {
@@ -72,7 +73,7 @@ final class BadMap<K,V> {
         entries[i] = new Entry(hash, k, v, old);
     }
 
-    private static <K,V> void store(Entry[] entries, Entry e) {
+    private static void store(Entry[] entries, Entry e) {
         int i = e.hash % entries.length;
         Entry old = entries[i]; // old may be null
         if (old == null && e.next == null) {
@@ -84,15 +85,12 @@ final class BadMap<K,V> {
         }
     }
 
-    private static <K,V> void rehash(Entry[] src, Entry[] dest) {
-        for (Entry old : src) {
-            if (old != null) {
-                if (old.next == null) {
-                    store(dest, old);
-                } else {
-                    store(dest, old.hash, old.key, old.value);
-                    store(dest, old.next);
-                }
+    private static void rehash(Entry[] src, Entry[] dest) {
+        for (Entry entry : src) {
+            // have to store each "next" element individually; they may belong in different indices
+            while (entry != null) {
+                store(dest, entry);
+                entry = entry.next;
             }
         }
     }
@@ -128,7 +126,7 @@ final class BadMap<K,V> {
         2053, 3079, 4057, 7103, 10949, 16069, 32609, 65867, 104729
     };
 
-    private final static int nextPrime(int i) {
+    private static int nextPrime(int i) {
         for (int p : primes) {
             if (p > i)
                 return p;
