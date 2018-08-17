@@ -10,8 +10,7 @@ public class ObjectsConfig {
         private String optionalValue;
         @Optional
         private String defaultedValue = "hello";
-        private String mandatoryValue;
-        private String Default;
+        private String optionalMethodValue;
 
         public String getMandatoryValue() {
           return mandatoryValue;
@@ -39,11 +38,11 @@ public class ObjectsConfig {
 
         @Optional
         public String getDefault() {
-          return Default;
+          return optionalMethodValue;
         }
 
-        public void setDefault(String Default) {
-          this.Default = Default;
+        public void setDefault(String optionalMethodValue) {
+          this.optionalMethodValue = optionalMethodValue;
         }
     }
 
