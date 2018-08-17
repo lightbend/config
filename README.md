@@ -90,6 +90,7 @@ to merge it in.
     - [JavaScript port](#javascript-port)
     - [C# port](#c-port-1)
     - [Linting tool](#linting-tool)
+    - [Online playground](#online-playground)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -105,12 +106,12 @@ You can find published releases on Maven Central.
     <dependency>
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
-        <version>1.3.1</version>
+        <version>1.3.2</version>
     </dependency>
 
 sbt dependency:
 
-    libraryDependencies += "com.typesafe" % "config" % "1.3.1"
+    libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 
 Link for direct download if you don't use a dependency manager:
 
@@ -123,7 +124,7 @@ https://github.com/lightbend/config/blob/master/NEWS.md
 
 ### API docs
 
- - Online: http://lightbend.github.io/config/latest/api/
+ - Online: https://lightbend.github.io/config/latest/api/
  - also published in jar form
  - consider reading this README first for an intro
  - for questions about the `.conf` file format, read
@@ -138,7 +139,7 @@ requests on GitHub.
 Before we can accept pull requests, you will need to agree to the
 Typesafe Contributor License Agreement online, using your GitHub
 account - it takes 30 seconds.  You can do this at
-http://www.typesafe.com/contribute/cla
+https://www.lightbend.com/contribute/cla
 
 Please see
 [CONTRIBUTING](https://github.com/lightbend/config/blob/master/CONTRIBUTING.md)
@@ -186,7 +187,7 @@ Objects are immutable, so methods on `Config` which transform the
 configuration return a new `Config`. Other types such as
 `ConfigParseOptions`, `ConfigResolveOptions`, `ConfigObject`,
 etc. are also immutable. See the
-[API docs](http://lightbend.github.io/config/latest/api/) for
+[API docs](https://lightbend.github.io/config/latest/api/) for
 details of course.
 
 ### Schemas and Validation
@@ -195,7 +196,7 @@ There isn't a schema language or anything like that. However, two
 suggested tools are:
 
  - use the
-   [checkValid() method](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
+   [checkValid() method](https://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#checkValid-com.typesafe.config.Config-java.lang.String...-)
  - access your config through a Settings class with a field for
    each setting, and instantiate it on startup (immediately
    throwing an exception if any settings are missing)
@@ -232,9 +233,6 @@ The idea is that libraries and frameworks should ship with a
 `application.conf`, or if they want to create multiple
 configurations in a single JVM, they could use
 `ConfigFactory.load("myapp")` to load their own `myapp.conf`.
-(Applications _can_ provide a `reference.conf` also if they want,
-but you may not find it necessary to separate it from
-`application.conf`.)
 
 Libraries and frameworks should default to `ConfigFactory.load()`
 if the application does not provide a custom `Config` object. This
@@ -432,7 +430,7 @@ values into multiple places in your code. You have been warned!
 ### Understanding `Config` and `ConfigObject`
 
 To read and modify configuration, you'll use the
-[Config](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html)
+[Config](https://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html)
 interface. A `Config` looks at a JSON-equivalent data structure as
 a one-level map from paths to values. So if your JSON looks like
 this:
@@ -460,7 +458,7 @@ skip `null` values.
 
 You can also look at a `Config` in the way most JSON APIs would,
 through the
-[ConfigObject](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html)
+[ConfigObject](https://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html)
 interface. This interface represents an object node in the JSON
 tree. `ConfigObject` instances come in multi-level trees, and the
 keys do not have any syntax (they are just strings, not path
@@ -472,15 +470,15 @@ expressions). Iterating over the above example as a
 In `ConfigObject`, `null` values are visible (distinct from
 missing values), just as they are in JSON.
 
-`ConfigObject` is a subtype of [ConfigValue](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
+`ConfigObject` is a subtype of [ConfigValue](https://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigValue.html), where the other
 subtypes are the other JSON types (list, string, number, boolean, null).
 
 `Config` and `ConfigObject` are two ways to look at the same
 internal data structure, and you can convert between them for free
 using
-[Config.root()](http://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#root%28%29)
+[Config.root()](https://lightbend.github.io/config/latest/api/com/typesafe/config/Config.html#root--)
 and
-[ConfigObject.toConfig()](http://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig%28%29).
+[ConfigObject.toConfig()](https://lightbend.github.io/config/latest/api/com/typesafe/config/ConfigObject.html#toConfig--).
 
 ### ConfigBeanFactory
 
@@ -757,8 +755,10 @@ If you have trouble with your configuration, some useful tips.
    output on stderr describing each file that is loaded.
    Note: this feature is not included in the older version in
    Play/Akka 2.0.
- - Use `myConfig.root().render()` to get a `Config` printed out as a
+ - Use `myConfig.root().render()` to get a `Config` as a
    string with comments showing where each value came from.
+   This string can be printed out on console or logged to 
+   a file etc.
 
 ### Supports Java 8 and Later
 
@@ -837,7 +837,7 @@ format.
   * Ficus https://github.com/ceedubs/ficus
   * configz https://github.com/arosien/configz
   * configs https://github.com/kxbmap/configs
-  * config-annotation https://github.com/zhongl/config-annotation
+  * config-annotation https://github.com/zhongl/config-annotation
   * PureConfig https://github.com/pureconfig/pureconfig
   * Simple Scala Config https://github.com/ElderResearch/ssc
   * konfig https://github.com/vpon/konfig
@@ -846,6 +846,7 @@ format.
   * validated-config https://github.com/carlpulley/validated-config
   * Cedi Config https://github.com/ccadllc/cedi-config
   * Cfg https://github.com/carueda/cfg
+  * circe-config https://github.com/circe/circe-config
 
 #### Clojure wrappers for the Java library
 
@@ -885,7 +886,11 @@ format.
 #### Linting tool
 
    * A web based linting tool http://www.hoconlint.com/
-   
+
+#### Online playground
+
+   * https://hocon-playground.herokuapp.com/
+
 # Maintanance notes
 
 ## License

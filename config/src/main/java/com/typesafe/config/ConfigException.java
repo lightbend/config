@@ -58,27 +58,34 @@ public abstract class ConfigException extends RuntimeException implements Serial
         ConfigImplUtil.writeOrigin(out, origin);
     }
 
-    private void readObject(java.io.ObjectInputStream in) throws IOException,
-            ClassNotFoundException {
-        in.defaultReadObject();
-        ConfigOrigin origin = ConfigImplUtil.readOrigin(in);
+    // For deserialization - uses reflection to set the final origin field on the object
+    private static <T> void setOriginField(T hasOriginField, Class<T> clazz,
+            ConfigOrigin origin) throws IOException {
         // circumvent "final"
         Field f;
         try {
-            f = ConfigException.class.getDeclaredField("origin");
+            f = clazz.getDeclaredField("origin");
         } catch (NoSuchFieldException e) {
-            throw new IOException("ConfigException has no origin field?", e);
+            throw new IOException(clazz.getSimpleName() + " has no origin field?", e);
         } catch (SecurityException e) {
-            throw new IOException("unable to fill out origin field in ConfigException", e);
+            throw new IOException("unable to fill out origin field in " +
+                    clazz.getSimpleName(), e);
         }
         f.setAccessible(true);
         try {
-            f.set(this, origin);
+            f.set(hasOriginField, origin);
         } catch (IllegalArgumentException e) {
             throw new IOException("unable to set origin field", e);
         } catch (IllegalAccessException e) {
             throw new IOException("unable to set origin field", e);
         }
+    }
+
+    private void readObject(java.io.ObjectInputStream in) throws IOException,
+            ClassNotFoundException {
+        in.defaultReadObject();
+        ConfigOrigin origin = ConfigImplUtil.readOrigin(in);
+        setOriginField(this, ConfigException.class, origin);
     }
 
     /**
@@ -310,10 +317,10 @@ public abstract class ConfigException extends RuntimeException implements Serial
      * {@link ConfigException.ValidationFailed} exception thrown from
      * <code>checkValid()</code> includes a list of problems encountered.
      */
-    public static class ValidationProblem {
+    public static class ValidationProblem implements Serializable {
 
         final private String path;
-        final private ConfigOrigin origin;
+        final private transient ConfigOrigin origin;
         final private String problem;
 
         public ValidationProblem(String path, ConfigOrigin origin, String problem) {
@@ -345,6 +352,20 @@ public abstract class ConfigException extends RuntimeException implements Serial
          */
         public String problem() {
             return problem;
+        }
+
+        // We customize serialization because ConfigOrigin isn't
+        // serializable and we don't want it to be
+        private void writeObject(java.io.ObjectOutputStream out) throws IOException {
+            out.defaultWriteObject();
+            ConfigImplUtil.writeOrigin(out, origin);
+        }
+
+        private void readObject(java.io.ObjectInputStream in) throws IOException,
+                ClassNotFoundException {
+            in.defaultReadObject();
+            ConfigOrigin origin = ConfigImplUtil.readOrigin(in);
+            setOriginField(this, ValidationProblem.class, origin);
         }
 
         @Override

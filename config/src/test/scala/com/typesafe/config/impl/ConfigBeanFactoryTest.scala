@@ -223,6 +223,8 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertEquals("hello", beanConfig.getValueObject.getOptionalValue)
         assertEquals("hello", beanConfig.getValueObject.getDefaultedValue)
         assertEquals("hello", beanConfig.getValueObject.getMandatoryValue)
+        assertNull(beanConfig.getValueObject.getDefault)
+        assertEquals("notNull", beanConfig.getValueObject.getMandatoryValue)
     }
 
     @Test

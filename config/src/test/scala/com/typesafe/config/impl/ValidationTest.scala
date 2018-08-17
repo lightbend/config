@@ -98,6 +98,21 @@ class ValidationTest extends TestUtils {
     }
 
     @Test
+    def validationFailedSerializable(): Unit = {
+        // Reusing a previous test case to generate an error
+        val reference = parseConfig("""{ a : [{},{},{}] }""")
+        val conf = parseConfig("""{ a : 42 }""")
+        val e = intercept[ConfigException.ValidationFailed] {
+            conf.checkValid(reference)
+        }
+
+        val expecteds = Seq(WrongType("a", 1, "list", "number"))
+
+        val actual = checkSerializableNoMeaningfulEquals(e)
+        checkValidationException(actual, expecteds)
+    }
+
+    @Test
     def validationAllowsListOverriddenWithSameTypeList() {
         val reference = parseConfig("""{ a : [1,2,3] }""")
         val conf = parseConfig("""{ a : [4,5] }""")

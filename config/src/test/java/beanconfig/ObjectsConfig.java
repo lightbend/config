@@ -10,6 +10,8 @@ public class ObjectsConfig {
         private String optionalValue;
         @Optional
         private String defaultedValue = "hello";
+        private String mandatoryValue;
+        private String Default;
 
         public String getMandatoryValue() {
           return mandatoryValue;
@@ -33,6 +35,15 @@ public class ObjectsConfig {
 
         public void setDefaultedValue(String defaultedValue) {
           this.defaultedValue = defaultedValue;
+        }
+
+        @Optional
+        public String getDefault() {
+          return Default;
+        }
+
+        public void setDefault(String Default) {
+          this.Default = Default;
         }
     }
 

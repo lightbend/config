@@ -1,3 +1,8 @@
+# 1.3.3: February 22, 2018
+
+- artifact now includes `Automatic-Module-Name` which makes it consumable as Java 9 module.
+- minor issue fix. All of the fixed issues can be found in the [milestone page](https://github.com/lightbend/config/milestone/3?closed=1).
+
 # 1.3.2: October 6, 2017
 
 - environment variables are now able to be resolved to lists in
@@ -222,7 +227,7 @@ Thank you to contributors with commits since v1.2.1 tag:
  - build jar using Java 1.6 (and enforce this in build)
  - change getDuration to return unboxed long instead of boxed
  - API documentation improvements
-   http://lightbend.github.io/config/latest/api/
+   https://lightbend.github.io/config/latest/api/
 
 # 1.1.0-9f31d6308e7ebbc3d7904b64ebb9f61f7e22a968: January 6, 2014
 

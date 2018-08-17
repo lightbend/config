@@ -3,6 +3,7 @@
  */
 package com.typesafe.config.impl
 
+import com.typesafe.config.ConfigSyntax
 import org.junit.Assert._
 import org.junit._
 
@@ -89,5 +90,30 @@ class UtilTest extends TestUtils {
         for (s <- lotsOfStrings) {
             roundtripUnquoted(s)
         }
+    }
+
+    @Test
+    def syntaxFromExtensionConf(): Unit = {
+        assertEquals(ConfigSyntax.CONF, ConfigImplUtil.syntaxFromExtension("application.conf"))
+    }
+
+    @Test
+    def syntaxFromExtensionJson(): Unit = {
+        assertEquals(ConfigSyntax.JSON, ConfigImplUtil.syntaxFromExtension("application.json"))
+    }
+
+    @Test
+    def syntaxFromExtensionProperties(): Unit = {
+        assertEquals(ConfigSyntax.PROPERTIES, ConfigImplUtil.syntaxFromExtension("application.properties"))
+    }
+
+    @Test
+    def syntaxFromExtensionUnknown(): Unit = {
+        assertNull(ConfigImplUtil.syntaxFromExtension("application.exe"))
+    }
+
+    @Test
+    def syntaxFromExtensionNull(): Unit = {
+        assertNull(ConfigImplUtil.syntaxFromExtension(null))
     }
 }

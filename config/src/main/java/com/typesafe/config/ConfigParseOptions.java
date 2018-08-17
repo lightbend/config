@@ -4,6 +4,8 @@
 package com.typesafe.config;
 
 
+import com.typesafe.config.impl.ConfigImplUtil;
+
 /**
  * A set of options related to parsing.
  *
@@ -60,6 +62,18 @@ public final class ConfigParseOptions {
         else
             return new ConfigParseOptions(syntax, this.originDescription, this.allowMissing,
                     this.includer, this.classLoader);
+    }
+
+    /**
+     * Set the file format. If set to null, assume {@link ConfigSyntax#CONF}.
+     *
+     * @param filename
+     *            a configuration file name
+     * @return options with the syntax set
+     */
+    public ConfigParseOptions setSyntaxFromFilename(String filename) {
+        ConfigSyntax syntax = ConfigImplUtil.syntaxFromExtension(filename);
+        return setSyntax(syntax);
     }
 
     /**

@@ -180,6 +180,8 @@ public abstract class Parseable implements ConfigParseable {
             return rawParseValue(origin, finalOptions);
         } catch (IOException e) {
             if (finalOptions.getAllowMissing()) {
+                trace(e.getMessage() + ". Allowing Missing File, this can be turned off by setting" +
+                        " ConfigParseOptions.allowMissing = false");
                 return SimpleConfigObject.emptyMissing(origin);
             } else {
                 trace("exception loading " + origin.description() + ": " + e.getClass().getName()
@@ -322,17 +324,6 @@ public abstract class Parseable implements ConfigParseable {
     @Override
     public String toString() {
         return getClass().getSimpleName();
-    }
-
-    private static ConfigSyntax syntaxFromExtension(String name) {
-        if (name.endsWith(".json"))
-            return ConfigSyntax.JSON;
-        else if (name.endsWith(".conf"))
-            return ConfigSyntax.CONF;
-        else if (name.endsWith(".properties"))
-            return ConfigSyntax.PROPERTIES;
-        else
-            return null;
     }
 
     private static Reader readerFromStream(InputStream input) {
@@ -572,7 +563,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigSyntax guessSyntax() {
-            return syntaxFromExtension(input.getPath());
+            return ConfigImplUtil.syntaxFromExtension(input.getPath());
         }
 
         @Override
@@ -641,7 +632,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigSyntax guessSyntax() {
-            return syntaxFromExtension(input.getName());
+            return ConfigImplUtil.syntaxFromExtension(input.getName());
         }
 
         @Override
@@ -754,7 +745,7 @@ public abstract class Parseable implements ConfigParseable {
 
         @Override
         ConfigSyntax guessSyntax() {
-            return syntaxFromExtension(resource);
+            return ConfigImplUtil.syntaxFromExtension(resource);
         }
 
         static String parent(String resource) {
