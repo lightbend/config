@@ -7,7 +7,7 @@ import java.util.*;
 
 import com.typesafe.config.ConfigException;
 
-final class Path {
+public final class Path {
 
     final private String first;
     final private Path remainder;
@@ -216,7 +216,7 @@ final class Path {
      * toString() is a debugging-oriented version while this is an
      * error-message-oriented human-readable one.
      */
-    String render() {
+    public String render() {
         StringBuilder sb = new StringBuilder();
         appendToStringBuilder(sb);
         return sb.toString();
