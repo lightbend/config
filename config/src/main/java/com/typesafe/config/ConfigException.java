@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.lang.reflect.Field;
 
 import com.typesafe.config.impl.ConfigImplUtil;
+import com.typesafe.config.impl.Path;
 
 /**
  * All exceptions thrown by the library are subclasses of
@@ -124,6 +125,10 @@ public abstract class ConfigException extends RuntimeException implements Serial
         public Missing(String path, Throwable cause) {
             super("No configuration setting found for key '" + path + "'",
                     cause);
+        }
+
+        public Missing(ConfigOrigin origin, Path path) {
+            this(origin, "No configuration setting found for key '" + path.render() + "'");
         }
 
         public Missing(String path) {

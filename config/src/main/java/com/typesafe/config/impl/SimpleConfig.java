@@ -153,7 +153,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             ConfigValueType expected, Path originalPath) {
         AbstractConfigValue v = self.peekAssumingResolved(key, originalPath);
         if (v == null)
-            throw new ConfigException.Missing(originalPath.render());
+            throw new ConfigException.Missing(self.origin(), originalPath);
 
         if (expected != null)
             v = DefaultTransformer.transform(v, expected);
