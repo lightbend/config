@@ -487,7 +487,7 @@ trait Config extends ConfigMergeable {
      *         entire tree of { @link ConfigObject} and creating an entry for
      *                                each leaf value.
      */
-    def entrySet: util.Set[util.Map.Entry[String, ConfigValue]]
+    def entrySet: ju.Set[ju.Map.Entry[String, ConfigValue]]
 
     /**
      * Checks whether a value is set to null at the given path,
