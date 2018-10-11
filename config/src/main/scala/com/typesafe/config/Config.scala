@@ -6,8 +6,11 @@ package com.typesafe.config
 import java.time.Duration
 import java.time.Period
 import java.time.temporal.TemporalAmount
+import java.{ lang => jl }
 import java.{ util => ju }
-import java.util.concurrent.TimeUnit
+import ju.concurrent.TimeUnit
+
+import scala.annotation.varargs
 
 /**
  * An immutable map from config paths to config values. Paths are dot-separated
@@ -389,7 +392,7 @@ trait Config extends ConfigMergeable {
      * if the reference config is unresolved or caller otherwise
      * misuses the API
      */
-    def checkValid(reference: Config, restrictToPaths: String*): Unit
+    @varargs def checkValid(reference: Config, restrictToPaths: String*): Unit
 
     /**
      * Checks whether a value is present and non-null at the given path. This
@@ -680,7 +683,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException.BadValue
      * if value cannot be parsed as a size in bytes
      */
-    def getBytes(path: String): Long
+    def getBytes(path: String): jl.Long
 
     /**
      * Gets a value as an amount of memory (parses special strings like "128M"). If
@@ -721,7 +724,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException.BadValue
      * if value cannot be parsed as a number of milliseconds
      */
-    @deprecated def getMilliseconds(path: String): Long
+    @deprecated("", "") def getMilliseconds(path: String): jl.Long
 
     /**
      * Get value as a duration in nanoseconds. If the value is already a number
@@ -740,7 +743,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException.BadValue
      * if value cannot be parsed as a number of nanoseconds
      */
-    @deprecated def getNanoseconds(path: String): Long
+    @deprecated("", "") def getNanoseconds(path: String): jl.Long
 
     /**
      * Gets a value as a duration in a specified
@@ -853,7 +856,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException.WrongType
      * if value is not convertible to a list of booleans
      */
-    def getBooleanList(path: String): ju.List[Boolean]
+    def getBooleanList(path: String): ju.List[jl.Boolean]
 
     /**
      * Gets a list value with number elements.  Throws if the
@@ -898,7 +901,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException.WrongType
      * if value is not convertible to a list of longs
      */
-    def getLongList(path: String): ju.List[Long]
+    def getLongList(path: String): ju.List[jl.Long]
 
     /**
      * Gets a list value with double elements.  Throws if the
@@ -913,7 +916,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException.WrongType
      * if value is not convertible to a list of doubles
      */
-    def getDoubleList(path: String): ju.List[Double]
+    def getDoubleList(path: String): ju.List[jl.Double]
 
     /**
      * Gets a list value with string elements.  Throws if the
@@ -1007,7 +1010,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException.WrongType
      * if value is not convertible to a list of memory sizes
      */
-    def getBytesList(path: String): ju.List[Long]
+    def getBytesList(path: String): ju.List[jl.Long]
 
     /**
      * Gets a list, converting each value in the list to a memory size, using the
@@ -1029,14 +1032,14 @@ trait Config extends ConfigMergeable {
      * @param path the path
      * @return list of millisecond values
      */
-    @deprecated def getMillisecondsList(path: String): ju.List[Long]
+    @deprecated("", "") def getMillisecondsList(path: String): ju.List[jl.Long]
 
     /**
      * @deprecated As of release 1.1, replaced by { @link #getDurationList(String, TimeUnit)}
      * @param path the path
      * @return list of nanosecond values
      */
-    @deprecated def getNanosecondsList(path: String): ju.List[Long]
+    @deprecated("", "") def getNanosecondsList(path: String): ju.List[jl.Long]
 
     /**
      * Gets a list, converting each value in the list to a duration, using the
@@ -1049,7 +1052,7 @@ trait Config extends ConfigMergeable {
      * time units of the returned values
      * @return list of durations, in the requested units
      */
-    def getDurationList(path: String, unit: TimeUnit): ju.List[Long]
+    def getDurationList(path: String, unit: TimeUnit): ju.List[jl.Long]
 
     /**
      * Gets a list, converting each value in the list to a duration, using the
