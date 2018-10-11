@@ -1088,6 +1088,15 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return root().resolveStatus() == ResolveStatus.RESOLVED;
     }
 
+    // dummy method to satisfy compiler - could delegate to method to be safe
+    // See https://github.com/scala/bug/issues/10658
+    @Override
+    public void checkValid(Config reference, scala.collection.Seq<String> restrictToPaths) {
+        // doesn't work
+        //ClassTag<String> tag = scala.reflect.ClassTag$.MODULE$.apply(String.class);
+        //checkValid(reference, restrictToPaths.toArray(tag));
+    }
+
     @Override
     public void checkValid(Config reference, String... restrictToPaths) {
         SimpleConfig ref = (SimpleConfig) reference;
