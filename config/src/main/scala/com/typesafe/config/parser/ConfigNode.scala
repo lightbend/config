@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.parser;
+package com.typesafe.config.parser
 
 /**
  * A node in the syntax tree for a HOCON or JSON document.
@@ -24,12 +24,13 @@ package com.typesafe.config.parser;
  * Also, this interface is likely to grow new methods over time, so third-party
  * implementations will break.
  */
-public interface ConfigNode {
+trait ConfigNode {
+
     /**
      * The original text of the input which was used to form this particular
      * node.
      *
      * @return the original text used to form this node as a String
      */
-    public String render();
+    def render(): String
 }
