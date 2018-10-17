@@ -1,6 +1,6 @@
-package com.typesafe.config.parser;
+package com.typesafe.config.parser
 
-import com.typesafe.config.ConfigValue;
+import com.typesafe.config.ConfigValue
 
 /**
  * Represents an individual HOCON or JSON file, preserving all
@@ -19,7 +19,8 @@ import com.typesafe.config.ConfigValue;
  * Also, this interface is likely to grow new methods over time, so third-party
  * implementations will break.
  */
-public interface ConfigDocument {
+trait ConfigDocument {
+
     /**
      * Returns a new ConfigDocument that is a copy of the current ConfigDocument,
      * but with the desired value set at the desired path. If the path exists, it will
@@ -38,7 +39,7 @@ public interface ConfigDocument {
      *                 into the ConfigDocument.
      * @return a copy of the ConfigDocument with the desired value at the desired path
      */
-    ConfigDocument withValueText(String path, String newValue);
+    def withValueText(path: String, newValue: String): ConfigDocument
 
     /**
      * Returns a new ConfigDocument that is a copy of the current
@@ -52,7 +53,7 @@ public interface ConfigDocument {
      *                 ConfigDocument.
      * @return a copy of the ConfigDocument with the desired value at the desired path
      */
-    ConfigDocument withValue(String path, ConfigValue newValue);
+    def withValue(path: String, newValue: ConfigValue): ConfigDocument
 
     /**
      * Returns a new ConfigDocument that is a copy of the current ConfigDocument, but with
@@ -63,20 +64,22 @@ public interface ConfigDocument {
      * @param path the path to remove from the document
      * @return a copy of the ConfigDocument with the desired value removed from the document.
      */
-    ConfigDocument withoutPath(String path);
+    def withoutPath(path: String): ConfigDocument
 
     /**
      * Returns a boolean indicating whether or not a ConfigDocument has a value at the desired path.
      * null counts as a value for purposes of this check.
+     *
      * @param path the path to check
      * @return true if the path exists in the document, otherwise false
      */
-    boolean hasPath(String path);
+    def hasPath(path: String): Boolean
 
     /**
      * The original text of the input, modified if necessary with
      * any replaced or added values.
+     *
      * @return the modified original text
      */
-    String render();
+    def render(): String
 }
