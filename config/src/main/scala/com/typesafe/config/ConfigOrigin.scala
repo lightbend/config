@@ -1,11 +1,10 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
-import java.net.URL;
-import java.util.List;
-
+import java.net.URL
+import java.util.List
 
 /**
  * Represents the origin (such as filename and line number) of a
@@ -27,14 +26,15 @@ import java.util.List;
  * interface is likely to grow new methods over time, so third-party
  * implementations will break.
  */
-public interface ConfigOrigin {
+trait ConfigOrigin {
+
     /**
      * Returns a string describing the origin of a value or exception. This will
      * never return null.
      *
      * @return string describing the origin
      */
-    public String description();
+    def description(): String
 
     /**
      * Returns a filename describing the origin. This will return null if the
@@ -42,7 +42,7 @@ public interface ConfigOrigin {
      *
      * @return filename of the origin or null
      */
-    public String filename();
+    def filename(): String
 
     /**
      * Returns a URL describing the origin. This will return null if the origin
@@ -50,7 +50,7 @@ public interface ConfigOrigin {
      *
      * @return url of the origin or null
      */
-    public URL url();
+    def url(): URL
 
     /**
      * Returns a classpath resource name describing the origin. This will return
@@ -58,7 +58,7 @@ public interface ConfigOrigin {
      *
      * @return resource name of the origin or null
      */
-    public String resource();
+    def resource(): String
 
     /**
      * Returns a line number where the value or exception originated. This will
@@ -66,7 +66,7 @@ public interface ConfigOrigin {
      *
      * @return line number or -1 if none is available
      */
-    public int lineNumber();
+    def lineNumber(): Int
 
     /**
      * Returns any comments that appeared to "go with" this place in the file.
@@ -74,11 +74,11 @@ public interface ConfigOrigin {
      * change, but at the moment comments that are immediately before an array
      * element or object field, with no blank line after the comment, "go with"
      * that element or field.
-     * 
+     *
      * @return any comments that seemed to "go with" this origin, empty list if
      *         none
      */
-    public List<String> comments();
+    def comments(): List[String]
 
     /**
      * Returns a {@code ConfigOrigin} based on this one, but with the given
@@ -91,11 +91,10 @@ public interface ConfigOrigin {
      * a new instance may not be created and {@code this} is returned directly.
      *
      * @since 1.3.0
-     *
      * @param comments the comments used on the returned origin
      * @return the ConfigOrigin with the given comments
      */
-    public ConfigOrigin withComments(List<String> comments);
+    def withComments(comments: List[String]): ConfigOrigin
 
     /**
      * Returns a {@code ConfigOrigin} based on this one, but with the given
@@ -110,9 +109,8 @@ public interface ConfigOrigin {
      * directly.
      *
      * @since 1.3.0
-     *
      * @param lineNumber the new line number
      * @return the created ConfigOrigin
      */
-    public ConfigOrigin withLineNumber(int lineNumber);
+    def withLineNumber(lineNumber: Int): ConfigOrigin
 }

@@ -1,13 +1,14 @@
-package com.typesafe.config;
+package com.typesafe.config
 
 /**
  * Implement this interface and provide an instance to
  * {@link ConfigResolveOptions#appendResolver ConfigResolveOptions.appendResolver()}
  * to provide custom behavior when unresolved substitutions are encountered
  * during resolution.
+ *
  * @since 1.3.2
  */
-public interface ConfigResolver {
+trait ConfigResolver {
 
     /**
      * Returns the value to substitute for the given unresolved path. To get the
@@ -19,7 +20,7 @@ public interface ConfigResolver {
      * @param path the unresolved path
      * @return the value to use as a substitution or null
      */
-    public ConfigValue lookup(String path);
+    def lookup(path: String): ConfigValue
 
     /**
      * Returns a new resolver that falls back to the given resolver if this
@@ -33,6 +34,5 @@ public interface ConfigResolver {
      * @param fallback the previous includer for chaining
      * @return a new resolver
      */
-    public ConfigResolver withFallback(ConfigResolver fallback);
-
+    def withFallback(fallback: ConfigResolver): ConfigResolver
 }

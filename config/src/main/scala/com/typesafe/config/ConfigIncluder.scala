@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
 /**
  * Implement this interface and provide an instance to
@@ -10,7 +10,8 @@ package com.typesafe.config;
  * also want to implement {@link ConfigIncluderClasspath},
  * {@link ConfigIncluderFile}, and {@link ConfigIncluderURL}, or not.
  */
-public interface ConfigIncluder {
+trait ConfigIncluder {
+
     /**
      * Returns a new includer that falls back to the given includer. This is how
      * you can obtain the default includer; it will be provided as a fallback.
@@ -26,25 +27,25 @@ public interface ConfigIncluder {
      * @param fallback the previous includer for chaining
      * @return a new includer
      */
-    ConfigIncluder withFallback(ConfigIncluder fallback);
+    def withFallback(fallback: ConfigIncluder): ConfigIncluder
 
     /**
      * Parses another item to be included. The returned object typically would
      * not have substitutions resolved. You can throw a ConfigException here to
      * abort parsing, or return an empty object, but may not return null.
-     * 
+     *
      * This method is used for a "heuristic" include statement that does not
      * specify file, URL, or classpath resource. If the include statement does
      * specify, then the same class implementing {@link ConfigIncluder} must
      * also implement {@link ConfigIncluderClasspath},
      * {@link ConfigIncluderFile}, or {@link ConfigIncluderURL} as needed, or a
      * default includer will be used.
-     * 
+     *
      * @param context
      *            some info about the include context
      * @param what
      *            the include statement's argument
      * @return a non-null ConfigObject
      */
-    ConfigObject include(ConfigIncludeContext context, String what);
+    def include(context: ConfigIncludeContext, what: String): ConfigObject
 }

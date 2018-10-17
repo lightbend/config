@@ -1,8 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
-
+package com.typesafe.config
 
 /**
  * An opaque handle to something that can be parsed, obtained from
@@ -15,7 +14,8 @@ package com.typesafe.config;
  * interface is likely to grow new methods over time, so third-party
  * implementations will break.
  */
-public interface ConfigParseable {
+trait ConfigParseable {
+
     /**
      * Parse whatever it is. The options should come from
      * {@link ConfigParseable#options options()} but you could tweak them if you
@@ -26,20 +26,22 @@ public interface ConfigParseable {
      *            {@link ConfigParseable#options options()}
      * @return the parsed object
      */
-    ConfigObject parse(ConfigParseOptions options);
+    def parse(options: ConfigParseOptions): ConfigObject
 
     /**
      * Returns a {@link ConfigOrigin} describing the origin of the parseable
      * item.
+     *
      * @return the origin of the parseable item
      */
-    ConfigOrigin origin();
+    def origin(): ConfigOrigin
 
     /**
      * Get the initial options, which can be modified then passed to parse().
      * These options will have the right description, includer, and other
      * parameters already set up.
+     *
      * @return the initial options
      */
-    ConfigParseOptions options();
+    def options(): ConfigParseOptions
 }

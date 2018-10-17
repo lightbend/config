@@ -1,9 +1,9 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
-import java.net.URL;
+import java.net.URL
 
 /**
  * Implement this <em>in addition to</em> {@link ConfigIncluder} if you want to
@@ -11,7 +11,8 @@ import java.net.URL;
  * syntax. If you do not implement this but do implement {@link ConfigIncluder},
  * attempts to load URLs will use the default includer.
  */
-public interface ConfigIncluderURL {
+trait ConfigIncluderURL {
+
     /**
      * Parses another item to be included. The returned object typically would
      * not have substitutions resolved. You can throw a ConfigException here to
@@ -23,5 +24,5 @@ public interface ConfigIncluderURL {
      *            the include statement's argument
      * @return a non-null ConfigObject
      */
-    ConfigObject includeURL(ConfigIncludeContext context, URL what);
+    def includeURL(context: ConfigIncludeContext, what: URL): ConfigObject
 }

@@ -1,9 +1,9 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
-import java.util.List;
+import java.util.List
 
 /**
  * Subtype of {@link ConfigValue} representing a list value, as in JSON's
@@ -23,16 +23,16 @@ import java.util.List;
  * <p>
  * The {@link ConfigValue#valueType} method on a list returns
  * {@link ConfigValueType#LIST}.
- * 
+ *
  * <p>
  * <em>Do not implement {@code ConfigList}</em>; it should only be implemented
  * by the config library. Arbitrary implementations will not work because the
  * library internals assume a specific concrete implementation. Also, this
  * interface is likely to grow new methods over time, so third-party
  * implementations will break.
- * 
+ *
  */
-public interface ConfigList extends List<ConfigValue>, ConfigValue {
+trait ConfigList extends List[ConfigValue] with ConfigValue {
 
     /**
      * Recursively unwraps the list, returning a list of plain Java values such
@@ -40,9 +40,6 @@ public interface ConfigList extends List<ConfigValue>, ConfigValue {
      *
      * @return a {@link java.util.List} containing plain Java objects
      */
-    @Override
-    List<Object> unwrapped();
-
-    @Override
-    ConfigList withOrigin(ConfigOrigin origin);
+    override def unwrapped: List[AnyRef]
+    override def withOrigin(origin: ConfigOrigin): ConfigList
 }

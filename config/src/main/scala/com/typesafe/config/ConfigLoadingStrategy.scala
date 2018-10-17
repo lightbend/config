@@ -1,4 +1,4 @@
-package com.typesafe.config;
+package com.typesafe.config
 
 /**
  * This method allows you to alter default config loading strategy for all the code which
@@ -9,12 +9,13 @@ package com.typesafe.config;
  *
  * You have to define VM property {@code config.strategy} to replace default strategy with your own.
  */
-public interface ConfigLoadingStrategy {
+trait ConfigLoadingStrategy {
+
     /**
      * This method must load and parse application config.
      *
      * @param parseOptions {@link ConfigParseOptions} to use
      * @return loaded config
      */
-    Config parseApplicationConfig(ConfigParseOptions parseOptions);
+    def parseApplicationConfig(parseOptions: ConfigParseOptions): Config
 }

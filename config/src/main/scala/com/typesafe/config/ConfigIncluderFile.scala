@@ -1,15 +1,18 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
+
+import java.io.File
 
 /**
  * Implement this <em>in addition to</em> {@link ConfigIncluder} if you want to
- * support inclusion of files with the {@code include classpath("resource")}
- * syntax. If you do not implement this but do implement {@link ConfigIncluder},
- * attempts to load classpath resources will use the default includer.
+ * support inclusion of files with the {@code include file("filename")} syntax.
+ * If you do not implement this but do implement {@link ConfigIncluder},
+ * attempts to load files will use the default includer.
  */
-public interface ConfigIncluderClasspath {
+trait ConfigIncluderFile {
+
     /**
      * Parses another item to be included. The returned object typically would
      * not have substitutions resolved. You can throw a ConfigException here to
@@ -21,5 +24,5 @@ public interface ConfigIncluderClasspath {
      *            the include statement's argument
      * @return a non-null ConfigObject
      */
-    ConfigObject includeResources(ConfigIncludeContext context, String what);
+    def includeFile(context: ConfigIncludeContext, what: File): ConfigObject
 }

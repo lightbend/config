@@ -1,8 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
-
+package com.typesafe.config
 
 /**
  * Context provided to a {@link ConfigIncluder}; this interface is only useful
@@ -16,7 +15,8 @@ package com.typesafe.config;
  * interface is likely to grow new methods over time, so third-party
  * implementations will break.
  */
-public interface ConfigIncludeContext {
+trait ConfigIncludeContext {
+
     /**
      * Tries to find a name relative to whatever is doing the including, for
      * example in the same directory as the file doing the including. Returns
@@ -33,7 +33,7 @@ public interface ConfigIncludeContext {
      * @return parseable item relative to the resource doing the including, or
      *         null
      */
-    ConfigParseable relativeTo(String filename);
+    def relativeTo(filename: String): ConfigParseable
 
     /**
      * Parse options to use (if you use another method to get a
@@ -42,15 +42,13 @@ public interface ConfigIncludeContext {
      *
      * @return the parse options
      */
-    ConfigParseOptions parseOptions();
-
+    def parseOptions(): ConfigParseOptions
 
     /**
      * Copy this {@link ConfigIncludeContext} giving it a new value for its parseOptions.
      *
      * @param options new parse options to use
-     *
      * @return the updated copy of this context
      */
-    ConfigIncludeContext setParseOptions(ConfigParseOptions options);
+    def setParseOptions(options: ConfigParseOptions): ConfigIncludeContext
 }
