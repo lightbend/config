@@ -1,6 +1,6 @@
-package com.typesafe.config;
+package com.typesafe.config
 
-import com.typesafe.config.impl.ConfigBeanImpl;
+import com.typesafe.config.impl.ConfigBeanImpl
 
 /**
  * Factory for automatically creating a Java class from a {@link Config}.
@@ -8,7 +8,7 @@ import com.typesafe.config.impl.ConfigBeanImpl;
  *
  * @since 1.3.0
  */
-public class ConfigBeanFactory {
+object ConfigBeanFactory {
 
     /**
      * Creates an instance of a class, initializing its fields from a {@link Config}.
@@ -31,7 +31,6 @@ public class ConfigBeanFactory {
      * setter <code>setFooBar</code>.
      *
      * @since 1.3.0
-     *
      * @param config source of config information
      * @param clazz class to be instantiated
      * @param <T> the type of the class to be instantiated
@@ -43,7 +42,6 @@ public class ConfigBeanFactory {
      * @throws ConfigException
      *     Can throw the same exceptions as the getters on <code>Config</code>
      */
-    public static <T> T create(Config config, Class<T> clazz) {
-        return ConfigBeanImpl.createInternal(config, clazz);
-    }
+    def create[T](config: Config, clazz: Class[T]): T =
+        ConfigBeanImpl.createInternal(config, clazz)
 }
