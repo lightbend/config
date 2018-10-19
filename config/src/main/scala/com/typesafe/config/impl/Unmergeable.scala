@@ -1,9 +1,9 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config.impl;
+package com.typesafe.config.impl
 
-import java.util.Collection;
+import java.{ util => ju }
 
 /**
  * Interface that tags a ConfigValue that is not mergeable until after
@@ -11,6 +11,6 @@ import java.util.Collection;
  * never appear in a resolved tree, like {@link ConfigSubstitution} and
  * {@link ConfigDelayedMerge}.
  */
-interface Unmergeable {
-    Collection<? extends AbstractConfigValue> unmergedValues();
+trait Unmergeable {
+    def unmergedValues: ju.Collection[_ <: AbstractConfigValue]
 }
