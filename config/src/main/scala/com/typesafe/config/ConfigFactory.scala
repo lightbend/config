@@ -1,17 +1,15 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
-import com.typesafe.config.impl.ConfigImpl;
-import com.typesafe.config.impl.Parseable;
-
-import java.io.File;
-import java.io.Reader;
-import java.net.URL;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.Callable;
+import com.typesafe.config.impl.ConfigImpl
+import com.typesafe.config.impl.Parseable
+import java.io.{ File, Reader }
+import java.net.URL
+import java.{ util => ju }
+import java.util.Properties
+import java.util.concurrent.Callable
 
 /**
  * Contains static methods for creating {@link Config} instances.
@@ -34,11 +32,8 @@ import java.util.concurrent.Callable;
  * overview</a> which describes the big picture as shown in those
  * examples.
  */
-public final class ConfigFactory {
-    private static final String STRATEGY_PROPERTY_NAME = "config.strategy";
-
-    private ConfigFactory() {
-    }
+object ConfigFactory {
+    private val STRATEGY_PROPERTY_NAME = "config.strategy"
 
     /**
      * Loads an application's configuration from the given classpath resource or
@@ -71,30 +66,30 @@ public final class ConfigFactory {
      *            name (optionally without extension) of a resource on classpath
      * @return configuration for an application relative to context class loader
      */
-    public static Config load(String resourceBasename) {
-        return load(resourceBasename, ConfigParseOptions.defaults(),
-                ConfigResolveOptions.defaults());
-    }
+    def load(resourceBasename: String): Config = load(
+        resourceBasename,
+        ConfigParseOptions.defaults,
+        ConfigResolveOptions.defaults)
 
     /**
      * Like {@link #load(String)} but uses the supplied class loader instead of
      * the current thread's context class loader.
-     * 
+     *
      * <p>
      * To load a standalone resource (without the default reference and default
      * overrides), use {@link #parseResourcesAnySyntax(ClassLoader, String)}
      * rather than this method. To load only the reference config use
      * {@link #defaultReference(ClassLoader)} and to load only the overrides use
      * {@link #defaultOverrides(ClassLoader)}.
-     * 
+     *
      * @param loader class loader to look for resources in
      * @param resourceBasename basename (no .conf/.json/.properties suffix)
      * @return configuration for an application relative to given class loader
      */
-    public static Config load(ClassLoader loader, String resourceBasename) {
-        return load(resourceBasename, ConfigParseOptions.defaults().setClassLoader(loader),
-                ConfigResolveOptions.defaults());
-    }
+    def load(loader: ClassLoader, resourceBasename: String): Config = load(
+        resourceBasename,
+        ConfigParseOptions.defaults.setClassLoader(loader),
+        ConfigResolveOptions.defaults)
 
     /**
      * Like {@link #load(String)} but allows you to specify parse and resolve
@@ -108,11 +103,14 @@ public final class ConfigFactory {
      *            options to use when resolving the stack
      * @return configuration for an application
      */
-    public static Config load(String resourceBasename, ConfigParseOptions parseOptions,
-            ConfigResolveOptions resolveOptions) {
-        ConfigParseOptions withLoader = ensureClassLoader(parseOptions, "load");
-        Config appConfig = ConfigFactory.parseResourcesAnySyntax(resourceBasename, withLoader);
-        return load(withLoader.getClassLoader(), appConfig, resolveOptions);
+    def load(
+        resourceBasename: String,
+        parseOptions: ConfigParseOptions,
+        resolveOptions: ConfigResolveOptions): Config = {
+        val withLoader = ensureClassLoader(parseOptions, "load")
+        val appConfig =
+            ConfigFactory.parseResourcesAnySyntax(resourceBasename, withLoader)
+        load(withLoader.getClassLoader, appConfig, resolveOptions)
     }
 
     /**
@@ -132,27 +130,28 @@ public final class ConfigFactory {
      *            options to use when resolving the stack
      * @return configuration for an application
      */
-    public static Config load(ClassLoader loader, String resourceBasename,
-            ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
-        return load(resourceBasename, parseOptions.setClassLoader(loader), resolveOptions);
-    }
-
-    private static ClassLoader checkedContextClassLoader(String methodName) {
-        ClassLoader loader = Thread.currentThread().getContextClassLoader();
+    def load(
+        loader: ClassLoader,
+        resourceBasename: String,
+        parseOptions: ConfigParseOptions,
+        resolveOptions: ConfigResolveOptions): Config =
+        load(
+            resourceBasename,
+            parseOptions.setClassLoader(loader),
+            resolveOptions)
+    private def checkedContextClassLoader(methodName: String) = {
+        val loader = Thread.currentThread.getContextClassLoader
         if (loader == null)
-            throw new ConfigException.BugOrBroken("Context class loader is not set for the current thread; "
-                    + "if Thread.currentThread().getContextClassLoader() returns null, you must pass a ClassLoader "
-                    + "explicitly to ConfigFactory." + methodName);
-        else
-            return loader;
+            throw new ConfigException.BugOrBroken(
+                "Context class loader is not set for the current thread; " + "if Thread.currentThread().getContextClassLoader() returns null, you must pass a ClassLoader " + "explicitly to ConfigFactory." + methodName)
+        else loader
     }
-
-    private static ConfigParseOptions ensureClassLoader(ConfigParseOptions options, String methodName) {
-        if (options.getClassLoader() == null)
-            return options.setClassLoader(checkedContextClassLoader(methodName));
-        else
-            return options;
-    }
+    private def ensureClassLoader(
+        options: ConfigParseOptions,
+        methodName: String) =
+        if (options.getClassLoader == null)
+            options.setClassLoader(checkedContextClassLoader(methodName))
+        else options
 
     /**
      * Assembles a standard configuration using a custom <code>Config</code>
@@ -164,9 +163,8 @@ public final class ConfigFactory {
      *            the application's portion of the configuration
      * @return resolved configuration with overrides and fallbacks added
      */
-    public static Config load(Config config) {
-        return load(checkedContextClassLoader("load"), config);
-    }
+    def load(config: Config): Config =
+        load(checkedContextClassLoader("load"), config)
 
     /**
      * Like {@link #load(Config)} but allows you to specify
@@ -178,9 +176,8 @@ public final class ConfigFactory {
      *            the application's portion of the configuration
      * @return resolved configuration with overrides and fallbacks added
      */
-    public static Config load(ClassLoader loader, Config config) {
-        return load(loader, config, ConfigResolveOptions.defaults());
-    }
+    def load(loader: ClassLoader, config: Config): Config =
+        load(loader, config, ConfigResolveOptions.defaults)
 
     /**
      * Like {@link #load(Config)} but allows you to specify
@@ -192,9 +189,8 @@ public final class ConfigFactory {
      *            options for resolving the assembled config stack
      * @return resolved configuration with overrides and fallbacks added
      */
-    public static Config load(Config config, ConfigResolveOptions resolveOptions) {
-        return load(checkedContextClassLoader("load"), config, resolveOptions);
-    }
+    def load(config: Config, resolveOptions: ConfigResolveOptions): Config =
+        load(checkedContextClassLoader("load"), config, resolveOptions)
 
     /**
      * Like {@link #load(Config,ConfigResolveOptions)} but allows you to specify
@@ -209,12 +205,14 @@ public final class ConfigFactory {
      *            options for resolving the assembled config stack
      * @return resolved configuration with overrides and fallbacks added
      */
-    public static Config load(ClassLoader loader, Config config, ConfigResolveOptions resolveOptions) {
-        return defaultOverrides(loader).withFallback(config).withFallback(defaultReference(loader))
-                .resolve(resolveOptions);
-    }
-
-
+    def load(
+        loader: ClassLoader,
+        config: Config,
+        resolveOptions: ConfigResolveOptions): Config =
+        defaultOverrides(loader)
+            .withFallback(config)
+            .withFallback(defaultReference(loader))
+            .resolve(resolveOptions)
 
     /**
      * Loads a default configuration, equivalent to {@link #load(Config)
@@ -227,9 +225,9 @@ public final class ConfigFactory {
      *
      * @return configuration for an application
      */
-    public static Config load() {
-        ClassLoader loader = checkedContextClassLoader("load");
-        return load(loader);
+    def load(): Config = {
+        val loader = checkedContextClassLoader("load")
+        load(loader)
     }
 
     /**
@@ -239,9 +237,8 @@ public final class ConfigFactory {
      *            Options for parsing resources
      * @return configuration for an application
      */
-    public static Config load(ConfigParseOptions parseOptions) {
-        return load(parseOptions, ConfigResolveOptions.defaults());
-    }
+    def load(parseOptions: ConfigParseOptions): Config =
+        load(parseOptions, ConfigResolveOptions.defaults)
 
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
@@ -251,14 +248,16 @@ public final class ConfigFactory {
      *            class loader for finding resources
      * @return configuration for an application
      */
-    public static Config load(final ClassLoader loader) {
-        final ConfigParseOptions withLoader = ConfigParseOptions.defaults().setClassLoader(loader);
-        return ConfigImpl.computeCachedConfig(loader, "load", new Callable<Config>() {
-            @Override
-            public Config call() {
-                return load(loader, defaultApplication(withLoader));
-            }
-        });
+    def load(loader: ClassLoader): Config = {
+        val withLoader =
+            ConfigParseOptions.defaults.setClassLoader(loader)
+        ConfigImpl.computeCachedConfig(
+            loader,
+            "load",
+            new Callable[Config]() {
+                override def call: Config =
+                    return load(loader, defaultApplication(withLoader))
+            })
     }
 
     /**
@@ -271,9 +270,8 @@ public final class ConfigFactory {
      *            Options for parsing resources
      * @return configuration for an application
      */
-    public static Config load(ClassLoader loader, ConfigParseOptions parseOptions) {
-        return load(parseOptions.setClassLoader(loader));
-    }
+    def load(loader: ClassLoader, parseOptions: ConfigParseOptions): Config =
+        load(parseOptions.setClassLoader(loader))
 
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
@@ -285,10 +283,10 @@ public final class ConfigFactory {
      *            options for resolving the assembled config stack
      * @return configuration for an application
      */
-    public static Config load(ClassLoader loader, ConfigResolveOptions resolveOptions) {
-        return load(loader, ConfigParseOptions.defaults(), resolveOptions);
-    }
-
+    def load(
+        loader: ClassLoader,
+        resolveOptions: ConfigResolveOptions): Config =
+        load(loader, ConfigParseOptions.defaults, resolveOptions)
 
     /**
      * Like {@link #load()} but allows specifying a class loader other than the
@@ -302,9 +300,12 @@ public final class ConfigFactory {
      *            options for resolving the assembled config stack
      * @return configuration for an application
      */
-    public static Config load(ClassLoader loader, ConfigParseOptions parseOptions, ConfigResolveOptions resolveOptions) {
-        final ConfigParseOptions withLoader = ensureClassLoader(parseOptions, "load");
-        return load(loader, defaultApplication(withLoader), resolveOptions);
+    def load(
+        loader: ClassLoader,
+        parseOptions: ConfigParseOptions,
+        resolveOptions: ConfigResolveOptions): Config = {
+        val withLoader = ensureClassLoader(parseOptions, "load")
+        load(loader, defaultApplication(withLoader), resolveOptions)
     }
 
     /**
@@ -316,12 +317,13 @@ public final class ConfigFactory {
      * @param resolveOptions
      *            options for resolving the assembled config stack
      * @return configuration for an application
-     *
      * @since 1.3.0
      */
-    public static Config load(ConfigParseOptions parseOptions, final ConfigResolveOptions resolveOptions) {
-        final ConfigParseOptions withLoader = ensureClassLoader(parseOptions, "load");
-        return load(defaultApplication(withLoader), resolveOptions);
+    def load(
+        parseOptions: ConfigParseOptions,
+        resolveOptions: ConfigResolveOptions): Config = {
+        val withLoader = ensureClassLoader(parseOptions, "load")
+        load(defaultApplication(withLoader), resolveOptions)
     }
 
     /**
@@ -329,32 +331,31 @@ public final class ConfigFactory {
      * by merging all resources "reference.conf" found on the classpath and
      * overriding the result with system properties. The returned reference
      * configuration will already have substitutions resolved.
-     * 
+     *
      * <p>
      * Libraries and frameworks should ship with a "reference.conf" in their
      * jar.
-     * 
+     *
      * <p>
      * The reference config must be looked up in the class loader that contains
      * the libraries that you want to use with this config, so the
      * "reference.conf" for each library can be found. Use
      * {@link #defaultReference(ClassLoader)} if the context class loader is not
      * suitable.
-     * 
+     *
      * <p>
      * The {@link #load()} methods merge this configuration for you
      * automatically.
-     * 
+     *
      * <p>
      * Future versions may look for reference configuration in more places. It
      * is not guaranteed that this method <em>only</em> looks at
      * "reference.conf".
-     * 
+     *
      * @return the default reference config for context class loader
      */
-    public static Config defaultReference() {
-        return defaultReference(checkedContextClassLoader("defaultReference"));
-    }
+    def defaultReference(): Config =
+        defaultReference(checkedContextClassLoader("defaultReference"))
 
     /**
      * Like {@link #defaultReference()} but allows you to specify a class loader
@@ -363,9 +364,8 @@ public final class ConfigFactory {
      * @param loader class loader to look for resources in
      * @return the default reference config for this class loader
      */
-    public static Config defaultReference(ClassLoader loader) {
-        return ConfigImpl.defaultReference(loader);
-    }
+    def defaultReference(loader: ClassLoader): Config =
+        ConfigImpl.defaultReference(loader)
 
     /**
      * Obtains the default override configuration, which currently consists of
@@ -382,9 +382,7 @@ public final class ConfigFactory {
      *
      * @return the default override configuration
      */
-    public static Config defaultOverrides() {
-        return systemProperties();
-    }
+    def defaultOverrides(): Config = systemProperties
 
     /**
      * Like {@link #defaultOverrides()} but allows you to specify a class loader
@@ -393,9 +391,7 @@ public final class ConfigFactory {
      * @param loader class loader to look for resources in
      * @return the default override configuration
      */
-    public static Config defaultOverrides(ClassLoader loader) {
-        return systemProperties();
-    }
+    def defaultOverrides(loader: ClassLoader): Config = systemProperties
 
     /**
      * Obtains the default application-specific configuration,
@@ -441,37 +437,32 @@ public final class ConfigFactory {
      * <code>ConfigFactory.parseResources("application")</code>.
      *
      * @since 1.3.0
-     *
      * @return the default application.conf or system-property-configured configuration
      */
-    public static Config defaultApplication() {
-        return defaultApplication(ConfigParseOptions.defaults());
-    }
+    def defaultApplication(): Config =
+        defaultApplication(ConfigParseOptions.defaults)
 
     /**
      * Like {@link #defaultApplication()} but allows you to specify a class loader
      * to use rather than the current context class loader.
      *
      * @since 1.3.0
-     *
      * @param loader class loader to look for resources in
      * @return the default application configuration
      */
-    public static Config defaultApplication(ClassLoader loader) {
-        return defaultApplication(ConfigParseOptions.defaults().setClassLoader(loader));
-    }
+    def defaultApplication(loader: ClassLoader): Config = defaultApplication(
+        ConfigParseOptions.defaults.setClassLoader(loader))
 
     /**
      * Like {@link #defaultApplication()} but allows you to specify parse options.
      *
      * @since 1.3.0
-     *
      * @param options the options
      * @return the default application configuration
      */
-    public static Config defaultApplication(ConfigParseOptions options) {
-        return getConfigLoadingStrategy().parseApplicationConfig(ensureClassLoader(options, "defaultApplication"));
-    }
+    def defaultApplication(options: ConfigParseOptions): Config =
+        getConfigLoadingStrategy.parseApplicationConfig(
+            ensureClassLoader(options, "defaultApplication"))
 
     /**
      * Reloads any cached configs, picking up changes to system properties for
@@ -492,11 +483,10 @@ public final class ConfigFactory {
      * making changes, then calling {@link #load()}, will work. Make changes
      * before you invalidate.
      */
-    public static void invalidateCaches() {
-        // We rely on this having the side effect that it drops
+    def invalidateCaches(): Unit = { // We rely on this having the side effect that it drops
         // all caches
-        ConfigImpl.reloadSystemPropertiesConfig();
-        ConfigImpl.reloadEnvVariablesConfig();
+        ConfigImpl.reloadSystemPropertiesConfig()
+        ConfigImpl.reloadEnvVariablesConfig()
     }
 
     /**
@@ -506,9 +496,7 @@ public final class ConfigFactory {
      *
      * @return an empty configuration
      */
-    public static Config empty() {
-        return empty(null);
-    }
+    def empty(): Config = empty(null)
 
     /**
      * Gets an empty configuration with a description to be used to create a
@@ -522,9 +510,8 @@ public final class ConfigFactory {
      *            description of the config
      * @return an empty configuration
      */
-    public static Config empty(String originDescription) {
-        return ConfigImpl.emptyConfig(originDescription);
-    }
+    def empty(originDescription: String): Config =
+        ConfigImpl.emptyConfig(originDescription)
 
     /**
      * Gets a <code>Config</code> containing the system properties from
@@ -545,9 +532,7 @@ public final class ConfigFactory {
      *
      * @return system properties parsed into a <code>Config</code>
      */
-    public static Config systemProperties() {
-        return ConfigImpl.systemPropertiesAsConfig();
-    }
+    def systemProperties(): Config = ConfigImpl.systemPropertiesAsConfig
 
     /**
      * Gets a <code>Config</code> containing the system's environment variables.
@@ -563,9 +548,7 @@ public final class ConfigFactory {
      *
      * @return system environment variables parsed into a <code>Config</code>
      */
-    public static Config systemEnvironment() {
-        return ConfigImpl.envVariablesAsConfig();
-    }
+    def systemEnvironment(): Config = ConfigImpl.envVariablesAsConfig
 
     /**
      * Converts a Java {@link java.util.Properties} object to a
@@ -588,21 +571,21 @@ public final class ConfigFactory {
      *            the parse options
      * @return the parsed configuration
      */
-    public static Config parseProperties(Properties properties,
-            ConfigParseOptions options) {
-        return Parseable.newProperties(properties, options).parse().toConfig();
-    }
+    def parseProperties(
+        properties: Properties,
+        options: ConfigParseOptions): Config =
+        Parseable.newProperties(properties, options).parse.toConfig
 
     /**
      * Like {@link #parseProperties(Properties, ConfigParseOptions)} but uses default
      * parse options.
+     *
      * @param properties
      *            a Java Properties object
      * @return the parsed configuration
      */
-    public static Config parseProperties(Properties properties) {
-        return parseProperties(properties, ConfigParseOptions.defaults());
-    }
+    def parseProperties(properties: Properties): Config =
+        parseProperties(properties, ConfigParseOptions.defaults)
 
     /**
      * Parses a Reader into a Config instance. Does not call
@@ -619,9 +602,8 @@ public final class ConfigFactory {
      * @return the parsed configuration
      * @throws ConfigException on IO or parse errors
      */
-    public static Config parseReader(Reader reader, ConfigParseOptions options) {
-        return Parseable.newReader(reader, options).parse().toConfig();
-    }
+    def parseReader(reader: Reader, options: ConfigParseOptions): Config =
+        Parseable.newReader(reader, options).parse.toConfig
 
     /**
      * Parses a reader into a Config instance as with
@@ -633,9 +615,8 @@ public final class ConfigFactory {
      * @return the parsed configuration
      * @throws ConfigException on IO or parse errors
      */
-    public static Config parseReader(Reader reader) {
-        return parseReader(reader, ConfigParseOptions.defaults());
-    }
+    def parseReader(reader: Reader): Config =
+        parseReader(reader, ConfigParseOptions.defaults)
 
     /**
      * Parses a URL into a Config instance. Does not call
@@ -652,9 +633,8 @@ public final class ConfigFactory {
      * @return the parsed configuration
      * @throws ConfigException on IO or parse errors
      */
-    public static Config parseURL(URL url, ConfigParseOptions options) {
-        return Parseable.newURL(url, options).parse().toConfig();
-    }
+    def parseURL(url: URL, options: ConfigParseOptions): Config =
+        Parseable.newURL(url, options).parse.toConfig
 
     /**
      * Parses a url into a Config instance as with
@@ -666,9 +646,7 @@ public final class ConfigFactory {
      * @return the parsed configuration
      * @throws ConfigException on IO or parse errors
      */
-    public static Config parseURL(URL url) {
-        return parseURL(url, ConfigParseOptions.defaults());
-    }
+    def parseURL(url: URL): Config = parseURL(url, ConfigParseOptions.defaults)
 
     /**
      * Parses a file into a Config instance. Does not call
@@ -685,9 +663,8 @@ public final class ConfigFactory {
      * @return the parsed configuration
      * @throws ConfigException on IO or parse errors
      */
-    public static Config parseFile(File file, ConfigParseOptions options) {
-        return Parseable.newFile(file, options).parse().toConfig();
-    }
+    def parseFile(file: File, options: ConfigParseOptions): Config =
+        Parseable.newFile(file, options).parse.toConfig
 
     /**
      * Parses a file into a Config instance as with
@@ -699,9 +676,8 @@ public final class ConfigFactory {
      * @return the parsed configuration
      * @throws ConfigException on IO or parse errors
      */
-    public static Config parseFile(File file) {
-        return parseFile(file, ConfigParseOptions.defaults());
-    }
+    def parseFile(file: File): Config =
+        parseFile(file, ConfigParseOptions.defaults)
 
     /**
      * Parses a file with a flexible extension. If the <code>fileBasename</code>
@@ -736,10 +712,10 @@ public final class ConfigFactory {
      *            parse options
      * @return the parsed configuration
      */
-    public static Config parseFileAnySyntax(File fileBasename,
-            ConfigParseOptions options) {
-        return ConfigImpl.parseFileAnySyntax(fileBasename, options).toConfig();
-    }
+    def parseFileAnySyntax(
+        fileBasename: File,
+        options: ConfigParseOptions): Config =
+        ConfigImpl.parseFileAnySyntax(fileBasename, options).toConfig
 
     /**
      * Like {@link #parseFileAnySyntax(File,ConfigParseOptions)} but always uses
@@ -749,9 +725,8 @@ public final class ConfigFactory {
      *            a filename with or without extension
      * @return the parsed configuration
      */
-    public static Config parseFileAnySyntax(File fileBasename) {
-        return parseFileAnySyntax(fileBasename, ConfigParseOptions.defaults());
-    }
+    def parseFileAnySyntax(fileBasename: File): Config =
+        parseFileAnySyntax(fileBasename, ConfigParseOptions.defaults)
 
     /**
      * Parses all resources on the classpath with the given name and merges them
@@ -782,11 +757,11 @@ public final class ConfigFactory {
      *            parse options
      * @return the parsed configuration
      */
-    public static Config parseResources(Class<?> klass, String resource,
-            ConfigParseOptions options) {
-        return Parseable.newResources(klass, resource, options).parse()
-                .toConfig();
-    }
+    def parseResources(
+        klass: Class[_],
+        resource: String,
+        options: ConfigParseOptions): Config =
+        Parseable.newResources(klass, resource, options).parse.toConfig
 
     /**
      * Like {@link #parseResources(Class,String,ConfigParseOptions)} but always uses
@@ -801,9 +776,8 @@ public final class ConfigFactory {
      *            or absolute starting with a "/"
      * @return the parsed configuration
      */
-    public static Config parseResources(Class<?> klass, String resource) {
-        return parseResources(klass, resource, ConfigParseOptions.defaults());
-    }
+    def parseResources(klass: Class[_], resource: String): Config =
+        parseResources(klass, resource, ConfigParseOptions.defaults)
 
     /**
      * Parses classpath resources with a flexible extension. In general, this
@@ -835,11 +809,13 @@ public final class ConfigFactory {
      *            from klass)
      * @return the parsed configuration
      */
-    public static Config parseResourcesAnySyntax(Class<?> klass, String resourceBasename,
-            ConfigParseOptions options) {
-        return ConfigImpl.parseResourcesAnySyntax(klass, resourceBasename,
-                options).toConfig();
-    }
+    def parseResourcesAnySyntax(
+        klass: Class[_],
+        resourceBasename: String,
+        options: ConfigParseOptions): Config =
+        ConfigImpl
+            .parseResourcesAnySyntax(klass, resourceBasename, options)
+            .toConfig
 
     /**
      * Like {@link #parseResourcesAnySyntax(Class,String,ConfigParseOptions)}
@@ -854,9 +830,13 @@ public final class ConfigFactory {
      *            with or without extension
      * @return the parsed configuration
      */
-    public static Config parseResourcesAnySyntax(Class<?> klass, String resourceBasename) {
-        return parseResourcesAnySyntax(klass, resourceBasename, ConfigParseOptions.defaults());
-    }
+    def parseResourcesAnySyntax(
+        klass: Class[_],
+        resourceBasename: String): Config =
+        parseResourcesAnySyntax(
+            klass,
+            resourceBasename,
+            ConfigParseOptions.defaults)
 
     /**
      * Parses all resources on the classpath with the given name and merges them
@@ -880,10 +860,11 @@ public final class ConfigFactory {
      *            parse options (class loader is ignored)
      * @return the parsed configuration
      */
-    public static Config parseResources(ClassLoader loader, String resource,
-            ConfigParseOptions options) {
-        return parseResources(resource, options.setClassLoader(loader));
-    }
+    def parseResources(
+        loader: ClassLoader,
+        resource: String,
+        options: ConfigParseOptions): Config =
+        parseResources(resource, options.setClassLoader(loader))
 
     /**
      * Like {@link #parseResources(ClassLoader,String,ConfigParseOptions)} but always uses
@@ -895,9 +876,8 @@ public final class ConfigFactory {
      *            resource to look up in the loader
      * @return the parsed configuration
      */
-    public static Config parseResources(ClassLoader loader, String resource) {
-        return parseResources(loader, resource, ConfigParseOptions.defaults());
-    }
+    def parseResources(loader: ClassLoader, resource: String): Config =
+        parseResources(loader, resource, ConfigParseOptions.defaults)
 
     /**
      * Parses classpath resources with a flexible extension. In general, this
@@ -922,11 +902,13 @@ public final class ConfigFactory {
      *            parse options (class loader ignored)
      * @return the parsed configuration
      */
-    public static Config parseResourcesAnySyntax(ClassLoader loader, String resourceBasename,
-            ConfigParseOptions options) {
-        return ConfigImpl.parseResourcesAnySyntax(resourceBasename, options.setClassLoader(loader))
-                .toConfig();
-    }
+    def parseResourcesAnySyntax(
+        loader: ClassLoader,
+        resourceBasename: String,
+        options: ConfigParseOptions): Config =
+        ConfigImpl
+            .parseResourcesAnySyntax(resourceBasename, options.setClassLoader(loader))
+            .toConfig
 
     /**
      * Like {@link #parseResourcesAnySyntax(ClassLoader,String,ConfigParseOptions)} but always uses
@@ -940,54 +922,66 @@ public final class ConfigFactory {
      *            extension
      * @return the parsed configuration
      */
-    public static Config parseResourcesAnySyntax(ClassLoader loader, String resourceBasename) {
-        return parseResourcesAnySyntax(loader, resourceBasename, ConfigParseOptions.defaults());
-    }
+    def parseResourcesAnySyntax(
+        loader: ClassLoader,
+        resourceBasename: String): Config =
+        parseResourcesAnySyntax(
+            loader,
+            resourceBasename,
+            ConfigParseOptions.defaults)
 
     /**
      * Like {@link #parseResources(ClassLoader,String,ConfigParseOptions)} but
      * uses thread's current context class loader if none is set in the
      * ConfigParseOptions.
+     *
      * @param resource the resource name
      * @param options parse options
      * @return the parsed configuration
      */
-    public static Config parseResources(String resource, ConfigParseOptions options) {
-        ConfigParseOptions withLoader = ensureClassLoader(options, "parseResources");
-        return Parseable.newResources(resource, withLoader).parse().toConfig();
+    def parseResources(resource: String, options: ConfigParseOptions): Config = {
+        val withLoader =
+            ensureClassLoader(options, "parseResources")
+        Parseable.newResources(resource, withLoader).parse.toConfig
     }
 
     /**
      * Like {@link #parseResources(ClassLoader,String)} but uses thread's
      * current context class loader.
+     *
      * @param resource the resource name
      * @return the parsed configuration
      */
-    public static Config parseResources(String resource) {
-        return parseResources(resource, ConfigParseOptions.defaults());
-    }
+    def parseResources(resource: String): Config =
+        parseResources(resource, ConfigParseOptions.defaults)
 
     /**
      * Like
      * {@link #parseResourcesAnySyntax(ClassLoader,String,ConfigParseOptions)}
      * but uses thread's current context class loader.
+     *
      * @param resourceBasename the resource basename (no file type suffix)
      * @param options parse options
      * @return the parsed configuration
      */
-    public static Config parseResourcesAnySyntax(String resourceBasename, ConfigParseOptions options) {
-        return ConfigImpl.parseResourcesAnySyntax(resourceBasename, options).toConfig();
-    }
+    def parseResourcesAnySyntax(
+        resourceBasename: String,
+        options: ConfigParseOptions): Config =
+        ConfigImpl
+            .parseResourcesAnySyntax(resourceBasename, options)
+            .toConfig
 
     /**
      * Like {@link #parseResourcesAnySyntax(ClassLoader,String)} but uses
      * thread's current context class loader.
+     *
      * @param resourceBasename the resource basename (no file type suffix)
      * @return the parsed configuration
      */
-    public static Config parseResourcesAnySyntax(String resourceBasename) {
-        return parseResourcesAnySyntax(resourceBasename, ConfigParseOptions.defaults());
-    }
+    def parseResourcesAnySyntax(resourceBasename: String): Config =
+        parseResourcesAnySyntax(
+            resourceBasename,
+            ConfigParseOptions.defaults)
 
     /**
      * Parses a string (which should be valid HOCON or JSON by default, or
@@ -997,9 +991,8 @@ public final class ConfigFactory {
      * @param options parse options
      * @return the parsed configuration
      */
-    public static Config parseString(String s, ConfigParseOptions options) {
-        return Parseable.newString(s, options).parse().toConfig();
-    }
+    def parseString(s: String, options: ConfigParseOptions): Config =
+        Parseable.newString(s, options).parse.toConfig
 
     /**
      * Parses a string (which should be valid HOCON or JSON).
@@ -1007,9 +1000,8 @@ public final class ConfigFactory {
      * @param s string to parse
      * @return the parsed configuration
      */
-    public static Config parseString(String s) {
-        return parseString(s, ConfigParseOptions.defaults());
-    }
+    def parseString(s: String): Config =
+        parseString(s, ConfigParseOptions.defaults)
 
     /**
      * Creates a {@code Config} based on a {@link java.util.Map} from paths to
@@ -1034,10 +1026,8 @@ public final class ConfigFactory {
      *            messages)
      * @return the map converted to a {@code Config}
      */
-    public static Config parseMap(Map<String, ? extends Object> values,
-            String originDescription) {
-        return ConfigImpl.fromPathMap(values, originDescription).toConfig();
-    }
+    def parseMap(values: ju.Map[String, _], originDescription: String): Config =
+        ConfigImpl.fromPathMap(values, originDescription).toConfig
 
     /**
      * See the other overload of {@link #parseMap(Map, String)} for details,
@@ -1046,21 +1036,22 @@ public final class ConfigFactory {
      * @param values map from paths to plain Java values
      * @return the map converted to a {@code Config}
      */
-    public static Config parseMap(Map<String, ? extends Object> values) {
-        return parseMap(values, null);
-    }
+    def parseMap(values: ju.Map[String, _]): Config = parseMap(values, null)
 
-    private static ConfigLoadingStrategy getConfigLoadingStrategy() {
-        String className = System.getProperties().getProperty(STRATEGY_PROPERTY_NAME);
-
-        if (className != null) {
-            try {
-                return ConfigLoadingStrategy.class.cast(Class.forName(className).newInstance());
-            } catch (Throwable e) {
-                throw new ConfigException.BugOrBroken("Failed to load strategy: " + className, e);
+    private def getConfigLoadingStrategy = {
+        val className =
+            System.getProperties.getProperty(STRATEGY_PROPERTY_NAME)
+        if (className != null)
+            try classOf[ConfigLoadingStrategy].cast(
+                Class.forName(className).newInstance)
+            catch {
+                case e: Throwable =>
+                    throw new ConfigException.BugOrBroken(
+                        "Failed to load strategy: " + className,
+                        e)
             }
-        } else {
-            return new DefaultConfigLoadingStrategy();
-        }
+        else new DefaultConfigLoadingStrategy
     }
 }
+
+final class ConfigFactory private () {}
