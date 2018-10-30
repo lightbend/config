@@ -1,17 +1,16 @@
-package com.typesafe.config;
+package com.typesafe.config
 
-import java.util.List;
+import java.{ util => ju }
 
-import com.typesafe.config.impl.ConfigImplUtil;
+import com.typesafe.config.impl.ConfigImplUtil
+
+import scala.annotation.varargs
 
 /**
  * Contains static utility methods.
- * 
+ *
  */
-public final class ConfigUtil {
-    private ConfigUtil() {
-
-    }
+object ConfigUtil {
 
     /**
      * Quotes and escapes a string, as in the JSON specification.
@@ -20,9 +19,7 @@ public final class ConfigUtil {
      *            a string
      * @return the string quoted and escaped
      */
-    public static String quoteString(String s) {
-        return ConfigImplUtil.renderJsonString(s);
-    }
+    def quoteString(s: String): String = ConfigImplUtil.renderJsonString(s)
 
     /**
      * Converts a list of keys to a path expression, by quoting the path
@@ -32,16 +29,14 @@ public final class ConfigUtil {
      * <p>
      * See the overview documentation for {@link Config} for more detail on path
      * expressions vs. keys.
-     * 
+     *
      * @param elements
      *            the keys in the path
      * @return a path expression
      * @throws ConfigException
      *             if there are no elements
      */
-    public static String joinPath(String... elements) {
-        return ConfigImplUtil.joinPath(elements);
-    }
+    @varargs def joinPath(elements: String*): String = ConfigImplUtil.joinPath(elements)
 
     /**
      * Converts a list of strings to a path expression, by quoting the path
@@ -51,16 +46,15 @@ public final class ConfigUtil {
      * <p>
      * See the overview documentation for {@link Config} for more detail on path
      * expressions vs. keys.
-     * 
+     *
      * @param elements
      *            the keys in the path
      * @return a path expression
      * @throws ConfigException
      *             if the list is empty
      */
-    public static String joinPath(List<String> elements) {
-        return ConfigImplUtil.joinPath(elements);
-    }
+    def joinPath(elements: ju.List[String]): String =
+        ConfigImplUtil.joinPath(elements)
 
     /**
      * Converts a path expression into a list of keys, by splitting on period
@@ -70,14 +64,14 @@ public final class ConfigUtil {
      * <p>
      * See the overview documentation for {@link Config} for more detail on path
      * expressions vs. keys.
-     * 
+     *
      * @param path
      *            a path expression
      * @return the individual keys in the path
      * @throws ConfigException
      *             if the path expression is invalid
      */
-    public static List<String> splitPath(String path) {
-        return ConfigImplUtil.splitPath(path);
-    }
+    def splitPath(path: String): ju.List[String] = ConfigImplUtil.splitPath(path)
 }
+
+final class ConfigUtil private () {}
