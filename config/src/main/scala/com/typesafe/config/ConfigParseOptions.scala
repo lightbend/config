@@ -1,10 +1,9 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
-
-import com.typesafe.config.impl.ConfigImplUtil;
+import com.typesafe.config.impl.ConfigImplUtil
 
 /**
  * A set of options related to parsing.
@@ -22,31 +21,24 @@ import com.typesafe.config.impl.ConfigImplUtil;
  * </pre>
  *
  */
-public final class ConfigParseOptions {
-    final ConfigSyntax syntax;
-    final String originDescription;
-    final boolean allowMissing;
-    final ConfigIncluder includer;
-    final ClassLoader classLoader;
-
-    private ConfigParseOptions(ConfigSyntax syntax, String originDescription, boolean allowMissing,
-            ConfigIncluder includer, ClassLoader classLoader) {
-        this.syntax = syntax;
-        this.originDescription = originDescription;
-        this.allowMissing = allowMissing;
-        this.includer = includer;
-        this.classLoader = classLoader;
-    }
+object ConfigParseOptions {
 
     /**
      * Gets an instance of <code>ConfigParseOptions</code> with all fields
      * set to the default values. Start with this instance and make any
      * changes you need.
+     *
      * @return the default parse options
      */
-    public static ConfigParseOptions defaults() {
-        return new ConfigParseOptions(null, null, true, null, null);
-    }
+    def defaults() = new ConfigParseOptions(null, null, true, null, null)
+}
+
+final class ConfigParseOptions private (
+    val syntax: ConfigSyntax,
+    val originDescription: String,
+    val allowMissing: Boolean,
+    val includer: ConfigIncluder,
+    val classLoader: ClassLoader) {
 
     /**
      * Set the file format. If set to null, try to guess from any available
@@ -56,13 +48,15 @@ public final class ConfigParseOptions {
      *            a syntax or {@code null} for best guess
      * @return options with the syntax set
      */
-    public ConfigParseOptions setSyntax(ConfigSyntax syntax) {
-        if (this.syntax == syntax)
-            return this;
+    def setSyntax(syntax: ConfigSyntax): ConfigParseOptions =
+        if (this.syntax eq syntax) this
         else
-            return new ConfigParseOptions(syntax, this.originDescription, this.allowMissing,
-                    this.includer, this.classLoader);
-    }
+            new ConfigParseOptions(
+                syntax,
+                this.originDescription,
+                this.allowMissing,
+                this.includer,
+                this.classLoader)
 
     /**
      * Set the file format. If set to null, assume {@link ConfigSyntax#CONF}.
@@ -71,18 +65,17 @@ public final class ConfigParseOptions {
      *            a configuration file name
      * @return options with the syntax set
      */
-    public ConfigParseOptions setSyntaxFromFilename(String filename) {
-        ConfigSyntax syntax = ConfigImplUtil.syntaxFromExtension(filename);
-        return setSyntax(syntax);
+    def setSyntaxFromFilename(filename: String): ConfigParseOptions = {
+        val syntax = ConfigImplUtil.syntaxFromExtension(filename)
+        setSyntax(syntax)
     }
 
     /**
      * Gets the current syntax option, which may be null for "any".
+     *
      * @return the current syntax or null
      */
-    public ConfigSyntax getSyntax() {
-        return syntax;
-    }
+    def getSyntax(): ConfigSyntax = syntax
 
     /**
      * Set a description for the thing being parsed. In most cases this will be
@@ -94,33 +87,31 @@ public final class ConfigParseOptions {
      * @param originDescription description to put in the {@link ConfigOrigin}
      * @return options with the origin description set
      */
-    public ConfigParseOptions setOriginDescription(String originDescription) {
-        // findbugs complains about == here but is wrong, do not "fix"
-        if (this.originDescription == originDescription)
-            return this;
-        else if (this.originDescription != null && originDescription != null
-                && this.originDescription.equals(originDescription))
-            return this;
+    def setOriginDescription(originDescription: String): ConfigParseOptions = { // findbugs complains about == here but is wrong, do not "fix"
+        if (this.originDescription eq originDescription) this
+        else if (this.originDescription != null && originDescription != null && this.originDescription == originDescription)
+            this
         else
-            return new ConfigParseOptions(this.syntax, originDescription, this.allowMissing,
-                    this.includer, this.classLoader);
+            new ConfigParseOptions(
+                this.syntax,
+                originDescription,
+                this.allowMissing,
+                this.includer,
+                this.classLoader)
     }
 
     /**
      * Gets the current origin description, which may be null for "automatic".
+     *
      * @return the current origin description or null
      */
-    public String getOriginDescription() {
-        return originDescription;
-    }
+    def getOriginDescription(): String = originDescription
 
     /** this is package-private, not public API */
-    ConfigParseOptions withFallbackOriginDescription(String originDescription) {
-        if (this.originDescription == null)
-            return setOriginDescription(originDescription);
-        else
-            return this;
-    }
+    private[config] def withFallbackOriginDescription(
+        originDescription: String) =
+        if (this.originDescription == null) setOriginDescription(originDescription)
+        else this
 
     /**
      * Set to false to throw an exception if the item being parsed (for example
@@ -131,21 +122,22 @@ public final class ConfigParseOptions {
      * @param allowMissing true to silently ignore missing item
      * @return options with the "allow missing" flag set
      */
-    public ConfigParseOptions setAllowMissing(boolean allowMissing) {
-        if (this.allowMissing == allowMissing)
-            return this;
+    def setAllowMissing(allowMissing: Boolean): ConfigParseOptions =
+        if (this.allowMissing == allowMissing) this
         else
-            return new ConfigParseOptions(this.syntax, this.originDescription, allowMissing,
-                    this.includer, this.classLoader);
-    }
+            new ConfigParseOptions(
+                this.syntax,
+                this.originDescription,
+                allowMissing,
+                this.includer,
+                this.classLoader)
 
     /**
      * Gets the current "allow missing" flag.
+     *
      * @return whether we allow missing files
      */
-    public boolean getAllowMissing() {
-        return allowMissing;
-    }
+    def getAllowMissing(): Boolean = allowMissing
 
     /**
      * Set a {@link ConfigIncluder} which customizes how includes are handled.
@@ -154,13 +146,15 @@ public final class ConfigParseOptions {
      * @param includer the includer to use or null for default
      * @return new version of the parse options with different includer
      */
-    public ConfigParseOptions setIncluder(ConfigIncluder includer) {
-        if (this.includer == includer)
-            return this;
+    def setIncluder(includer: ConfigIncluder): ConfigParseOptions =
+        if (this.includer eq includer) this
         else
-            return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
-                    includer, this.classLoader);
-    }
+            new ConfigParseOptions(
+                this.syntax,
+                this.originDescription,
+                this.allowMissing,
+                includer,
+                this.classLoader)
 
     /**
      * Prepends a {@link ConfigIncluder} which customizes how
@@ -171,15 +165,12 @@ public final class ConfigParseOptions {
      * @param includer the includer to prepend (may not be null)
      * @return new version of the parse options with different includer
      */
-    public ConfigParseOptions prependIncluder(ConfigIncluder includer) {
+    def prependIncluder(includer: ConfigIncluder): ConfigParseOptions = {
         if (includer == null)
-            throw new NullPointerException("null includer passed to prependIncluder");
-        if (this.includer == includer)
-            return this;
-        else if (this.includer != null)
-            return setIncluder(includer.withFallback(this.includer));
-        else
-            return setIncluder(includer);
+            throw new NullPointerException("null includer passed to prependIncluder")
+        if (this.includer eq includer) this
+        else if (this.includer != null) setIncluder(includer.withFallback(this.includer))
+        else setIncluder(includer)
     }
 
     /**
@@ -190,24 +181,20 @@ public final class ConfigParseOptions {
      * @param includer the includer to append (may not be null)
      * @return new version of the parse options with different includer
      */
-    public ConfigParseOptions appendIncluder(ConfigIncluder includer) {
+    def appendIncluder(includer: ConfigIncluder): ConfigParseOptions = {
         if (includer == null)
-            throw new NullPointerException("null includer passed to appendIncluder");
-        if (this.includer == includer)
-            return this;
-        else if (this.includer != null)
-            return setIncluder(this.includer.withFallback(includer));
-        else
-            return setIncluder(includer);
+            throw new NullPointerException("null includer passed to appendIncluder")
+        if (this.includer eq includer) this
+        else if (this.includer != null) setIncluder(this.includer.withFallback(includer))
+        else setIncluder(includer)
     }
 
     /**
      * Gets the current includer (will be null for the default includer).
+     *
      * @return current includer or null
      */
-    public ConfigIncluder getIncluder() {
-        return includer;
-    }
+    def getIncluder(): ConfigIncluder = includer
 
     /**
      * Set the class loader. If set to null,
@@ -218,13 +205,15 @@ public final class ConfigParseOptions {
      *            loader
      * @return options with the class loader set
      */
-    public ConfigParseOptions setClassLoader(ClassLoader loader) {
-        if (this.classLoader == loader)
-            return this;
+    def setClassLoader(loader: ClassLoader): ConfigParseOptions =
+        if (this.classLoader eq loader) this
         else
-            return new ConfigParseOptions(this.syntax, this.originDescription, this.allowMissing,
-                    this.includer, loader);
-    }
+            new ConfigParseOptions(
+                this.syntax,
+                this.originDescription,
+                this.allowMissing,
+                this.includer,
+                loader)
 
     /**
      * Get the class loader; never returns {@code null}, if the class loader was
@@ -233,10 +222,7 @@ public final class ConfigParseOptions {
      *
      * @return class loader to use
      */
-    public ClassLoader getClassLoader() {
-        if (this.classLoader == null)
-            return Thread.currentThread().getContextClassLoader();
-        else
-            return this.classLoader;
-    }
+    def getClassLoader(): ClassLoader =
+        if (this.classLoader == null) Thread.currentThread.getContextClassLoader
+        else this.classLoader
 }
