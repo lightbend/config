@@ -1,7 +1,7 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
 /**
  * <p>
@@ -16,19 +16,7 @@ package com.typesafe.config;
  *         ConfigRenderOptions.defaults().setComments(false)
  * </pre>
  */
-public final class ConfigRenderOptions {
-    private final boolean originComments;
-    private final boolean comments;
-    private final boolean formatted;
-    private final boolean json;
-
-    private ConfigRenderOptions(boolean originComments, boolean comments, boolean formatted,
-            boolean json) {
-        this.originComments = originComments;
-        this.comments = comments;
-        this.formatted = formatted;
-        this.json = json;
-    }
+object ConfigRenderOptions {
 
     /**
      * Returns the default render options which are verbose (commented and
@@ -37,9 +25,7 @@ public final class ConfigRenderOptions {
      *
      * @return the default render options
      */
-    public static ConfigRenderOptions defaults() {
-        return new ConfigRenderOptions(true, true, true, true);
-    }
+    def defaults() = new ConfigRenderOptions(true, true, true, true)
 
     /**
      * Returns concise render options (no whitespace or comments). For a
@@ -47,9 +33,14 @@ public final class ConfigRenderOptions {
      *
      * @return the concise render options
      */
-    public static ConfigRenderOptions concise() {
-        return new ConfigRenderOptions(false, false, false, true);
-    }
+    def concise() = new ConfigRenderOptions(false, false, false, true)
+}
+
+final class ConfigRenderOptions private (
+    val originComments: Boolean,
+    val comments: Boolean,
+    val formatted: Boolean,
+    val json: Boolean) {
 
     /**
      * Returns options with comments toggled. This controls human-written
@@ -60,12 +51,9 @@ public final class ConfigRenderOptions {
      *            true to include comments in the render
      * @return options with requested setting for comments
      */
-    public ConfigRenderOptions setComments(boolean value) {
-        if (value == comments)
-            return this;
-        else
-            return new ConfigRenderOptions(originComments, value, formatted, json);
-    }
+    def setComments(value: Boolean): ConfigRenderOptions =
+        if (value == comments) this
+        else new ConfigRenderOptions(originComments, value, formatted, json)
 
     /**
      * Returns whether the options enable comments. This method is mostly used
@@ -73,9 +61,7 @@ public final class ConfigRenderOptions {
      *
      * @return true if comments should be rendered
      */
-    public boolean getComments() {
-        return comments;
-    }
+    def getComments(): Boolean = comments
 
     /**
      * Returns options with origin comments toggled. If this is enabled, the
@@ -93,12 +79,9 @@ public final class ConfigRenderOptions {
      *            render
      * @return options with origin comments toggled
      */
-    public ConfigRenderOptions setOriginComments(boolean value) {
-        if (value == originComments)
-            return this;
-        else
-            return new ConfigRenderOptions(value, comments, formatted, json);
-    }
+    def setOriginComments(value: Boolean): ConfigRenderOptions =
+        if (value == originComments) this
+        else new ConfigRenderOptions(value, comments, formatted, json)
 
     /**
      * Returns whether the options enable automated origin comments. This method
@@ -106,9 +89,7 @@ public final class ConfigRenderOptions {
      *
      * @return true if origin comments should be rendered
      */
-    public boolean getOriginComments() {
-        return originComments;
-    }
+    def getOriginComments(): Boolean = originComments
 
     /**
      * Returns options with formatting toggled. Formatting means indentation and
@@ -118,12 +99,9 @@ public final class ConfigRenderOptions {
      *            true to enable formatting
      * @return options with requested setting for formatting
      */
-    public ConfigRenderOptions setFormatted(boolean value) {
-        if (value == formatted)
-            return this;
-        else
-            return new ConfigRenderOptions(originComments, comments, value, json);
-    }
+    def setFormatted(value: Boolean): ConfigRenderOptions =
+        if (value == formatted) this
+        else new ConfigRenderOptions(originComments, comments, value, json)
 
     /**
      * Returns whether the options enable formatting. This method is mostly used
@@ -131,9 +109,7 @@ public final class ConfigRenderOptions {
      *
      * @return true if the options enable formatting
      */
-    public boolean getFormatted() {
-        return formatted;
-    }
+    def getFormatted(): Boolean = formatted
 
     /**
      * Returns options with JSON toggled. JSON means that HOCON extensions
@@ -146,12 +122,9 @@ public final class ConfigRenderOptions {
      *            true to include non-JSON extensions in the render
      * @return options with requested setting for JSON
      */
-    public ConfigRenderOptions setJson(boolean value) {
-        if (value == json)
-            return this;
-        else
-            return new ConfigRenderOptions(originComments, comments, formatted, value);
-    }
+    def setJson(value: Boolean): ConfigRenderOptions =
+        if (value == json) this
+        else new ConfigRenderOptions(originComments, comments, formatted, value)
 
     /**
      * Returns whether the options enable JSON. This method is mostly used by
@@ -159,24 +132,16 @@ public final class ConfigRenderOptions {
      *
      * @return true if only JSON should be rendered
      */
-    public boolean getJson() {
-        return json;
-    }
+    def getJson(): Boolean = json
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder("ConfigRenderOptions(");
-        if (originComments)
-            sb.append("originComments,");
-        if (comments)
-            sb.append("comments,");
-        if (formatted)
-            sb.append("formatted,");
-        if (json)
-            sb.append("json,");
-        if (sb.charAt(sb.length() - 1) == ',')
-            sb.setLength(sb.length() - 1);
-        sb.append(")");
-        return sb.toString();
+    override def toString: String = {
+        val sb = new StringBuilder("ConfigRenderOptions(")
+        if (originComments) sb.append("originComments,")
+        if (comments) sb.append("comments,")
+        if (formatted) sb.append("formatted,")
+        if (json) sb.append("json,")
+        if (sb.charAt(sb.length - 1) == ',') sb.setLength(sb.length - 1)
+        sb.append(")")
+        sb.toString
     }
 }
