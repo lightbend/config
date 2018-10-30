@@ -16,6 +16,7 @@ import java.util.List;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
+import scala.collection.JavaConverters;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -192,6 +193,12 @@ final public class ConfigImplUtil {
             // IllegalArgumentException "url has an authority component"
             return new File(url.getPath());
         }
+    }
+    // add Scala vararg version
+    public static String joinPath(scala.collection.Seq<String> elements) {
+        List<String> javaListPaths = JavaConverters.asJavaListConverter(elements).asJava();
+        String[] javaArrayPaths = javaListPaths.toArray(new String[0]);
+        return joinPath(javaArrayPaths);
     }
 
     public static String joinPath(String... elements) {
