@@ -13,7 +13,7 @@ class ConfigNodeSingleToken extends AbstractConfigNode {
     }
 
     @Override
-    protected Collection<Token> tokens() {
+    public Collection<Token> tokens() {
         return Collections.singletonList(token);
     }
 

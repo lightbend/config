@@ -16,7 +16,7 @@ final class ConfigNodeSimpleValue extends AbstractConfigNodeValue {
     }
 
     @Override
-    protected Collection<Token> tokens() {
+    public Collection<Token> tokens() {
         return Collections.singletonList(token);
     }
 

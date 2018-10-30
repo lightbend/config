@@ -19,7 +19,7 @@ final class ConfigNodeInclude extends AbstractConfigNode {
     }
 
     @Override
-    protected Collection<Token> tokens() {
+    public Collection<Token> tokens() {
         ArrayList<Token> tokens = new ArrayList<Token>();
         for (AbstractConfigNode child : children) {
             tokens.addAll(child.tokens());

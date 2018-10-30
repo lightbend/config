@@ -17,7 +17,7 @@ final class ConfigNodePath extends AbstractConfigNode {
     }
 
     @Override
-    protected Collection<Token> tokens() {
+    public Collection<Token> tokens() {
         return tokens;
     }
 
