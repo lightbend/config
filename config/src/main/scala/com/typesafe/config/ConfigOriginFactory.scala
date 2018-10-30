@@ -1,8 +1,7 @@
-package com.typesafe.config;
+package com.typesafe.config
 
-import java.net.URL;
-
-import com.typesafe.config.impl.ConfigImpl;
+import java.net.URL
+import com.typesafe.config.impl.ConfigImpl
 
 /**
  * This class contains some static factory methods for building a {@link
@@ -13,9 +12,7 @@ import com.typesafe.config.impl.ConfigImpl;
  *
  * @since 1.3.0
  */
-public final class ConfigOriginFactory {
-    private ConfigOriginFactory() {
-    }
+object ConfigOriginFactory {
 
     /**
      * Returns the default origin for values when no other information is
@@ -23,46 +20,38 @@ public final class ConfigOriginFactory {
      * #fromAnyRef(Object)}.
      *
      * @since 1.3.0
-     *
      * @return the default origin
      */
-    public static ConfigOrigin newSimple() {
-        return newSimple(null);
-    }
+    def newSimple(): ConfigOrigin = newSimple(null)
 
     /**
      * Returns an origin with the given description.
      *
      *  @since 1.3.0
-     *
      * @param description brief description of what the origin is
      * @return a new origin
      */
-    public static ConfigOrigin newSimple(String description) {
-        return ConfigImpl.newSimpleOrigin(description);
-    }
+    def newSimple(description: String): ConfigOrigin =
+        ConfigImpl.newSimpleOrigin(description)
 
     /**
      * Creates a file origin with the given filename.
      *
      * @since 1.3.0
-     *
      * @param filename the filename of this origin
      * @return a new origin
      */
-    public static ConfigOrigin newFile(String filename) {
-        return ConfigImpl.newFileOrigin(filename);
-    }
+    def newFile(filename: String): ConfigOrigin =
+        ConfigImpl.newFileOrigin(filename)
 
     /**
      * Creates a url origin with the given URL object.
      *
      * @since 1.3.0
-     *
      * @param url the url of this origin
      * @return a new origin
      */
-    public static ConfigOrigin newURL(URL url) {
-        return ConfigImpl.newURLOrigin(url);
-    }
+    def newURL(url: URL): ConfigOrigin = ConfigImpl.newURLOrigin(url)
 }
+
+final class ConfigOriginFactory private () {}
