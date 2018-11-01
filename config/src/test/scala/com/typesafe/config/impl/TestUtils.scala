@@ -249,7 +249,7 @@ abstract trait TestUtils {
                     "possibly caused by http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6446627",
                     nf)
             case e: Exception =>
-                System.err.println(e.getStackTrace.toString);
+                e.printStackTrace(System.err)
                 throw new AssertionError("failed to make a copy via serialization", e)
         }
 
