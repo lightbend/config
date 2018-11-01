@@ -58,7 +58,7 @@ final class ConfigNodeField extends AbstractConfigNode {
         for (AbstractConfigNode child : children) {
             if (child instanceof ConfigNodeSingleToken) {
                 Token t = ((ConfigNodeSingleToken) child).token();
-                if (t == Tokens.PLUS_EQUALS || t == Tokens.COLON || t == Tokens.EQUALS) {
+                if (t == Tokens.PLUS_EQUALS() || t == Tokens.COLON() || t == Tokens.EQUALS()) {
                     return t;
                 }
             }

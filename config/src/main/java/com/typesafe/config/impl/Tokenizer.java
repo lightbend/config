@@ -141,7 +141,7 @@ final class Tokenizer {
             lineNumber = 1;
             lineOrigin = this.origin.withLineNumber(lineNumber);
             tokens = new LinkedList<Token>();
-            tokens.add(Tokens.START);
+            tokens.add(Tokens.START());
             whitespaceSaver = new WhitespaceSaver();
         }
 
@@ -528,7 +528,7 @@ final class Tokenizer {
                 throw problem(asString(c), "'+' not followed by =, '" + asString(c)
                         + "' not allowed after '+'", true /* suggestQuotes */);
             }
-            return Tokens.PLUS_EQUALS;
+            return Tokens.PLUS_EQUALS();
         }
 
         private Token pullSubstitution() throws ProblemException {
@@ -558,10 +558,10 @@ final class Tokenizer {
                 // note that we avoid validating the allowed tokens inside
                 // the substitution here; we even allow nested substitutions
                 // in the tokenizer. The parser sorts it out.
-                if (t == Tokens.CLOSE_CURLY) {
+                if (t == Tokens.CLOSE_CURLY()) {
                     // end the loop, done!
                     break;
-                } else if (t == Tokens.END) {
+                } else if (t == Tokens.END()) {
                     throw problem(origin,
                             "Substitution ${ was not closed with a }");
                 } else {
@@ -578,7 +578,7 @@ final class Tokenizer {
         private Token pullNextToken(WhitespaceSaver saver) throws ProblemException {
             int c = nextCharAfterWhitespace(saver);
             if (c == -1) {
-                return Tokens.END;
+                return Tokens.END();
             } else if (c == '\n') {
                 // newline tokens have the just-ended line number
                 Token line = Tokens.newLine(lineOrigin);
@@ -598,25 +598,25 @@ final class Tokenizer {
                         t = pullSubstitution();
                         break;
                     case ':':
-                        t = Tokens.COLON;
+                        t = Tokens.COLON();
                         break;
                     case ',':
-                        t = Tokens.COMMA;
+                        t = Tokens.COMMA();
                         break;
                     case '=':
-                        t = Tokens.EQUALS;
+                        t = Tokens.EQUALS();
                         break;
                     case '{':
-                        t = Tokens.OPEN_CURLY;
+                        t = Tokens.OPEN_CURLY();
                         break;
                     case '}':
-                        t = Tokens.CLOSE_CURLY;
+                        t = Tokens.CLOSE_CURLY();
                         break;
                     case '[':
-                        t = Tokens.OPEN_SQUARE;
+                        t = Tokens.OPEN_SQUARE();
                         break;
                     case ']':
-                        t = Tokens.CLOSE_SQUARE;
+                        t = Tokens.CLOSE_SQUARE();
                         break;
                     case '+':
                         t = pullPlusEquals();
@@ -673,7 +673,7 @@ final class Tokenizer {
         @Override
         public Token next() {
             Token t = tokens.remove();
-            if (tokens.isEmpty() && t != Tokens.END) {
+            if (tokens.isEmpty() && t != Tokens.END()) {
                 try {
                     queueNextToken();
                 } catch (ProblemException e) {

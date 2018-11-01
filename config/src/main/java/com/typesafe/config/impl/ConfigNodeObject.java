@@ -45,7 +45,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
             if (childrenCopy.get(i) instanceof ConfigNodeSingleToken) {
                 Token t = ((ConfigNodeSingleToken) childrenCopy.get(i)).token();
                 // Ensure that, when we are removing settings in JSON, we don't end up with a trailing comma
-                if (flavor == ConfigSyntax.JSON && !seenNonMatching && t == Tokens.COMMA) {
+                if (flavor == ConfigSyntax.JSON && !seenNonMatching && t == Tokens.COMMA()) {
                     childrenCopy.remove(i);
                 }
                 continue;
@@ -62,7 +62,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
                 for (int j = i; j < childrenCopy.size(); j++) {
                     if (childrenCopy.get(j) instanceof ConfigNodeSingleToken) {
                         Token t = ((ConfigNodeSingleToken) childrenCopy.get(j)).token();
-                        if (Tokens.isIgnoredWhitespace(t) || t == Tokens.COMMA) {
+                        if (Tokens.isIgnoredWhitespace(t) || t == Tokens.COMMA()) {
                             childrenCopy.remove(j);
                             j--;
                         } else {
@@ -147,7 +147,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         } else {
             // Calculate the indentation of the ending curly-brace to get the indentation of the root object
             AbstractConfigNode last = children.get(children.size() - 1);
-            if (last instanceof ConfigNodeSingleToken && ((ConfigNodeSingleToken) last).token() == Tokens.CLOSE_CURLY) {
+            if (last instanceof ConfigNodeSingleToken && ((ConfigNodeSingleToken) last).token() == Tokens.CLOSE_CURLY()) {
                 AbstractConfigNode beforeLast = children.get(children.size() - 2);
                 String indent = "";
                 if (beforeLast instanceof ConfigNodeSingleToken &&
@@ -197,12 +197,12 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
 
         // Otherwise, construct the new setting
         boolean startsWithBrace = !super.children.isEmpty() && super.children.get(0) instanceof ConfigNodeSingleToken &&
-                ((ConfigNodeSingleToken) super.children.get(0)).token() == Tokens.OPEN_CURLY;
+                ((ConfigNodeSingleToken) super.children.get(0)).token() == Tokens.OPEN_CURLY();
         ArrayList<AbstractConfigNode> newNodes = new ArrayList<AbstractConfigNode>();
         newNodes.addAll(indentation);
         newNodes.add(desiredPath.first());
         newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
-        newNodes.add(new ConfigNodeSingleToken(Tokens.COLON));
+        newNodes.add(new ConfigNodeSingleToken(Tokens.COLON()));
         newNodes.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
 
         if (path.length() == 1) {
@@ -210,12 +210,12 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         } else {
             // If the path is of length greater than one add the required new objects along the path
             ArrayList<AbstractConfigNode> newObjectNodes = new ArrayList<AbstractConfigNode>();
-            newObjectNodes.add(new ConfigNodeSingleToken(Tokens.OPEN_CURLY));
+            newObjectNodes.add(new ConfigNodeSingleToken(Tokens.OPEN_CURLY()));
             if (indentation.isEmpty()) {
                 newObjectNodes.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
             }
             newObjectNodes.addAll(indentation);
-            newObjectNodes.add(new ConfigNodeSingleToken(Tokens.CLOSE_CURLY));
+            newObjectNodes.add(new ConfigNodeSingleToken(Tokens.CLOSE_CURLY()));
             ConfigNodeObject newObject = new ConfigNodeObject(newObjectNodes);
             newNodes.add(newObject.addValueOnPath(desiredPath.subPath(1), indentedValue, flavor));
         }
@@ -229,15 +229,15 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
                 if ((flavor == ConfigSyntax.JSON || sameLine) && childrenCopy.get(i) instanceof ConfigNodeField) {
                     if (i+1 >= childrenCopy.size() ||
                             !(childrenCopy.get(i+1) instanceof ConfigNodeSingleToken
-                                    && ((ConfigNodeSingleToken) childrenCopy.get(i+1)).token() == Tokens.COMMA))
-                    childrenCopy.add(i+1, new ConfigNodeSingleToken(Tokens.COMMA));
+                                    && ((ConfigNodeSingleToken) childrenCopy.get(i+1)).token() == Tokens.COMMA()))
+                    childrenCopy.add(i+1, new ConfigNodeSingleToken(Tokens.COMMA()));
                     break;
                 }
 
                 // Add the value into the copy of the children map, keeping any whitespace/newlines
                 // before the close curly brace
                 if (startsWithBrace && childrenCopy.get(i) instanceof ConfigNodeSingleToken &&
-                        ((ConfigNodeSingleToken) childrenCopy.get(i)).token == Tokens.CLOSE_CURLY) {
+                        ((ConfigNodeSingleToken) childrenCopy.get(i)).token == Tokens.CLOSE_CURLY()) {
                     AbstractConfigNode previous = childrenCopy.get(i - 1);
                     if (previous instanceof ConfigNodeSingleToken &&
                             Tokens.isNewline(((ConfigNodeSingleToken) previous).token())) {

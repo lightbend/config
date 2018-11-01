@@ -243,7 +243,7 @@ final class ConfigParser {
 
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
-                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
+                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS()) {
                         // we really should make this work, but for now throwing
                         // an exception is better than producing an incorrect
                         // result. See
@@ -267,7 +267,7 @@ final class ConfigParser {
                     // comments from the key token go to the value token
                     newValue = parseValue(valueNode, comments);
 
-                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
+                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS()) {
                         arrayCount -= 1;
 
                         List<AbstractConfigValue> concat = new ArrayList<AbstractConfigValue>(2);
@@ -291,7 +291,7 @@ final class ConfigParser {
                                 break;
                             } else if (nodes.get(i) instanceof ConfigNodeSingleToken) {
                                 ConfigNodeSingleToken curr = (ConfigNodeSingleToken) nodes.get(i);
-                                if (curr.token() == Tokens.COMMA || Tokens.isIgnoredWhitespace(curr.token())) {
+                                if (curr.token() == Tokens.COMMA() || Tokens.isIgnoredWhitespace(curr.token())) {
                                     // keep searching, as there could still be a comment
                                 } else {
                                     i--;

@@ -117,7 +117,7 @@ final class PathParser {
                 String s = v.transformToString();
 
                 addPathText(buf, true, s);
-            } else if (t == Tokens.END) {
+            } else if (t == Tokens.END()) {
                 // ignore this; when parsing a file, it should not happen
                 // since we're parsing a token list rather than the main
                 // token iterator, and when parsing a path expression from the
