@@ -37,7 +37,7 @@ final class Tokens {
         }
 
         @Override
-        protected boolean canEqual(Object other) {
+        public boolean canEqual(Object other) {
             return other instanceof Value;
         }
 
@@ -63,7 +63,7 @@ final class Tokens {
         }
 
         @Override
-        protected boolean canEqual(Object other) {
+        public boolean canEqual(Object other) {
             return other instanceof Line;
         }
 
@@ -102,7 +102,7 @@ final class Tokens {
         }
 
         @Override
-        protected boolean canEqual(Object other) {
+        public boolean canEqual(Object other) {
             return other instanceof UnquotedText;
         }
 
@@ -135,7 +135,7 @@ final class Tokens {
         public String toString() { return "'" + value + "' (WHITESPACE)"; }
 
         @Override
-        protected boolean canEqual(Object other) {
+        public boolean canEqual(Object other) {
             return other instanceof IgnoredWhitespace;
         }
 
@@ -200,7 +200,7 @@ final class Tokens {
         }
 
         @Override
-        protected boolean canEqual(Object other) {
+        public boolean canEqual(Object other) {
             return other instanceof Problem;
         }
 
@@ -268,7 +268,7 @@ final class Tokens {
         }
 
         @Override
-        protected boolean canEqual(Object other) {
+        public boolean canEqual(Object other) {
             return other instanceof Comment;
         }
 
@@ -319,7 +319,7 @@ final class Tokens {
         }
 
         @Override
-        protected boolean canEqual(Object other) {
+        public boolean canEqual(Object other) {
             return other instanceof Substitution;
         }
 
