@@ -763,7 +763,8 @@ If you have trouble with your configuration, some useful tips.
    `com.typesafe.config.ConfigException$Missing: No configuration setting found for key foo`,
    and you're sure that key is defined in your config file, they might appear e.g.
    when you're loading configuration from a thread that's not the JVM's main thread.
-   Try passing the `ClassLoader` to manually - e.g. with `ConfigFactory.load(getClass().getClassLoader())`.
+   Try passing the `ClassLoader` in manually - e.g. with `ConfigFactory.load(getClass().getClassLoader())`
+    or setting the context class loader.
    If you don't pass one, Lightbend Config uses the calling thread's `contextClassLoader`, and in some cases,
    it may not have your configuration files in its classpath,
    so loading the config on that thread can yield unexpected, erroneous results.
