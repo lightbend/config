@@ -28,7 +28,7 @@ final class ConfigNodeRoot private[impl] (
         val childrenCopy =
             new ju.ArrayList[AbstractConfigNode](children)
         var i = 0
-        while ({ i < childrenCopy.size }) {
+        while (i < childrenCopy.size) {
             val node = childrenCopy.get(i)
             if (node.isInstanceOf[ConfigNodeComplexValue])
                 if (node.isInstanceOf[ConfigNodeArray])
@@ -50,8 +50,7 @@ final class ConfigNodeRoot private[impl] (
                                 .setValueOnPath(desiredPath, value, flavor))
                     return new ConfigNodeRoot(childrenCopy, origin)
                 }
-
-            { i += 1; i - 1 }
+            i += 1
         }
         throw new ConfigException.BugOrBroken(
             "ConfigNodeRoot did not contain a value")
@@ -61,7 +60,7 @@ final class ConfigNodeRoot private[impl] (
         val childrenCopy =
             new ju.ArrayList[AbstractConfigNode](children)
         var i = 0
-        while ({ i < childrenCopy.size }) {
+        while (i < childrenCopy.size) {
             val node = childrenCopy.get(i)
             if (node.isInstanceOf[ConfigNodeComplexValue])
                 if (node.isInstanceOf[ConfigNodeArray])
@@ -71,7 +70,7 @@ final class ConfigNodeRoot private[impl] (
                 else if (node.isInstanceOf[ConfigNodeObject])
                     return node.asInstanceOf[ConfigNodeObject].hasValue(path)
 
-            { i += 1; i - 1 }
+            i += 1
         }
         throw new ConfigException.BugOrBroken(
             "ConfigNodeRoot did not contain a value")

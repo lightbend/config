@@ -16,7 +16,7 @@ final class ConfigNodePath private[impl] (
         var periodCount = 0
         val tokensCopy = new ju.ArrayList[Token](tokensArg)
         var i = 0
-        while ({ i < tokensCopy.size }) {
+        while (i < tokensCopy.size) {
             if (Tokens.isUnquotedText(tokensCopy.get(i)) && tokensCopy
                 .get(i)
                 .tokenText == ".") { periodCount += 1; periodCount - 1 }
@@ -25,7 +25,7 @@ final class ConfigNodePath private[impl] (
                     path.subPath(toRemove),
                     tokensCopy.subList(i + 1, tokensCopy.size))
 
-            { i += 1; i - 1 }
+            i += 1
         }
         throw new ConfigException.BugOrBroken(
             "Tried to remove too many elements from a Path node")
@@ -33,13 +33,13 @@ final class ConfigNodePath private[impl] (
     private[impl] def first: ConfigNodePath = {
         val tokensCopy = new ju.ArrayList[Token](tokens)
         var i = 0
-        while ({ i < tokensCopy.size }) {
+        while (i < tokensCopy.size) {
             if (Tokens.isUnquotedText(tokensCopy.get(i)) && tokensCopy
                 .get(i)
                 .tokenText == ".")
                 return new ConfigNodePath(path.subPath(0, 1), tokensCopy.subList(0, i))
 
-            { i += 1; i - 1 }
+            i += 1
         }
         this
     }

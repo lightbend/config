@@ -22,7 +22,7 @@ abstract class ConfigNodeComplexValue(
         val childrenCopy =
             new ju.ArrayList[AbstractConfigNode](children)
         var i = 0
-        while ({ i < childrenCopy.size }) {
+        while (i < childrenCopy.size) {
             val child = childrenCopy.get(i)
             if (child.isInstanceOf[ConfigNodeSingleToken] && Tokens.isNewline(
                 child.asInstanceOf[ConfigNodeSingleToken].token)) {
@@ -47,7 +47,7 @@ abstract class ConfigNodeComplexValue(
                         .asInstanceOf[ConfigNodeComplexValue]
                         .indentText(indentation))
 
-            { i += 1; i - 1 }
+            i += 1
         }
         newNode(childrenCopy)
     }
