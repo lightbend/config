@@ -280,7 +280,7 @@ class ConfigDocumentParserTest extends TestUtils {
     def parseEmptyDocument {
         val node = ConfigDocumentParser.parse(tokenize(""), fakeOrigin(), ConfigParseOptions.defaults())
         assertTrue(node.value().isInstanceOf[ConfigNodeObject])
-        assertTrue(node.value().children().isEmpty())
+        assertTrue(node.value().children.isEmpty())
 
         val node2 = ConfigDocumentParser.parse(tokenize("#comment\n#comment\n\n"), fakeOrigin(), ConfigParseOptions.defaults())
         assertTrue(node2.value().isInstanceOf[ConfigNodeObject])

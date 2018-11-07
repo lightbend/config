@@ -8,7 +8,7 @@ final class ConfigNodeConcatenation extends ConfigNodeComplexValue {
     }
 
     @Override
-    protected ConfigNodeConcatenation newNode(Collection<AbstractConfigNode> nodes) {
+    public ConfigNodeConcatenation newNode(Collection<AbstractConfigNode> nodes) {
         return new ConfigNodeConcatenation(nodes);
     }
 }

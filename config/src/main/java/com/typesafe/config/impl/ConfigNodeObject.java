@@ -11,12 +11,12 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
     }
 
     @Override
-    protected ConfigNodeObject newNode(Collection<AbstractConfigNode> nodes) {
+    public ConfigNodeObject newNode(Collection<AbstractConfigNode> nodes) {
         return new ConfigNodeObject(nodes);
     }
 
     public boolean hasValue(Path desiredPath) {
-        for (AbstractConfigNode node : children) {
+        for (AbstractConfigNode node : children()) {
             if (node instanceof ConfigNodeField) {
                 ConfigNodeField field = (ConfigNodeField) node;
                 Path key = field.path().value();
@@ -37,7 +37,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
     }
 
     protected ConfigNodeObject changeValueOnPath(Path desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children());
         boolean seenNonMatching = false;
         // Copy the value so we can change it to null but not modify the original parameter
         AbstractConfigNodeValue valueCopy = value;
@@ -89,7 +89,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
                 if (node.value() instanceof ConfigNodeObject) {
                     Path remainingPath = desiredPath.subPath(key.length());
                     childrenCopy.set(i, node.replaceValue(((ConfigNodeObject) node.value()).changeValueOnPath(remainingPath, valueCopy, flavor)));
-                    if (valueCopy != null && !node.equals(super.children.get(i)))
+                    if (valueCopy != null && !node.equals(super.children().get(i)))
                         valueCopy = null;
                 }
             } else {
@@ -121,23 +121,23 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
     private Collection<AbstractConfigNode> indentation() {
         boolean seenNewLine = false;
         ArrayList<AbstractConfigNode> indentation = new ArrayList<AbstractConfigNode>();
-        if (children.isEmpty()) {
+        if (children().isEmpty()) {
             return indentation;
         }
-        for (int i = 0; i < children.size(); i++) {
+        for (int i = 0; i < children().size(); i++) {
             if (!seenNewLine) {
-                if (children.get(i) instanceof ConfigNodeSingleToken &&
-                        Tokens.isNewline(((ConfigNodeSingleToken) children.get(i)).token())) {
+                if (children().get(i) instanceof ConfigNodeSingleToken &&
+                        Tokens.isNewline(((ConfigNodeSingleToken) children().get(i)).token())) {
                     seenNewLine = true;
                     indentation.add(new ConfigNodeSingleToken(Tokens.newLine(null)));
                 }
             } else {
-                if (children.get(i) instanceof ConfigNodeSingleToken &&
-                        Tokens.isIgnoredWhitespace(((ConfigNodeSingleToken) children.get(i)).token()) &&
-                        i + 1 < children.size() && (children.get(i+1) instanceof ConfigNodeField ||
-                        children.get(i+1) instanceof ConfigNodeInclude)) {
+                if (children().get(i) instanceof ConfigNodeSingleToken &&
+                        Tokens.isIgnoredWhitespace(((ConfigNodeSingleToken) children().get(i)).token()) &&
+                        i + 1 < children().size() && (children().get(i+1) instanceof ConfigNodeField ||
+                        children().get(i+1) instanceof ConfigNodeInclude)) {
                     // Return the indentation of the first setting on its own line
-                    indentation.add(children.get(i));
+                    indentation.add(children().get(i));
                     return indentation;
                 }
             }
@@ -146,9 +146,9 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
             indentation.add(new ConfigNodeSingleToken(Tokens.newIgnoredWhitespace(null, " ")));
         } else {
             // Calculate the indentation of the ending curly-brace to get the indentation of the root object
-            AbstractConfigNode last = children.get(children.size() - 1);
+            AbstractConfigNode last = children().get(children().size() - 1);
             if (last instanceof ConfigNodeSingleToken && ((ConfigNodeSingleToken) last).token() == Tokens.CLOSE_CURLY()) {
-                AbstractConfigNode beforeLast = children.get(children.size() - 2);
+                AbstractConfigNode beforeLast = children().get(children().size() - 2);
                 String indent = "";
                 if (beforeLast instanceof ConfigNodeSingleToken &&
                         Tokens.isIgnoredWhitespace(((ConfigNodeSingleToken) beforeLast).token()))
@@ -165,7 +165,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
 
     protected ConfigNodeObject addValueOnPath(ConfigNodePath desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
         Path path = desiredPath.value();
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children());
         ArrayList<AbstractConfigNode> indentation = new ArrayList<AbstractConfigNode>(indentation());
 
         // If the value we're inserting is a complex value, we'll need to indent it for insertion
@@ -180,11 +180,11 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
 
         // If the path is of length greater than one, see if the value needs to be added further down
         if (path.length() > 1) {
-            for (int i = super.children.size() - 1; i >= 0; i--) {
-                if (!(super.children.get(i) instanceof ConfigNodeField)) {
+            for (int i = super.children().size() - 1; i >= 0; i--) {
+                if (!(super.children().get(i) instanceof ConfigNodeField)) {
                     continue;
                 }
-                ConfigNodeField node = (ConfigNodeField) super.children.get(i);
+                ConfigNodeField node = (ConfigNodeField) super.children().get(i);
                 Path key = node.path().value();
                 if (path.startsWith(key) && node.value() instanceof ConfigNodeObject) {
                     ConfigNodePath remainingPath = desiredPath.subPath(key.length());
@@ -196,8 +196,8 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         }
 
         // Otherwise, construct the new setting
-        boolean startsWithBrace = !super.children.isEmpty() && super.children.get(0) instanceof ConfigNodeSingleToken &&
-                ((ConfigNodeSingleToken) super.children.get(0)).token() == Tokens.OPEN_CURLY();
+        boolean startsWithBrace = !super.children().isEmpty() && super.children().get(0) instanceof ConfigNodeSingleToken &&
+                ((ConfigNodeSingleToken) super.children().get(0)).token() == Tokens.OPEN_CURLY();
         ArrayList<AbstractConfigNode> newNodes = new ArrayList<AbstractConfigNode>();
         newNodes.addAll(indentation);
         newNodes.add(desiredPath.first());

@@ -8,7 +8,7 @@ final class ConfigNodeArray extends ConfigNodeComplexValue {
     }
 
     @Override
-    protected ConfigNodeArray newNode(Collection<AbstractConfigNode> nodes) {
+    public ConfigNodeArray newNode(Collection<AbstractConfigNode> nodes) {
         return new ConfigNodeArray(nodes);
     }
 }

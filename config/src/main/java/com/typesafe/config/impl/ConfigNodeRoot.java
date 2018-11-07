@@ -16,12 +16,12 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
     }
 
     @Override
-    protected ConfigNodeRoot newNode(Collection<AbstractConfigNode> nodes) {
+    public ConfigNodeRoot newNode(Collection<AbstractConfigNode> nodes) {
         throw new ConfigException.BugOrBroken("Tried to indent the root object");
     }
 
     protected ConfigNodeComplexValue value() {
-        for (AbstractConfigNode node : children) {
+        for (AbstractConfigNode node : children()) {
             if (node instanceof ConfigNodeComplexValue) {
                 return (ConfigNodeComplexValue)node;
             }
@@ -30,7 +30,7 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
     }
 
     protected ConfigNodeRoot setValue(String desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children());
         for (int i = 0; i < childrenCopy.size(); i++) {
             AbstractConfigNode node = childrenCopy.get(i);
             if (node instanceof ConfigNodeComplexValue) {
@@ -51,7 +51,7 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
 
     protected boolean hasValue(String desiredPath) {
         Path path = PathParser.parsePath(desiredPath);
-        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
+        ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children());
         for (int i = 0; i < childrenCopy.size(); i++) {
             AbstractConfigNode node = childrenCopy.get(i);
             if (node instanceof ConfigNodeComplexValue) {
