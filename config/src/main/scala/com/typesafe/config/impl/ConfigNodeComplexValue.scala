@@ -18,7 +18,7 @@ abstract class ConfigNodeComplexValue(
         }
         tokens
     }
-    protected def indentText(indentation: AbstractConfigNode): ConfigNodeComplexValue = {
+    private[impl] def indentText(indentation: AbstractConfigNode): ConfigNodeComplexValue = {
         val childrenCopy =
             new ju.ArrayList[AbstractConfigNode](children)
         var i = 0

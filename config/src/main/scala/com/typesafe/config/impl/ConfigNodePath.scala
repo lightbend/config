@@ -11,7 +11,7 @@ final class ConfigNodePath private[impl] (
     tokensArg: ju.Collection[Token])
     extends AbstractConfigNode {
     override def tokens(): ju.Collection[Token] = tokensArg
-    protected def value: Path = path
+    private[impl] def value: Path = path
     private[impl] def subPath(toRemove: Int): ConfigNodePath = {
         var periodCount = 0
         val tokensCopy = new ju.ArrayList[Token](tokensArg)
@@ -30,7 +30,7 @@ final class ConfigNodePath private[impl] (
         throw new ConfigException.BugOrBroken(
             "Tried to remove too many elements from a Path node")
     }
-    protected def first: ConfigNodePath = {
+    private[impl] def first: ConfigNodePath = {
         val tokensCopy = new ju.ArrayList[Token](tokens)
         var i = 0
         while ({ i < tokensCopy.size }) {
