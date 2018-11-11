@@ -199,12 +199,12 @@ final class PropertiesParser {
                     .get(parentPath) : root;
 
             AbstractConfigObject o = new SimpleConfigObject(origin, scope,
-                    ResolveStatus.RESOLVED, false /* ignoresFallbacks */);
+                    ResolveStatus.RESOLVED(), false /* ignoresFallbacks */);
             parent.put(scopePath.last(), o);
         }
 
         // return root config object
-        return new SimpleConfigObject(origin, root, ResolveStatus.RESOLVED,
+        return new SimpleConfigObject(origin, root, ResolveStatus.RESOLVED(),
                 false /* ignoresFallbacks */);
     }
 }

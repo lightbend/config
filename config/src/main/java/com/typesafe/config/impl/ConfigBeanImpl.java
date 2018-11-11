@@ -41,7 +41,7 @@ public class ConfigBeanImpl {
      * @return the bean instance
      */
     public static <T> T createInternal(Config config, Class<T> clazz) {
-        if (((SimpleConfig)config).root().resolveStatus() != ResolveStatus.RESOLVED)
+        if (((SimpleConfig)config).root().resolveStatus() != ResolveStatus.RESOLVED())
             throw new ConfigException.NotResolved(
                     "need to Config#resolve() a config before using it to initialize a bean, see the API docs for Config#resolve()");
 

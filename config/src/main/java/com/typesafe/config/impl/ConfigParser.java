@@ -193,7 +193,7 @@ final class ConfigParser {
             // we really should make this work, but for now throwing an
             // exception is better than producing an incorrect result.
             // See https://github.com/lightbend/config/issues/160
-            if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
+            if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED())
                 throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
                         + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
                         + "remove the ${} statements from the included file.");

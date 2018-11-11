@@ -39,7 +39,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             throw new ConfigException.BugOrBroken(
                     "creating config object with null map");
         this.value = value;
-        this.resolved = status == ResolveStatus.RESOLVED;
+        this.resolved = status == ResolveStatus.RESOLVED();
         this.ignoresFallbacks = ignoresFallbacks;
 
         // Kind of an expensive debug check. Comment out?
@@ -96,7 +96,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         SimpleConfigObject o = withOnlyPathOrNull(path);
         if (o == null) {
             return new SimpleConfigObject(origin(),
-                    Collections.<String, AbstractConfigValue> emptyMap(), ResolveStatus.RESOLVED,
+                    Collections.<String, AbstractConfigValue> emptyMap(), ResolveStatus.RESOLVED(),
                     ignoresFallbacks);
         } else {
             return o;
@@ -277,7 +277,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             if (first != kept)
                 changed = true;
 
-            if (kept.resolveStatus() == ResolveStatus.UNRESOLVED)
+            if (kept.resolveStatus() == ResolveStatus.UNRESOLVED())
                 allResolved = false;
         }
 
@@ -326,7 +326,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                     AbstractConfigValue newValue = changes.get(k);
                     if (newValue != null) {
                         modified.put(k, newValue);
-                        if (newValue.resolveStatus() == ResolveStatus.UNRESOLVED)
+                        if (newValue.resolveStatus() == ResolveStatus.UNRESOLVED())
                             sawUnresolved = true;
                     } else {
                         // remove this child; don't put it in the new map.
@@ -334,12 +334,12 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 } else {
                     AbstractConfigValue newValue = value.get(k);
                     modified.put(k, newValue);
-                    if (newValue.resolveStatus() == ResolveStatus.UNRESOLVED)
+                    if (newValue.resolveStatus() == ResolveStatus.UNRESOLVED())
                         sawUnresolved = true;
                 }
             }
             return new SimpleConfigObject(origin(), modified,
-                    sawUnresolved ? ResolveStatus.UNRESOLVED : ResolveStatus.RESOLVED,
+                    sawUnresolved ? ResolveStatus.UNRESOLVED() : ResolveStatus.RESOLVED(),
                     ignoresFallbacks());
         }
     }
@@ -387,7 +387,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     @Override
     ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
-        if (resolveStatus() == ResolveStatus.RESOLVED)
+        if (resolveStatus() == ResolveStatus.RESOLVED())
             return ResolveResult.make(context, this);
 
         final ResolveSource sourceWithParent = source.pushParent(this);

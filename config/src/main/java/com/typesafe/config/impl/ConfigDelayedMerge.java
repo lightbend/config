@@ -180,7 +180,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
     @Override
     ResolveStatus resolveStatus() {
-        return ResolveStatus.UNRESOLVED;
+        return ResolveStatus.UNRESOLVED();
     }
 
     @Override

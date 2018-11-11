@@ -185,7 +185,7 @@ final class ResolveContext {
 
             ResolveContext withMemo = result.context;
 
-            if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
+            if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED()) {
                 // if the resolved object is fully resolved by resolving
                 // only the restrictToChildOrNull, then it can be cached
                 // under fullKey since the child we were restricted to

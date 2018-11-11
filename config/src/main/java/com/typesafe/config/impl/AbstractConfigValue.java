@@ -78,7 +78,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
     }
 
     ResolveStatus resolveStatus() {
-        return ResolveStatus.RESOLVED;
+        return ResolveStatus.RESOLVED();
     }
 
     protected static List<AbstractConfigValue> replaceChildInList(List<AbstractConfigValue> list,
@@ -164,7 +164,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
     protected boolean ignoresFallbacks() {
         // if we are not resolved, then somewhere in this value there's
         // a substitution that may need to look at the fallbacks.
-        return resolveStatus() == ResolveStatus.RESOLVED;
+        return resolveStatus() == ResolveStatus.RESOLVED();
     }
 
     protected AbstractConfigValue withFallbacksIgnored() {
@@ -227,7 +227,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
             AbstractConfigValue fallback) {
         requireNotIgnoringFallbacks();
 
-        if (resolveStatus() == ResolveStatus.RESOLVED) {
+        if (resolveStatus() == ResolveStatus.RESOLVED()) {
             // falling back to a non-object doesn't merge anything, and also
             // prohibits merging any objects that we fall back to later.
             // so we have to switch to ignoresFallbacks mode.

@@ -64,7 +64,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
 
     @Override
     ResolveStatus resolveStatus() {
-        return ResolveStatus.UNRESOLVED;
+        return ResolveStatus.UNRESOLVED();
     }
 
     @Override
@@ -293,7 +293,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
                         + "' has not been resolved and may turn out to contain or hide '" + key
                         + "'."
                         + " Be sure to Config#resolve() before using a config object.");
-            } else if (layer.resolveStatus() == ResolveStatus.UNRESOLVED) {
+            } else if (layer.resolveStatus() == ResolveStatus.UNRESOLVED()) {
                 // if the layer is not an object, and not a substitution or
                 // merge,
                 // then it's something that's unresolved because it _contains_

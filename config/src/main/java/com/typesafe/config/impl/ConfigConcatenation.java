@@ -232,7 +232,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
 
     @Override
     ResolveStatus resolveStatus() {
-        return ResolveStatus.UNRESOLVED;
+        return ResolveStatus.UNRESOLVED();
     }
 
     @Override

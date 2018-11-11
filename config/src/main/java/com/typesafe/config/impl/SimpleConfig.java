@@ -1087,7 +1087,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public boolean isResolved() {
-        return root().resolveStatus() == ResolveStatus.RESOLVED;
+        return root().resolveStatus() == ResolveStatus.RESOLVED();
     }
 
     // Scala method to satisfy compiler - delegate to Java method to be safe
@@ -1105,13 +1105,13 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         SimpleConfig ref = (SimpleConfig) reference;
 
         // unresolved reference config is a bug in the caller of checkValid
-        if (ref.root().resolveStatus() != ResolveStatus.RESOLVED)
+        if (ref.root().resolveStatus() != ResolveStatus.RESOLVED())
             throw new ConfigException.BugOrBroken(
                     "do not call checkValid() with an unresolved reference config, call Config#resolve(), see Config#resolve() API docs");
 
         // unresolved config under validation is a bug in something,
         // NotResolved is a more specific subclass of BugOrBroken
-        if (root().resolveStatus() != ResolveStatus.RESOLVED)
+        if (root().resolveStatus() != ResolveStatus.RESOLVED())
             throw new ConfigException.NotResolved(
                     "need to Config#resolve() each config before using it, see the API docs for Config#resolve()");
 

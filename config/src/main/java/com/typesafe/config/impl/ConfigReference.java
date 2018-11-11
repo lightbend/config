@@ -116,7 +116,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
 
     @Override
     ResolveStatus resolveStatus() {
-        return ResolveStatus.UNRESOLVED;
+        return ResolveStatus.UNRESOLVED();
     }
 
     // when you graft a substitution into another object,

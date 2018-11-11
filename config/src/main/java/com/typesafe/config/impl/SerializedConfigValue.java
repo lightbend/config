@@ -447,7 +447,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
 
     @Override
     public void writeExternal(ObjectOutput out) throws IOException {
-        if (((AbstractConfigValue) value).resolveStatus() != ResolveStatus.RESOLVED)
+        if (((AbstractConfigValue) value).resolveStatus() != ResolveStatus.RESOLVED())
             throw new NotSerializableException(
                     "tried to serialize a value with unresolved substitutions, need to Config#resolve() first, see API docs");
         FieldOut field = new FieldOut(SerializedField.ROOT_VALUE);

@@ -34,7 +34,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
             ResolveStatus status) {
         super(origin);
         this.value = value;
-        this.resolved = status == ResolveStatus.RESOLVED;
+        this.resolved = status == ResolveStatus.RESOLVED();
 
         // kind of an expensive debug check (makes this constructor pointless)
         if (status != ResolveStatus.fromValues(value))
@@ -155,7 +155,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
         } else {
             try {
                 ResolveModifier modifier = new ResolveModifier(context, source.pushParent(this));
-                SimpleConfigList value = modifyMayThrow(modifier, context.options().getAllowUnresolved() ? null : ResolveStatus.RESOLVED);
+                SimpleConfigList value = modifyMayThrow(modifier, context.options().getAllowUnresolved() ? null : ResolveStatus.RESOLVED());
                 return ResolveResult.make(modifier.context, value);
             } catch (NotPossibleToResolve e) {
                 throw e;

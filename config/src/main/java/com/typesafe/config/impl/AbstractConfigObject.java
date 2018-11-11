@@ -152,7 +152,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
                 firstOrigin = v.origin();
 
             if (v instanceof AbstractConfigObject
-                    && ((AbstractConfigObject) v).resolveStatus() == ResolveStatus.RESOLVED
+                    && ((AbstractConfigObject) v).resolveStatus() == ResolveStatus.RESOLVED()
                     && ((ConfigObject) v).isEmpty()) {
                 // don't include empty files or the .empty()
                 // config in the description, since they are
