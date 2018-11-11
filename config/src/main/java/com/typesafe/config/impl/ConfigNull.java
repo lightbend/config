@@ -28,7 +28,7 @@ final class ConfigNull extends AbstractConfigValue implements Serializable {
 
     @Override
     public ConfigValueType valueType() {
-        return ConfigValueType.NULL;
+        return ConfigValueType.NULL();
     }
 
     @Override

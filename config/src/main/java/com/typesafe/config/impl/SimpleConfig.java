@@ -99,7 +99,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     @Override
     public boolean hasPath(String pathExpression) {
         ConfigValue peeked = hasPathPeek(pathExpression);
-        return peeked != null && peeked.valueType() != ConfigValueType.NULL;
+        return peeked != null && peeked.valueType() != ConfigValueType.NULL();
     }
 
     @Override
@@ -139,7 +139,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     static private AbstractConfigValue throwIfNull(AbstractConfigValue v, ConfigValueType expected, Path originalPath) {
-        if (v.valueType() == ConfigValueType.NULL)
+        if (v.valueType() == ConfigValueType.NULL())
             throw new ConfigException.Null(v.origin(), originalPath.render(),
                     expected != null ? expected.name() : null);
         else
@@ -160,7 +160,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         if (expected != null)
             v = DefaultTransformer.transform(v, expected);
 
-        if (expected != null && (v.valueType() != expected && v.valueType() != ConfigValueType.NULL))
+        if (expected != null && (v.valueType() != expected && v.valueType() != ConfigValueType.NULL()))
             throw new ConfigException.WrongType(v.origin(), originalPath.render(), expected.name(),
                     v.valueType().name());
         else
@@ -176,7 +176,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 return findKeyOrNull(self, key, expected, originalPath);
             } else {
                 AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
-                        ConfigValueType.OBJECT,
+                        ConfigValueType.OBJECT(),
                         originalPath.subPath(0, originalPath.length() - next.length()));
                 assert (o != null); // missing was supposed to throw
                 return findOrNull(o, next, expected, originalPath);
@@ -212,17 +212,17 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     @Override
     public boolean getIsNull(String path) {
         AbstractConfigValue v = findOrNull(path, null);
-        return (v.valueType() == ConfigValueType.NULL);
+        return (v.valueType() == ConfigValueType.NULL());
     }
 
     @Override
     public boolean getBoolean(String path) {
-        ConfigValue v = find(path, ConfigValueType.BOOLEAN);
+        ConfigValue v = find(path, ConfigValueType.BOOLEAN());
         return (Boolean) v.unwrapped();
     }
 
     private ConfigNumber getConfigNumber(String path) {
-        ConfigValue v = find(path, ConfigValueType.NUMBER);
+        ConfigValue v = find(path, ConfigValueType.NUMBER());
         return (ConfigNumber) v;
     }
 
@@ -249,25 +249,25 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public String getString(String path) {
-        ConfigValue v = find(path, ConfigValueType.STRING);
+        ConfigValue v = find(path, ConfigValueType.STRING());
         return (String) v.unwrapped();
     }
 
     @Override
     public <T extends Enum<T>> T getEnum(Class<T> enumClass, String path) {
-        ConfigValue v = find(path, ConfigValueType.STRING);
+        ConfigValue v = find(path, ConfigValueType.STRING());
         return getEnumValue(path, enumClass, v);
     }
 
     @Override
     public ConfigList getList(String path) {
-        AbstractConfigValue v = find(path, ConfigValueType.LIST);
+        AbstractConfigValue v = find(path, ConfigValueType.LIST());
         return (ConfigList) v;
     }
 
     @Override
     public AbstractConfigObject getObject(String path) {
-        AbstractConfigObject obj = (AbstractConfigObject) find(path, ConfigValueType.OBJECT);
+        AbstractConfigObject obj = (AbstractConfigObject) find(path, ConfigValueType.OBJECT());
         return obj;
     }
 
@@ -288,7 +288,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         try {
             size = getLong(path);
         } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING);
+            ConfigValue v = find(path, ConfigValueType.STRING());
             size = parseBytes((String) v.unwrapped(),
                     v.origin(), path);
         }
@@ -314,7 +314,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public long getDuration(String path, TimeUnit unit) {
-        ConfigValue v = find(path, ConfigValueType.STRING);
+        ConfigValue v = find(path, ConfigValueType.STRING());
         long result = unit.convert(
                        parseDuration((String) v.unwrapped(), v.origin(), path),
                        TimeUnit.NANOSECONDS);
@@ -323,14 +323,14 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public Duration getDuration(String path) {
-        ConfigValue v = find(path, ConfigValueType.STRING);
+        ConfigValue v = find(path, ConfigValueType.STRING());
         long nanos = parseDuration((String) v.unwrapped(), v.origin(), path);
         return Duration.ofNanos(nanos);
     }
 
     @Override
     public Period getPeriod(String path){
-        ConfigValue v = find(path, ConfigValueType.STRING);
+        ConfigValue v = find(path, ConfigValueType.STRING());
         return parsePeriod((String) v.unwrapped(), v.origin(), path);
     }
 
@@ -365,18 +365,18 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public List<Boolean> getBooleanList(String path) {
-        return getHomogeneousUnwrappedList(path, ConfigValueType.BOOLEAN);
+        return getHomogeneousUnwrappedList(path, ConfigValueType.BOOLEAN());
     }
 
     @Override
     public List<Number> getNumberList(String path) {
-        return getHomogeneousUnwrappedList(path, ConfigValueType.NUMBER);
+        return getHomogeneousUnwrappedList(path, ConfigValueType.NUMBER());
     }
 
     @Override
     public List<Integer> getIntList(String path) {
         List<Integer> l = new ArrayList<Integer>();
-        List<AbstractConfigValue> numbers = getHomogeneousWrappedList(path, ConfigValueType.NUMBER);
+        List<AbstractConfigValue> numbers = getHomogeneousWrappedList(path, ConfigValueType.NUMBER());
         for (AbstractConfigValue v : numbers) {
             l.add(((ConfigNumber) v).intValueRangeChecked(path));
         }
@@ -405,12 +405,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public List<String> getStringList(String path) {
-        return getHomogeneousUnwrappedList(path, ConfigValueType.STRING);
+        return getHomogeneousUnwrappedList(path, ConfigValueType.STRING());
     }
 
     @Override
     public <T extends Enum<T>> List<T> getEnumList(Class<T> enumClass, String path) {
-        List<ConfigString> enumNames = getHomogeneousWrappedList(path, ConfigValueType.STRING);
+        List<ConfigString> enumNames = getHomogeneousWrappedList(path, ConfigValueType.STRING());
         List<T> enumList = new ArrayList<T>();
         for (ConfigString enumName : enumNames) {
             enumList.add(getEnumValue(path, enumClass, enumName));
@@ -459,7 +459,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public List<ConfigObject> getObjectList(String path) {
-        return getHomogeneousWrappedList(path, ConfigValueType.OBJECT);
+        return getHomogeneousWrappedList(path, ConfigValueType.OBJECT());
     }
 
     @Override
@@ -487,9 +487,9 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         List<Long> l = new ArrayList<Long>();
         List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
+            if (v.valueType() == ConfigValueType.NUMBER()) {
                 l.add(((Number) v.unwrapped()).longValue());
-            } else if (v.valueType() == ConfigValueType.STRING) {
+            } else if (v.valueType() == ConfigValueType.STRING()) {
                 String s = (String) v.unwrapped();
                 Long n = parseBytes(s, v.origin(), path);
                 l.add(n);
@@ -517,12 +517,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         List<Long> l = new ArrayList<Long>();
         List<? extends ConfigValue> list = getList(path);
         for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
+            if (v.valueType() == ConfigValueType.NUMBER()) {
                 Long n = unit.convert(
                            ((Number) v.unwrapped()).longValue(),
                            TimeUnit.MILLISECONDS);
                 l.add(n);
-            } else if (v.valueType() == ConfigValueType.STRING) {
+            } else if (v.valueType() == ConfigValueType.STRING()) {
                 String s = (String) v.unwrapped();
                 Long n = unit.convert(
                            parseDuration(s, v.origin(), path),
@@ -953,8 +953,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     private static boolean couldBeNull(AbstractConfigValue v) {
-        return DefaultTransformer.transform(v, ConfigValueType.NULL)
-                .valueType() == ConfigValueType.NULL;
+        return DefaultTransformer.transform(v, ConfigValueType.NULL())
+                .valueType() == ConfigValueType.NULL();
     }
 
     private static boolean haveCompatibleTypes(ConfigValue reference, AbstractConfigValue value) {
@@ -967,23 +967,23 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     }
 
     private static boolean haveCompatibleTypes(ConfigValueType referenceType, AbstractConfigValue value) {
-        if (referenceType == ConfigValueType.NULL || couldBeNull(value)) {
+        if (referenceType == ConfigValueType.NULL() || couldBeNull(value)) {
             // we allow any setting to be null
             return true;
-        } else if (referenceType == ConfigValueType.OBJECT) {
+        } else if (referenceType == ConfigValueType.OBJECT()) {
             if (value instanceof AbstractConfigObject) {
                 return true;
             } else {
                 return false;
             }
-        } else if (referenceType == ConfigValueType.LIST) {
+        } else if (referenceType == ConfigValueType.LIST()) {
             // objects may be convertible to lists if they have numeric keys
             if (value instanceof SimpleConfigList || value instanceof SimpleConfigObject) {
                 return true;
             } else {
                 return false;
             }
-        } else if (referenceType == ConfigValueType.STRING) {
+        } else if (referenceType == ConfigValueType.STRING()) {
             // assume a string could be gotten as any non-collection type;
             // allows things like getMilliseconds including domain-specific
             // interpretations of strings
@@ -1045,10 +1045,10 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     static void checkValid(Path path, ConfigValueType referenceType, AbstractConfigValue value,
             List<ConfigException.ValidationProblem> accumulator) {
         if (haveCompatibleTypes(referenceType, value)) {
-            if (referenceType == ConfigValueType.LIST && value instanceof SimpleConfigObject) {
+            if (referenceType == ConfigValueType.LIST() && value instanceof SimpleConfigObject) {
                 // attempt conversion of indexed object to list
                 AbstractConfigValue listValue = DefaultTransformer.transform(value,
-                        ConfigValueType.LIST);
+                        ConfigValueType.LIST());
                 if (!(listValue instanceof SimpleConfigList))
                     addWrongType(accumulator, referenceType, value, path);
             }
@@ -1074,7 +1074,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 // attempt conversion of indexed object to list
                 SimpleConfigList listRef = (SimpleConfigList) reference;
                 AbstractConfigValue listValue = DefaultTransformer.transform(value,
-                        ConfigValueType.LIST);
+                        ConfigValueType.LIST());
                 if (listValue instanceof SimpleConfigList)
                     checkListCompatibility(path, listRef, (SimpleConfigList) listValue, accumulator);
                 else

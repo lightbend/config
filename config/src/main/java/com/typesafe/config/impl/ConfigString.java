@@ -65,7 +65,7 @@ abstract class ConfigString extends AbstractConfigValue implements Serializable 
 
     @Override
     public ConfigValueType valueType() {
-        return ConfigValueType.STRING;
+        return ConfigValueType.STRING();
     }
 
     @Override

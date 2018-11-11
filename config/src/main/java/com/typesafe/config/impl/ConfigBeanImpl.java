@@ -238,29 +238,29 @@ public class ConfigBeanImpl {
     // null if we can't easily say; this is heuristic/best-effort
     private static ConfigValueType getValueTypeOrNull(Class<?> parameterClass) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
-            return ConfigValueType.BOOLEAN;
+            return ConfigValueType.BOOLEAN();
         } else if (parameterClass == Integer.class || parameterClass == int.class) {
-            return ConfigValueType.NUMBER;
+            return ConfigValueType.NUMBER();
         } else if (parameterClass == Double.class || parameterClass == double.class) {
-            return ConfigValueType.NUMBER;
+            return ConfigValueType.NUMBER();
         } else if (parameterClass == Long.class || parameterClass == long.class) {
-            return ConfigValueType.NUMBER;
+            return ConfigValueType.NUMBER();
         } else if (parameterClass == String.class) {
-            return ConfigValueType.STRING;
+            return ConfigValueType.STRING();
         } else if (parameterClass == Duration.class) {
             return null;
         } else if (parameterClass == ConfigMemorySize.class) {
             return null;
         } else if (parameterClass == List.class) {
-            return ConfigValueType.LIST;
+            return ConfigValueType.LIST();
         } else if (parameterClass == Map.class) {
-            return ConfigValueType.OBJECT;
+            return ConfigValueType.OBJECT();
         } else if (parameterClass == Config.class) {
-            return ConfigValueType.OBJECT;
+            return ConfigValueType.OBJECT();
         } else if (parameterClass == ConfigObject.class) {
-            return ConfigValueType.OBJECT;
+            return ConfigValueType.OBJECT();
         } else if (parameterClass == ConfigList.class) {
-            return ConfigValueType.LIST;
+            return ConfigValueType.LIST();
         } else {
             return null;
         }

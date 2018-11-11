@@ -115,7 +115,7 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
 
     @Override
     public ConfigValueType valueType() {
-        return ConfigValueType.OBJECT;
+        return ConfigValueType.OBJECT();
     }
 
     protected abstract AbstractConfigObject newCopy(ResolveStatus status, ConfigOrigin origin);

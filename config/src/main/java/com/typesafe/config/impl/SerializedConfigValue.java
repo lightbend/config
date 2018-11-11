@@ -81,14 +81,14 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
 
     private static enum SerializedValueType {
         // the ordinals here are in the wire format, caution
-        NULL(ConfigValueType.NULL),
-        BOOLEAN(ConfigValueType.BOOLEAN),
-        INT(ConfigValueType.NUMBER),
-        LONG(ConfigValueType.NUMBER),
-        DOUBLE(ConfigValueType.NUMBER),
-        STRING(ConfigValueType.STRING),
-        LIST(ConfigValueType.LIST),
-        OBJECT(ConfigValueType.OBJECT);
+        NULL(ConfigValueType.NULL()),
+        BOOLEAN(ConfigValueType.BOOLEAN()),
+        INT(ConfigValueType.NUMBER()),
+        LONG(ConfigValueType.NUMBER()),
+        DOUBLE(ConfigValueType.NUMBER()),
+        STRING(ConfigValueType.STRING()),
+        LIST(ConfigValueType.LIST()),
+        OBJECT(ConfigValueType.OBJECT());
 
         ConfigValueType configType;
 
@@ -105,7 +105,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
 
         static SerializedValueType forValue(ConfigValue value) {
             ConfigValueType t = value.valueType();
-            if (t == ConfigValueType.NUMBER) {
+            if (t == ConfigValueType.NUMBER()) {
                 if (value instanceof ConfigInt)
                     return INT;
                 else if (value instanceof ConfigLong)

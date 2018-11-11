@@ -44,7 +44,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
 
     @Override
     public ConfigValueType valueType() {
-        return ConfigValueType.LIST;
+        return ConfigValueType.LIST();
     }
 
     @Override

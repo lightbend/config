@@ -18,10 +18,10 @@ final class DefaultTransformer {
 
     static AbstractConfigValue transform(AbstractConfigValue value,
             ConfigValueType requested) {
-        if (value.valueType() == ConfigValueType.STRING) {
+        if (value.valueType() == ConfigValueType.STRING()) {
             String s = (String) value.unwrapped();
-            switch (requested) {
-            case NUMBER:
+            switch (requested.name()) {
+            case "NUMBER":
                 try {
                     Long v = Long.parseLong(s);
                     return new ConfigLong(value.origin(), v, s);
@@ -35,11 +35,11 @@ final class DefaultTransformer {
                     // oh well.
                 }
                 break;
-            case NULL:
+            case "NULL":
                 if (s.equals("null"))
                     return new ConfigNull(value.origin());
                 break;
-            case BOOLEAN:
+            case "BOOLEAN":
                 if (s.equals("true") || s.equals("yes") || s.equals("on")) {
                     return new ConfigBoolean(value.origin(), true);
                 } else if (s.equals("false") || s.equals("no")
@@ -47,40 +47,40 @@ final class DefaultTransformer {
                     return new ConfigBoolean(value.origin(), false);
                 }
                 break;
-            case LIST:
+            case "LIST":
                 // can't go STRING to LIST automatically
                 break;
-            case OBJECT:
+            case "OBJECT":
                 // can't go STRING to OBJECT automatically
                 break;
-            case STRING:
+            case "STRING":
                 // no-op STRING to STRING
                 break;
             }
-        } else if (requested == ConfigValueType.STRING) {
+        } else if (requested == ConfigValueType.STRING()) {
             // if we converted null to string here, then you wouldn't properly
             // get a missing-value error if you tried to get a null value
             // as a string.
-            switch (value.valueType()) {
-            case NUMBER: // FALL THROUGH
-            case BOOLEAN:
+            switch (value.valueType().name()) {
+            case "NUMBER": // FALL THROUGH
+            case "BOOLEAN":
                 return new ConfigString.Quoted(value.origin(),
                         value.transformToString());
-            case NULL:
+            case "NULL":
                 // want to be sure this throws instead of returning "null" as a
                 // string
                 break;
-            case OBJECT:
+            case "OBJECT":
                 // no OBJECT to STRING automatically
                 break;
-            case LIST:
+            case "LIST":
                 // no LIST to STRING automatically
                 break;
-            case STRING:
+            case "STRING":
                 // no-op STRING to STRING
                 break;
             }
-        } else if (requested == ConfigValueType.LIST && value.valueType() == ConfigValueType.OBJECT) {
+        } else if (requested == ConfigValueType.LIST() && value.valueType() == ConfigValueType.OBJECT()) {
             // attempt to convert an array-like (numeric indices) object to a
             // list. This would be used with .properties syntax for example:
             // -Dfoo.0=bar -Dfoo.1=baz

@@ -22,7 +22,7 @@ final class ConfigDouble extends ConfigNumber implements Serializable {
 
     @Override
     public ConfigValueType valueType() {
-        return ConfigValueType.NUMBER;
+        return ConfigValueType.NUMBER();
     }
 
     @Override

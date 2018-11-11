@@ -95,9 +95,9 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         // check for an object which can be converted to a list
         // (this will be an object with numeric keys, like foo.0, foo.1)
         if (left instanceof ConfigObject && right instanceof SimpleConfigList) {
-            left = DefaultTransformer.transform(left, ConfigValueType.LIST);
+            left = DefaultTransformer.transform(left, ConfigValueType.LIST());
         } else if (left instanceof SimpleConfigList && right instanceof ConfigObject) {
-            right = DefaultTransformer.transform(right, ConfigValueType.LIST);
+            right = DefaultTransformer.transform(right, ConfigValueType.LIST());
         }
 
         // Since this depends on the type of two instances, I couldn't think

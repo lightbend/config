@@ -260,7 +260,7 @@ final class ConfigDocumentParser {
 
         private ConfigNodePath parseKey(Token token) {
             if (flavor == ConfigSyntax.JSON()) {
-                if (Tokens.isValueWithType(token, ConfigValueType.STRING)) {
+                if (Tokens.isValueWithType(token, ConfigValueType.STRING())) {
                     return PathParser.parsePathNodeExpression(Collections.singletonList(token).iterator(),
                                                               baseOrigin.withLineNumber(lineNumber));
                 } else {
@@ -387,7 +387,7 @@ final class ConfigDocumentParser {
                 t = nextTokenCollectingWhitespace(children);
 
                 // quoted string
-                if (!Tokens.isValueWithType(t, ConfigValueType.STRING)) {
+                if (!Tokens.isValueWithType(t, ConfigValueType.STRING())) {
                     throw parseError("expecting include " + prefix + ") parameter to be a quoted string, rather than: " + t);
                 }
                 children.add(new ConfigNodeSimpleValue(t));
@@ -405,7 +405,7 @@ final class ConfigDocumentParser {
                 }
 
                 return new ConfigNodeInclude(children, kind, isRequired);
-            } else if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
+            } else if (Tokens.isValueWithType(t, ConfigValueType.STRING())) {
                 children.add(new ConfigNodeSimpleValue(t));
                 return new ConfigNodeInclude(children, ConfigIncludeKind.HEURISTIC, isRequired);
             } else {

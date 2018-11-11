@@ -110,7 +110,7 @@ final class PathParser {
             if (Tokens.isIgnoredWhitespace(t))
                 continue;
 
-            if (Tokens.isValueWithType(t, ConfigValueType.STRING)) {
+            if (Tokens.isValueWithType(t, ConfigValueType.STRING())) {
                 AbstractConfigValue v = Tokens.getValue(t);
                 // this is a quoted string; so any periods
                 // in here don't count as path separators

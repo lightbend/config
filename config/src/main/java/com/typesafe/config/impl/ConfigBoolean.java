@@ -22,7 +22,7 @@ final class ConfigBoolean extends AbstractConfigValue implements Serializable {
 
     @Override
     public ConfigValueType valueType() {
-        return ConfigValueType.BOOLEAN;
+        return ConfigValueType.BOOLEAN();
     }
 
     @Override
