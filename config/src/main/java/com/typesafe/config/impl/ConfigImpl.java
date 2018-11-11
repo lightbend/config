@@ -191,14 +191,14 @@ public class ConfigImpl {
 
     public static ConfigValue fromAnyRef(Object object, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
-        return fromAnyRef(object, origin, FromMapMode.KEYS_ARE_KEYS);
+        return fromAnyRef(object, origin, FromMapMode.KEYS_ARE_KEYS());
     }
 
     public static ConfigObject fromPathMap(
             Map<String, ? extends Object> pathMap, String originDescription) {
         ConfigOrigin origin = valueOrigin(originDescription);
         return (ConfigObject) fromAnyRef(pathMap, origin,
-                FromMapMode.KEYS_ARE_PATHS);
+                FromMapMode.KEYS_ARE_PATHS());
     }
 
     static AbstractConfigValue fromAnyRef(Object object, ConfigOrigin origin,
@@ -246,7 +246,7 @@ public class ConfigImpl {
             if (((Map<?, ?>) object).isEmpty())
                 return emptyObject(origin);
 
-            if (mapMode == FromMapMode.KEYS_ARE_KEYS) {
+            if (mapMode == FromMapMode.KEYS_ARE_KEYS()) {
                 Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
                 for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
                     Object key = entry.getKey();

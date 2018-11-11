@@ -163,7 +163,7 @@ final class PropertiesParser {
                 }
             } else {
                 value = ConfigImpl.fromAnyRef(pathMap.get(path), origin,
-                        FromMapMode.KEYS_ARE_PATHS);
+                        FromMapMode.KEYS_ARE_PATHS());
             }
             if (value != null)
                 parent.put(last, value);
