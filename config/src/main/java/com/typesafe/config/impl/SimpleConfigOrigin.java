@@ -45,7 +45,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
     }
 
     static SimpleConfigOrigin newSimple(String description) {
-        return new SimpleConfigOrigin(description, -1, -1, OriginType.GENERIC, null, null, null);
+        return new SimpleConfigOrigin(description, -1, -1, OriginType.GENERIC(), null, null, null);
     }
 
     static SimpleConfigOrigin newFile(String filename) {
@@ -55,12 +55,12 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         } catch (MalformedURLException e) {
             url = null;
         }
-        return new SimpleConfigOrigin(filename, -1, -1, OriginType.FILE, url, null, null);
+        return new SimpleConfigOrigin(filename, -1, -1, OriginType.FILE(), url, null, null);
     }
 
     static SimpleConfigOrigin newURL(URL url) {
         String u = url.toExternalForm();
-        return new SimpleConfigOrigin(u, -1, -1, OriginType.URL, u, null, null);
+        return new SimpleConfigOrigin(u, -1, -1, OriginType.URL(), u, null, null);
     }
 
     static SimpleConfigOrigin newResource(String resource, URL url) {
@@ -69,7 +69,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
             desc = resource + " @ " + url.toExternalForm();
         else
             desc = resource;
-        return new SimpleConfigOrigin(desc, -1, -1, OriginType.RESOURCE, url != null ? url.toExternalForm() : null,
+        return new SimpleConfigOrigin(desc, -1, -1, OriginType.RESOURCE(), url != null ? url.toExternalForm() : null,
                 resource, null);
     }
 
@@ -173,7 +173,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
 
     @Override
     public String filename() {
-        if (originType == OriginType.FILE) {
+        if (originType == OriginType.FILE()) {
             return description;
         } else if (urlOrNull != null) {
             URL url;
@@ -236,7 +236,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         if (a.originType == b.originType) {
             mergedType = a.originType;
         } else {
-            mergedType = OriginType.GENERIC;
+            mergedType = OriginType.GENERIC();
         }
 
         // first use the "description" field which has no line numbers
@@ -491,7 +491,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         List<String> commentsOrNull = (List<String>) m.get(SerializedField.ORIGIN_COMMENTS);
         // Older versions did not have a resource field, they stuffed it into
         // the description.
-        if (originType == OriginType.RESOURCE && resourceOrNull == null) {
+        if (originType == OriginType.RESOURCE() && resourceOrNull == null) {
             resourceOrNull = description;
         }
         return new SimpleConfigOrigin(description, lineNumber != null ? lineNumber : -1,
