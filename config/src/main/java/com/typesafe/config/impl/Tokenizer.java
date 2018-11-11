@@ -49,7 +49,7 @@ final class Tokenizer {
      * that after you're done with the returned iterator.
      */
     static Iterator<Token> tokenize(ConfigOrigin origin, Reader input, ConfigSyntax flavor) {
-        return new TokenIterator(origin, input, flavor != ConfigSyntax.JSON);
+        return new TokenIterator(origin, input, flavor != ConfigSyntax.JSON());
     }
 
     static String render(Iterator<Token> tokens) {

@@ -45,7 +45,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
             if (childrenCopy.get(i) instanceof ConfigNodeSingleToken) {
                 Token t = ((ConfigNodeSingleToken) childrenCopy.get(i)).token();
                 // Ensure that, when we are removing settings in JSON, we don't end up with a trailing comma
-                if (flavor == ConfigSyntax.JSON && !seenNonMatching && t == Tokens.COMMA()) {
+                if (flavor == ConfigSyntax.JSON() && !seenNonMatching && t == Tokens.COMMA()) {
                     childrenCopy.remove(i);
                 }
                 continue;
@@ -100,7 +100,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
     }
 
     public ConfigNodeObject setValueOnPath(String desiredPath, AbstractConfigNodeValue value) {
-        return setValueOnPath(desiredPath, value, ConfigSyntax.CONF);
+        return setValueOnPath(desiredPath, value, ConfigSyntax.CONF());
     }
 
     public ConfigNodeObject setValueOnPath(String desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
@@ -221,12 +221,12 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         }
 
         // Combine these two cases so that we only have to iterate once
-        if (flavor == ConfigSyntax.JSON || startsWithBrace || sameLine) {
+        if (flavor == ConfigSyntax.JSON() || startsWithBrace || sameLine) {
             for (int i = childrenCopy.size() - 1; i >= 0; i--) {
 
                 // If we are in JSON or are adding a setting on the same line, we need to add a comma to the
                 // last setting
-                if ((flavor == ConfigSyntax.JSON || sameLine) && childrenCopy.get(i) instanceof ConfigNodeField) {
+                if ((flavor == ConfigSyntax.JSON() || sameLine) && childrenCopy.get(i) instanceof ConfigNodeField) {
                     if (i+1 >= childrenCopy.size() ||
                             !(childrenCopy.get(i+1) instanceof ConfigNodeSingleToken
                                     && ((ConfigNodeSingleToken) childrenCopy.get(i+1)).token() == Tokens.COMMA()))

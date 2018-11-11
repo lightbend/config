@@ -31,7 +31,7 @@ final class PathParser {
     static ConfigOrigin apiOrigin = SimpleConfigOrigin.newSimple("path parameter");
 
     static ConfigNodePath parsePathNode(String path) {
-        return parsePathNode(path, ConfigSyntax.CONF);
+        return parsePathNode(path, ConfigSyntax.CONF());
     }
 
     static ConfigNodePath parsePathNode(String path, ConfigSyntax flavor) {
@@ -56,7 +56,7 @@ final class PathParser {
 
         try {
             Iterator<Token> tokens = Tokenizer.tokenize(apiOrigin, reader,
-                    ConfigSyntax.CONF);
+                    ConfigSyntax.CONF());
             tokens.next(); // drop START
             return parsePathExpression(tokens, apiOrigin, path);
         } finally {
@@ -66,17 +66,17 @@ final class PathParser {
 
     protected static Path parsePathExpression(Iterator<Token> expression,
                                             ConfigOrigin origin) {
-        return parsePathExpression(expression, origin, null, null, ConfigSyntax.CONF);
+        return parsePathExpression(expression, origin, null, null, ConfigSyntax.CONF());
     }
 
     protected static Path parsePathExpression(Iterator<Token> expression,
                                               ConfigOrigin origin, String originalText) {
-        return parsePathExpression(expression, origin, originalText, null, ConfigSyntax.CONF);
+        return parsePathExpression(expression, origin, originalText, null, ConfigSyntax.CONF());
     }
 
     protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
                                                             ConfigOrigin origin) {
-        return parsePathNodeExpression(expression, origin, null, ConfigSyntax.CONF);
+        return parsePathNodeExpression(expression, origin, null, ConfigSyntax.CONF());
     }
 
     protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
@@ -187,7 +187,7 @@ final class PathParser {
         String[] splitToken = tokenText.split("\\.");
         ArrayList<Token> splitTokens = new ArrayList<Token>();
         for (String s : splitToken) {
-            if (flavor == ConfigSyntax.CONF)
+            if (flavor == ConfigSyntax.CONF())
                 splitTokens.add(Tokens.newUnquotedText(t.origin(), s));
             else
                 splitTokens.add(Tokens.newString(t.origin(), s, "\"" + s + "\""));

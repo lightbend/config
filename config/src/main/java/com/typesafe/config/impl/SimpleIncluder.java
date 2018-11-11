@@ -180,20 +180,20 @@ class SimpleIncluder implements FullIncluder {
             ConfigSyntax syntax = options.getSyntax();
 
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
-            if (syntax == null || syntax == ConfigSyntax.CONF) {
+            if (syntax == null || syntax == ConfigSyntax.CONF()) {
                 try {
                     obj = confHandle.parse(confHandle.options().setAllowMissing(false)
-                            .setSyntax(ConfigSyntax.CONF));
+                            .setSyntax(ConfigSyntax.CONF()));
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
                     fails.add(e);
                 }
             }
 
-            if (syntax == null || syntax == ConfigSyntax.JSON) {
+            if (syntax == null || syntax == ConfigSyntax.JSON()) {
                 try {
                     ConfigObject parsed = jsonHandle.parse(jsonHandle.options()
-                            .setAllowMissing(false).setSyntax(ConfigSyntax.JSON));
+                            .setAllowMissing(false).setSyntax(ConfigSyntax.JSON()));
                     obj = obj.withFallback(parsed);
                     gotSomething = true;
                 } catch (ConfigException.IO e) {
@@ -201,10 +201,10 @@ class SimpleIncluder implements FullIncluder {
                 }
             }
 
-            if (syntax == null || syntax == ConfigSyntax.PROPERTIES) {
+            if (syntax == null || syntax == ConfigSyntax.PROPERTIES()) {
                 try {
                     ConfigObject parsed = propsHandle.parse(propsHandle.options()
-                            .setAllowMissing(false).setSyntax(ConfigSyntax.PROPERTIES));
+                            .setAllowMissing(false).setSyntax(ConfigSyntax.PROPERTIES()));
                     obj = obj.withFallback(parsed);
                     gotSomething = true;
                 } catch (ConfigException.IO e) {

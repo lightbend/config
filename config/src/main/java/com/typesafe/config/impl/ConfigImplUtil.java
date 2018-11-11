@@ -252,11 +252,11 @@ final public class ConfigImplUtil {
         if (filename == null)
             return null;
         else if (filename.endsWith(".json"))
-            return ConfigSyntax.JSON;
+            return ConfigSyntax.JSON();
         else if (filename.endsWith(".conf"))
-            return ConfigSyntax.CONF;
+            return ConfigSyntax.CONF();
         else if (filename.endsWith(".properties"))
-            return ConfigSyntax.PROPERTIES;
+            return ConfigSyntax.PROPERTIES();
         else
             return null;
     }

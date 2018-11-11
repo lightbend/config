@@ -9,13 +9,13 @@ import com.typesafe.config.*;
 
 final class ConfigDocumentParser {
     static ConfigNodeRoot parse(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
-        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF() : options.getSyntax();
         ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parse();
     }
 
     static AbstractConfigNodeValue parseValue(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
-        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF() : options.getSyntax();
         ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parseSingleValue();
     }
@@ -49,7 +49,7 @@ final class ConfigDocumentParser {
 
         private Token nextToken() {
             Token t = popToken();
-            if (flavor == ConfigSyntax.JSON) {
+            if (flavor == ConfigSyntax.JSON()) {
                 if (Tokens.isUnquotedText(t) && !isUnquotedWhitespace(t)) {
                     throw parseError("Token not allowed in valid JSON: '"
                             + Tokens.getUnquotedText(t) + "'");
@@ -90,7 +90,7 @@ final class ConfigDocumentParser {
         // either a newline or a comma. The iterator
         // is left just after the comma or the newline.
         private boolean checkElementSeparator(Collection<AbstractConfigNode> nodes) {
-            if (flavor == ConfigSyntax.JSON) {
+            if (flavor == ConfigSyntax.JSON()) {
                 Token t = nextTokenCollectingWhitespace(nodes);
                 if (t == Tokens.COMMA()) {
                     nodes.add(new ConfigNodeSingleToken(t));
@@ -129,7 +129,7 @@ final class ConfigDocumentParser {
         // parse a concatenation. If there is no concatenation, return the next value
         private AbstractConfigNodeValue consolidateValues(Collection<AbstractConfigNode> nodes) {
             // this trick is not done in JSON
-            if (flavor == ConfigSyntax.JSON)
+            if (flavor == ConfigSyntax.JSON())
                 return null;
 
             // create only if we have value tokens
@@ -259,7 +259,7 @@ final class ConfigDocumentParser {
         }
 
         private ConfigNodePath parseKey(Token token) {
-            if (flavor == ConfigSyntax.JSON) {
+            if (flavor == ConfigSyntax.JSON()) {
                 if (Tokens.isValueWithType(token, ConfigValueType.STRING)) {
                     return PathParser.parsePathNodeExpression(Collections.singletonList(token).iterator(),
                                                               baseOrigin.withLineNumber(lineNumber));
@@ -305,7 +305,7 @@ final class ConfigDocumentParser {
         }
 
         private boolean isKeyValueSeparatorToken(Token t) {
-            if (flavor == ConfigSyntax.JSON) {
+            if (flavor == ConfigSyntax.JSON()) {
                 return t == Tokens.COLON();
             } else {
                 return t == Tokens.COLON() || t == Tokens.EQUALS() || t == Tokens.PLUS_EQUALS();
@@ -427,7 +427,7 @@ final class ConfigDocumentParser {
             while (true) {
                 Token t = nextTokenCollectingWhitespace(objectNodes);
                 if (t == Tokens.CLOSE_CURLY()) {
-                    if (flavor == ConfigSyntax.JSON && afterComma) {
+                    if (flavor == ConfigSyntax.JSON() && afterComma) {
                         throw parseError(addQuoteSuggestion(t.toString(),
                                 "expecting a field name after a comma, got a close brace } instead"));
                     } else if (!hadOpenCurly) {
@@ -439,7 +439,7 @@ final class ConfigDocumentParser {
                 } else if (t == Tokens.END() && !hadOpenCurly) {
                     putBack(t);
                     break;
-                } else if (flavor != ConfigSyntax.JSON && isIncludeKeyword(t)) {
+                } else if (flavor != ConfigSyntax.JSON() && isIncludeKeyword(t)) {
                     ArrayList<AbstractConfigNode> includeNodes = new ArrayList<AbstractConfigNode>();
                     includeNodes.add(new ConfigNodeSingleToken(t));
                     objectNodes.add(parseInclude(includeNodes));
@@ -453,7 +453,7 @@ final class ConfigDocumentParser {
                     boolean insideEquals = false;
 
                     AbstractConfigNodeValue nextValue;
-                    if (flavor == ConfigSyntax.CONF && afterKey == Tokens.OPEN_CURLY()) {
+                    if (flavor == ConfigSyntax.CONF() && afterKey == Tokens.OPEN_CURLY()) {
                         // can omit the ':' or '=' before an object value
                         nextValue = parseValue(afterKey);
                     } else {
@@ -493,7 +493,7 @@ final class ConfigDocumentParser {
                             // if the value is an object (or substitution that
                             // could become an object).
 
-                            if (flavor == ConfigSyntax.JSON) {
+                            if (flavor == ConfigSyntax.JSON()) {
                                 throw parseError("JSON does not allow duplicate fields: '"
                                         + key
                                         + "' was already seen");
@@ -501,7 +501,7 @@ final class ConfigDocumentParser {
                         }
                         keys.put(key, true);
                     } else {
-                        if (flavor == ConfigSyntax.JSON) {
+                        if (flavor == ConfigSyntax.JSON()) {
                             throw new ConfigException.BugOrBroken(
                                     "somehow got multi-element path in JSON mode");
                         }
@@ -602,7 +602,7 @@ final class ConfigDocumentParser {
                             || Tokens.isSubstitution(t)) {
                         nextValue = parseValue(t);
                         children.add(nextValue);
-                    } else if (flavor != ConfigSyntax.JSON && t == Tokens.CLOSE_SQUARE()) {
+                    } else if (flavor != ConfigSyntax.JSON() && t == Tokens.CLOSE_SQUARE()) {
                         // we allow one trailing comma
                         putBack(t);
                     } else {
@@ -632,7 +632,7 @@ final class ConfigDocumentParser {
             if (t == Tokens.OPEN_CURLY() || t == Tokens.OPEN_SQUARE()) {
                 result = parseValue(t);
             } else {
-                if (flavor == ConfigSyntax.JSON) {
+                if (flavor == ConfigSyntax.JSON()) {
                     if (t == Tokens.END()) {
                         throw parseError("Empty document");
                     } else {
@@ -687,7 +687,7 @@ final class ConfigDocumentParser {
             if (t == Tokens.END()) {
                 throw parseError("Empty value");
             }
-            if (flavor == ConfigSyntax.JSON) {
+            if (flavor == ConfigSyntax.JSON()) {
                 AbstractConfigNodeValue node = parseValue(t);
                 t = nextToken();
                 if (t == Tokens.END()) {

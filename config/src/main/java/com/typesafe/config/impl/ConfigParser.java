@@ -56,7 +56,7 @@ final class ConfigParser {
         // value.
         private AbstractConfigValue parseConcatenation(ConfigNodeConcatenation n) {
             // this trick is not done in JSON
-            if (flavor == ConfigSyntax.JSON)
+            if (flavor == ConfigSyntax.JSON())
                 throw new ConfigException.BugOrBroken("Found a concatenation node in JSON");
 
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
@@ -233,7 +233,7 @@ final class ConfigParser {
                         comments.clear();
                     }
                     lastWasNewline = true;
-                } else if (flavor != ConfigSyntax.JSON && node instanceof ConfigNodeInclude) {
+                } else if (flavor != ConfigSyntax.JSON() && node instanceof ConfigNodeInclude) {
                     parseInclude(values, (ConfigNodeInclude)node);
                     lastWasNewline = false;
                 } else if (node instanceof ConfigNodeField) {
@@ -318,7 +318,7 @@ final class ConfigParser {
                             // if the value is an object (or substitution that
                             // could become an object).
 
-                            if (flavor == ConfigSyntax.JSON) {
+                            if (flavor == ConfigSyntax.JSON()) {
                                 throw parseError("JSON does not allow duplicate fields: '"
                                     + key
                                     + "' was already seen at "
@@ -329,7 +329,7 @@ final class ConfigParser {
                         }
                         values.put(key, newValue);
                     } else {
-                        if (flavor == ConfigSyntax.JSON) {
+                        if (flavor == ConfigSyntax.JSON()) {
                             throw new ConfigException.BugOrBroken(
                                     "somehow got multi-element path in JSON mode");
                         }
