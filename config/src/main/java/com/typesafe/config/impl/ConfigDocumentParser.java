@@ -364,13 +364,13 @@ final class ConfigDocumentParser {
                 String prefix;
 
                 if (kindText.startsWith("url(")) {
-                    kind = ConfigIncludeKind.URL;
+                    kind = ConfigIncludeKind.URL();
                     prefix = "url(";
                 } else if (kindText.startsWith("file(")) {
-                    kind = ConfigIncludeKind.FILE;
+                    kind = ConfigIncludeKind.FILE();
                     prefix = "file(";
                 } else if (kindText.startsWith("classpath(")) {
-                    kind = ConfigIncludeKind.CLASSPATH;
+                    kind = ConfigIncludeKind.CLASSPATH();
                     prefix = "classpath(";
                 } else {
                     throw parseError("expecting include parameter to be quoted filename, file(), classpath(), or url(). No spaces are allowed before the open paren. Not expecting: "
@@ -407,7 +407,7 @@ final class ConfigDocumentParser {
                 return new ConfigNodeInclude(children, kind, isRequired);
             } else if (Tokens.isValueWithType(t, ConfigValueType.STRING())) {
                 children.add(new ConfigNodeSimpleValue(t));
-                return new ConfigNodeInclude(children, ConfigIncludeKind.HEURISTIC, isRequired);
+                return new ConfigNodeInclude(children, ConfigIncludeKind.HEURISTIC(), isRequired);
             } else {
                 throw parseError("include keyword is not followed by a quoted string, but by: " + t);
             }

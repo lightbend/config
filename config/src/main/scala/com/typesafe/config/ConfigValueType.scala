@@ -1,14 +1,14 @@
 /**
  *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
-package com.typesafe.config;
+package com.typesafe.config
 
 /**
  * The type of a configuration value (following the <a
  * href="http://json.org">JSON</a> type schema).
  */
 class ConfigValueType private (name: String, ordinal: Int)
-    extends Enum[ConfigSyntax](name, ordinal)
+    extends Enum[ConfigValueType](name, ordinal)
 
 object ConfigValueType {
 

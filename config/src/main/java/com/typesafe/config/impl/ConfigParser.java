@@ -161,8 +161,8 @@ final class ConfigParser {
             ConfigIncludeContext cic = includeContext.setParseOptions(includeContext.parseOptions().setAllowMissing(!isRequired));
 
             AbstractConfigObject obj;
-            switch (n.kind()) {
-                case URL:
+            switch (n.kind().name()) {
+                case "URL":
                     URL url;
                     try {
                         url = new URL(n.name());
@@ -172,16 +172,16 @@ final class ConfigParser {
                     obj = (AbstractConfigObject) includer.includeURL(cic, url);
                     break;
 
-                case FILE:
+                case "FILE":
                     obj = (AbstractConfigObject) includer.includeFile(cic,
                             new File(n.name()));
                     break;
 
-                case CLASSPATH:
+                case "CLASSPATH":
                     obj = (AbstractConfigObject) includer.includeResources(cic, n.name());
                     break;
 
-                case HEURISTIC:
+                case "HEURISTIC":
                     obj = (AbstractConfigObject) includer
                             .include(cic, n.name());
                     break;
