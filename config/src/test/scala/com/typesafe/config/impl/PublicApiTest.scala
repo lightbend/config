@@ -971,17 +971,17 @@ class PublicApiTest extends TestUtils {
         val eCopy = checkSerializableNoMeaningfulEquals(e)
         assertTrue("messages equal after deserialize", e.getMessage.equals(eCopy.getMessage))
         assertTrue("cause messages equal after deserialize", e.getCause().getMessage.equals(eCopy.getCause().getMessage))
-        assertTrue("origins equal after deserialize", e.origin().equals(eCopy.origin()))
+        assertTrue("origins equal after deserialize", e.origin.equals(eCopy.origin))
     }
 
     @Test
     def exceptionSerializableWithNullOrigin() {
         val e = new ConfigException.Missing("this is a message", new RuntimeException("this is a cause"))
-        assertTrue("origin null before serialize", e.origin() == null)
+        assertTrue("origin null before serialize", e.origin == null)
         val eCopy = checkSerializableNoMeaningfulEquals(e)
         assertTrue("messages equal after deserialize", e.getMessage.equals(eCopy.getMessage))
         assertTrue("cause messages equal after deserialize", e.getCause().getMessage.equals(eCopy.getCause().getMessage))
-        assertTrue("origin null after deserialize", e.origin() == null)
+        assertTrue("origin null after deserialize", e.origin == null)
     }
 
     @Test

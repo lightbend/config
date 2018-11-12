@@ -806,13 +806,13 @@ abstract trait TestUtils {
 
     sealed abstract class Problem(path: String, line: Int) {
         def check(p: ConfigException.ValidationProblem) {
-            assertEquals("matching path", path, p.path())
-            assertEquals("matching line for " + path, line, p.origin().lineNumber())
+            assertEquals("matching path", path, p.path)
+            assertEquals("matching line for " + path, line, p.origin.lineNumber())
         }
 
         protected def assertMessage(p: ConfigException.ValidationProblem, re: String) {
-            assertTrue("didn't get expected message for " + path + ": got '" + p.problem() + "'",
-                p.problem().matches(re))
+            assertTrue("didn't get expected message for " + path + ": got '" + p.problem + "'",
+                p.problem.matches(re))
         }
     }
 
@@ -841,7 +841,7 @@ abstract trait TestUtils {
     }
 
     protected def checkValidationException(e: ConfigException.ValidationFailed, expecteds: Seq[Problem]) {
-        val problems = e.problems().asScala.toIndexedSeq.sortBy(_.path).sortBy(_.origin.lineNumber)
+        val problems = e.problems.asScala.toIndexedSeq.sortBy(_.path).sortBy(_.origin.lineNumber)
 
         //for (problem <- problems)
         //    System.err.println(problem.origin().description() + ": " + problem.path() + ": " + problem.problem())
