@@ -17,13 +17,15 @@ import com.typesafe.config.impl.ConfigImplUtil
 abstract class ConfigException(message: String, cause: Throwable)
     extends RuntimeException(message, cause) with Serializable {
 
-    @transient var origin = null
+    @transient var origin: ConfigOrigin = null
 
-    protected def this(origin: ConfigOrigin, message: String, cause: Throwable) =
-        this(origin.description() + ": " + message, cause)
+    protected def this(origin: ConfigOrigin, message: String, cause: Throwable) = {
+        this(ConfigException.makeMessage(origin, message), cause)
+        this.origin = origin
+    }
 
     protected def this(origin: ConfigOrigin, message: String) =
-        this(origin.description() + ": " + message, null)
+        this(ConfigException.makeMessage(origin, message), null)
 
     protected def this(message: String) =
         this(message, null)
@@ -47,6 +49,7 @@ abstract class ConfigException(message: String, cause: Throwable)
 
 }
 
+@SerialVersionUID(1L)
 object ConfigException {
     // For deserialization - uses reflection to set the final origin field on the object
     @throws(classOf[IOException])
@@ -75,6 +78,11 @@ object ConfigException {
                 throw new IOException("unable to set origin field", e)
         }
     }
+    /* this in Java would never purposely called with a null Origin but
+        because of Scala's primary constructor constraints and the way these
+        classes work we need to guard against null Origin */
+    private def makeMessage(origin: ConfigOrigin, message: String): String =
+        if (origin != null) origin.description() + ": " + message else message
 
     /**
      * Exception indicating that the type of a value does not match the type you
@@ -101,13 +109,21 @@ object ConfigException {
      * null.
      */
     @SerialVersionUID(1L)
+    object Missing {
+        private def makeMessage(path: String) =
+            "No configuration setting found for key '" + path + "'"
+    }
+
+    // primary ctor calls super directly with no special message
+    @SerialVersionUID(1L)
     class Missing(origin: ConfigOrigin, message: String, cause: Throwable)
         extends ConfigException(origin, message, cause) {
+
         def this(path: String, cause: Throwable) =
-            this(null, "No configuration setting found for key '" + path + "'", cause)
+            this(null, Missing.makeMessage(path), cause)
 
         def this(origin: ConfigOrigin, path: String) =
-            this(origin, "No configuration setting found for key '" + path + "'", null)
+            this(origin, Missing.makeMessage(path), null)
 
         def this(path: String) = this(path, null)
 
@@ -254,9 +270,10 @@ object ConfigException {
      * {@link ConfigException.ValidationFailed} exception thrown from
      * <code>checkValid()</code> includes a list of problems encountered.
      */
+    @SerialVersionUID(1L)
     class ValidationProblem(
         val path: String, // the path of the problem setting
-        val origin: ConfigOrigin, // the origin of the problem setting
+        @transient val origin: ConfigOrigin = null, // the origin of the problem setting
         val problem: String) // description of the problem
         extends Serializable {
 
