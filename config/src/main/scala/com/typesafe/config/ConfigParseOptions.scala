@@ -49,7 +49,7 @@ final class ConfigParseOptions private (
      * @return options with the syntax set
      */
     def setSyntax(syntax: ConfigSyntax): ConfigParseOptions =
-        if (this.syntax eq syntax) this
+        if (this.syntax == syntax) this
         else
             new ConfigParseOptions(
                 syntax,
@@ -88,7 +88,7 @@ final class ConfigParseOptions private (
      * @return options with the origin description set
      */
     def setOriginDescription(originDescription: String): ConfigParseOptions = { // findbugs complains about == here but is wrong, do not "fix"
-        if (this.originDescription eq originDescription) this
+        if (this.originDescription == originDescription) this
         else if (this.originDescription != null && originDescription != null && this.originDescription == originDescription)
             this
         else
@@ -147,7 +147,7 @@ final class ConfigParseOptions private (
      * @return new version of the parse options with different includer
      */
     def setIncluder(includer: ConfigIncluder): ConfigParseOptions =
-        if (this.includer eq includer) this
+        if (this.includer == includer) this
         else
             new ConfigParseOptions(
                 this.syntax,
@@ -184,7 +184,7 @@ final class ConfigParseOptions private (
     def appendIncluder(includer: ConfigIncluder): ConfigParseOptions = {
         if (includer == null)
             throw new NullPointerException("null includer passed to appendIncluder")
-        if (this.includer eq includer) this
+        if (this.includer == includer) this
         else if (this.includer != null) setIncluder(this.includer.withFallback(includer))
         else setIncluder(includer)
     }
@@ -206,7 +206,7 @@ final class ConfigParseOptions private (
      * @return options with the class loader set
      */
     def setClassLoader(loader: ClassLoader): ConfigParseOptions =
-        if (this.classLoader eq loader) this
+        if (this.classLoader == loader) this
         else
             new ConfigParseOptions(
                 this.syntax,
