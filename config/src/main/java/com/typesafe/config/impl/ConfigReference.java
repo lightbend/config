@@ -72,9 +72,9 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
         AbstractConfigValue v;
         try {
             ResolveSource.ResultWithPath resultWithPath = source.lookupSubst(newContext, expr, prefixLength);
-            newContext = resultWithPath.result.context;
+            newContext = resultWithPath.result.context();
 
-            if (resultWithPath.result.value != null) {
+            if (resultWithPath.result.value() != null) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
                     ConfigImpl.trace(newContext.depth(), "recursively resolving " + resultWithPath
                             + " which was the resolution of " + expr + " against " + source);
@@ -85,10 +85,10 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
                 if (ConfigImpl.traceSubstitutionsEnabled())
                     ConfigImpl.trace(newContext.depth(), "will recursively resolve against " + recursiveResolveSource);
 
-                ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(resultWithPath.result.value,
+                ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(resultWithPath.result.value(),
                         recursiveResolveSource);
-                v = result.value;
-                newContext = result.context;
+                v = result.value();
+                newContext = result.context();
             } else {
                 ConfigValue fallback = context.options().getResolver().lookup(expr.path().render());
                 v = (AbstractConfigValue) fallback;

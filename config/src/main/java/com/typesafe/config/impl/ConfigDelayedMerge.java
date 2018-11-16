@@ -130,8 +130,8 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                 ConfigImpl.trace(newContext.depth(), "Resolving highest-priority item in delayed merge " + end
                         + " against " + sourceForEnd + " endWasRemoved=" + (source != sourceForEnd));
             ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(end, sourceForEnd);
-            AbstractConfigValue resolvedEnd = result.value;
-            newContext = result.context;
+            AbstractConfigValue resolvedEnd = result.value();
+            newContext = result.context();
 
             if (resolvedEnd != null) {
                 if (merged == null) {

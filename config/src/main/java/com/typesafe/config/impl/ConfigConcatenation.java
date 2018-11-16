@@ -203,8 +203,8 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             Path restriction = newContext.restrictToChild();
             ResolveResult<? extends AbstractConfigValue> result = newContext.unrestricted()
                     .resolve(p, sourceWithParent);
-            AbstractConfigValue r = result.value;
-            newContext = result.context.restrict(restriction);
+            AbstractConfigValue r = result.value();
+            newContext = result.context().restrict(restriction);
             if (ConfigImpl.traceSubstitutionsEnabled())
                 ConfigImpl.trace(context.depth(), "resolved concat piece to " + r);
             if (r == null) {

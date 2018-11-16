@@ -46,9 +46,9 @@ final class ResolveSource {
         Path restriction = context.restrictToChild();
         ResolveResult<? extends AbstractConfigValue> partiallyResolved = context.restrict(path).resolve(obj,
                 new ResolveSource(obj));
-        ResolveContext newContext = partiallyResolved.context.restrict(restriction);
-        if (partiallyResolved.value instanceof AbstractConfigObject) {
-            ValueWithPath pair = findInObject((AbstractConfigObject) partiallyResolved.value, path);
+        ResolveContext newContext = partiallyResolved.context().restrict(restriction);
+        if (partiallyResolved.value() instanceof AbstractConfigObject) {
+            ValueWithPath pair = findInObject((AbstractConfigObject) partiallyResolved.value(), path);
             return new ResultWithPath(ResolveResult.make(newContext, pair.value), pair.pathFromRoot);
         } else {
             throw new ConfigException.BugOrBroken("resolved object to non-object " + obj + " to " + partiallyResolved);
@@ -96,7 +96,7 @@ final class ResolveSource {
         // included file if we were not a root file
         ResultWithPath result = findInObject(root, context, subst.path());
 
-        if (result.result.value == null) {
+        if (result.result.value() == null) {
             // Then we want to check relative to the root file. We don't
             // want the prefix we were included at to be used when looking
             // up env variables either.
@@ -104,20 +104,20 @@ final class ResolveSource {
 
             if (prefixLength > 0) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(result.result.context.depth(), unprefixed
+                    ConfigImpl.trace(result.result.context().depth(), unprefixed
                             + " - looking up relative to parent file");
-                result = findInObject(root, result.result.context, unprefixed);
+                result = findInObject(root, result.result.context(), unprefixed);
             }
 
-            if (result.result.value == null && result.result.context.options().getUseSystemEnvironment()) {
+            if (result.result.value() == null && result.result.context().options().getUseSystemEnvironment()) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(result.result.context.depth(), unprefixed + " - looking up in system environment");
+                    ConfigImpl.trace(result.result.context().depth(), unprefixed + " - looking up in system environment");
                 result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context, unprefixed);
             }
         }
 
         if (ConfigImpl.traceSubstitutionsEnabled())
-            ConfigImpl.trace(result.result.context.depth(), "resolved to " + result);
+            ConfigImpl.trace(result.result.context().depth(), "resolved to " + result);
 
         return result;
     }

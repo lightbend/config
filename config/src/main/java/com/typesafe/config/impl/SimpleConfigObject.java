@@ -364,8 +364,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                     if (remainder != null) {
                         ResolveResult<? extends AbstractConfigValue> result = context.restrict(remainder).resolve(v,
                                 source);
-                        context = result.context.unrestricted().restrict(originalRestrict);
-                        return result.value;
+                        context = result.context().unrestricted().restrict(originalRestrict);
+                        return result.value();
                     } else {
                         // we don't want to resolve the leaf child.
                         return v;
@@ -377,8 +377,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             } else {
                 // no restrictToChild, resolve everything
                 ResolveResult<? extends AbstractConfigValue> result = context.unrestricted().resolve(v, source);
-                context = result.context.unrestricted().restrict(originalRestrict);
-                return result.value;
+                context = result.context().unrestricted().restrict(originalRestrict);
+                return result.value();
             }
         }
 

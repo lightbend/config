@@ -177,13 +177,13 @@ final class ResolveContext {
             }
 
             ResolveResult<? extends AbstractConfigValue> result = original.resolveSubstitutions(this, source);
-            AbstractConfigValue resolved = result.value;
+            AbstractConfigValue resolved = result.value();
 
             if (ConfigImpl.traceSubstitutionsEnabled())
                 ConfigImpl.trace(depth(), "resolved to " + resolved + "@" + System.identityHashCode(resolved)
                         + " from " + original + "@" + System.identityHashCode(resolved));
 
-            ResolveContext withMemo = result.context;
+            ResolveContext withMemo = result.context();
 
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED()) {
                 // if the resolved object is fully resolved by resolving
@@ -228,7 +228,7 @@ final class ResolveContext {
         ResolveContext context = new ResolveContext(options, null /* restrictToChild */);
 
         try {
-            return context.resolve(value, source).value;
+            return context.resolve(value, source).value();
         } catch (NotPossibleToResolve e) {
             // ConfigReference was supposed to catch NotPossibleToResolve
             throw new ConfigException.BugOrBroken(
