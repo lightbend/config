@@ -447,9 +447,9 @@ class ConfigTest extends TestUtils {
     private def ignoresFallbacks(m: ConfigMergeable) = {
         m match {
             case v: AbstractConfigValue =>
-                v.ignoresFallbacks()
+                v.ignoresFallbacks
             case c: SimpleConfig =>
-                c.root.ignoresFallbacks()
+                c.root.ignoresFallbacks
         }
     }
 
@@ -469,8 +469,8 @@ class ConfigTest extends TestUtils {
         val nonEmptyIgnoringFallbacks = nonEmpty.withFallback(primitive)
 
         assertEquals(false, empty.ignoresFallbacks())
-        assertEquals(true, primitive.ignoresFallbacks())
-        assertEquals(true, emptyIgnoringFallbacks.ignoresFallbacks())
+        assertEquals(true, primitive.ignoresFallbacks)
+        assertEquals(true, emptyIgnoringFallbacks.ignoresFallbacks)
         assertEquals(false, ignoresFallbacks(nonEmpty))
         assertEquals(true, ignoresFallbacks(nonEmptyIgnoringFallbacks))
 

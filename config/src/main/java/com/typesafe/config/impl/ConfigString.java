@@ -27,7 +27,7 @@ abstract class ConfigString extends AbstractConfigValue implements Serializable 
             super(origin, value);
         }
         @Override
-        protected Quoted newCopy(ConfigOrigin origin) {
+        public Quoted newCopy(ConfigOrigin origin) {
             return new Quoted(origin, value);
         }
         // serialization all goes through SerializedConfigValue
@@ -50,7 +50,7 @@ abstract class ConfigString extends AbstractConfigValue implements Serializable 
             super(origin, value);
         }
         @Override
-        protected Unquoted newCopy(ConfigOrigin origin) {
+        public Unquoted newCopy(ConfigOrigin origin) {
             return new Unquoted(origin, value);
         }
         // serialization all goes through SerializedConfigValue
@@ -74,12 +74,12 @@ abstract class ConfigString extends AbstractConfigValue implements Serializable 
     }
 
     @Override
-    String transformToString() {
+    public String transformToString() {
         return value;
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+    public void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         String rendered;
         if (options.getJson())
             rendered = ConfigImplUtil.renderJsonString(value);

@@ -31,7 +31,7 @@ final class ConfigLong extends ConfigNumber implements Serializable {
     }
 
     @Override
-    String transformToString() {
+    public String transformToString() {
         String s = super.transformToString();
         if (s == null)
             return Long.toString(value);
@@ -50,7 +50,7 @@ final class ConfigLong extends ConfigNumber implements Serializable {
     }
 
     @Override
-    protected ConfigLong newCopy(ConfigOrigin origin) {
+    public ConfigLong newCopy(ConfigOrigin origin) {
         return new ConfigLong(origin, value, originalText);
     }
 

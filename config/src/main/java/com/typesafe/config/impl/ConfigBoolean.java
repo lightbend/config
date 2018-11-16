@@ -31,12 +31,12 @@ final class ConfigBoolean extends AbstractConfigValue implements Serializable {
     }
 
     @Override
-    String transformToString() {
+    public String transformToString() {
         return value ? "true" : "false";
     }
 
     @Override
-    protected ConfigBoolean newCopy(ConfigOrigin origin) {
+    public ConfigBoolean newCopy(ConfigOrigin origin) {
         return new ConfigBoolean(origin, value);
     }
 

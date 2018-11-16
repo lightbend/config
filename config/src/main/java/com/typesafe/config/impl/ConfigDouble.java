@@ -31,7 +31,7 @@ final class ConfigDouble extends ConfigNumber implements Serializable {
     }
 
     @Override
-    String transformToString() {
+    public String transformToString() {
         String s = super.transformToString();
         if (s == null)
             return Double.toString(value);
@@ -50,7 +50,7 @@ final class ConfigDouble extends ConfigNumber implements Serializable {
     }
 
     @Override
-    protected ConfigDouble newCopy(ConfigOrigin origin) {
+    public ConfigDouble newCopy(ConfigOrigin origin) {
         return new ConfigDouble(origin, value, originalText);
     }
 

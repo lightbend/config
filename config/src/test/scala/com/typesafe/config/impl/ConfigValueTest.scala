@@ -772,8 +772,8 @@ class ConfigValueTest extends TestUtils {
             obj.withOnlyKey("b").toConfig.resolve
         }
 
-        assertEquals(ResolveStatus.UNRESOLVED, obj.resolveStatus())
-        assertEquals(ResolveStatus.RESOLVED, obj.withOnlyKey("z").resolveStatus())
+        assertEquals(ResolveStatus.UNRESOLVED, obj.resolveStatus)
+        assertEquals(ResolveStatus.RESOLVED, obj.withOnlyKey("z").resolveStatus)
     }
 
     @Test
@@ -801,9 +801,9 @@ class ConfigValueTest extends TestUtils {
             obj.withoutKey("z").toConfig.resolve
         }
 
-        assertEquals(ResolveStatus.UNRESOLVED, obj.resolveStatus())
-        assertEquals(ResolveStatus.UNRESOLVED, obj.withoutKey("a").resolveStatus())
-        assertEquals(ResolveStatus.RESOLVED, obj.withoutKey("a").withoutKey("b").resolveStatus())
+        assertEquals(ResolveStatus.UNRESOLVED, obj.resolveStatus)
+        assertEquals(ResolveStatus.UNRESOLVED, obj.withoutKey("a").resolveStatus)
+        assertEquals(ResolveStatus.RESOLVED, obj.withoutKey("a").withoutKey("b").resolveStatus)
     }
 
     @Test

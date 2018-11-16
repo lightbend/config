@@ -64,12 +64,12 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    protected ConfigConcatenation newCopy(ConfigOrigin newOrigin) {
+    public ConfigConcatenation newCopy(ConfigOrigin newOrigin) {
         return new ConfigConcatenation(newOrigin, pieces);
     }
 
     @Override
-    protected boolean ignoresFallbacks() {
+    public boolean ignoresFallbacks() {
         // we can never ignore fallbacks because if a child ConfigReference
         // is self-referential we have to look lower in the merge stack
         // for its value.
@@ -178,7 +178,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
+    public ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
         if (ConfigImpl.traceSubstitutionsEnabled()) {
             int indent = context.depth() + 2;
@@ -231,7 +231,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    ResolveStatus resolveStatus() {
+    public ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED();
     }
 
@@ -255,7 +255,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     // system property and env variable lookups don't get
     // broken.
     @Override
-    ConfigConcatenation relativized(Path prefix) {
+    public ConfigConcatenation relativized(Path prefix) {
         List<AbstractConfigValue> newPieces = new ArrayList<AbstractConfigValue>();
         for (AbstractConfigValue p : pieces) {
             newPieces.add(p.relativized(prefix));
@@ -264,7 +264,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    protected boolean canEqual(Object other) {
+    public boolean canEqual(Object other) {
         return other instanceof ConfigConcatenation;
     }
 
@@ -285,7 +285,7 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+    public void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         for (AbstractConfigValue p : pieces) {
             p.render(sb, indent, atRoot, options);
         }

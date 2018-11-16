@@ -500,7 +500,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
     }
 
     @Override
-    protected SerializedConfigValue newCopy(ConfigOrigin origin) {
+    public SerializedConfigValue newCopy(ConfigOrigin origin) {
         throw shouldNotBeUsed();
     }
 

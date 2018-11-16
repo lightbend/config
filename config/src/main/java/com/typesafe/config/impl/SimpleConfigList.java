@@ -57,7 +57,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    ResolveStatus resolveStatus() {
+    public ResolveStatus resolveStatus() {
         return ResolveStatus.fromBoolean(resolved);
     }
 
@@ -143,7 +143,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    ResolveResult<? extends SimpleConfigList> resolveSubstitutions(ResolveContext context, ResolveSource source)
+    public ResolveResult<? extends SimpleConfigList> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
         if (resolved)
             return ResolveResult.make(context, this);
@@ -157,7 +157,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
                 ResolveModifier modifier = new ResolveModifier(context, source.pushParent(this));
                 SimpleConfigList value = modifyMayThrow(modifier, context.options().getAllowUnresolved() ? null : ResolveStatus.RESOLVED());
                 return ResolveResult.make(modifier.context, value);
-            } catch (NotPossibleToResolve e) {
+            } catch (AbstractConfigValue.NotPossibleToResolve e) {
                 throw e;
             } catch (RuntimeException e) {
                 throw e;
@@ -168,7 +168,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    SimpleConfigList relativized(final Path prefix) {
+    public SimpleConfigList relativized(final Path prefix) {
         return modify(new NoExceptionsModifier() {
             @Override
             public AbstractConfigValue modifyChild(String key, AbstractConfigValue v) {
@@ -179,7 +179,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    protected boolean canEqual(Object other) {
+    public boolean canEqual(Object other) {
         return other instanceof SimpleConfigList;
     }
 
@@ -202,7 +202,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+    public void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (value.isEmpty()) {
             sb.append("[]");
         } else {
@@ -439,7 +439,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
     }
 
     @Override
-    protected SimpleConfigList newCopy(ConfigOrigin newOrigin) {
+    public SimpleConfigList newCopy(ConfigOrigin newOrigin) {
         return new SimpleConfigList(newOrigin, value);
     }
 

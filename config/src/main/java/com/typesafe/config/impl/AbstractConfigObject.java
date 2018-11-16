@@ -121,18 +121,18 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
     protected abstract AbstractConfigObject newCopy(ResolveStatus status, ConfigOrigin origin);
 
     @Override
-    protected AbstractConfigObject newCopy(ConfigOrigin origin) {
+    public AbstractConfigObject newCopy(ConfigOrigin origin) {
         return newCopy(resolveStatus(), origin);
     }
 
     @Override
-    protected AbstractConfigObject constructDelayedMerge(ConfigOrigin origin,
+    public AbstractConfigObject constructDelayedMerge(ConfigOrigin origin,
             List<AbstractConfigValue> stack) {
         return new ConfigDelayedMergeObject(origin, stack);
     }
 
     @Override
-    protected abstract AbstractConfigObject mergedWithObject(AbstractConfigObject fallback);
+    public abstract AbstractConfigObject mergedWithObject(AbstractConfigObject fallback);
 
     @Override
     public AbstractConfigObject withFallback(ConfigMergeable mergeable) {
@@ -176,18 +176,18 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
     }
 
     @Override
-    abstract ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context,
-            ResolveSource source)
-            throws NotPossibleToResolve;
+    public abstract ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context,
+            ResolveSource source);
+            //throws NotPossibleToResolve;
 
     @Override
-    abstract AbstractConfigObject relativized(final Path prefix);
+    public abstract AbstractConfigObject relativized(final Path prefix);
 
     @Override
     public abstract AbstractConfigValue get(Object key);
 
     @Override
-    protected abstract void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options);
+    public abstract void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options);
 
     private static UnsupportedOperationException weAreImmutable(String method) {
         return new UnsupportedOperationException("ConfigObject is immutable, you can't call Map."

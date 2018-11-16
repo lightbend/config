@@ -54,7 +54,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
+    public ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
         return resolveSubstitutions(this, stack, context, source);
     }
@@ -179,7 +179,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    ResolveStatus resolveStatus() {
+    public ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED();
     }
 
@@ -198,7 +198,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    ConfigDelayedMerge relativized(Path prefix) {
+    public ConfigDelayedMerge relativized(Path prefix) {
         List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
         for (AbstractConfigValue o : stack) {
             newStack.add(o.relativized(prefix));
@@ -213,27 +213,27 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    protected boolean ignoresFallbacks() {
+    public boolean ignoresFallbacks() {
         return stackIgnoresFallbacks(stack);
     }
 
     @Override
-    protected AbstractConfigValue newCopy(ConfigOrigin newOrigin) {
+    public AbstractConfigValue newCopy(ConfigOrigin newOrigin) {
         return new ConfigDelayedMerge(newOrigin, stack);
     }
 
     @Override
-    protected final ConfigDelayedMerge mergedWithTheUnmergeable(Unmergeable fallback) {
+    public final ConfigDelayedMerge mergedWithTheUnmergeable(Unmergeable fallback) {
         return (ConfigDelayedMerge) mergedWithTheUnmergeable(stack, fallback);
     }
 
     @Override
-    protected final ConfigDelayedMerge mergedWithObject(AbstractConfigObject fallback) {
+    public final ConfigDelayedMerge mergedWithObject(AbstractConfigObject fallback) {
         return (ConfigDelayedMerge) mergedWithObject(stack, fallback);
     }
 
     @Override
-    protected ConfigDelayedMerge mergedWithNonObject(AbstractConfigValue fallback) {
+    public ConfigDelayedMerge mergedWithNonObject(AbstractConfigValue fallback) {
         return (ConfigDelayedMerge) mergedWithNonObject(stack, fallback);
     }
 
@@ -243,7 +243,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    protected boolean canEqual(Object other) {
+    public boolean canEqual(Object other) {
         return other instanceof ConfigDelayedMerge;
     }
 
@@ -266,12 +266,12 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
+    public void render(StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
         render(stack, sb, indent, atRoot, atKey, options);
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+    public void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         render(sb, indent, atRoot, null, options);
     }
 

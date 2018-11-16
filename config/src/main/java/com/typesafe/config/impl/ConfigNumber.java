@@ -28,7 +28,7 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
     public abstract Number unwrapped();
 
     @Override
-    String transformToString() {
+    public String transformToString() {
         return originalText;
     }
 
@@ -51,7 +51,7 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
     }
 
     @Override
-    protected boolean canEqual(Object other) {
+    public boolean canEqual(Object other) {
         return other instanceof ConfigNumber;
     }
 

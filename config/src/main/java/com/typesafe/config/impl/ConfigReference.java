@@ -48,12 +48,12 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     }
 
     @Override
-    protected ConfigReference newCopy(ConfigOrigin newOrigin) {
+    public ConfigReference newCopy(ConfigOrigin newOrigin) {
         return new ConfigReference(newOrigin, expr, prefixLength);
     }
 
     @Override
-    protected boolean ignoresFallbacks() {
+    public boolean ignoresFallbacks() {
         return false;
     }
 
@@ -67,7 +67,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     // This way it's impossible for NotPossibleToResolve to "escape" since
     // any failure to resolve has to start with a ConfigReference.
     @Override
-    ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source) {
+    public ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source) {
         ResolveContext newContext = context.addCycleMarker(this);
         AbstractConfigValue v;
         try {
@@ -115,7 +115,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     }
 
     @Override
-    ResolveStatus resolveStatus() {
+    public ResolveStatus resolveStatus() {
         return ResolveStatus.UNRESOLVED();
     }
 
@@ -125,13 +125,13 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     // system property and env variable lookups don't get
     // broken.
     @Override
-    ConfigReference relativized(Path prefix) {
+    public ConfigReference relativized(Path prefix) {
         SubstitutionExpression newExpr = expr.changePath(expr.path().prepend(prefix));
         return new ConfigReference(origin(), newExpr, prefixLength + prefix.length());
     }
 
     @Override
-    protected boolean canEqual(Object other) {
+    public boolean canEqual(Object other) {
         return other instanceof ConfigReference;
     }
 
@@ -152,7 +152,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+    public void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         sb.append(expr.toString());
     }
 

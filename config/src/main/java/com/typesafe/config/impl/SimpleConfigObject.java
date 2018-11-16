@@ -186,7 +186,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected SimpleConfigObject withFallbacksIgnored() {
+    public SimpleConfigObject withFallbacksIgnored() {
         if (ignoresFallbacks)
             return this;
         else
@@ -194,7 +194,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    ResolveStatus resolveStatus() {
+    public ResolveStatus resolveStatus() {
         return ResolveStatus.fromBoolean(resolved);
     }
 
@@ -231,7 +231,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected boolean ignoresFallbacks() {
+    public boolean ignoresFallbacks() {
         return ignoresFallbacks;
     }
 
@@ -245,7 +245,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected SimpleConfigObject mergedWithObject(AbstractConfigObject abstractFallback) {
+    public SimpleConfigObject mergedWithObject(AbstractConfigObject abstractFallback) {
         requireNotIgnoringFallbacks();
 
         if (!(abstractFallback instanceof SimpleConfigObject)) {
@@ -385,7 +385,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context, ResolveSource source)
+    public ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
         if (resolveStatus() == ResolveStatus.RESOLVED())
             return ResolveResult.make(context, this);
@@ -407,7 +407,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    SimpleConfigObject relativized(final Path prefix) {
+    public SimpleConfigObject relativized(final Path prefix) {
         return modify(new NoExceptionsModifier() {
 
             @Override
@@ -461,7 +461,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+    public void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (isEmpty()) {
             sb.append("{}");
         } else {
@@ -575,7 +575,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected boolean canEqual(Object other) {
+    public boolean canEqual(Object other) {
         return other instanceof ConfigObject;
     }
 
