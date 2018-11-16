@@ -318,7 +318,7 @@ abstract class AbstractConfigValue private[impl] (val _origin: ConfigOrigin)
         }
         render(sb, indent, atRoot, options)
     }
-    protected def render(
+    def render(
         sb: jl.StringBuilder,
         indent: Int,
         atRoot: Boolean,
