@@ -3,7 +3,7 @@
  */
 package com.typesafe.config
 
-import java.util.Map
+import java.{ util => ju }
 
 /**
  * Subtype of {@link ConfigValue} representing an object (AKA dictionary or map)
@@ -60,7 +60,7 @@ import java.util.Map
  * Also, this interface is likely to grow new methods over time, so third-party
  * implementations will break.
  */
-trait ConfigObject extends ConfigValue with Map[String, ConfigValue] {
+trait ConfigObject extends ConfigValue with ju.Map[String, ConfigValue] {
 
     /**
      * Converts this object to a {@link Config} instance, enabling you to use
@@ -77,7 +77,7 @@ trait ConfigObject extends ConfigValue with Map[String, ConfigValue] {
      *
      * @return a {@link java.util.Map} containing plain Java objects
      */
-    override def unwrapped(): Map[String, AnyRef]
+    override def unwrapped(): ju.Map[String, AnyRef]
     override def withFallback(other: ConfigMergeable): ConfigObject
 
     /**

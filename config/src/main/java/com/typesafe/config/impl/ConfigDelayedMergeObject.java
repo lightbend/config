@@ -42,7 +42,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    protected ConfigDelayedMergeObject newCopy(ResolveStatus status, ConfigOrigin origin) {
+    public ConfigDelayedMergeObject newCopy(ResolveStatus status, ConfigOrigin origin) {
         if (status != resolveStatus())
             throw new ConfigException.BugOrBroken(
                     "attempt to create resolved ConfigDelayedMergeObject");
@@ -130,17 +130,17 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    protected AbstractConfigObject withOnlyPathOrNull(Path path) {
+    public AbstractConfigObject withOnlyPathOrNull(Path path) {
         throw notResolved();
     }
 
     @Override
-    AbstractConfigObject withOnlyPath(Path path) {
+    public AbstractConfigObject withOnlyPath(Path path) {
         throw notResolved();
     }
 
     @Override
-    AbstractConfigObject withoutPath(Path path) {
+    public AbstractConfigObject withoutPath(Path path) {
         throw notResolved();
     }
 
@@ -150,7 +150,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    ConfigDelayedMergeObject withValue(Path path, ConfigValue value) {
+    public ConfigDelayedMergeObject withValue(Path path, ConfigValue value) {
         throw notResolved();
     }
 
@@ -208,6 +208,11 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
+    public AbstractConfigValue remove(Object key) {
+        throw notResolved();
+    }
+
+    @Override
     public boolean containsKey(Object key) {
         throw notResolved();
     }
@@ -243,7 +248,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     }
 
     @Override
-    protected AbstractConfigValue attemptPeekWithPartialResolve(String key) {
+    public AbstractConfigValue attemptPeekWithPartialResolve(String key) {
         // a partial resolve of a ConfigDelayedMergeObject always results in a
         // SimpleConfigObject because all the substitutions in the stack get
         // resolved in order to look up the partial.

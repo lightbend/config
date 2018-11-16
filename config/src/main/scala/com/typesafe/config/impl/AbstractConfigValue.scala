@@ -113,7 +113,7 @@ abstract class AbstractConfigValue private[impl] (val _origin: ConfigOrigin)
      * @return a new value if there were changes, or this if no changes
      */
     @throws[NotPossibleToResolve]
-    private[impl] def resolveSubstitutions(
+    def resolveSubstitutions(
         context: ResolveContext,
         source: ResolveSource): ResolveResult[_ <: AbstractConfigValue] =
         ResolveResult.make(context, this)

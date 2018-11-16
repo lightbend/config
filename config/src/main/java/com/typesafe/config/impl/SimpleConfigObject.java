@@ -68,7 +68,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     // withOnlyPath("a.b.c") that we don't keep an empty
     // "a" object.
     @Override
-    protected SimpleConfigObject withOnlyPathOrNull(Path path) {
+    public SimpleConfigObject withOnlyPathOrNull(Path path) {
         String key = path.first();
         Path next = path.remainder();
         AbstractConfigValue v = value.get(key);
@@ -92,7 +92,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    SimpleConfigObject withOnlyPath(Path path) {
+    public SimpleConfigObject withOnlyPath(Path path) {
         SimpleConfigObject o = withOnlyPathOrNull(path);
         if (o == null) {
             return new SimpleConfigObject(origin(),
@@ -104,7 +104,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    SimpleConfigObject withoutPath(Path path) {
+    public SimpleConfigObject withoutPath(Path path) {
         String key = path.first();
         Path next = path.remainder();
         AbstractConfigValue v = value.get(key);
@@ -150,7 +150,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    SimpleConfigObject withValue(Path path, ConfigValue v) {
+    public SimpleConfigObject withValue(Path path, ConfigValue v) {
         String key = path.first();
         Path next = path.remainder();
 
@@ -171,7 +171,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected AbstractConfigValue attemptPeekWithPartialResolve(String key) {
+    public AbstractConfigValue attemptPeekWithPartialResolve(String key) {
         return value.get(key);
     }
 
@@ -181,7 +181,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     @Override
-    protected SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin) {
+    public SimpleConfigObject newCopy(ResolveStatus newStatus, ConfigOrigin newOrigin) {
         return newCopy(newStatus, newOrigin, ignoresFallbacks);
     }
 
