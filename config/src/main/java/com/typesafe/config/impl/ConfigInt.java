@@ -40,18 +40,18 @@ final class ConfigInt extends ConfigNumber implements Serializable {
     }
 
     @Override
-    protected long longValue() {
+    public long longValue() {
         return value;
     }
 
     @Override
-    protected double doubleValue() {
+    public double doubleValue() {
         return value;
     }
 
     @Override
     public ConfigInt newCopy(ConfigOrigin origin) {
-        return new ConfigInt(origin, value, originalText);
+        return new ConfigInt(origin, value, originalText());
     }
 
     // serialization all goes through SerializedConfigValue

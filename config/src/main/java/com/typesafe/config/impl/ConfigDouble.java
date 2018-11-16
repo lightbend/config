@@ -40,18 +40,18 @@ final class ConfigDouble extends ConfigNumber implements Serializable {
     }
 
     @Override
-    protected long longValue() {
+    public long longValue() {
         return (long) value;
     }
 
     @Override
-    protected double doubleValue() {
+    public double doubleValue() {
         return value;
     }
 
     @Override
     public ConfigDouble newCopy(ConfigOrigin origin) {
-        return new ConfigDouble(origin, value, originalText);
+        return new ConfigDouble(origin, value, originalText());
     }
 
     // serialization all goes through SerializedConfigValue
