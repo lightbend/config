@@ -237,7 +237,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
                 // Add the value into the copy of the children map, keeping any whitespace/newlines
                 // before the close curly brace
                 if (startsWithBrace && childrenCopy.get(i) instanceof ConfigNodeSingleToken &&
-                        ((ConfigNodeSingleToken) childrenCopy.get(i)).token == Tokens.CLOSE_CURLY()) {
+                        ((ConfigNodeSingleToken) childrenCopy.get(i)).token() == Tokens.CLOSE_CURLY()) {
                     AbstractConfigNode previous = childrenCopy.get(i - 1);
                     if (previous instanceof ConfigNodeSingleToken &&
                             Tokens.isNewline(((ConfigNodeSingleToken) previous).token())) {
