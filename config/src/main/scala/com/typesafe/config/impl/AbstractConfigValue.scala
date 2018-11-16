@@ -96,6 +96,7 @@ object AbstractConfigValue {
         }
     }
 }
+
 abstract class AbstractConfigValue private[impl] (val _origin: ConfigOrigin)
     extends ConfigValue
     with MergeableValue {

@@ -81,5 +81,5 @@ abstract class ConfigNumber(
     }
     // serialization all goes through SerializedConfigValue
     @throws[ObjectStreamException]
-    private def writeReplace = new SerializedConfigValue(this)
+    private def writeReplace(): jl.Object = new SerializedConfigValue(this)
 }
