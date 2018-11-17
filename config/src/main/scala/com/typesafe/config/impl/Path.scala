@@ -48,7 +48,7 @@ object Path {
                 pb.appendKey(elements(i))
                 i += 1
             }
-            pb.result()
+            pb.result
         } else null
         (first, remainder)
     }
