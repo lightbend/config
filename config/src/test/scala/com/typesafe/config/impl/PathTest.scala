@@ -72,9 +72,9 @@ class PathTest extends TestUtils {
             RenderTest("1.2.3.4", path("1", "2", "3", "4")))
 
         for (t <- tests) {
-            assertEquals(t.expected, t.path.render())
+            assertEquals(t.expected, t.path.render)
             assertEquals(t.path, PathParser.parsePath(t.expected))
-            assertEquals(t.path, PathParser.parsePath(t.path.render()))
+            assertEquals(t.path, PathParser.parsePath(t.path.render))
         }
     }
 
@@ -93,21 +93,21 @@ class PathTest extends TestUtils {
 
     @Test
     def pathLength() {
-        assertEquals(1, path("foo").length())
-        assertEquals(2, path("foo", "bar").length())
+        assertEquals(1, path("foo").length)
+        assertEquals(2, path("foo", "bar").length)
     }
 
     @Test
     def pathParent() {
-        assertNull(path("a").parent())
-        assertEquals(path("a"), path("a", "b").parent())
-        assertEquals(path("a", "b"), path("a", "b", "c").parent())
+        assertNull(path("a").parent)
+        assertEquals(path("a"), path("a", "b").parent)
+        assertEquals(path("a", "b"), path("a", "b", "c").parent)
     }
 
     @Test
     def pathLast() {
-        assertEquals("a", path("a").last())
-        assertEquals("b", path("a", "b").last())
+        assertEquals("a", path("a").last)
+        assertEquals("b", path("a", "b").last)
     }
 
     @Test

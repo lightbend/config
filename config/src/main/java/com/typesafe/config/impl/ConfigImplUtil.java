@@ -11,12 +11,14 @@ import java.io.ObjectOutputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
 import scala.collection.JavaConverters;
+import scala.collection.mutable.Buffer;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -194,15 +196,15 @@ final public class ConfigImplUtil {
             return new File(url.getPath());
         }
     }
-    // add Scala vararg version
+    // add Scala vararg version - this is the one finally called now
     public static String joinPath(scala.collection.Seq<String> elements) {
-        List<String> javaListPaths = JavaConverters.asJavaListConverter(elements).asJava();
-        String[] javaArrayPaths = javaListPaths.toArray(new String[0]);
-        return joinPath(javaArrayPaths);
+        return (new Path(elements)).render();
     }
 
     public static String joinPath(String... elements) {
-        return (new Path(elements)).render();
+        List<String> list = Arrays.asList(elements);
+        Buffer<String> sbuf = JavaConverters.asScalaBufferConverter(list).asScala();
+        return joinPath(sbuf);
     }
 
     public static String joinPath(List<String> elements) {
