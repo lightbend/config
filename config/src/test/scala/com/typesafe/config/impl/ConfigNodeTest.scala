@@ -23,12 +23,12 @@ class ConfigNodeTest extends TestUtils {
     private def fieldNodeTest(key: ConfigNodePath, value: AbstractConfigNodeValue, newValue: AbstractConfigNodeValue) {
         val keyValNode = nodeKeyValuePair(key, value)
         assertEquals(key.render() + " : " + value.render(), keyValNode.render())
-        assertEquals(key.render, keyValNode.path().render())
-        assertEquals(value.render, keyValNode.value().render())
+        assertEquals(key.render, keyValNode.path.render())
+        assertEquals(value.render, keyValNode.value.render())
 
         val newKeyValNode = keyValNode.replaceValue(newValue)
         assertEquals(key.render() + " : " + newValue.render(), newKeyValNode.render())
-        assertEquals(newValue.render(), newKeyValNode.value().render())
+        assertEquals(newValue.render(), newKeyValNode.value.render())
     }
 
     private def topLevelValueReplaceTest(value: AbstractConfigNodeValue, newValue: AbstractConfigNodeValue, key: String = "foo") {

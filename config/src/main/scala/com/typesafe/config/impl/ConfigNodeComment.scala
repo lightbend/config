@@ -9,5 +9,5 @@ final class ConfigNodeComment(val comment: Token)
         throw new ConfigException.BugOrBroken(
             "Tried to create a ConfigNodeComment from a non-comment token")
 
-    protected def commentText: String = Tokens.getCommentText(token)
+    private[impl] def commentText: String = Tokens.getCommentText(token)
 }
