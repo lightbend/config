@@ -18,7 +18,7 @@ final class ConfigBoolean(
 
     override def valueType: ConfigValueType = ConfigValueType.BOOLEAN
 
-    override def unwrapped: Boolean = value
+    override def unwrapped: jl.Boolean = value
 
     override def transformToString: String = if (value) "true" else "false"
 

@@ -76,7 +76,8 @@ object AbstractConfigValue {
         false
     }
 
-    protected trait Modifier { // keyOrNull is null for non-objects
+    private[impl] trait Modifier {
+        // keyOrNull is null for non-objects
         @throws[Exception]
         def modifyChildMayThrow(
             keyOrNull: String,

@@ -25,7 +25,7 @@ final class ConfigNull(origin: ConfigOrigin)
 
     override def valueType: ConfigValueType = ConfigValueType.NULL
 
-    override def unwrapped: Any = null
+    override def unwrapped: AnyRef = null
 
     override def transformToString = "null"
 

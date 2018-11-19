@@ -44,7 +44,7 @@ trait ConfigValue extends ConfigMergeable {
      *
      * @return a plain Java value corresponding to this ConfigValue
      */
-    def unwrapped(): Any
+    def unwrapped(): AnyRef
 
     /**
      * Renders the config value as a HOCON string. This method is primarily
