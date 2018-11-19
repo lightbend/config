@@ -76,7 +76,7 @@ class ConfParserTest extends TestUtils {
                 case list: ConfigList =>
                     list.get(0) match {
                         case ref: ConfigReference =>
-                            ref.expression().path
+                            ref.expression.path
                     }
             }
         } catch {
