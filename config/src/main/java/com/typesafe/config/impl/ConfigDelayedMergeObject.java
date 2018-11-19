@@ -52,14 +52,14 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
     @Override
     public ResolveResult<? extends AbstractConfigObject> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
-        ResolveResult<? extends AbstractConfigValue> merged = ConfigDelayedMerge.resolveSubstitutions(this, stack,
+        ResolveResult<? extends AbstractConfigValue> merged = ConfigDelayedMerge$.MODULE$.resolveSubstitutions(this, stack,
                 context, source);
         return merged.asObjectResult();
     }
 
     @Override
     public AbstractConfigValue makeReplacement(ResolveContext context, int skipping) {
-        return ConfigDelayedMerge.makeReplacement(context, stack, skipping);
+        return ConfigDelayedMerge$.MODULE$.makeReplacement(context, stack, skipping);
     }
 
     @Override
@@ -184,7 +184,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
 
     @Override
     public void render(StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
-        ConfigDelayedMerge.render(stack, sb, indent, atRoot, atKey, options);
+        ConfigDelayedMerge$.MODULE$.render(stack, sb, indent, atRoot, atKey, options);
     }
 
     @Override
