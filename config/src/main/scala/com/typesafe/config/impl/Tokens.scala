@@ -12,10 +12,11 @@ import com.typesafe.config.ConfigValueType
 /* FIXME the way the subclasses of Token are private with static isFoo and accessors is kind of ridiculous. */
 object Tokens {
 
-    private[Tokens] class Value private[impl] (value: AbstractConfigValue, origText: String)
+    class Value private[impl] (val value: AbstractConfigValue, origText: String)
         extends Token(TokenType.VALUE, value.origin, origText) {
-        def this(value: AbstractConfigValue) { this(value, null) }
-        private[impl] def value(): AbstractConfigValue = value
+
+        def this(value: AbstractConfigValue) = this(value, null)
+
         override def toString(): String =
             if (value.resolveStatus eq ResolveStatus.RESOLVED)
                 "'" + value.unwrapped + "' (" + value.valueType.name + ")"
@@ -43,9 +44,9 @@ object Tokens {
     // This is not a Value, because it requires special processing
     private[Tokens] class UnquotedText private[impl] (
         origin: ConfigOrigin,
-        value: String)
+        val value: String)
         extends Token(TokenType.UNQUOTED_TEXT, origin) {
-        private[impl] def value(): String = value
+
         override def toString(): String = "'" + value + "'"
         override def canEqual(other: Any): Boolean =
             other.isInstanceOf[Tokens.UnquotedText]
@@ -72,15 +73,12 @@ object Tokens {
 
     private[Tokens] class Problem private[impl] (
         origin: ConfigOrigin,
-        what: String,
-        message: String,
-        suggestQuotes: Boolean,
-        cause: Throwable)
+        val what: String,
+        val message: String,
+        val suggestQuotes: Boolean,
+        val cause: Throwable)
         extends Token(TokenType.PROBLEM, origin) {
-        private[impl] def what(): String = what
-        private[impl] def message(): String = message
-        private[impl] def suggestQuotes(): Boolean = suggestQuotes
-        private[impl] def cause(): Throwable = cause
+
         override def toString(): String = {
             val sb = new StringBuilder
             sb.append('\'')
@@ -118,15 +116,15 @@ object Tokens {
             override def tokenText(): String = "//" + text
         }
         final private[impl] class HashComment private[impl] (origin: ConfigOrigin, text: String) extends Tokens.Comment(origin, text) {
-            override def tokenText(): String = "#" + super.text
+            override def tokenText(): String = "#" + text
         }
     }
 
     abstract private class Comment private[impl] (
         origin: ConfigOrigin,
-        text: String)
+        val text: String)
         extends Token(TokenType.COMMENT, origin) {
-        private[impl] def text(): String = text
+
         override def toString(): String = {
             val sb = new StringBuilder
             sb.append("'#")
@@ -147,13 +145,12 @@ object Tokens {
         }
     }
 
-    private[Tokens] class Substitution private[impl] (
+    class Substitution(
         origin: ConfigOrigin,
-        optional: Boolean,
-        value: ju.List[Token])
+        val optional: Boolean,
+        val value: ju.List[Token])
         extends Token(TokenType.SUBSTITUTION, origin) {
-        private[impl] def optional(): Boolean = optional
-        private[impl] def value(): ju.List[Token] = value
+
         override def tokenText(): String =
             "${" + (if (this.optional) "?" else "") + Tokenizer.render(
                 this.value.iterator) + "}"
