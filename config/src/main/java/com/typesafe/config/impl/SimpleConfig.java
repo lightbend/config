@@ -77,7 +77,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public SimpleConfig resolveWith(Config source, ConfigResolveOptions options) {
-        AbstractConfigValue resolved = ResolveContext.resolve(object, ((SimpleConfig) source).object, options);
+        AbstractConfigValue resolved = ResolveContext$.MODULE$.resolve(object, ((SimpleConfig) source).object, options);
 
         if (resolved == object)
             return this;

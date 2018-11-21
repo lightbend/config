@@ -40,7 +40,7 @@ object AbstractConfigValue {
     class NotPossibleToResolve private[impl] (
         val context: ResolveContext) extends RuntimeException("was not possible to resolve") {
 
-        private[impl] val traceString: String = context.traceString()
+        private[impl] val traceString: String = context.traceString
     }
 
     def replaceChildInList(
