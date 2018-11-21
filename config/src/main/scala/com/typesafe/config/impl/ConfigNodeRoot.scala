@@ -21,7 +21,7 @@ final class ConfigNodeRoot private[impl] (
         throw new ConfigException.BugOrBroken(
             "ConfigNodeRoot did not contain a value")
     }
-    protected def setValue(
+    private[impl] def setValue(
         desiredPath: String,
         value: AbstractConfigNodeValue,
         flavor: ConfigSyntax): ConfigNodeRoot = {
@@ -55,7 +55,7 @@ final class ConfigNodeRoot private[impl] (
         throw new ConfigException.BugOrBroken(
             "ConfigNodeRoot did not contain a value")
     }
-    protected def hasValue(desiredPath: String): Boolean = {
+    private[impl] def hasValue(desiredPath: String): Boolean = {
         val path = PathParser.parsePath(desiredPath)
         val childrenCopy =
             new ju.ArrayList[AbstractConfigNode](children)
