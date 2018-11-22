@@ -27,7 +27,7 @@ class ConfigTest extends TestUtils {
 
     def mergeUnresolved(toMerge: AbstractConfigObject*) = {
         if (toMerge.isEmpty) {
-            SimpleConfigObject.empty()
+            SimpleConfigObject.empty
         } else {
             toMerge.reduce((first, second) => first.withFallback(second))
         }
@@ -468,7 +468,7 @@ class ConfigTest extends TestUtils {
         val emptyIgnoringFallbacks = empty.withFallback(primitive)
         val nonEmptyIgnoringFallbacks = nonEmpty.withFallback(primitive)
 
-        assertEquals(false, empty.ignoresFallbacks())
+        assertEquals(false, empty.ignoresFallbacks)
         assertEquals(true, primitive.ignoresFallbacks)
         assertEquals(true, emptyIgnoringFallbacks.ignoresFallbacks)
         assertEquals(false, ignoresFallbacks(nonEmpty))

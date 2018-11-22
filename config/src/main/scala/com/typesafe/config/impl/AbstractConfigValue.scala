@@ -76,14 +76,6 @@ object AbstractConfigValue {
         false
     }
 
-    private[impl] trait Modifier {
-        // keyOrNull is null for non-objects
-        @throws[Exception]
-        def modifyChildMayThrow(
-            keyOrNull: String,
-            v: AbstractConfigValue): AbstractConfigValue
-    }
-
     def indent(
         sb: jl.StringBuilder,
         indent: Int,
@@ -95,6 +87,35 @@ object AbstractConfigValue {
                 remaining -= 1
             }
         }
+    }
+
+    private[impl] trait Modifier {
+        // keyOrNull is null for non-objects
+        @throws[Exception]
+        def modifyChildMayThrow(
+            keyOrNull: String,
+            v: AbstractConfigValue): AbstractConfigValue
+    }
+
+    private[impl] abstract class NoExceptionsModifier
+        extends AbstractConfigValue.Modifier {
+
+        @throws[Exception]
+        override final def modifyChildMayThrow(
+            keyOrNull: String,
+            v: AbstractConfigValue): AbstractConfigValue =
+            try modifyChild(keyOrNull, v)
+            catch {
+                case e: RuntimeException =>
+                    throw e
+                case e: Exception =>
+                    throw new ConfigException.BugOrBroken("Unexpected exception", e)
+            }
+
+        private[impl] def modifyChild(
+            keyOrNull: String,
+            v: AbstractConfigValue): AbstractConfigValue
+
     }
 }
 
@@ -134,27 +155,6 @@ abstract class AbstractConfigValue private[impl] (val _origin: ConfigOrigin)
      *         to do
      */
     private[impl] def relativized(prefix: Path) = this
-
-    abstract protected class NoExceptionsModifier
-        extends AbstractConfigValue.Modifier {
-
-        @throws[Exception]
-        override final def modifyChildMayThrow(
-            keyOrNull: String,
-            v: AbstractConfigValue): AbstractConfigValue =
-            try modifyChild(keyOrNull, v)
-            catch {
-                case e: RuntimeException =>
-                    throw e
-                case e: Exception =>
-                    throw new ConfigException.BugOrBroken("Unexpected exception", e)
-            }
-
-        private[impl] def modifyChild(
-            keyOrNull: String,
-            v: AbstractConfigValue): AbstractConfigValue
-
-    }
 
     override def toFallbackValue: AbstractConfigValue = this
 
@@ -293,7 +293,7 @@ abstract class AbstractConfigValue private[impl] (val _origin: ConfigOrigin)
         getClass.getSimpleName + "(" + sb.toString + ")"
     }
 
-    protected def render(
+    private[impl] def render(
         sb: jl.StringBuilder,
         indent: Int,
         atRoot: Boolean,

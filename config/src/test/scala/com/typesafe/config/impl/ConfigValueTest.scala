@@ -395,7 +395,7 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configDelayedMergeObjectEquality() {
-        val empty = SimpleConfigObject.empty()
+        val empty = SimpleConfigObject.empty
         val s1 = subst("foo")
         val s2 = subst("bar")
         val a = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](empty, s1, s2).asJava)
@@ -409,7 +409,7 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configDelayedMergeObjectNotSerializable() {
-        val empty = SimpleConfigObject.empty()
+        val empty = SimpleConfigObject.empty
         val s1 = subst("foo")
         val s2 = subst("bar")
         val a = new ConfigDelayedMergeObject(fakeOrigin(), List[AbstractConfigValue](empty, s1, s2).asJava)
@@ -426,7 +426,7 @@ class ConfigValueTest extends TestUtils {
         stringValue("hi").toString()
         nullValue().toString()
         boolValue(true).toString()
-        val emptyObj = SimpleConfigObject.empty()
+        val emptyObj = SimpleConfigObject.empty
         emptyObj.toString()
         (new SimpleConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]())).toString()
         subst("a").toString()
@@ -582,7 +582,7 @@ class ConfigValueTest extends TestUtils {
         unresolved { dm.unwrapped() }
 
         // ConfigDelayedMergeObject
-        val emptyObj = SimpleConfigObject.empty()
+        val emptyObj = SimpleConfigObject.empty
         val dmo = new ConfigDelayedMergeObject(fakeOrigin(),
             List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
         assertEquals(ConfigValueType.OBJECT, dmo.valueType())

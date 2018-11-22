@@ -149,7 +149,7 @@ class JsonTest extends TestUtils {
         // be sure we do the same thing as Lift when we build our JSON "DOM"
         for (valid <- whitespaceVariations(validJson, true)) {
             val liftAST = if (valid.liftBehaviorUnexpected) {
-                SimpleConfigObject.empty()
+                SimpleConfigObject.empty
             } else {
                 addOffendingJsonToException("lift", valid.test) {
                     fromJsonWithLiftParser(valid.test)

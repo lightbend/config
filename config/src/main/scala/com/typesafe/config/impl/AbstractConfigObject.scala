@@ -51,7 +51,7 @@ object AbstractConfigObject {
                 .asInstanceOf[ConfigObject]
                 .isEmpty) {
                 // don't include empty files or the .empty()
-                // config in the description, since they are
+                // config in the description, since they arex
                 // likely to be "implementation details"
             } else {
                 origins.add(v.origin)
@@ -94,7 +94,7 @@ abstract class AbstractConfigObject(origin: ConfigOrigin)
 
     override def withValue(key: String, value: ConfigValue): AbstractConfigObject
 
-    protected def withOnlyPathOrNull(path: Path): AbstractConfigObject
+    private[impl] def withOnlyPathOrNull(path: Path): AbstractConfigObject
 
     private[impl] def withOnlyPath(path: Path): AbstractConfigObject
 
