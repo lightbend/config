@@ -4,8 +4,8 @@ import java.{ util => ju }
 
 final class ConfigNodeInclude(
     final val children: ju.Collection[AbstractConfigNode],
-    protected val kind: ConfigIncludeKind,
-    protected val isRequired: Boolean) extends AbstractConfigNode {
+    private[impl] val kind: ConfigIncludeKind,
+    private[impl] val isRequired: Boolean) extends AbstractConfigNode {
 
     override def tokens: ju.Collection[Token] = {
         val tokens = new ju.ArrayList[Token]
@@ -14,7 +14,7 @@ final class ConfigNodeInclude(
         tokens
     }
 
-    protected def name: String = {
+    private[impl] def name: String = {
         import scala.collection.JavaConverters._
         for (n <- children.asScala) {
             if (n.isInstanceOf[ConfigNodeSimpleValue])

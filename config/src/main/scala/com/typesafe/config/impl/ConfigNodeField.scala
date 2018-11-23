@@ -52,7 +52,7 @@ final class ConfigNodeField(_children: ju.Collection[AbstractConfigNode])
         }
         throw new ConfigException.BugOrBroken("Field node doesn't have a path")
     }
-    protected def separator: Token = {
+    private[impl] def separator: Token = {
         for (child <- children.asScala) {
             if (child.isInstanceOf[ConfigNodeSingleToken]) {
                 val t = child.asInstanceOf[ConfigNodeSingleToken].token
@@ -62,7 +62,7 @@ final class ConfigNodeField(_children: ju.Collection[AbstractConfigNode])
         }
         null
     }
-    protected def comments: ju.List[String] = {
+    private[impl] def comments: ju.List[String] = {
         val comments = new ju.ArrayList[String]
         for (child <- children.asScala) {
             if (child.isInstanceOf[ConfigNodeComment])

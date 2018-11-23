@@ -11,7 +11,7 @@ final class ConfigNodeSimpleValue private[impl] (val token: Token)
 
     override def tokens: ju.Collection[Token] = ju.Collections.singletonList(token)
 
-    protected def value: AbstractConfigValue = {
+    private[impl] def value: AbstractConfigValue = {
         if (Tokens.isValue(token)) return Tokens.getValue(token)
         else if (Tokens.isUnquotedText(token))
             return new ConfigString.Unquoted(
