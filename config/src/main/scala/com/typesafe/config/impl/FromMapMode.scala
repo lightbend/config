@@ -3,7 +3,7 @@
  */
 package com.typesafe.config.impl
 
-class FromMapMode private (name: String, ordinal: Int)
+final class FromMapMode private (name: String, ordinal: Int)
     extends Enum[FromMapMode](name, ordinal)
 
 object FromMapMode {

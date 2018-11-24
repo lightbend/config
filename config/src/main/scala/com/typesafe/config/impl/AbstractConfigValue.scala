@@ -342,7 +342,7 @@ abstract class AbstractConfigValue private[impl] (val _origin: ConfigOrigin)
     // other strings or by the DefaultTransformer.
     private[impl] def transformToString: String = null
 
-    private[impl] def atKey(origin: ConfigOrigin, key: String) = {
+    private[impl] def atKey(origin: ConfigOrigin, key: String): SimpleConfig = {
         val m =
             Collections.singletonMap(key, this)
         new SimpleConfigObject(origin, m).toConfig
@@ -350,10 +350,10 @@ abstract class AbstractConfigValue private[impl] (val _origin: ConfigOrigin)
 
     override def atKey(key: String): SimpleConfig = atKey(SimpleConfigOrigin.newSimple("atKey(" + key + ")"), key)
 
-    private[impl] def atPath(origin: ConfigOrigin, path: Path) = {
+    private[impl] def atPath(origin: ConfigOrigin, path: Path): SimpleConfig = {
         var parent = path.parent
         var result = atKey(origin, path.last)
-        while ({ parent != null }) {
+        while (parent != null) {
             val key = parent.last
             result = result.atKey(origin, key)
             parent = parent.parent

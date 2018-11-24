@@ -1,6 +1,6 @@
 package com.typesafe.config.impl
 
-class ConfigIncludeKind private (name: String, ordinal: Int)
+final class ConfigIncludeKind private (name: String, ordinal: Int)
     extends Enum[ConfigIncludeKind](name, ordinal)
 
 object ConfigIncludeKind {

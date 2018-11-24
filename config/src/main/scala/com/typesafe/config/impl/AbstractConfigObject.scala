@@ -21,7 +21,8 @@ object AbstractConfigObject {
     private def peekPath(
         self: AbstractConfigObject,
         path: Path): AbstractConfigValue =
-        try { // we'll fail if anything along the path can't
+        try {
+            // we'll fail if anything along the path can't
             // be looked at without resolving.
             val next = path.remainder
             val v = self.attemptPeekWithPartialResolve(path.first)
@@ -111,7 +112,7 @@ abstract class AbstractConfigObject(origin: ConfigOrigin)
      * @param key
      * @return the unmodified raw value or null
      */
-    final protected def peekAssumingResolved(key: String, originalPath: Path): AbstractConfigValue =
+    final private[impl] def peekAssumingResolved(key: String, originalPath: Path): AbstractConfigValue =
         try {
             attemptPeekWithPartialResolve(key)
         } catch {
@@ -138,7 +139,7 @@ abstract class AbstractConfigObject(origin: ConfigOrigin)
      * if the path is not found; throws ConfigException.NotResolved if we need
      * to go through an unresolved node to look up the path.
      */
-    protected def peekPath(path: Path): AbstractConfigValue = AbstractConfigObject.peekPath(this, path)
+    private[impl] def peekPath(path: Path): AbstractConfigValue = AbstractConfigObject.peekPath(this, path)
 
     override def valueType: ConfigValueType = ConfigValueType.OBJECT
 

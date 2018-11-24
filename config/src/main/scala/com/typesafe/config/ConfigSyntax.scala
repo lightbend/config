@@ -11,7 +11,7 @@ package com.typesafe.config;
  * >Java properties</a>).
  *
  */
-class ConfigSyntax private (name: String, ordinal: Int)
+final class ConfigSyntax private (name: String, ordinal: Int)
     extends Enum[ConfigSyntax](name, ordinal)
 
 object ConfigSyntax {
@@ -47,6 +47,6 @@ object ConfigSyntax {
 
     def valueOf(name: String): ConfigSyntax =
         _values.find(_.name == name).getOrElse {
-            throw new IllegalArgumentException("No enum const Status." + name)
+            throw new IllegalArgumentException("No enum const ConfigSyntax." + name)
         }
 }

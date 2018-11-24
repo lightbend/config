@@ -3,7 +3,7 @@
  */
 package com.typesafe.config.impl
 
-class TokenType private (name: String, ordinal: Int)
+final class TokenType private (name: String, ordinal: Int)
     extends Enum[TokenType](name, ordinal)
 
 object TokenType {

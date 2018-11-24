@@ -1,7 +1,7 @@
 package com.typesafe.config.impl
 
 // caution: ordinals used in serialization
-class OriginType private (name: String, ordinal: Int)
+final class OriginType private (name: String, ordinal: Int)
     extends Enum[OriginType](name, ordinal)
 
 object OriginType {

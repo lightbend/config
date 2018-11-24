@@ -7,7 +7,7 @@ package com.typesafe.config
  * The type of a configuration value (following the <a
  * href="http://json.org">JSON</a> type schema).
  */
-class ConfigValueType private (name: String, ordinal: Int)
+final class ConfigValueType private (name: String, ordinal: Int)
     extends Enum[ConfigValueType](name, ordinal)
 
 object ConfigValueType {
