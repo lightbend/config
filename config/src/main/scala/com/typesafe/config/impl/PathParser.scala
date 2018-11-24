@@ -50,7 +50,7 @@ object PathParser {
         parsePathExpression(expression, origin, null, null, ConfigSyntax.CONF)
     protected def parsePathExpression(expression: ju.Iterator[Token], origin: ConfigOrigin, originalText: String): Path =
         parsePathExpression(expression, origin, originalText, null, ConfigSyntax.CONF)
-    protected def parsePathNodeExpression(expression: ju.Iterator[Token], origin: ConfigOrigin): ConfigNodePath =
+    private[impl] def parsePathNodeExpression(expression: ju.Iterator[Token], origin: ConfigOrigin): ConfigNodePath =
         parsePathNodeExpression(expression, origin, null, ConfigSyntax.CONF)
     protected def parsePathNodeExpression(expression: ju.Iterator[Token], origin: ConfigOrigin, originalText: String,
         flavor: ConfigSyntax): ConfigNodePath = {
