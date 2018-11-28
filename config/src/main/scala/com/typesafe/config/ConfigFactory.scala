@@ -483,8 +483,8 @@ object ConfigFactory {
      * making changes, then calling {@link #load()}, will work. Make changes
      * before you invalidate.
      */
-    def invalidateCaches(): Unit = { // We rely on this having the side effect that it drops
-        // all caches
+    def invalidateCaches(): Unit = {
+        // We rely on this having the side effect that it drops all caches
         ConfigImpl.reloadSystemPropertiesConfig()
         ConfigImpl.reloadEnvVariablesConfig()
     }

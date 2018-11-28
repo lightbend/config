@@ -298,7 +298,7 @@ abstract trait TestUtils {
     }
 
     def includer() = {
-        ConfigImpl.defaultIncluder()
+        ConfigImpl.defaultIncluder
     }
 
     case class ParseTest(liftBehaviorUnexpected: Boolean, whitespaceMatters: Boolean, test: String)

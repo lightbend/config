@@ -66,7 +66,7 @@ object ConfigValueFactory {
      *            name of origin file or brief description of what the value is
      * @return a new value
      */
-    def fromAnyRef(`object`: Any, originDescription: String): ConfigValue =
+    def fromAnyRef(`object`: AnyRef, originDescription: String): ConfigValue =
         ConfigImpl.fromAnyRef(`object`, originDescription)
 
     /**
@@ -118,7 +118,7 @@ object ConfigValueFactory {
      * @param object a plain Java value
      * @return a new {@link ConfigValue}
      */
-    def fromAnyRef(`object`: Any): ConfigValue = fromAnyRef(`object`, null)
+    def fromAnyRef(`object`: AnyRef): ConfigValue = fromAnyRef(`object`, null)
 
     /**
      * See the other overload {@link #fromMap(Map,String)} for details, this one

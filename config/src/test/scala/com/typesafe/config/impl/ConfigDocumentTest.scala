@@ -188,7 +188,7 @@ class ConfigDocumentTest extends TestUtils {
         val finalText = "{\"a\": 12}"
         val configDocHOCON = ConfigDocumentFactory.parseString(origText)
         val configDocJSON = ConfigDocumentFactory.parseString(origText, ConfigParseOptions.defaults.setSyntax(ConfigSyntax.JSON))
-        val newValue = ConfigValueFactory.fromAnyRef(12)
+        val newValue = ConfigValueFactory.fromAnyRef(12: Integer)
         assertEquals(origText, configDocHOCON.render())
         assertEquals(origText, configDocJSON.render())
         assertEquals(finalText, configDocHOCON.withValue("a", newValue).render())
