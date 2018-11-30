@@ -82,7 +82,7 @@ object ConfigException {
         because of Scala's primary constructor constraints and the way these
         classes work we need to guard against null Origin */
     private def makeMessage(origin: ConfigOrigin, message: String): String =
-        if (origin != null) origin.description() + ": " + message else message
+        if (origin != null) origin.description + ": " + message else message
 
     /**
      * Exception indicating that the type of a value does not match the type you

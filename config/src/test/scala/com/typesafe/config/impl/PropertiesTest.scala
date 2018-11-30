@@ -178,7 +178,7 @@ class PropertiesTest extends TestUtils {
                 a = ${a} [ 5, 6 ]
                 a = [-2, -1] ${a}
                 """)
-        val conf = conf2.withFallback(conf1).resolve()
+        val conf = conf2.withFallback(conf1).resolve
         val reference = ConfigFactory.parseString("{ a : [-2,-1,0,1,2,3,4,5,6] }")
 
         assertEquals(Seq(-2, -1, 0, 1, 2, 3, 4, 5, 6), conf.getIntList("a").asScala.toSeq)
@@ -193,6 +193,6 @@ class PropertiesTest extends TestUtils {
 
         val conf = ConfigFactory.parseProperties(props)
 
-        assertEquals(0, conf.root().size())
+        assertEquals(0, conf.root.size())
     }
 }

@@ -26,14 +26,14 @@ trait ConfigValue extends ConfigMergeable {
      *
      * @return where the value came from
      */
-    def origin(): ConfigOrigin
+    def origin: ConfigOrigin
 
     /**
      * The {@link ConfigValueType} of the value; matches the JSON type schema.
      *
      * @return value's type
      */
-    def valueType(): ConfigValueType
+    def valueType: ConfigValueType
 
     /**
      * Returns the value as a plain Java boxed value, that is, a {@code String},
@@ -44,7 +44,7 @@ trait ConfigValue extends ConfigMergeable {
      *
      * @return a plain Java value corresponding to this ConfigValue
      */
-    def unwrapped(): AnyRef
+    def unwrapped: AnyRef
 
     /**
      * Renders the config value as a HOCON string. This method is primarily
@@ -63,7 +63,7 @@ trait ConfigValue extends ConfigMergeable {
      *
      * @return the rendered value
      */
-    def render(): String
+    def render: String
 
     /**
      * Renders the config value to a string, using the provided options.

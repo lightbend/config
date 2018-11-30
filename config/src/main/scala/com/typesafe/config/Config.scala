@@ -175,7 +175,7 @@ trait Config extends ConfigMergeable {
      *
      * @return the root object in the configuration
      */
-    def root(): ConfigObject
+    def root: ConfigObject
 
     /**
      * Gets the origin of the {@code Config}, which may be a file, or a file
@@ -183,7 +183,7 @@ trait Config extends ConfigMergeable {
      *
      * @return the origin of the { @code Config} for use in error messages
      */
-    def origin(): ConfigOrigin
+    def origin: ConfigOrigin
 
     override def withFallback(other: ConfigMergeable): Config
 
@@ -242,7 +242,7 @@ trait Config extends ConfigMergeable {
      * @throws ConfigException
      * some other config exception if there are other problems
      */
-    def resolve(): Config
+    def resolve: Config
 
     /**
      * Like {@link Config#resolve()} but allows you to specify non-default
@@ -267,7 +267,7 @@ trait Config extends ConfigMergeable {
      *         configuration.
      * @since 1.2.0
      */
-    def isResolved(): Boolean
+    def isResolved: Boolean
 
     /**
      * Like {@link Config#resolve()} except that substitution values are looked
@@ -467,7 +467,7 @@ trait Config extends ConfigMergeable {
      *
      * @return true if the configuration is empty
      */
-    def isEmpty(): Boolean
+    def isEmpty: Boolean
 
     /**
      * Returns the set of path-value pairs, excluding any null values, found by
@@ -491,7 +491,7 @@ trait Config extends ConfigMergeable {
      *         entire tree of { @link ConfigObject} and creating an entry for
      *                                each leaf value.
      */
-    def entrySet(): ju.Set[ju.Map.Entry[String, ConfigValue]]
+    def entrySet: ju.Set[ju.Map.Entry[String, ConfigValue]]
 
     /**
      * Checks whether a value is set to null at the given path,

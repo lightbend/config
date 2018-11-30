@@ -278,17 +278,17 @@ abstract trait TestUtils {
         import scala.collection.JavaConverters._
         (a, b) match {
             case (obj1: ConfigObject, obj2: ConfigObject) =>
-                assertEquals(obj1.origin(), obj2.origin())
+                assertEquals(obj1.origin, obj2.origin)
                 for (e <- obj1.entrySet().asScala) {
                     checkEqualOrigins(e.getValue(), obj2.get(e.getKey()))
                 }
             case (list1: ConfigList, list2: ConfigList) =>
-                assertEquals(list1.origin(), list2.origin())
+                assertEquals(list1.origin, list2.origin)
                 for ((v1, v2) <- list1.asScala zip list2.asScala) {
                     checkEqualOrigins(v1, v2)
                 }
             case (value1: ConfigValue, value2: ConfigValue) =>
-                assertEquals(value1.origin(), value2.origin())
+                assertEquals(value1.origin, value2.origin)
             case _ =>
         }
     }
@@ -807,7 +807,7 @@ abstract trait TestUtils {
     sealed abstract class Problem(path: String, line: Int) {
         def check(p: ConfigException.ValidationProblem) {
             assertEquals("matching path", path, p.path)
-            assertEquals("matching line for " + path, line, p.origin.lineNumber())
+            assertEquals("matching line for " + path, line, p.origin.lineNumber)
         }
 
         protected def assertMessage(p: ConfigException.ValidationProblem, re: String) {
@@ -844,7 +844,7 @@ abstract trait TestUtils {
         val problems = e.problems.asScala.toIndexedSeq.sortBy(_.path).sortBy(_.origin.lineNumber)
 
         //for (problem <- problems)
-        //    System.err.println(problem.origin().description() + ": " + problem.path() + ": " + problem.problem())
+        //    System.err.println(problem.origin.description() + ": " + problem.path() + ": " + problem.problem())
 
         for ((problem, expected) <- problems zip expecteds) {
             expected.check(problem)

@@ -42,7 +42,7 @@ trait ConfigIncludeContext {
      *
      * @return the parse options
      */
-    def parseOptions(): ConfigParseOptions
+    def parseOptions: ConfigParseOptions
 
     /**
      * Copy this {@link ConfigIncludeContext} giving it a new value for its parseOptions.

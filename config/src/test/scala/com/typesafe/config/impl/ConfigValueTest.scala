@@ -199,16 +199,16 @@ class ConfigValueTest extends TestUtils {
         checkNotEqualObjects(b, c)
 
         // the config for an equal object is also equal
-        val config = a.toConfig()
+        val config = a.toConfig
         checkEqualObjects(config, config)
-        checkEqualObjects(config, sameAsA.toConfig())
-        checkEqualObjects(a.toConfig(), config)
-        checkNotEqualObjects(config, b.toConfig())
-        checkNotEqualObjects(config, c.toConfig())
+        checkEqualObjects(config, sameAsA.toConfig)
+        checkEqualObjects(a.toConfig, config)
+        checkNotEqualObjects(config, b.toConfig)
+        checkNotEqualObjects(config, c.toConfig)
 
         // configs are not equal to objects
-        checkNotEqualObjects(a, a.toConfig())
-        checkNotEqualObjects(b, b.toConfig())
+        checkNotEqualObjects(a, a.toConfig)
+        checkNotEqualObjects(b, b.toConfig)
     }
 
     @Test
@@ -239,7 +239,7 @@ class ConfigValueTest extends TestUtils {
 
         val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val a = new SimpleConfigObject(fakeOrigin(), aMap)
-        val b = checkSerializableOldFormat(expectedSerialization, a.toConfig())
+        val b = checkSerializableOldFormat(expectedSerialization, a.toConfig)
         assertEquals(1, b.getInt("a"))
         // check that deserialized Config and ConfigObject refer to each other
         assertTrue(b.root.toConfig eq b)
@@ -273,7 +273,7 @@ class ConfigValueTest extends TestUtils {
 
         val aMap = configMap("a" -> 1, "b" -> 2, "c" -> 3)
         val a = new SimpleConfigObject(fakeOrigin(), aMap)
-        val b = checkSerializable(expectedSerialization, a.toConfig())
+        val b = checkSerializable(expectedSerialization, a.toConfig)
         assertEquals(1, b.getInt("a"))
         // check that deserialized Config and ConfigObject refer to each other
         assertTrue(b.root.toConfig eq b)
@@ -320,7 +320,7 @@ class ConfigValueTest extends TestUtils {
         val aScalaSeq = Seq(1, 2, 3) map { intValue(_): AbstractConfigValue }
         val aList = new SimpleConfigList(fakeOrigin(), aScalaSeq.asJava)
         val bList = checkSerializable(expectedSerialization, aList)
-        assertEquals(1, bList.get(0).unwrapped())
+        assertEquals(1, bList.get(0).unwrapped)
     }
 
     @Test
@@ -449,7 +449,7 @@ class ConfigValueTest extends TestUtils {
     def configObjectUnwraps() {
         val m = new SimpleConfigObject(fakeOrigin(),
             configMap("a" -> 1, "b" -> 2, "c" -> 3))
-        assertEquals(Map("a" -> 1, "b" -> 2, "c" -> 3), m.unwrapped().asScala)
+        assertEquals(Map("a" -> 1, "b" -> 2, "c" -> 3), m.unwrapped.asScala)
     }
 
     @Test
@@ -573,20 +573,20 @@ class ConfigValueTest extends TestUtils {
     @Test
     def notResolvedThrown() {
         // ConfigSubstitution
-        unresolved { subst("foo").valueType() }
-        unresolved { subst("foo").unwrapped() }
+        unresolved { subst("foo").valueType }
+        unresolved { subst("foo").unwrapped }
 
         // ConfigDelayedMerge
         val dm = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](subst("a"), subst("b")).asJava)
-        unresolved { dm.valueType() }
-        unresolved { dm.unwrapped() }
+        unresolved { dm.valueType }
+        unresolved { dm.unwrapped }
 
         // ConfigDelayedMergeObject
         val emptyObj = SimpleConfigObject.empty
         val dmo = new ConfigDelayedMergeObject(fakeOrigin(),
             List[AbstractConfigValue](emptyObj, subst("a"), subst("b")).asJava)
-        assertEquals(ConfigValueType.OBJECT, dmo.valueType())
-        unresolved { dmo.unwrapped() }
+        assertEquals(ConfigValueType.OBJECT, dmo.valueType)
+        unresolved { dmo.unwrapped }
         unresolved { dmo.get("foo") }
         unresolved { dmo.containsKey(null) }
         unresolved { dmo.containsValue(null) }
@@ -628,7 +628,7 @@ class ConfigValueTest extends TestUtils {
             new SimpleConfigObject(SimpleConfigOrigin.newSimple(desc), values);
         }
         def m(values: AbstractConfigObject*) = {
-            AbstractConfigObject.mergeOrigins(values: _*).description()
+            AbstractConfigObject.mergeOrigins(values: _*).description
         }
 
         // simplest case
@@ -688,13 +688,13 @@ class ConfigValueTest extends TestUtils {
         // the general idea is that the destination type should depend
         // only on the actual numeric value, not on the type of the source
         // value.
-        assertEquals(3.14, nD(3.14).unwrapped())
-        assertEquals(1, nL(1).unwrapped())
-        assertEquals(1, nD(1.0).unwrapped())
-        assertEquals(Int.MaxValue + 1L, nL(Int.MaxValue + 1L).unwrapped())
-        assertEquals(Int.MinValue - 1L, nL(Int.MinValue - 1L).unwrapped())
-        assertEquals(Int.MaxValue + 1L, nD(Int.MaxValue + 1.0).unwrapped())
-        assertEquals(Int.MinValue - 1L, nD(Int.MinValue - 1.0).unwrapped())
+        assertEquals(3.14, nD(3.14).unwrapped)
+        assertEquals(1, nL(1).unwrapped)
+        assertEquals(1, nD(1.0).unwrapped)
+        assertEquals(Int.MaxValue + 1L, nL(Int.MaxValue + 1L).unwrapped)
+        assertEquals(Int.MinValue - 1L, nL(Int.MinValue - 1L).unwrapped)
+        assertEquals(Int.MaxValue + 1L, nD(Int.MaxValue + 1.0).unwrapped)
+        assertEquals(Int.MinValue - 1L, nD(Int.MinValue - 1.0).unwrapped)
     }
 
     @Test
@@ -717,22 +717,22 @@ class ConfigValueTest extends TestUtils {
         val filenameWithLine = hasFilename.withLineNumber(3)
         val noFilenameWithLine = noFilename.withLineNumber(4)
 
-        assertEquals("foo", hasFilename.filename())
-        assertEquals("foo", filenameWithLine.filename())
-        assertNull(noFilename.filename())
-        assertNull(noFilenameWithLine.filename())
+        assertEquals("foo", hasFilename.filename)
+        assertEquals("foo", filenameWithLine.filename)
+        assertNull(noFilename.filename)
+        assertNull(noFilenameWithLine.filename)
 
-        assertEquals("foo", hasFilename.description())
-        assertEquals("bar", noFilename.description())
+        assertEquals("foo", hasFilename.description)
+        assertEquals("bar", noFilename.description)
 
-        assertEquals(-1, hasFilename.lineNumber())
-        assertEquals(-1, noFilename.lineNumber())
+        assertEquals(-1, hasFilename.lineNumber)
+        assertEquals(-1, noFilename.lineNumber)
 
-        assertEquals("foo: 3", filenameWithLine.description())
-        assertEquals("bar: 4", noFilenameWithLine.description());
+        assertEquals("foo: 3", filenameWithLine.description)
+        assertEquals("bar: 4", noFilenameWithLine.description);
 
-        assertEquals(3, filenameWithLine.lineNumber())
-        assertEquals(4, noFilenameWithLine.lineNumber())
+        assertEquals(3, filenameWithLine.lineNumber)
+        assertEquals(4, noFilenameWithLine.lineNumber)
 
         // the filename is made absolute when converting to url
         assertTrue(hasFilename.url.toExternalForm.contains("foo"))
@@ -965,7 +965,7 @@ class ConfigValueTest extends TestUtils {
         val list = new SimpleConfigList(SimpleConfigOrigin.newSimple("\n5\n6\n7\n"),
             java.util.Collections.singletonList(v.asInstanceOf[AbstractConfigValue]))
         val conf = ConfigFactory.empty().withValue("bar", list)
-        val rendered = conf.root.render()
+        val rendered = conf.root.render
         def assertHas(s: String): Unit =
             assertTrue(s"has ${s.replace("\n", "\\n")} in it", rendered.contains(s))
         assertHas("is a description\n")

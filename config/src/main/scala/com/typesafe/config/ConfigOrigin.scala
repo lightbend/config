@@ -34,7 +34,7 @@ trait ConfigOrigin {
      *
      * @return string describing the origin
      */
-    def description(): String
+    def description: String
 
     /**
      * Returns a filename describing the origin. This will return null if the
@@ -42,7 +42,7 @@ trait ConfigOrigin {
      *
      * @return filename of the origin or null
      */
-    def filename(): String
+    def filename: String
 
     /**
      * Returns a URL describing the origin. This will return null if the origin
@@ -50,7 +50,7 @@ trait ConfigOrigin {
      *
      * @return url of the origin or null
      */
-    def url(): URL
+    def url: URL
 
     /**
      * Returns a classpath resource name describing the origin. This will return
@@ -58,7 +58,7 @@ trait ConfigOrigin {
      *
      * @return resource name of the origin or null
      */
-    def resource(): String
+    def resource: String
 
     /**
      * Returns a line number where the value or exception originated. This will
@@ -66,7 +66,7 @@ trait ConfigOrigin {
      *
      * @return line number or -1 if none is available
      */
-    def lineNumber(): Int
+    def lineNumber: Int
 
     /**
      * Returns any comments that appeared to "go with" this place in the file.
@@ -78,7 +78,7 @@ trait ConfigOrigin {
      * @return any comments that seemed to "go with" this origin, empty list if
      *         none
      */
-    def comments(): List[String]
+    def comments: List[String]
 
     /**
      * Returns a {@code ConfigOrigin} based on this one, but with the given

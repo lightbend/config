@@ -181,7 +181,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
         val resolved = resolve(obj)
 
-        assertTrue(resolved.isEmpty())
+        assertTrue(resolved.isEmpty)
     }
 
     private val substChainObject = {
@@ -533,7 +533,7 @@ class ConfigSubstitutionTest extends TestUtils {
         assertTrue(delayedMergeObjectResolveProblem6.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
 
         // should be able to attemptPeekWithPartialResolve() a known non-object without resolving
-        assertEquals(101, delayedMergeObjectResolveProblem6.toConfig().getObject("item1").attemptPeekWithPartialResolve("xyz").unwrapped())
+        assertEquals(101, delayedMergeObjectResolveProblem6.toConfig.getObject("item1").attemptPeekWithPartialResolve("xyz").unwrapped)
 
         val resolved = resolveWithoutFallbacks(delayedMergeObjectResolveProblem6)
 
@@ -583,7 +583,7 @@ class ConfigSubstitutionTest extends TestUtils {
         assertTrue(delayedMergeObjectWithKnownValue.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
 
         val e = intercept[ConfigException.NotResolved] {
-            delayedMergeObjectNeedsFullResolve.toConfig().getObject("item1.b")
+            delayedMergeObjectNeedsFullResolve.toConfig.getObject("item1.b")
         }
 
         assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("item1.b"))
@@ -615,7 +615,7 @@ class ConfigSubstitutionTest extends TestUtils {
         assertTrue(delayedMergeObjectEmbrace.attemptPeekWithPartialResolve("item1").isInstanceOf[ConfigDelayedMergeObject])
         assertTrue(delayedMergeObjectEmbrace.attemptPeekWithPartialResolve("item2").isInstanceOf[ConfigDelayedMergeObject])
 
-        val resolved = delayedMergeObjectEmbrace.toConfig.resolve()
+        val resolved = delayedMergeObjectEmbrace.toConfig.resolve
         assertEquals(1, resolved.getInt("item1.c"))
         assertEquals(1, resolved.getInt("item2.d"))
         assertEquals(15, resolved.getInt("item1.x"))
@@ -639,7 +639,7 @@ class ConfigSubstitutionTest extends TestUtils {
         assertTrue(plainObjectEmbrace.attemptPeekWithPartialResolve("item1").isInstanceOf[SimpleConfigObject])
         assertTrue(plainObjectEmbrace.attemptPeekWithPartialResolve("item2").isInstanceOf[SimpleConfigObject])
 
-        val resolved = plainObjectEmbrace.toConfig.resolve()
+        val resolved = plainObjectEmbrace.toConfig.resolve
         assertEquals(14, resolved.getInt("item1.b"))
         assertEquals(10, resolved.getInt("item2.e"))
         assertEquals(14, resolved.getInt("item2.f"))
@@ -737,7 +737,7 @@ class ConfigSubstitutionTest extends TestUtils {
 
         val resolved = resolve(ConfigFactory.systemProperties().withFallback(props).root.asInstanceOf[AbstractConfigObject])
 
-        assertEquals(List("0", "1"), resolved.getList("a").unwrapped().asScala)
+        assertEquals(List("0", "1"), resolved.getList("a").unwrapped.asScala)
     }
 
     @Test
@@ -750,7 +750,7 @@ class ConfigSubstitutionTest extends TestUtils {
         //"testList.0" and "testList.1" are defined as envVars in build.sbt
         val resolved = resolve(props)
 
-        assertEquals(List("0", "1"), resolved.getList("a").unwrapped().asScala)
+        assertEquals(List("0", "1"), resolved.getList("a").unwrapped.asScala)
     }
 
     // this is a weird test, it used to test fallback to system props which made more sense.
@@ -986,8 +986,8 @@ class ConfigSubstitutionTest extends TestUtils {
         // whether we resolve a or b first.
         val obj = parseObject("""a=1, b={c=5}, b=${a}, a=${b}""")
         val resolved = resolve(obj)
-        val option1 = parseObject(""" b={c=5}, a={c=5} """).toConfig()
-        val option2 = parseObject(""" b=1, a=1 """).toConfig()
+        val option1 = parseObject(""" b={c=5}, a={c=5} """).toConfig
+        val option2 = parseObject(""" b=1, a=1 """).toConfig
         assertTrue("not an expected possibility: " + resolved +
             " expected 1: " + option1 + " or 2: " + option2,
             resolved == option1 || resolved == option2)

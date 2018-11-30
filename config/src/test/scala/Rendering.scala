@@ -26,7 +26,7 @@ object RenderExample extends App {
         println("=== END UNRESOLVED " + what)
 
         println("=== BEGIN RESOLVED " + what)
-        print(conf.resolve().root.render(options))
+        print(conf.resolve.root.render(options))
         println("=== END RESOLVED " + what)
     }
 

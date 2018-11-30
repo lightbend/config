@@ -37,15 +37,15 @@ class JsonTest extends TestUtils {
             case v: ConfigList =>
                 lift.JArray(v.asScala.toList.map({ elem => toLift(elem) }))
             case v: ConfigBoolean =>
-                lift.JBool(v.unwrapped())
+                lift.JBool(v.unwrapped)
             case v: ConfigInt =>
-                lift.JInt(BigInt(v.unwrapped()))
+                lift.JInt(BigInt(v.unwrapped))
             case v: ConfigLong =>
-                lift.JInt(BigInt(v.unwrapped()))
+                lift.JInt(BigInt(v.unwrapped))
             case v: ConfigDouble =>
-                lift.JDouble(v.unwrapped())
+                lift.JDouble(v.unwrapped)
             case v: ConfigString =>
-                lift.JString(v.unwrapped())
+                lift.JString(v.unwrapped)
             case v: ConfigNull =>
                 lift.JNull
         }

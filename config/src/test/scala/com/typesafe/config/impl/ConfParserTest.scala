@@ -56,7 +56,7 @@ class ConfParserTest extends TestUtils {
                 parse(valid.test)
             }
             // let's also check round-trip rendering
-            val rendered = ourAST.render()
+            val rendered = ourAST.render
             val reparsed = addOffendingJsonToException("config-conf-reparsed", rendered) {
                 parse(rendered)
             }
@@ -362,16 +362,16 @@ class ConfParserTest extends TestUtils {
     }
 
     private def assertComments(comments: Seq[String], conf: Config) {
-        assertEquals(comments, conf.root().origin().comments().asScala.toSeq)
+        assertEquals(comments, conf.root.origin.comments.asScala.toSeq)
     }
 
     private def assertComments(comments: Seq[String], conf: Config, path: String) {
-        assertEquals(comments, conf.getValue(path).origin().comments().asScala.toSeq)
+        assertEquals(comments, conf.getValue(path).origin.comments.asScala.toSeq)
     }
 
     private def assertComments(comments: Seq[String], conf: Config, path: String, index: Int) {
         val v = conf.getList(path).get(index)
-        assertEquals(comments, v.origin().comments().asScala.toSeq)
+        assertEquals(comments, v.origin.comments.asScala.toSeq)
     }
 
     @Test
@@ -742,7 +742,7 @@ class ConfParserTest extends TestUtils {
         val url = resourceFile("test01").toURI().toURL().toExternalForm()
         val conf = ConfigFactory.parseString("include url(" + quoteJsonString(url) + ")")
 
-        assertTrue("including basename URL doesn't load anything", conf.isEmpty())
+        assertTrue("including basename URL doesn't load anything", conf.isEmpty)
     }
 
     @Test
@@ -847,7 +847,7 @@ class ConfParserTest extends TestUtils {
         val url = resourceFile("test01").toURI().toURL().toExternalForm()
         val conf = ConfigFactory.parseString("include " + quoteJsonString(url))
 
-        assertTrue("including basename URL doesn't load anything", conf.isEmpty())
+        assertTrue("including basename URL doesn't load anything", conf.isEmpty)
     }
 
     @Test

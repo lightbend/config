@@ -34,7 +34,7 @@ class ApiExamples {
         // just showing how ConfigObject stores a tree of values.)
         val c: Int = obj.get("ints")
             .asInstanceOf[ConfigObject]
-            .get("fortyTwo").unwrapped()
+            .get("fortyTwo").unwrapped
             .asInstanceOf[java.lang.Integer]
 
         // this is unfortunate; asScala creates a mutable map but

@@ -69,7 +69,7 @@ trait ConfigObject extends ConfigValue with ju.Map[String, ConfigValue] {
      *
      * @return a {@link Config} with this object as its root
      */
-    def toConfig(): Config
+    def toConfig: Config
 
     /**
      * Recursively unwraps the object, returning a map from String to whatever
@@ -77,7 +77,7 @@ trait ConfigObject extends ConfigValue with ju.Map[String, ConfigValue] {
      *
      * @return a {@link java.util.Map} containing plain Java objects
      */
-    override def unwrapped(): ju.Map[String, AnyRef]
+    override def unwrapped: ju.Map[String, AnyRef]
     override def withFallback(other: ConfigMergeable): ConfigObject
 
     /**

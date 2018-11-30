@@ -34,7 +34,7 @@ trait ConfigParseable {
      *
      * @return the origin of the parseable item
      */
-    def origin(): ConfigOrigin
+    def origin: ConfigOrigin
 
     /**
      * Get the initial options, which can be modified then passed to parse().
@@ -43,5 +43,5 @@ trait ConfigParseable {
      *
      * @return the initial options
      */
-    def options(): ConfigParseOptions
+    def options: ConfigParseOptions
 }

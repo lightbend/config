@@ -610,7 +610,7 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(stringValue("a"), stringValue("b"), stringValue("c")), conf.getList("arrays.ofString").asScala)
 
         // make sure floats starting with a '.' are parsed as strings (they will be converted to double on demand)
-        assertEquals(ConfigValueType.STRING, conf.getValue("floats.pointThirtyThree").valueType())
+        assertEquals(ConfigValueType.STRING, conf.getValue("floats.pointThirtyThree").valueType)
     }
 
     @Test
@@ -876,7 +876,7 @@ class ConfigTest extends TestUtils {
     def test01Origins() {
         val conf = ConfigFactory.load("test01")
 
-        val o1 = conf.getValue("ints.fortyTwo").origin()
+        val o1 = conf.getValue("ints.fortyTwo").origin
         // the checkout directory would be in between this startsWith and endsWith
         assertTrue("description starts with resource '" + o1.description + "'", o1.description.startsWith("test01.conf @"))
         assertTrue("description ends with url and line '" + o1.description + "'", o1.description.endsWith("/config/target/test-classes/test01.conf: 3"))
@@ -884,7 +884,7 @@ class ConfigTest extends TestUtils {
         assertTrue("url ends with resource file", o1.url.getPath.endsWith("/config/target/test-classes/test01.conf"))
         assertEquals(3, o1.lineNumber)
 
-        val o2 = conf.getValue("fromJson1").origin()
+        val o2 = conf.getValue("fromJson1").origin
         // the checkout directory would be in between this startsWith and endsWith
         assertTrue("description starts with json resource '" + o2.description + "'", o2.description.startsWith("test01.json @"))
         assertTrue("description of json resource ends with url and line '" + o2.description + "'", o2.description.endsWith("/config/target/test-classes/test01.json: 2"))
@@ -892,7 +892,7 @@ class ConfigTest extends TestUtils {
         assertTrue("url ends with json resource file", o2.url.getPath.endsWith("/config/target/test-classes/test01.json"))
         assertEquals(2, o2.lineNumber)
 
-        val o3 = conf.getValue("fromProps.bool").origin()
+        val o3 = conf.getValue("fromProps.bool").origin
         // the checkout directory would be in between this startsWith and endsWith
         assertTrue("description starts with props resource '" + o3.description + "'", o3.description.startsWith("test01.properties @"))
         assertTrue("description of props resource ends with url '" + o3.description + "'", o3.description.endsWith("/config/target/test-classes/test01.properties"))
@@ -906,7 +906,7 @@ class ConfigTest extends TestUtils {
     def test01EntrySet() {
         val conf = ConfigFactory.load("test01")
 
-        val javaEntries = conf.entrySet()
+        val javaEntries = conf.entrySet
         val entries = Map((javaEntries.asScala.toSeq map { e => (e.getKey(), e.getValue()) }): _*)
         assertEquals(Some(intValue(42)), entries.get("ints.fortyTwo"))
         assertEquals(None, entries.get("nulls.null"))
@@ -1074,7 +1074,7 @@ class ConfigTest extends TestUtils {
         }
 
         // be sure resolving doesn't throw
-        val resolved = conf.resolve()
+        val resolved = conf.resolve
         assertEquals(3, resolved.getInt("a.c"))
         assertEquals(5, resolved.getInt("b"))
         assertEquals(10, resolved.getInt("a.q"))
@@ -1083,7 +1083,7 @@ class ConfigTest extends TestUtils {
     @Test
     def test10DelayedMergeRelativizing() {
         val conf = ConfigFactory.parseResources(classOf[ConfigTest], "/test10.conf")
-        val resolved = conf.resolve()
+        val resolved = conf.resolve
         assertEquals(3, resolved.getInt("foo.a.c"))
         assertEquals(5, resolved.getInt("foo.b"))
         assertEquals(10, resolved.getInt("foo.a.q"))
@@ -1116,7 +1116,7 @@ class ConfigTest extends TestUtils {
                 ConfigParseOptions.defaults().setAllowMissing(false))
             for (renderOptions <- optionsCombos) {
                 val unresolvedRender = conf.root.render(renderOptions)
-                val resolved = conf.resolve()
+                val resolved = conf.resolve
                 val resolvedRender = resolved.root.render(renderOptions)
                 val unresolvedParsed = ConfigFactory.parseString(unresolvedRender, ConfigParseOptions.defaults())
                 val resolvedParsed = ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults())
@@ -1161,7 +1161,7 @@ class ConfigTest extends TestUtils {
             val name = "/test" + { if (numString.size == 1) "0" else "" } + numString
             val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], name,
                 ConfigParseOptions.defaults().setAllowMissing(false))
-            val resolved = conf.resolve()
+            val resolved = conf.resolve
             checkSerializable(resolved)
         }
     }
@@ -1172,7 +1172,7 @@ class ConfigTest extends TestUtils {
         assertTrue("config with no substitutions starts as resolved", resolved.isResolved)
         val unresolved = ConfigFactory.parseString("foo = ${a}, a=42")
         assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
-        val resolved2 = unresolved.resolve()
+        val resolved2 = unresolved.resolve
         assertTrue("after resolution, config is now resolved", resolved2.isResolved)
     }
 
@@ -1181,7 +1181,7 @@ class ConfigTest extends TestUtils {
         val values = ConfigFactory.parseString("unknown = [someVal], known = 42")
         val unresolved = ConfigFactory.parseString("concat = [${unknown}[]], sibling = [${unknown}, ${known}]")
         unresolved.resolve(ConfigResolveOptions.defaults().setAllowUnresolved(true))
-        unresolved.withFallback(values).resolve()
+        unresolved.withFallback(values).resolve
         unresolved.resolveWith(values)
     }
 
@@ -1215,7 +1215,7 @@ class ConfigTest extends TestUtils {
         // scope "val resolved"
         {
             // and given the values for the resolve, we should be able to
-            val resolved = allowedUnresolved.withFallback(values).resolve()
+            val resolved = allowedUnresolved.withFallback(values).resolve
             for (kv <- Seq("a" -> 1, "b" -> 2, "c.x" -> 3, "c.y" -> 4)) {
                 assertEquals(kv._2, resolved.getInt(kv._1))
             }
@@ -1238,7 +1238,7 @@ class ConfigTest extends TestUtils {
     def resolveWithWorks(): Unit = {
         // the a=42 is present here to be sure it gets ignored when we resolveWith
         val unresolved = ConfigFactory.parseString("foo = ${a}, a = 42")
-        assertEquals(42, unresolved.resolve().getInt("foo"))
+        assertEquals(42, unresolved.resolve.getInt("foo"))
         val source = ConfigFactory.parseString("a = 43")
         val resolved = unresolved.resolveWith(source)
         assertEquals(43, resolved.getInt("foo"))
@@ -1274,7 +1274,7 @@ class ConfigTest extends TestUtils {
         var options = ConfigResolveOptions.defaults().setAllowUnresolved(allowUnresolved)
         for (resolver <- resolvers)
             options = options.appendResolver(resolver)
-        val obj = unresolved.resolve(options).root()
+        val obj = unresolved.resolve(options).root
         assertEquals(expected, obj.render(ConfigRenderOptions.concise().setJson(false)))
     }
 
