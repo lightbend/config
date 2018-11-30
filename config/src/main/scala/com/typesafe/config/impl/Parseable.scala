@@ -434,7 +434,6 @@ object Parseable {
 
 abstract class Parseable protected (private var initialOptions: ConfigParseOptions) extends ConfigParseable {
     private var includeContext: ConfigIncludeContext = null
-    //private var initialOptions = null
     private var initialOrigin: ConfigOrigin = null
     def this() = this(null)
     private def fixupOptions(
@@ -480,7 +479,6 @@ abstract class Parseable protected (private var initialOptions: ConfigParseOptio
         if (filename.startsWith("/")) resource = filename.substring(1)
         Parseable.newResources(resource, options.setOriginDescription(null))
     }
-    //private[impl] def includeContext(): ConfigIncludeContext = includeContext
     override def parse(baseOptions: ConfigParseOptions): ConfigObject = {
         val stack = Parseable.parseStack.get
         if (stack.size >= Parseable.MAX_INCLUDE_DEPTH)

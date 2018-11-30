@@ -17,7 +17,7 @@ import com.typesafe.config.ConfigOrigin
 // but was hoping this would be enough simpler to be a little messy. eh.
 object SimpleConfigOrigin {
     // Needed for ConfigImpl.java
-    /*private[impl]*/ def newSimple(description: String) = new SimpleConfigOrigin(
+    private[impl] def newSimple(description: String) = new SimpleConfigOrigin(
         description,
         -1,
         -1,
@@ -25,7 +25,7 @@ object SimpleConfigOrigin {
         null,
         null,
         null)
-    /*private[impl]*/ def newFile(filename: String): SimpleConfigOrigin = {
+    private[impl] def newFile(filename: String): SimpleConfigOrigin = {
         var url: String = null
         try url = new File(filename).toURI.toURL.toExternalForm
         catch {
@@ -41,7 +41,7 @@ object SimpleConfigOrigin {
             null,
             null)
     }
-    /*private[impl]*/ def newURL(url: URL): SimpleConfigOrigin = {
+    private[impl] def newURL(url: URL): SimpleConfigOrigin = {
         val u = url.toExternalForm
         new SimpleConfigOrigin(u, -1, -1, OriginType.URL, u, null, null)
     }
@@ -150,7 +150,7 @@ object SimpleConfigOrigin {
         else
             mergeTwo(a, mergeTwo(b, c))
 
-    /*private[impl]*/ def mergeOrigins(a: ConfigOrigin, b: ConfigOrigin): SimpleConfigOrigin =
+    private[impl] def mergeOrigins(a: ConfigOrigin, b: ConfigOrigin): SimpleConfigOrigin =
         mergeTwo(
             a.asInstanceOf[SimpleConfigOrigin],
             b.asInstanceOf[SimpleConfigOrigin])

@@ -93,7 +93,7 @@ object SimpleIncluder {
     // trying to use it; for 'include "basename"' in a .conf file, for
     // loading app.{conf,json,properties} from classpath, and for
     // loading app.{conf,json,properties} from the filesystem.
-    /*private[impl]*/ def fromBasename(
+    private[impl] def fromBasename(
         source: SimpleIncluder.NameSource,
         name: String,
         options: ConfigParseOptions) = {
@@ -214,7 +214,7 @@ object SimpleIncluder {
         else includeFileWithoutFallback(context, what)
     }
 
-    /*private[impl]*/ def makeFull(includer: ConfigIncluder) = if (includer.isInstanceOf[FullIncluder]) includer.asInstanceOf[FullIncluder]
+    private[impl] def makeFull(includer: ConfigIncluder) = if (includer.isInstanceOf[FullIncluder]) includer.asInstanceOf[FullIncluder]
     else new SimpleIncluder.Proxy(includer)
 }
 

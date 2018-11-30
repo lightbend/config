@@ -44,8 +44,8 @@ object SimpleConfigList {
         new UnsupportedOperationException("ConfigList is immutable, you can't call List.'" + method + "'")
 }
 
-@SerialVersionUID(2L) /*final*/
-class SimpleConfigList(
+@SerialVersionUID(2L)
+final class SimpleConfigList(
     origin: ConfigOrigin,
     val value: ju.List[AbstractConfigValue],
     status: ResolveStatus)
