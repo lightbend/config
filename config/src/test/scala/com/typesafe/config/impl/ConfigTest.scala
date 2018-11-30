@@ -352,7 +352,7 @@ class ConfigTest extends TestUtils {
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : 57 } } } """)
         val merged = mergeUnresolved(fixUpCycle, cycleObject)
         val v = resolveNoSystem(subst("foo"), merged)
-        assertEquals(intValue(57), v);
+        assertEquals(intValue(57), v)
     }
 
     @Test
@@ -402,7 +402,7 @@ class ConfigTest extends TestUtils {
             val resolved = resolveNoSystem(merged, merged)
 
             assertEquals(3, resolved.root.size())
-            assertEquals(42, resolved.getInt("j"));
+            assertEquals(42, resolved.getInt("j"))
             assertEquals(2, resolved.getInt("b.y"))
             assertEquals(3, resolved.getInt("c.z"))
         }
@@ -951,8 +951,8 @@ class ConfigTest extends TestUtils {
         // include should have overridden the "ints" value in test03
         assertEquals(42, conf.getInt("test01.ints.fortyTwo"))
         // include should have been overridden by 42
-        assertEquals(42, conf.getInt("test01.booleans"));
-        assertEquals(42, conf.getInt("test01.booleans"));
+        assertEquals(42, conf.getInt("test01.booleans"))
+        assertEquals(42, conf.getInt("test01.booleans"))
         // include should have gotten .properties and .json also
         assertEquals("abc", conf.getString("test01.fromProps.abc"))
         assertEquals("A", conf.getString("test01.fromJsonA"))
@@ -983,10 +983,10 @@ class ConfigTest extends TestUtils {
 
         // check that includes into the root object work and that
         // "substitutions look relative-to-included-file first then at root second" works
-        assertEquals("This is in the included file", conf.getString("a"));
-        assertEquals("This is in the including file", conf.getString("b"));
-        assertEquals("This is in the included file", conf.getString("subtree.a"));
-        assertEquals("This is in the including file", conf.getString("subtree.b"));
+        assertEquals("This is in the included file", conf.getString("a"))
+        assertEquals("This is in the including file", conf.getString("b"))
+        assertEquals("This is in the included file", conf.getString("subtree.a"))
+        assertEquals("This is in the including file", conf.getString("subtree.b"))
     }
 
     @Test
@@ -1134,7 +1134,7 @@ class ConfigTest extends TestUtils {
                 if (renderOptions.getJson() && !(renderOptions.getComments() || renderOptions.getOriginComments())) {
                     // should get valid JSON if we don't have comments and are resolved
                     val json = try {
-                        ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON));
+                        ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
                     } catch {
                         case e: Exception =>
                             System.err.println("resolvedRender is not valid json: " + resolvedRender)

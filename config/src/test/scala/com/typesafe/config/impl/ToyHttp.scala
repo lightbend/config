@@ -27,7 +27,7 @@ final class ToyHttp(handler: ToyHttp.Request => ToyHttp.Response) {
     final val port = serverSocket.getLocalPort
     private final val thread = new Thread(new Runnable() {
         override def run() =
-            mainLoop();
+            mainLoop()
     })
 
     thread.setDaemon(true)
@@ -118,8 +118,8 @@ final class ToyHttp(handler: ToyHttp.Request => ToyHttp.Response) {
         //val stuff = new java.io.ByteArrayOutputStream
         //val writer = new PrintWriter(new OutputStreamWriter(stuff, StandardCharsets.UTF_8))
         val writer = new PrintWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8))
-        val dateFormat = new SimpleDateFormat("E, d MMM yyyy HH:mm:ss 'GMT'", Locale.US);
-        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        val dateFormat = new SimpleDateFormat("E, d MMM yyyy HH:mm:ss 'GMT'", Locale.US)
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"))
 
         writer.append(s"HTTP/1.1 ${response.code} ${codeText(response.code)}\r\n")
         writer.append(s"Date: ${dateFormat.format(new Date)}\r\n")

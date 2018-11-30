@@ -70,9 +70,9 @@ object ConfigException {
                     e)
         }
 
-        f.setAccessible(true);
+        f.setAccessible(true)
         try {
-            f.set(hasOriginField, origin);
+            f.set(hasOriginField, origin)
         } catch {
             case e @ (_: IllegalArgumentException | _: IllegalAccessException) =>
                 throw new IOException("unable to set origin field", e)

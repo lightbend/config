@@ -6,7 +6,7 @@ import org.junit.Test
 class ConfigNodeTest extends TestUtils {
 
     private def singleTokenNodeTest(token: Token) {
-        val node = configNodeSingleToken(token);
+        val node = configNodeSingleToken(token)
         assertEquals(node.render(), token.tokenText())
     }
 

@@ -22,33 +22,30 @@ final class ConfigNodeField(_children: ju.Collection[AbstractConfigNode])
         val childrenCopy =
             new ju.ArrayList[AbstractConfigNode](children)
         var i = 0
-        while ({ i < childrenCopy.size }) {
+        while (i < childrenCopy.size) {
             if (childrenCopy.get(i).isInstanceOf[AbstractConfigNodeValue]) {
                 childrenCopy.set(i, newValue)
                 return new ConfigNodeField(childrenCopy)
             }
-
-            { i += 1; i - 1 }
+            i += 1
         }
         throw new ConfigException.BugOrBroken("Field node doesn't have a value")
     }
     def value: AbstractConfigNodeValue = {
         var i = 0
-        while ({ i < children.size }) {
+        while (i < children.size) {
             if (children.get(i).isInstanceOf[AbstractConfigNodeValue])
                 return children.get(i).asInstanceOf[AbstractConfigNodeValue]
-
-            { i += 1; i - 1 }
+            i += 1
         }
         throw new ConfigException.BugOrBroken("Field node doesn't have a value")
     }
     def path: ConfigNodePath = {
         var i = 0
-        while ({ i < children.size }) {
+        while (i < children.size) {
             if (children.get(i).isInstanceOf[ConfigNodePath])
                 return children.get(i).asInstanceOf[ConfigNodePath]
-
-            { i += 1; i - 1 }
+            i += 1
         }
         throw new ConfigException.BugOrBroken("Field node doesn't have a path")
     }

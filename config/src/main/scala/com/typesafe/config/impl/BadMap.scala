@@ -30,7 +30,8 @@ object BadMap {
         }
     }
     private def rehash(src: Array[Entry], dest: Array[BadMap.Entry]): Unit = {
-        //        for (entry <- src) { // have to store each "next" element individually; they may belong in different indices
+        //        for (entry <- src) {
+        // have to store each "next" element individually; they may belong in different indices
         //            while ({ entry != null }) {
         //                store(dest, entry)
         //                entry = entry.next

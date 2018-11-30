@@ -31,7 +31,7 @@ object DefaultTransformer {
                         // try Double
                     }
                     try {
-                        val v = jl.Double.parseDouble(s);
+                        val v = jl.Double.parseDouble(s)
                         retVal = new ConfigDouble(value.origin, v, s)
                     } catch {
                         case e: NumberFormatException =>

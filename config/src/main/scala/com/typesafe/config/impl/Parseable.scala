@@ -471,7 +471,8 @@ abstract class Parseable protected (private var initialOptions: ConfigParseOptio
     protected def reader(options: ConfigParseOptions): Reader = reader()
     private[impl] def guessSyntax(): ConfigSyntax = null
     private[impl] def contentType(): ConfigSyntax = null
-    private[impl] def relativeTo(filename: String): ConfigParseable = { // fall back to classpath; we treat the "filename" as absolute
+    private[impl] def relativeTo(filename: String): ConfigParseable = {
+        // fall back to classpath; we treat the "filename" as absolute
         // (don't add a package name in front),
         // if it starts with "/" then remove the "/", for consistency
         // with ParseableResources.relativeTo

@@ -510,7 +510,7 @@ class ConfigValueTest extends TestUtils {
 
         assertEquals(1, l.indexOf(scalaSeq(1)))
 
-        assertFalse(l.isEmpty());
+        assertFalse(l.isEmpty())
 
         assertEquals(scalaSeq, l.iterator().asScala.toSeq)
 
@@ -625,7 +625,7 @@ class ConfigValueTest extends TestUtils {
             val values = new java.util.HashMap[String, AbstractConfigValue]()
             if (!empty)
                 values.put("hello", intValue(37))
-            new SimpleConfigObject(SimpleConfigOrigin.newSimple(desc), values);
+            new SimpleConfigObject(SimpleConfigOrigin.newSimple(desc), values)
         }
         def m(values: AbstractConfigObject*) = {
             AbstractConfigObject.mergeOrigins(values: _*).description
@@ -729,7 +729,7 @@ class ConfigValueTest extends TestUtils {
         assertEquals(-1, noFilename.lineNumber)
 
         assertEquals("foo: 3", filenameWithLine.description)
-        assertEquals("bar: 4", noFilenameWithLine.description);
+        assertEquals("bar: 4", noFilenameWithLine.description)
 
         assertEquals(3, filenameWithLine.lineNumber)
         assertEquals(4, noFilenameWithLine.lineNumber)

@@ -152,8 +152,8 @@ class ConfParserTest extends TestUtils {
                 }
             } catch {
                 case e: Throwable =>
-                    System.err.println("failed on: '" + invalid + "'");
-                    throw e;
+                    System.err.println("failed on: '" + invalid + "'")
+                    throw e
             }
         }
     }
@@ -267,9 +267,9 @@ class ConfParserTest extends TestUtils {
             { s: String => s.replace(",\n", "  \n  \n  ,  \n  \n  ") },
             { s: String => dropCurlies(s) })
 
-        var tested = 0;
+        var tested = 0
         for (v <- valids; change <- changes) {
-            tested += 1;
+            tested += 1
             val obj = parseConfig(change(v))
             assertEquals(3, obj.root.size())
             assertEquals("y", obj.getString("a"))

@@ -70,7 +70,7 @@ object AbstractConfigObject {
         import scala.collection.JavaConverters._
         val javaColl = stack.asJavaCollection
         mergeOrigins(javaColl)
-        //throws NotPossibleToResolve;
+        //throws NotPossibleToResolve
     }
 
     private def weAreImmutable(method: String) =

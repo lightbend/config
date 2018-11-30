@@ -35,7 +35,7 @@ object ComplexApp extends App {
     //////////
 
     // "config2" shows how to configure a library with a custom settings subtree
-    val config2 = ConfigFactory.load("complex2");
+    val config2 = ConfigFactory.load("complex2")
 
     // use the config ourselves
     println("config2, complex-app.something=" + config2.getString("complex-app.something"))

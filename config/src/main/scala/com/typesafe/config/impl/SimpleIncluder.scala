@@ -21,10 +21,12 @@ import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigParseable
 import com.typesafe.config.ConfigSyntax
 
-object SimpleIncluder { // ConfigIncludeContext does this for us on its options
+object SimpleIncluder {
+    // ConfigIncludeContext does this for us on its options
 
     private[impl] def clearForInclude(
-        options: ConfigParseOptions) = { // the class loader and includer are inherited, but not this other
+        options: ConfigParseOptions) = {
+        // the class loader and includer are inherited, but not this other
         // stuff.
         options
             .setSyntax(null)
@@ -35,7 +37,8 @@ object SimpleIncluder { // ConfigIncludeContext does this for us on its options
     // the heuristic includer in static form
     private[impl] def includeWithoutFallback(
         context: ConfigIncludeContext,
-        name: String) = { // the heuristic is valid URL then URL, else relative to including file;
+        name: String) = {
+        // the heuristic is valid URL then URL, else relative to including file;
         // relativeTo in a file falls back to classpath inside relativeTo().
         var url: URL = null
         try url = new URL(name)
@@ -144,8 +147,8 @@ object SimpleIncluder { // ConfigIncludeContext does this for us on its options
                     fails.add(e)
             }
             if (!options.getAllowMissing && !gotSomething) {
-                if (ConfigImpl.traceLoadsEnabled) { // the individual exceptions should have been logged already
-                    // with tracing enabled
+                if (ConfigImpl.traceLoadsEnabled) {
+                    // the individual exceptions should have been logged already with tracing enabled
                     ConfigImpl.trace(
                         "Did not find '" + name + "' with any extension (.conf, .json, .properties); " + "exceptions should have been logged above.")
                 }

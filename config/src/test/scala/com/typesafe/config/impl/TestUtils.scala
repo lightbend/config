@@ -304,7 +304,7 @@ abstract trait TestUtils {
     case class ParseTest(liftBehaviorUnexpected: Boolean, whitespaceMatters: Boolean, test: String)
     object ParseTest {
         def apply(liftBehaviorUnexpected: Boolean, test: String): ParseTest = {
-            ParseTest(liftBehaviorUnexpected, false, test);
+            ParseTest(liftBehaviorUnexpected, false, test)
         }
     }
     implicit def string2jsontest(test: String): ParseTest = ParseTest(false, test)
@@ -519,12 +519,12 @@ abstract trait TestUtils {
         "[ 1.0.0 ]", // two decimals, should end up as a string
         "[ 1.0. ]") // trailing decimal should end up as a string
 
-    protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;
+    protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf
 
-    protected val invalidConf = invalidJsonInvalidConf;
+    protected val invalidConf = invalidJsonInvalidConf
 
     // .conf is a superset of JSON so validJson just goes in here
-    protected val validConf = validConfInvalidJson ++ validJson;
+    protected val validConf = validConfInvalidJson ++ validJson
 
     protected def addOffendingJsonToException[R](parserName: String, s: String)(body: => R) = {
         try {
@@ -535,7 +535,7 @@ abstract trait TestUtils {
                     "tokens: " + tokenizeAsList(s)
                 } catch {
                     case e: Throwable =>
-                        "tokenizer failed: " + e.getMessage();
+                        "tokenizer failed: " + e.getMessage()
                 }
                 // don't use AssertionError because it seems to keep Eclipse
                 // from showing the causing exception in JUnit view for some reason
@@ -585,7 +585,7 @@ abstract trait TestUtils {
     protected def parseConfig(s: String) = {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test string").
-            setSyntax(ConfigSyntax.CONF);
+            setSyntax(ConfigSyntax.CONF)
         ConfigFactory.parseString(s, options).asInstanceOf[SimpleConfig]
     }
 
@@ -625,9 +625,9 @@ abstract trait TestUtils {
     private def tokenMaybeOptionalSubstitution(optional: Boolean, expression: Token*) = {
         val l = new java.util.ArrayList[Token]
         for (t <- expression) {
-            l.add(t);
+            l.add(t)
         }
-        Tokens.newSubstitution(fakeOrigin(), optional, l);
+        Tokens.newSubstitution(fakeOrigin(), optional, l)
     }
 
     def tokenSubstitution(expression: Token*) = {

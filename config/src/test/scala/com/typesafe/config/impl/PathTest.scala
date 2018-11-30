@@ -15,13 +15,13 @@ class PathTest extends TestUtils {
         // note: foo.bar is a single key here
         val a = Path.newKey("foo.bar")
         // check that newKey worked
-        assertEquals(path("foo.bar"), a);
+        assertEquals(path("foo.bar"), a)
         val sameAsA = Path.newKey("foo.bar")
         val differentKey = Path.newKey("hello")
         // here foo.bar is two elements
         val twoElements = Path.newPath("foo.bar")
         // check that newPath worked
-        assertEquals(path("foo", "bar"), twoElements);
+        assertEquals(path("foo", "bar"), twoElements)
         val sameAsTwoElements = Path.newPath("foo.bar")
 
         checkEqualObjects(a, a)

@@ -146,7 +146,8 @@ final class ConfigConcatenation(
     override def newCopy(newOrigin: ConfigOrigin) =
         new ConfigConcatenation(newOrigin, pieces)
 
-    override def ignoresFallbacks: Boolean = { // we can never ignore fallbacks because if a child ConfigReference
+    override def ignoresFallbacks: Boolean = {
+        // we can never ignore fallbacks because if a child ConfigReference
         // is self-referential we have to look lower in the merge stack
         // for its value.
         false
@@ -176,7 +177,7 @@ final class ConfigConcatenation(
         // Right now there's no reason to pushParent here because the
         // content of ConfigConcatenation should not need to replaceChild,
         // but if it did we'd have to do this.
-        val sourceWithParent = source // .pushParent(this);
+        val sourceWithParent = source // .pushParent(this)
         var newContext = context
         val resolved =
             new ju.ArrayList[AbstractConfigValue](pieces.size)

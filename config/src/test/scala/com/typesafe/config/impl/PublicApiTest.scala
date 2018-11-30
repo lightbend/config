@@ -57,7 +57,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def canLimitLoadToJson {
-        val options = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON);
+        val options = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON)
         val conf = ConfigFactory.load("test01", options, ConfigResolveOptions.defaults())
 
         assertEquals(1, conf.getInt("fromJson1"))
@@ -68,7 +68,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def canLimitLoadToProperties {
-        val options = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.PROPERTIES);
+        val options = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.PROPERTIES)
         val conf = ConfigFactory.load("test01", options, ConfigResolveOptions.defaults())
 
         assertEquals(1, conf.getInt("fromProps.one"))
@@ -79,7 +79,7 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def canLimitLoadToConf {
-        val options = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF);
+        val options = ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF)
         val conf = ConfigFactory.load("test01", options, ConfigResolveOptions.defaults())
 
         assertEquals(42, conf.getInt("ints.fortyTwo"))
@@ -99,7 +99,7 @@ class PublicApiTest extends TestUtils {
         assertEquals("foo", ConfigFactory.empty("foo").origin.description)
     }
 
-    private val defaultValueDesc = "hardcoded value";
+    private val defaultValueDesc = "hardcoded value"
 
     private def testFromValue(expectedValue: ConfigValue, createFrom: AnyRef) {
         assertEquals(expectedValue, ConfigValueFactory.fromAnyRef(createFrom))
@@ -124,13 +124,13 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def fromJavaNull() {
-        testFromValue(nullValue, null);
+        testFromValue(nullValue, null)
     }
 
     @Test
     def fromJavaNumbers() {
         testFromValue(intValue(5), 5: java.lang.Integer)
-        testFromValue(longValue(6), 6: java.lang.Long)
+        testFromValue(longValue(6), 6L: java.lang.Long)
         testFromValue(doubleValue(3.14), 3.14: java.lang.Double)
 
         class WeirdNumber(v: Double) extends java.lang.Number {
@@ -140,7 +140,7 @@ class PublicApiTest extends TestUtils {
             override def floatValue = v.floatValue
         }
 
-        val weirdNumber = new WeirdNumber(5.1);
+        val weirdNumber = new WeirdNumber(5.1)
         testFromValue(doubleValue(5.1), weirdNumber)
     }
 
@@ -169,7 +169,7 @@ class PublicApiTest extends TestUtils {
         testFromValue(new SimpleConfigList(fakeOrigin(), aListValue), List(1, 2, 3).asJava)
 
         // test with a non-List (but has to be ordered)
-        val treeSet = new TreeSet[Int]();
+        val treeSet = new TreeSet[Int]()
         treeSet.add(1)
         treeSet.add(2)
         treeSet.add(3)
@@ -188,20 +188,20 @@ class PublicApiTest extends TestUtils {
 
     @Test
     def fromConfigMemorySize() {
-        testFromValue(longValue(1024), ConfigMemorySize.ofBytes(1024));
-        testFromValue(longValue(512), ConfigMemorySize.ofBytes(512));
+        testFromValue(longValue(1024), ConfigMemorySize.ofBytes(1024))
+        testFromValue(longValue(512), ConfigMemorySize.ofBytes(512))
     }
 
     @Test
     def fromDuration() {
-        testFromValue(longValue(1000), Duration.ofMillis(1000));
-        testFromValue(longValue(1000 * 60 * 60 * 24), Duration.ofDays(1));
+        testFromValue(longValue(1000), Duration.ofMillis(1000))
+        testFromValue(longValue(1000 * 60 * 60 * 24), Duration.ofDays(1))
     }
 
     @Test
     def fromExistingConfigValue() {
-        testFromValue(longValue(1000), longValue(1000));
-        testFromValue(stringValue("foo"), stringValue("foo"));
+        testFromValue(longValue(1000), longValue(1000))
+        testFromValue(stringValue("foo"), stringValue("foo"))
 
         val aMapValue = new SimpleConfigObject(fakeOrigin(),
             Map("a" -> 1, "b" -> 2, "c" -> 3).mapValues(intValue(_): AbstractConfigValue).asJava)
@@ -216,7 +216,7 @@ class PublicApiTest extends TestUtils {
         testFromValue(new SimpleConfigList(fakeOrigin(), List(longValue(1): AbstractConfigValue,
             longValue(2): AbstractConfigValue,
             longValue(3): AbstractConfigValue).asJava),
-            list);
+            list)
     }
 
     @Test
@@ -335,10 +335,10 @@ class PublicApiTest extends TestUtils {
     }
 
     sealed trait IncludeKind
-    case object IncludeKindHeuristic extends IncludeKind;
-    case object IncludeKindFile extends IncludeKind;
-    case object IncludeKindURL extends IncludeKind;
-    case object IncludeKindClasspath extends IncludeKind;
+    case object IncludeKindHeuristic extends IncludeKind
+    case object IncludeKindFile extends IncludeKind
+    case object IncludeKindURL extends IncludeKind
+    case object IncludeKindClasspath extends IncludeKind
 
     case class Included(name: String, fallback: ConfigIncluder, kind: IncludeKind)
 
@@ -350,9 +350,9 @@ class PublicApiTest extends TestUtils {
 
         override def withFallback(fallback: ConfigIncluder) = {
             if (this.fallback == fallback) {
-                this;
+                this
             } else if (this.fallback == null) {
-                new RecordingIncluder(fallback, included);
+                new RecordingIncluder(fallback, included)
             } else {
                 new RecordingIncluder(this.fallback.withFallback(fallback), included)
             }
@@ -379,9 +379,9 @@ class PublicApiTest extends TestUtils {
 
         override def withFallback(fallback: ConfigIncluder) = {
             if (this.fallback == fallback) {
-                this;
+                this
             } else if (this.fallback == null) {
-                new RecordingFullIncluder(fallback, included);
+                new RecordingFullIncluder(fallback, included)
             } else {
                 new RecordingFullIncluder(this.fallback.withFallback(fallback), included)
             }
@@ -716,7 +716,7 @@ class PublicApiTest extends TestUtils {
         }
 
         // check providing the loader via ConfigParseOptions
-        val withLoader = ConfigParseOptions.defaults().setClassLoader(loaderA1);
+        val withLoader = ConfigParseOptions.defaults().setClassLoader(loaderA1)
         for (
             c <- Seq(ConfigFactory.parseResources("reference.conf", withLoader),
                 ConfigFactory.parseResourcesAnySyntax("reference", withLoader),
@@ -797,7 +797,7 @@ class PublicApiTest extends TestUtils {
         }
 
         // check providing the loader via ConfigParseOptions
-        val withLoader = ConfigParseOptions.defaults().setClassLoader(loaderA1);
+        val withLoader = ConfigParseOptions.defaults().setClassLoader(loaderA1)
         for (
             c <- Seq(ConfigFactory.parseResources("application.conf", withLoader),
                 ConfigFactory.parseResourcesAnySyntax("application", withLoader),

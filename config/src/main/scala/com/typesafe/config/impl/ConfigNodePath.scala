@@ -19,7 +19,9 @@ final class ConfigNodePath private[impl] (
         while (i < tokensCopy.size) {
             if (Tokens.isUnquotedText(tokensCopy.get(i)) && tokensCopy
                 .get(i)
-                .tokenText == ".") { periodCount += 1; periodCount - 1 }
+                .tokenText == ".") {
+                periodCount += 1
+            }
             if (periodCount == toRemove)
                 return new ConfigNodePath(
                     path.subPath(toRemove),

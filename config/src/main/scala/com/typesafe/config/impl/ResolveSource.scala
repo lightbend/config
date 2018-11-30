@@ -254,7 +254,7 @@ final class ResolveSource(
         else {
             throw new ConfigException.BugOrBroken(
                 "attempt to replace root " + root + " with " + replacement)
-            // return this;
+            // return this
         }
     }
     // replacement may be null to delete

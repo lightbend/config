@@ -311,10 +311,12 @@ object SimpleConfig {
         if ((referenceType eq ConfigValueType.NULL) || couldBeNull(value)) return true
         else if (referenceType eq ConfigValueType.OBJECT) if (value.isInstanceOf[AbstractConfigObject]) return true
         else return false
-        else if (referenceType eq ConfigValueType.LIST) { // objects may be convertible to lists if they have numeric keys
+        else if (referenceType eq ConfigValueType.LIST) {
+            // objects may be convertible to lists if they have numeric keys
             if (value.isInstanceOf[SimpleConfigList] || value.isInstanceOf[SimpleConfigObject]) return true
             else return false
-        } else if (referenceType eq ConfigValueType.STRING) { // assume a string could be gotten as any non-collection type;
+        } else if (referenceType eq ConfigValueType.STRING) {
+            // assume a string could be gotten as any non-collection type;
             // allows things like getMilliseconds including domain-specific
             // interpretations of strings
             return true

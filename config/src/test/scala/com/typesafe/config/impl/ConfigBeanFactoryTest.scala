@@ -7,7 +7,7 @@ import beanconfig.EnumsConfig.{ Solution, Problem }
 import com.typesafe.config._
 
 import java.io.{ InputStream, InputStreamReader }
-import java.time.Duration;
+import java.time.Duration
 
 import beanconfig._
 import org.junit.Assert._
@@ -122,10 +122,10 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigMemorySize.ofBytes(1073741824)),
             beanConfig.getOfMemorySize.asScala)
 
-        val stringsConfigOne = new StringsConfig();
+        val stringsConfigOne = new StringsConfig()
         stringsConfigOne.setAbcd("testAbcdOne")
         stringsConfigOne.setYes("testYesOne")
-        val stringsConfigTwo = new StringsConfig();
+        val stringsConfigTwo = new StringsConfig()
         stringsConfigTwo.setAbcd("testAbcdTwo")
         stringsConfigTwo.setYes("testYesTwo")
 
@@ -155,10 +155,10 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigMemorySize.ofBytes(1073741824)),
             beanConfig.getOfMemorySize.asScala)
 
-        val stringsConfigOne = new StringsConfig();
+        val stringsConfigOne = new StringsConfig()
         stringsConfigOne.setAbcd("testAbcdOne")
         stringsConfigOne.setYes("testYesOne")
-        val stringsConfigTwo = new StringsConfig();
+        val stringsConfigTwo = new StringsConfig()
         stringsConfigTwo.setAbcd("testAbcdTwo")
         stringsConfigTwo.setYes("testYesTwo")
 

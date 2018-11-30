@@ -654,9 +654,9 @@ class ConfigSubstitutionTest extends TestUtils {
 
         values.put("a", child.relativized(new Path("a")))
         // this "foo" should NOT be used.
-        values.put("foo", stringValue("in parent"));
+        values.put("foo", stringValue("in parent"))
 
-        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values));
+        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values))
 
         assertEquals("in child", resolved.getString("a.bar"))
     }
@@ -670,9 +670,9 @@ class ConfigSubstitutionTest extends TestUtils {
 
         values.put("a", child.relativized(new Path("a")))
         // so this "foo" SHOULD be used
-        values.put("foo", stringValue("in parent"));
+        values.put("foo", stringValue("in parent"))
 
-        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values));
+        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values))
 
         assertEquals("in parent", resolved.getString("a.bar"))
     }
