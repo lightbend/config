@@ -7,10 +7,8 @@ import org.junit.Assert._
 import org.junit._
 import net.liftweb.{ json => lift }
 import java.io.Reader
-import java.io.StringReader
 import com.typesafe.config._
 import java.util.HashMap
-import java.util.Collections
 
 class JsonTest extends TestUtils {
 
@@ -61,8 +59,6 @@ class JsonTest extends TestUtils {
                 new SimpleConfigObject(fakeOrigin(), m)
             case lift.JArray(values) =>
                 new SimpleConfigList(fakeOrigin(), values.map(fromLift(_)).asJava)
-            case lift.JField(name, value) =>
-                throw new IllegalStateException("either JField was a toplevel from lift-json or this function is buggy")
             case lift.JInt(i) =>
                 if (i.isValidInt) intValue(i.intValue) else longValue(i.longValue)
             case lift.JBool(b) =>
@@ -75,6 +71,12 @@ class JsonTest extends TestUtils {
                 new ConfigNull(fakeOrigin())
             case lift.JNothing =>
                 throw new ConfigException.BugOrBroken("Lift returned JNothing, probably an empty document (?)")
+            case _ =>
+                // Using lift-json 3.0 or newer for Scala 2.11+ matching on JField(_, _) is an error
+                // Using lift-json 2.6.3, Scala 2.10, we get the following warning:
+                // match may not be exhaustive. It would fail on the following input: JField(_, _)
+                // Remove this case when 2.10 support is dropped
+                throw new IllegalStateException("Unexpected JValue: " + liftValue)
         }
     }
 

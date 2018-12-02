@@ -31,8 +31,7 @@ final class ConfigDelayedMergeObject(
     if (!stack.get(0).isInstanceOf[AbstractConfigObject])
         throw new ConfigException.BugOrBroken(
             "created a delayed merge object not guaranteed to be an object")
-    import scala.collection.JavaConversions._
-    for (v <- stack) {
+    for (v <- stack.asScala) {
         if (v.isInstanceOf[ConfigDelayedMerge] || v
             .isInstanceOf[ConfigDelayedMergeObject])
             throw new ConfigException.BugOrBroken(
@@ -70,8 +69,9 @@ final class ConfigDelayedMergeObject(
         AbstractConfigValue.hasDescendantInList(stack, descendant)
     override def relativized(prefix: Path): ConfigDelayedMergeObject = {
         val newStack = new ju.ArrayList[AbstractConfigValue]
-        import scala.collection.JavaConversions._
-        for (o <- stack) { newStack.add(o.relativized(prefix)) }
+        for (o <- stack.asScala) {
+            newStack.add(o.relativized(prefix))
+        }
         new ConfigDelayedMergeObject(origin, newStack)
     }
     override def ignoresFallbacks: Boolean =

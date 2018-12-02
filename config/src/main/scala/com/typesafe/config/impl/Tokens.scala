@@ -156,8 +156,10 @@ object Tokens {
                 this.value.iterator) + "}"
         override def toString(): String = {
             val sb = new StringBuilder
-            import scala.collection.JavaConversions._
-            for (t <- value) { sb.append(t.toString) }
+            import scala.collection.JavaConverters._
+            for (t <- value.asScala) {
+                sb.append(t.toString)
+            }
             "'${" + sb.toString + "}'"
         }
         override def canEqual(other: Any): Boolean =

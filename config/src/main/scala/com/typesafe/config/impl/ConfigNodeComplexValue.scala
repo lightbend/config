@@ -8,7 +8,7 @@ import java.{ util => ju }
 abstract class ConfigNodeComplexValue(
     _children: ju.Collection[AbstractConfigNode]) extends AbstractConfigNodeValue {
     // why create ArrayList from Collection?
-    val children = new ju.ArrayList[AbstractConfigNode](_children)
+    val children: ju.List[AbstractConfigNode] = new ju.ArrayList[AbstractConfigNode](_children)
 
     override def tokens: ju.Collection[Token] = {
         val tokens = new ju.ArrayList[Token]

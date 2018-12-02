@@ -88,8 +88,7 @@ object ConfigParser {
                 throw new ConfigException.BugOrBroken(
                     "Found a concatenation node in JSON")
             val values = new ju.ArrayList[AbstractConfigValue]
-            import scala.collection.JavaConversions._
-            for (node <- n.children) {
+            for (node <- n.children.asScala) {
                 var v: AbstractConfigValue = null
                 if (node.isInstanceOf[AbstractConfigNodeValue]) {
                     v = parseValue(node.asInstanceOf[AbstractConfigNodeValue], null)
@@ -179,8 +178,7 @@ object ConfigParser {
                 val prefix = fullCurrentPath
                 obj = obj.relativized(prefix)
             }
-            import scala.collection.JavaConversions._
-            for (key <- obj.keySet) {
+            for (key <- obj.keySet.asScala) {
                 val v = obj.get(key)
                 val existing = values.get(key)
                 if (existing != null) values.put(key, v.withFallback(existing)) else values.put(key, v)

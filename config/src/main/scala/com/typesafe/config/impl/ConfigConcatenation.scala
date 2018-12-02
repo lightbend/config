@@ -125,8 +125,8 @@ final class ConfigConcatenation(
         throw new ConfigException.BugOrBroken(
             "Created concatenation with less than 2 items: " + this)
     var hadUnmergeable = false
-    import scala.collection.JavaConversions._
-    for (p <- pieces) {
+    import scala.collection.JavaConverters._
+    for (p <- pieces.asScala) {
         if (p.isInstanceOf[ConfigConcatenation])
             throw new ConfigException.BugOrBroken(
                 "ConfigConcatenation should never be nested: " + this)

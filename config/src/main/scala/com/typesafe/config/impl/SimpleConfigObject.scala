@@ -438,8 +438,7 @@ final class SimpleConfigObject(
     override def entrySet: ju.Set[ju.Map.Entry[String, ConfigValue]] = {
         // total bloat just to work around lack of type variance
         val entries = new ju.HashSet[ju.Map.Entry[String, ConfigValue]]
-        import scala.collection.JavaConversions._
-        for (e <- value.entrySet) {
+        for (e <- value.entrySet.asScala) {
             entries.add(new ju.AbstractMap.SimpleImmutableEntry[String, ConfigValue](e.getKey, e.getValue))
         }
         entries

@@ -9,8 +9,10 @@ final class ConfigNodeInclude(
 
     override def tokens: ju.Collection[Token] = {
         val tokens = new ju.ArrayList[Token]
-        import scala.collection.JavaConversions._
-        for (child <- children) { tokens.addAll(child.tokens) }
+        import scala.collection.JavaConverters._
+        for (child <- children.asScala) {
+            tokens.addAll(child.tokens)
+        }
         tokens
     }
 

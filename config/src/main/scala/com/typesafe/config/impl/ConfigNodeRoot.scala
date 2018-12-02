@@ -6,8 +6,8 @@ import com.typesafe.config.ConfigSyntax
 import java.{ util => ju }
 
 final class ConfigNodeRoot private[impl] (
-    children: ju.Collection[AbstractConfigNode],
-    val origin: ConfigOrigin) extends ConfigNodeComplexValue(children) {
+    _children: ju.Collection[AbstractConfigNode],
+    val origin: ConfigOrigin) extends ConfigNodeComplexValue(_children) {
 
     override def newNode(nodes: ju.Collection[AbstractConfigNode]) =
         throw new ConfigException.BugOrBroken("Tried to indent the root object")
