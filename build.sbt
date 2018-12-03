@@ -4,7 +4,7 @@
 // Release tags should follow: http://semver.org/
 import scalariform.formatter.preferences._
 
-ThisBuild / git.baseVersion         := "1.3.0"
+ThisBuild / git.baseVersion         := "1.3.4"
 ThisBuild / organization            := "com.typesafe"
 ThisBuild / Compile / scalacOptions := List("-unchecked", "-deprecation", "-feature")
 ThisBuild / Test / scalacOptions    := List("-unchecked", "-deprecation", "-feature")
