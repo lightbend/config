@@ -44,7 +44,7 @@ public class ConfigBeanFactory {
      *     Can throw the same exceptions as the getters on <code>Config</code>
      */
     public static <T> T create(Config config, Class<T> clazz) {
-        return ConfigBeanImpl.createInternal(config, clazz, true);
+        return ConfigBeanImpl.createInternal(config, clazz, ConfigBeanFactoryOptions.defaults());
     }
 
     /**
@@ -71,7 +71,7 @@ public class ConfigBeanFactory {
      *
      * @param config source of config information
      * @param clazz class to be instantiated
-     * @param validate passing false means that the config will not be validated against the bean's implied schema 
+     * @param options options to be used when creating the bean
      * @param <T> the type of the class to be instantiated
      * @return an instance of the class populated with data from the config
      * @throws ConfigException.BadBean
@@ -81,7 +81,7 @@ public class ConfigBeanFactory {
      * @throws ConfigException
      *     Can throw the same exceptions as the getters on <code>Config</code>
      */    
-    public static <T> T create(Config config, Class<T> clazz, boolean validate) {
-        return ConfigBeanImpl.createInternal(config, clazz, validate);
+    public static <T> T create(Config config, Class<T> clazz, ConfigBeanFactoryOptions options) {
+        return ConfigBeanImpl.createInternal(config, clazz, options);
     }
 }
