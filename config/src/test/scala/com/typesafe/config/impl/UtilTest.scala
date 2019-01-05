@@ -58,7 +58,7 @@ class UtilTest extends TestUtils {
         assertTrue(ConfigImplUtil.equalsHandlingNull("", ""))
     }
 
-    val lotsOfStrings = (invalidJson ++ validConf).map(_.test)
+    val lotsOfStrings: List[String] = (invalidJson ++ validConf).map(_.test)
 
     private def roundtripJson(s: String) {
         val rendered = ConfigImplUtil.renderJsonString(s)

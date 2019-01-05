@@ -63,7 +63,7 @@ class EquivalentsTest extends TestUtils {
             val (originals, others) = files.partition({ f => f.getName().startsWith("original.") })
             if (originals.isEmpty)
                 throw new RuntimeException("Need a file named 'original' in " + equiv.getPath())
-            if (originals.size > 1)
+            if (originals.length > 1)
                 throw new RuntimeException("Multiple 'original' files in " + equiv.getPath() + ": " + originals)
             val original = parse(originals(0))
 

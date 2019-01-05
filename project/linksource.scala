@@ -1,4 +1,4 @@
-import sbt._
+import sbt.{Def, _}
 import Keys._
 import plugins.JvmPlugin
 
@@ -12,7 +12,7 @@ object LinkSourcePlugin extends AutoPlugin {
 
   override def trigger = allRequirements
   override def requires = JvmPlugin
-  override lazy val projectSettings = Seq(
+  override lazy val projectSettings: Seq[Def.Setting[_ >: Option[String] with Task[Seq[String]] with Task[File] <: Product]] = Seq(
     javadocSourceBaseUrl := None,
     javacOptions in (Compile, doc) := {
       val old = (javacOptions in doc).value

@@ -140,7 +140,7 @@ class ConfigValueTest extends TestUtils {
             "_z_e_d_C_o_n_f_i_g_V_a_l_u_e00000000000000010C0000_x_p_w_10200000025050000001906" +
             "0000000D000B_f_a_k_e_ _o_r_i_g_i_n090000000100010400000001000103000000010001_x"
 
-        val a = nullValue()
+        val a = nullValue
         val b = checkSerializable(expectedSerialization, a)
         assertNull("b is null", b.unwrapped)
     }
@@ -424,11 +424,11 @@ class ConfigValueTest extends TestUtils {
         longValue(11).toString()
         doubleValue(3.14).toString()
         stringValue("hi").toString()
-        nullValue().toString()
+        nullValue.toString()
         boolValue(true).toString()
         val emptyObj = SimpleConfigObject.empty()
         emptyObj.toString()
-        (new SimpleConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]())).toString()
+        new SimpleConfigList(fakeOrigin(), Collections.emptyList[AbstractConfigValue]()).toString()
         subst("a").toString()
         substInString("b").toString()
         val dm = new ConfigDelayedMerge(fakeOrigin(), List[AbstractConfigValue](subst("a"), subst("b")).asJava)
@@ -499,7 +499,7 @@ class ConfigValueTest extends TestUtils {
         val l: ConfigList = new SimpleConfigList(fakeOrigin(),
             scalaSeq.asJava)
 
-        assertEquals(scalaSeq(0), l.get(0))
+        assertEquals(scalaSeq.head, l.get(0))
         assertEquals(scalaSeq(1), l.get(1))
         assertEquals(scalaSeq(2), l.get(2))
 
@@ -510,7 +510,7 @@ class ConfigValueTest extends TestUtils {
 
         assertEquals(1, l.indexOf(scalaSeq(1)))
 
-        assertFalse(l.isEmpty());
+        assertFalse(l.isEmpty())
 
         assertEquals(scalaSeq, l.iterator().asScala.toSeq)
 
@@ -611,12 +611,12 @@ class ConfigValueTest extends TestUtils {
 
         val obj = parseConfig("{ a : " + a + ", b : " + b + ", c : " + c + ", d : " + d + "}")
         assertEquals(Seq(a, b, c, d),
-            Seq("a", "b", "c", "d") map { obj.getString(_) })
+            Seq("a", "b", "c", "d") map { obj.getString })
 
         // make sure it still works if we're doing concatenation
         val obj2 = parseConfig("{ a : xx " + a + " yy, b : xx " + b + " yy, c : xx " + c + " yy, d : xx " + d + " yy}")
         assertEquals(Seq(a, b, c, d) map { "xx " + _ + " yy" },
-            Seq("a", "b", "c", "d") map { obj2.getString(_) })
+            Seq("a", "b", "c", "d") map { obj2.getString })
     }
 
     @Test
@@ -625,25 +625,25 @@ class ConfigValueTest extends TestUtils {
             val values = new java.util.HashMap[String, AbstractConfigValue]()
             if (!empty)
                 values.put("hello", intValue(37))
-            new SimpleConfigObject(SimpleConfigOrigin.newSimple(desc), values);
+            new SimpleConfigObject(SimpleConfigOrigin.newSimple(desc), values)
         }
         def m(values: AbstractConfigObject*) = {
             AbstractConfigObject.mergeOrigins(values: _*).description()
         }
 
         // simplest case
-        assertEquals("merge of a,b", m(o("a", false), o("b", false)))
+        assertEquals("merge of a,b", m(o("a", empty = false), o("b", empty = false)))
         // combine duplicate "merge of"
-        assertEquals("merge of a,x,y", m(o("a", false), o("merge of x,y", false)))
-        assertEquals("merge of a,b,x,y", m(o("merge of a,b", false), o("merge of x,y", false)))
+        assertEquals("merge of a,x,y", m(o("a", empty = false), o("merge of x,y", empty = false)))
+        assertEquals("merge of a,b,x,y", m(o("merge of a,b", empty = false), o("merge of x,y", empty = false)))
         // ignore empty objects
-        assertEquals("a", m(o("foo", true), o("a", false)))
+        assertEquals("a", m(o("foo", empty = true), o("a", empty = false)))
         // unless they are all empty, pick the first one
-        assertEquals("foo", m(o("foo", true), o("a", true)))
+        assertEquals("foo", m(o("foo", empty = true), o("a", empty = true)))
         // merge just one
-        assertEquals("foo", m(o("foo", false)))
+        assertEquals("foo", m(o("foo", empty = false)))
         // merge three
-        assertEquals("merge of a,b,c", m(o("a", false), o("b", false), o("c", false)))
+        assertEquals("merge of a,b,c", m(o("a", empty = false), o("b", empty = false), o("c", empty = false)))
     }
 
     @Test
@@ -661,7 +661,7 @@ class ConfigValueTest extends TestUtils {
         assertTrue(obj.hasPath("b"))
 
         // hasPath() is false for null values but containsKey is true
-        assertEquals(nullValue(), obj.root.get("a"))
+        assertEquals(nullValue, obj.root.get("a"))
         assertTrue(obj.root.containsKey("a"))
         assertFalse(obj.hasPath("a"))
 
@@ -729,7 +729,7 @@ class ConfigValueTest extends TestUtils {
         assertEquals(-1, noFilename.lineNumber())
 
         assertEquals("foo: 3", filenameWithLine.description())
-        assertEquals("bar: 4", noFilenameWithLine.description());
+        assertEquals("bar: 4", noFilenameWithLine.description())
 
         assertEquals(3, filenameWithLine.lineNumber())
         assertEquals(4, noFilenameWithLine.lineNumber())
@@ -944,10 +944,10 @@ class ConfigValueTest extends TestUtils {
         })
         def top(v: SimpleConfigList) = v.origin
         def middle(v: SimpleConfigList) = v.get(0).origin
-        def bottom(v: SimpleConfigList) = if (v.get(0).isInstanceOf[ConfigList])
-            Some(v.get(0).asInstanceOf[ConfigList].get(0).origin)
-        else
-            None
+        def bottom(v: SimpleConfigList) = v.get(0) match {
+            case list: ConfigList => Some(list.get(0).origin)
+            case _ => None
+        }
 
         //System.err.println("values=\n  " + values.map(v => top(v).description + ", " + middle(v).description + ", " + bottom(v).map(_.description)).mkString("\n  "))
         for (v <- values) {
