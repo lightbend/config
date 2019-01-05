@@ -8,7 +8,7 @@ ThisBuild / git.baseVersion         := "1.3.0"
 ThisBuild / organization            := "com.typesafe"
 ThisBuild / Compile / scalacOptions := List("-unchecked", "-deprecation", "-feature")
 ThisBuild / Test / scalacOptions    := List("-unchecked", "-deprecation", "-feature")
-ThisBuild / scalaVersion            := "2.10.6"
+ThisBuild / scalaVersion            := "2.12.8"
 
 ThisBuild / scmInfo                 := Option(
   ScmInfo(url("https://github.com/lightbend/config"), "scm:git@github.com:lightbend/config.git")
@@ -63,7 +63,7 @@ lazy val configLib =  Project("config", file("config"))
   .settings(nocomma {
     autoScalaLibrary                       := false
     crossPaths                             := false
-    libraryDependencies                    += "net.liftweb" %% "lift-json" % "2.5" % Test
+    libraryDependencies                    += "net.liftweb" %% "lift-json" % "3.3.0" % Test
     libraryDependencies                    += "com.novocode" % "junit-interface" % "0.11" % Test
 
     Compile / compile / javacOptions       ++= Seq("-source", "1.8", "-target", "1.8",

@@ -62,7 +62,7 @@ object RenderOptions extends App {
 
     val rendered =
         allBooleanLists(4).foldLeft(0) { (count, values) =>
-            val formatted = values(0)
+            val formatted = values.head
             val originComments = values(1)
             val comments = values(2)
             val json = values(3)

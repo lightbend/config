@@ -25,7 +25,7 @@ class ConfigTest extends TestUtils {
             ConfigResolveOptions.noSystem()).asInstanceOf[AbstractConfigObject].toConfig
     }
 
-    def mergeUnresolved(toMerge: AbstractConfigObject*) = {
+    def mergeUnresolved(toMerge: AbstractConfigObject*): AbstractConfigObject = {
         if (toMerge.isEmpty) {
             SimpleConfigObject.empty()
         } else {
@@ -33,7 +33,7 @@ class ConfigTest extends TestUtils {
         }
     }
 
-    def merge(toMerge: AbstractConfigObject*) = {
+    def merge(toMerge: AbstractConfigObject*): AbstractConfigObject = {
         val obj = mergeUnresolved(toMerge: _*)
         resolveNoSystem(obj, obj) match {
             case x: AbstractConfigObject => x
@@ -46,34 +46,31 @@ class ConfigTest extends TestUtils {
         def makeTrees(objects: Seq[AbstractConfigObject]): Iterator[AbstractConfigObject] = {
             objects.length match {
                 case 0 => Iterator.empty
-                case 1 => {
+                case 1 =>
                     Iterator(objects(0))
-                }
-                case 2 => {
+                case 2 =>
                     Iterator(objects(0).withFallback(objects(1)))
-                }
-                case n => {
+                case n =>
                     val leftSplits = for {
-                        i <- (1 until n)
+                        i <- 1 until n
                         pair = objects.splitAt(i)
                         first = pair._1.reduceLeft(_.withFallback(_))
                         second = pair._2.reduceLeft(_.withFallback(_))
                     } yield first.withFallback(second)
                     val rightSplits = for {
-                        i <- (1 until n)
+                        i <- 1 until n
                         pair = objects.splitAt(i)
                         first = pair._1.reduceRight(_.withFallback(_))
                         second = pair._2.reduceRight(_.withFallback(_))
                     } yield first.withFallback(second)
                     leftSplits.iterator ++ rightSplits.iterator
-                }
             }
         }
 
         val trees = makeTrees(allObjects).toSeq
         for (tree <- trees) {
             // if this fails, we were not associative.
-            if (!trees(0).equals(tree))
+            if (!trees.head.equals(tree))
                 throw new AssertionError("Merge was not associative, " +
                     "verify that it should not be, then don't use associativeMerge " +
                     "for this one. two results were: \none: " + trees(0) + "\ntwo: " +
@@ -352,7 +349,7 @@ class ConfigTest extends TestUtils {
         val fixUpCycle = parseObject(""" { "a" : { "b" : { "c" : 57 } } } """)
         val merged = mergeUnresolved(fixUpCycle, cycleObject)
         val v = resolveNoSystem(subst("foo"), merged)
-        assertEquals(intValue(57), v);
+        assertEquals(intValue(57), v)
     }
 
     @Test
@@ -402,7 +399,7 @@ class ConfigTest extends TestUtils {
             val resolved = resolveNoSystem(merged, merged)
 
             assertEquals(3, resolved.root.size())
-            assertEquals(42, resolved.getInt("j"));
+            assertEquals(42, resolved.getInt("j"))
             assertEquals(2, resolved.getInt("b.y"))
             assertEquals(3, resolved.getInt("c.z"))
         }
@@ -568,7 +565,7 @@ class ConfigTest extends TestUtils {
 
         // to get null we have to use the get() method from Map,
         // which takes a key and not a path
-        assertEquals(nullValue(), conf.getObject("nulls").get("null"))
+        assertEquals(nullValue, conf.getObject("nulls").get("null"))
         assertNull(conf.root.get("notinthefile"))
 
         // get stuff with getValue
@@ -951,8 +948,8 @@ class ConfigTest extends TestUtils {
         // include should have overridden the "ints" value in test03
         assertEquals(42, conf.getInt("test01.ints.fortyTwo"))
         // include should have been overridden by 42
-        assertEquals(42, conf.getInt("test01.booleans"));
-        assertEquals(42, conf.getInt("test01.booleans"));
+        assertEquals(42, conf.getInt("test01.booleans"))
+        assertEquals(42, conf.getInt("test01.booleans"))
         // include should have gotten .properties and .json also
         assertEquals("abc", conf.getString("test01.fromProps.abc"))
         assertEquals("A", conf.getString("test01.fromJsonA"))
@@ -983,10 +980,10 @@ class ConfigTest extends TestUtils {
 
         // check that includes into the root object work and that
         // "substitutions look relative-to-included-file first then at root second" works
-        assertEquals("This is in the included file", conf.getString("a"));
-        assertEquals("This is in the including file", conf.getString("b"));
-        assertEquals("This is in the included file", conf.getString("subtree.a"));
-        assertEquals("This is in the including file", conf.getString("subtree.b"));
+        assertEquals("This is in the included file", conf.getString("a"))
+        assertEquals("This is in the including file", conf.getString("b"))
+        assertEquals("This is in the included file", conf.getString("subtree.a"))
+        assertEquals("This is in the including file", conf.getString("subtree.b"))
     }
 
     @Test
@@ -1107,11 +1104,11 @@ class ConfigTest extends TestUtils {
                 .setOriginComments(originComments)
                 .setComments(comments)
                 .setJson(json)
-        }.toSeq
+        }
 
         for (i <- 1 to 10) {
             val numString = i.toString
-            val name = "/test" + { if (numString.size == 1) "0" else "" } + numString
+            val name = "/test" + { if (numString.length == 1) "0" else "" } + numString
             val conf = ConfigFactory.parseResourcesAnySyntax(classOf[ConfigTest], name,
                 ConfigParseOptions.defaults().setAllowMissing(false))
             for (renderOptions <- optionsCombos) {
@@ -1134,7 +1131,7 @@ class ConfigTest extends TestUtils {
                 if (renderOptions.getJson() && !(renderOptions.getComments() || renderOptions.getOriginComments())) {
                     // should get valid JSON if we don't have comments and are resolved
                     val json = try {
-                        ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON));
+                        ConfigFactory.parseString(resolvedRender, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.JSON))
                     } catch {
                         case e: Exception =>
                             System.err.println("resolvedRender is not valid json: " + resolvedRender)
@@ -1269,7 +1266,7 @@ class ConfigTest extends TestUtils {
     }
 
     private def runFallbackTest(expected: String, source: String,
-        allowUnresolved: Boolean, resolvers: ConfigResolver*) = {
+        allowUnresolved: Boolean, resolvers: ConfigResolver*): Unit = {
         val unresolved = ConfigFactory.parseString(source)
         var options = ConfigResolveOptions.defaults().setAllowUnresolved(allowUnresolved)
         for (resolver <- resolvers)

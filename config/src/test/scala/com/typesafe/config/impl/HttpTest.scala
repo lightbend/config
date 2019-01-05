@@ -92,7 +92,7 @@ object HttpTest {
 
     private var server: Option[ToyHttp] = None
 
-    def port = server.map(_.port).getOrElse(throw new Exception("http server isn't running"))
+    def port: Int = server.map(_.port).getOrElse(throw new Exception("http server isn't running"))
     def baseUrl = s"http://127.0.0.1:$port"
 
     private def handleThreeTypes(request: Request, json: String, props: String, hocon: String): Response = {
