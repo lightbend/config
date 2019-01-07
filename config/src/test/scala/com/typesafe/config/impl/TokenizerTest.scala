@@ -202,8 +202,8 @@ class TokenizerTest extends TestUtils {
 
         for (t <- invalidTests) {
             val tokenized = tokenizeAsList(t)
-            val maybeProblem = tokenized.find(Tokens.isProblem(_))
-            assertTrue(s"expected failure for <$t> but got ${t}", maybeProblem.isDefined)
+            val maybeProblem = tokenized.find(Tokens.isProblem)
+            assertTrue(s"expected failure for <$t> but got $t", maybeProblem.isDefined)
         }
     }
 
@@ -247,9 +247,9 @@ class TokenizerTest extends TestUtils {
         abstract class NumberTest(val s: String, val result: Token)
         case class LongTest(override val s: String, override val result: Token) extends NumberTest(s, result)
         case class DoubleTest(override val s: String, override val result: Token) extends NumberTest(s, result)
-        implicit def pair2inttest(pair: (String, Int)) = LongTest(pair._1, tokenLong(pair._2))
-        implicit def pair2longtest(pair: (String, Long)) = LongTest(pair._1, tokenLong(pair._2))
-        implicit def pair2doubletest(pair: (String, Double)) = DoubleTest(pair._1, tokenDouble(pair._2))
+        implicit def pair2inttest(pair: (String, Int)): LongTest = LongTest(pair._1, tokenLong(pair._2))
+        implicit def pair2longtest(pair: (String, Long)): LongTest = LongTest(pair._1, tokenLong(pair._2))
+        implicit def pair2doubletest(pair: (String, Double)): DoubleTest = DoubleTest(pair._1, tokenDouble(pair._2))
 
         val tests = List[NumberTest](("1", 1),
             ("1.2", 1.2),
@@ -302,7 +302,7 @@ class TokenizerTest extends TestUtils {
         for (invalid <- "+`^?!@*&\\") {
             val tokenized = tokenizeAsList(invalid.toString)
             assertEquals(3, tokenized.size)
-            assertEquals(Tokens.START, tokenized(0))
+            assertEquals(Tokens.START, tokenized.head)
             assertEquals(Tokens.END, tokenized(2))
             val problem = tokenized(1)
             assertTrue("reserved char is a problem", Tokens.isProblem(problem))

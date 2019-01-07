@@ -52,7 +52,7 @@ class ApiExamples {
         class EnhancedConfig(c: Config) {
             def getAny(path: String): Any = c.getAnyRef(path)
         }
-        implicit def config2enhanced(c: Config) = new EnhancedConfig(c)
+        implicit def config2enhanced(c: Config): EnhancedConfig = new EnhancedConfig(c)
 
         // somewhat nicer now
         val e: Int = conf.getAny("ints.fortyTwo") match {

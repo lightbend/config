@@ -79,7 +79,7 @@ class ConfigSubstitutionTest extends TestUtils {
     def resolveNull() {
         val s = subst("bar.null")
         val v = resolveWithoutFallbacks(s, simpleObject)
-        assertEquals(nullValue(), v)
+        assertEquals(nullValue, v)
     }
 
     @Test
@@ -126,13 +126,13 @@ class ConfigSubstitutionTest extends TestUtils {
 
     @Test
     def resolveMissingInString() {
-        val s = substInString("bar.missing", true /* optional */ )
+        val s = substInString("bar.missing", optional = true)
         val v = resolveWithoutFallbacks(s, simpleObject)
         // absent object becomes empty string
         assertEquals(stringValue("start<>end"), v)
 
         intercept[ConfigException.UnresolvedSubstitution] {
-            val s2 = substInString("bar.missing", false /* optional */ )
+            val s2 = substInString("bar.missing", optional = false)
             resolveWithoutFallbacks(s2, simpleObject)
         }
     }
@@ -654,9 +654,9 @@ class ConfigSubstitutionTest extends TestUtils {
 
         values.put("a", child.relativized(new Path("a")))
         // this "foo" should NOT be used.
-        values.put("foo", stringValue("in parent"));
+        values.put("foo", stringValue("in parent"))
 
-        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values));
+        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values))
 
         assertEquals("in child", resolved.getString("a.bar"))
     }
@@ -670,9 +670,9 @@ class ConfigSubstitutionTest extends TestUtils {
 
         values.put("a", child.relativized(new Path("a")))
         // so this "foo" SHOULD be used
-        values.put("foo", stringValue("in parent"));
+        values.put("foo", stringValue("in parent"))
 
-        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values));
+        val resolved = resolve(new SimpleConfigObject(fakeOrigin(), values))
 
         assertEquals("in parent", resolved.getString("a.bar"))
     }

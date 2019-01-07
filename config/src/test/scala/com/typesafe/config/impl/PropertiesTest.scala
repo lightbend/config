@@ -108,7 +108,7 @@ class PropertiesTest extends TestUtils {
 
         val conf = ConfigFactory.parseProperties(props, ConfigParseOptions.defaults())
         val reference = ConfigFactory.parseString("{ a : [0,1,2,3,4] }")
-        assertEquals(Seq(0, 1, 2, 3, 4), conf.getIntList("a").asScala.toSeq)
+        assertEquals(Seq(0, 1, 2, 3, 4), conf.getIntList("a").asScala)
         conf.checkValid(reference)
     }
 

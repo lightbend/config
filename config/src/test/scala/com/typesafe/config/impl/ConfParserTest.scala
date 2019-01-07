@@ -15,14 +15,14 @@ import java.util.Properties
 
 class ConfParserTest extends TestUtils {
 
-    def parseWithoutResolving(s: String) = {
+    def parseWithoutResolving(s: String): AbstractConfigValue = {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test conf string").
             setSyntax(ConfigSyntax.CONF)
-        Parseable.newString(s, options).parseValue().asInstanceOf[AbstractConfigValue]
+        Parseable.newString(s, options).parseValue()
     }
 
-    def parse(s: String) = {
+    def parse(s: String): AbstractConfigValue = {
         val tree = parseWithoutResolving(s)
 
         // resolve substitutions so we can test problems with that, like cycles or
@@ -38,7 +38,7 @@ class ConfParserTest extends TestUtils {
     @Test
     def invalidConfThrows(): Unit = {
         // be sure we throw
-        for (invalid <- whitespaceVariations(invalidConf, false)) {
+        for (invalid <- whitespaceVariations(invalidConf, validInLift = false)) {
             addOffendingJsonToException("config", invalid.test) {
                 intercept[ConfigException] {
                     parse(invalid.test)
@@ -152,7 +152,7 @@ class ConfParserTest extends TestUtils {
                 }
             } catch {
                 case e: Throwable =>
-                    System.err.println("failed on: '" + invalid + "'");
+                    System.err.println("failed on: '" + invalid + "'")
                     throw e;
             }
         }
@@ -267,9 +267,9 @@ class ConfParserTest extends TestUtils {
             { s: String => s.replace(",\n", "  \n  \n  ,  \n  \n  ") },
             { s: String => dropCurlies(s) })
 
-        var tested = 0;
+        var tested = 0
         for (v <- valids; change <- changes) {
-            tested += 1;
+            tested += 1
             val obj = parseConfig(change(v))
             assertEquals(3, obj.root.size())
             assertEquals("y", obj.getString("a"))
@@ -351,7 +351,7 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
-    def toStringForParseables() {
+    def toStringForParseablesWorks() {
         // just be sure the toString don't throw, to get test coverage
         val options = ConfigParseOptions.defaults()
         Parseable.newFile(new File("foo"), options).toString
@@ -366,7 +366,7 @@ class ConfParserTest extends TestUtils {
     }
 
     private def assertComments(comments: Seq[String], conf: Config, path: String) {
-        assertEquals(comments, conf.getValue(path).origin().comments().asScala.toSeq)
+        assertEquals(comments, conf.getValue(path).origin().comments().asScala)
     }
 
     private def assertComments(comments: Seq[String], conf: Config, path: String, index: Int) {

@@ -3,29 +3,28 @@
  */
 package com.typesafe.config.impl
 
+import java.io.Reader
+import java.util
+
+import com.typesafe.config._
+import net.liftweb.{ json => lift }
 import org.junit.Assert._
 import org.junit._
-import net.liftweb.{ json => lift }
-import java.io.Reader
-import java.io.StringReader
-import com.typesafe.config._
-import java.util.HashMap
-import java.util.Collections
 
 class JsonTest extends TestUtils {
 
     def parse(s: String): ConfigValue = {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test json string").
-            setSyntax(ConfigSyntax.JSON);
-        Parseable.newString(s, options).parseValue();
+            setSyntax(ConfigSyntax.JSON)
+        Parseable.newString(s, options).parseValue()
     }
 
     def parseAsConf(s: String): ConfigValue = {
         val options = ConfigParseOptions.defaults().
             setOriginDescription("test conf string").
-            setSyntax(ConfigSyntax.CONF);
-        Parseable.newString(s, options).parseValue();
+            setSyntax(ConfigSyntax.CONF)
+        Parseable.newString(s, options).parseValue()
     }
 
     private[this] def toLift(value: ConfigValue): lift.JValue = {
@@ -56,13 +55,11 @@ class JsonTest extends TestUtils {
 
         liftValue match {
             case lift.JObject(fields) =>
-                val m = new HashMap[String, AbstractConfigValue]()
+                val m = new util.HashMap[String, AbstractConfigValue]()
                 fields.foreach({ field => m.put(field.name, fromLift(field.value)) })
                 new SimpleConfigObject(fakeOrigin(), m)
             case lift.JArray(values) =>
-                new SimpleConfigList(fakeOrigin(), values.map(fromLift(_)).asJava)
-            case lift.JField(name, value) =>
-                throw new IllegalStateException("either JField was a toplevel from lift-json or this function is buggy")
+                new SimpleConfigList(fakeOrigin(), values.map(fromLift).asJava)
             case lift.JInt(i) =>
                 if (i.isValidInt) intValue(i.intValue) else longValue(i.longValue)
             case lift.JBool(b) =>
@@ -147,7 +144,7 @@ class JsonTest extends TestUtils {
         var tested = 0
 
         // be sure we do the same thing as Lift when we build our JSON "DOM"
-        for (valid <- whitespaceVariations(validJson, true)) {
+        for (valid <- whitespaceVariations(validJson, validInLift = true)) {
             val liftAST = if (valid.liftBehaviorUnexpected) {
                 SimpleConfigObject.empty()
             } else {

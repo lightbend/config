@@ -7,7 +7,7 @@ import beanconfig.EnumsConfig.{ Solution, Problem }
 import com.typesafe.config._
 
 import java.io.{ InputStream, InputStreamReader }
-import java.time.Duration;
+import java.time.Duration
 
 import beanconfig._
 import org.junit.Assert._
@@ -19,7 +19,7 @@ import scala.collection.mutable.ArrayBuffer
 class ConfigBeanFactoryTest extends TestUtils {
 
     @Test
-    def toCamelCase() {
+    def testToCamelCase() {
         assertEquals("configProp", ConfigImplUtil.toCamelCase("config-prop"))
         assertEquals("configProp", ConfigImplUtil.toCamelCase("configProp"))
         assertEquals("fooBar", ConfigImplUtil.toCamelCase("foo-----bar"))
@@ -122,10 +122,10 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigMemorySize.ofBytes(1073741824)),
             beanConfig.getOfMemorySize.asScala)
 
-        val stringsConfigOne = new StringsConfig();
+        val stringsConfigOne = new StringsConfig()
         stringsConfigOne.setAbcd("testAbcdOne")
         stringsConfigOne.setYes("testYesOne")
-        val stringsConfigTwo = new StringsConfig();
+        val stringsConfigTwo = new StringsConfig()
         stringsConfigTwo.setAbcd("testAbcdTwo")
         stringsConfigTwo.setYes("testYesTwo")
 
@@ -155,10 +155,10 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigMemorySize.ofBytes(1073741824)),
             beanConfig.getOfMemorySize.asScala)
 
-        val stringsConfigOne = new StringsConfig();
+        val stringsConfigOne = new StringsConfig()
         stringsConfigOne.setAbcd("testAbcdOne")
         stringsConfigOne.setYes("testYesOne")
-        val stringsConfigTwo = new StringsConfig();
+        val stringsConfigTwo = new StringsConfig()
         stringsConfigTwo.setAbcd("testAbcdTwo")
         stringsConfigTwo.setYes("testYesTwo")
 
@@ -200,7 +200,7 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertEquals("abcd", beanConfig.getConfig.getString("abcd"))
         assertEquals(3, beanConfig.getConfigObj.toConfig.getInt("intVal"))
         assertEquals(stringValue("hello world"), beanConfig.getConfigValue)
-        assertEquals(List(1, 2, 3).map(intValue(_)), beanConfig.getList.asScala)
+        assertEquals(List(1, 2, 3).map(intValue), beanConfig.getList.asScala)
         assertEquals(true, beanConfig.getUnwrappedMap.get("shouldBeInt"))
         assertEquals(42, beanConfig.getUnwrappedMap.get("should-be-boolean"))
     }
