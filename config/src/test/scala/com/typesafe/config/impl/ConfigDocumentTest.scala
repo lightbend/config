@@ -28,7 +28,7 @@ class ConfigDocumentTest extends TestUtils {
     }
 
     @Test
-    def configDocumentReplace {
+    def configDocumentReplace() {
         // Can handle parsing/replacement with a very simple map
         configDocumentReplaceConfTest("""{"a":1}""", """{"a":2}""", "2", "a")
         configDocumentReplaceJsonTest("""{"a":1}""", """{"a":2}""", "2", "a")
@@ -37,7 +37,7 @@ class ConfigDocumentTest extends TestUtils {
         configDocumentReplaceConfTest("a: b\nc = d", "a: b\nc = 12", "12", "c")
 
         // Can handle parsing/replacement with a complicated map
-        var origText =
+        val origText =
             """{
               "a":123,
               "b": 123.456,

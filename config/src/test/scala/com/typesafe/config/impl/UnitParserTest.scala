@@ -44,7 +44,7 @@ class UnitParserTest extends TestUtils {
     }
 
     @Test
-    def parsePeriod() = {
+    def parsePeriod(): Unit = {
         val oneYears = List(
             "1y", "1 y", "1year", "1 years", "   1y   ", "   1   y    ",
             "365", "365d", "365 d", "365 days", "   365   days   ", "365day",
@@ -157,7 +157,7 @@ class UnitParserTest extends TestUtils {
     @Test
     def parseHugeMemorySizes(): Unit = {
         def parseMem(s: String): Long = SimpleConfig.parseBytes(s, fakeOrigin(), "test")
-        def assertOutOfRange(s: String) = {
+        def assertOutOfRange(s: String): Unit = {
             val fail = intercept[ConfigException.BadValue] {
                 parseMem(s)
             }

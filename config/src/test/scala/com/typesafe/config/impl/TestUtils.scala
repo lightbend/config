@@ -574,7 +574,7 @@ abstract trait TestUtils {
     protected def intValue(i: Int) = new ConfigInt(fakeOrigin(), i, null)
     protected def longValue(l: Long) = new ConfigLong(fakeOrigin(), l, null)
     protected def boolValue(b: Boolean) = new ConfigBoolean(fakeOrigin(), b)
-    protected def nullValue() = new ConfigNull(fakeOrigin())
+    protected def nullValue = new ConfigNull(fakeOrigin())
     protected def stringValue(s: String) = new ConfigString.Quoted(fakeOrigin(), s)
     protected def doubleValue(d: Double) = new ConfigDouble(fakeOrigin(), d, null)
 

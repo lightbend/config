@@ -36,7 +36,7 @@ object Util {
     }
 
     def time(body: () => Unit, iterations: Int): Double = {
-        timeHelper(body, iterations, false)
+        timeHelper(body, iterations, retried = false)
     }
 
     def loop(args: Seq[String], body: () => Unit) {
@@ -57,10 +57,10 @@ object FileLoad extends App {
         }
     }
 
-    val ms = Util.time(task, 4000)
+    val ms = Util.time(() => task(), 4000)
     println("file load: " + ms + "ms")
 
-    Util.loop(args, task)
+    Util.loop(args, () => task())
 }
 
 object Resolve extends App {
@@ -73,10 +73,10 @@ object Resolve extends App {
         }
     }
 
-    val ms = Util.time(task, 3000000)
+    val ms = Util.time(() => task(), 3000000)
     println("resolve: " + ms + "ms")
 
-    Util.loop(args, task)
+    Util.loop(args, () => task())
 }
 
 object GetExistingPath extends App {
@@ -88,10 +88,10 @@ object GetExistingPath extends App {
         }
     }
 
-    val ms = Util.time(task, 2000000)
+    val ms = Util.time(() => task(), 2000000)
     println("GetExistingPath: " + ms + "ms")
 
-    Util.loop(args, task)
+    Util.loop(args, () => task())
 }
 
 object GetSeveralExistingPaths extends App {
@@ -105,10 +105,10 @@ object GetSeveralExistingPaths extends App {
         }
     }
 
-    val ms = Util.time(task, 5000000)
+    val ms = Util.time(() => task(), 5000000)
     println("GetSeveralExistingPaths: " + ms + "ms")
 
-    Util.loop(args, task)
+    Util.loop(args, () => task())
 }
 
 object HasPathOnMissing extends App {
@@ -120,10 +120,10 @@ object HasPathOnMissing extends App {
         }
     }
 
-    val ms = Util.time(task, 20000000)
+    val ms = Util.time(() => task(), 20000000)
     println("HasPathOnMissing: " + ms + "ms")
 
-    Util.loop(args, task)
+    Util.loop(args, () => task())
 }
 
 object CatchExceptionOnMissing extends App {
@@ -146,9 +146,9 @@ object CatchExceptionOnMissing extends App {
     }
 
     anotherStackFrame(40) { () =>
-        val ms = Util.time(task, 300000)
+        val ms = Util.time(() => task(), 300000)
         println("CatchExceptionOnMissing: " + ms + "ms")
 
-        Util.loop(args, task)
+        Util.loop(args, () => task())
     }
 }
