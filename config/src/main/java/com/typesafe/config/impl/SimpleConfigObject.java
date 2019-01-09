@@ -5,6 +5,7 @@ package com.typesafe.config.impl;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -426,15 +427,14 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             int length = s.length();
 
             // empty string doesn't count as a number
+            // string longer than "max number of digits in a long" cannot be parsed as a long
             if (length == 0)
                 return false;
 
             for (int i = 0; i < length; ++i) {
                 char c = s.charAt(i);
 
-                if (Character.isDigit(c))
-                    continue;
-                else
+                if (!Character.isDigit(c))
                     return false;
             }
             return true;
@@ -449,7 +449,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             boolean aDigits = isAllDigits(a);
             boolean bDigits = isAllDigits(b);
             if (aDigits && bDigits) {
-                return Integer.compare(Integer.parseInt(a), Integer.parseInt(b));
+                return new BigInteger(a).compareTo(new BigInteger(b));
             } else if (aDigits) {
                 return -1;
             } else if (bDigits) {
