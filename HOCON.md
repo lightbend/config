@@ -317,11 +317,6 @@ String value concatenation is allowed in field keys, in addition
 to field values and array elements. Objects and arrays do not make
 sense as field keys.
 
-Note: Akka 2.0 (and thus Play 2.0) contains an embedded
-implementation of the config lib which does not support array and
-object value concatenation; it only supports string value
-concatenation.
-
 #### String value concatenation
 
 String value concatenation is the trick that makes unquoted
@@ -739,9 +734,6 @@ optional (`${?a}` not `${a}`), which allows `a += b` to be the
 first mention of `a` in the file (it is not necessary to have `a =
 []` first).
 
-Note: Akka 2.0 (and thus Play 2.0) contains an embedded
-implementation of the config lib which does not support `+=`.
-
 #### Examples of Self-Referential Substitutions
 
 In isolation (with no merges involved), a self-referential field
@@ -958,11 +950,6 @@ You can quote `"include"` if you want a key that starts with the
 word `"include"`, only unquoted `include` is special:
 
     { "include" : 42 }
-
-Note: Akka 2.0 (and thus Play 2.0) contains an embedded
-implementation of the config lib which does not support the
-`url()`/`file()`/`classpath()` syntax. Only the heuristic `include
-"foo"` syntax is supported in that version.
 
 #### Include semantics: merging
 
