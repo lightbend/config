@@ -866,7 +866,7 @@ format.
 
 #### Scala port
 
-  * SHocon https://github.com/unicredit/shocon (work with both Scala and Scala.Js)
+  * SHocon https://github.com/akka-js/shocon (Supports Scala.js and Scala Native)
   * sconfig https://github.com/ekrich/sconfig
 
 #### Ruby port
