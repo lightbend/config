@@ -25,6 +25,7 @@ import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 import com.typesafe.config.Optional;
+import com.typesafe.config.ConfigBeanFactoryOptions;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -38,9 +39,10 @@ public class ConfigBeanImpl {
      * @param <T> type of the bean
      * @param config config to use
      * @param clazz class of the bean
+     * @param options options for the bean creation process
      * @return the bean instance
      */
-    public static <T> T createInternal(Config config, Class<T> clazz) {
+    public static <T> T createInternal(Config config, Class<T> clazz, ConfigBeanFactoryOptions options) {
         if (((SimpleConfig)config).root().resolveStatus() != ResolveStatus.RESOLVED)
             throw new ConfigException.NotResolved(
                     "need to Config#resolve() a config before using it to initialize a bean, see the API docs for Config#resolve()");
@@ -94,7 +96,7 @@ public class ConfigBeanImpl {
                     if (configValue != null) {
                         SimpleConfig.checkValid(path, expectedType, configValue, problems);
                     } else {
-                        if (!isOptionalProperty(clazz, beanProp)) {
+                        if (!options.getAllowMissing() && !isOptionalProperty(clazz, beanProp)) {
                             SimpleConfig.addMissing(problems, expectedType, path, config.origin());
                         }
                     }
@@ -114,14 +116,14 @@ public class ConfigBeanImpl {
                 String configPropName = originalNames.get(beanProp.getName());
                 // Is the property key missing in the config?
                 if (configPropName == null) {
-                    // If so, continue if the field is marked as @{link Optional}
-                    if (isOptionalProperty(clazz, beanProp)) {
-                        continue;
-                    }
-                    // Otherwise, raise a {@link Missing} exception right here
-                    throw new ConfigException.Missing(beanProp.getName());
+                    // no need to raise an exception or check for optional,
+                    // that has already been done by the validation step above.
+                    // just continue.
+                    // If validation is switched off, we still want this to work as best effort,
+                    // not to fail completely with an exception.
+                    continue;
                 }
-                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName);
+                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName, options);
                 setter.invoke(bean, unwrapped);
             }
             return bean;
@@ -143,7 +145,7 @@ public class ConfigBeanImpl {
     // types plus you can always use Object, ConfigValue, Config,
     // ConfigObject, etc.  as an escape hatch.
     private static Object getValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
-            String configPropName) {
+                                   String configPropName, ConfigBeanFactoryOptions options) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return config.getBoolean(configPropName);
         } else if (parameterClass == Integer.class || parameterClass == int.class) {
@@ -161,9 +163,9 @@ public class ConfigBeanImpl {
         } else if (parameterClass == Object.class) {
             return config.getAnyRef(configPropName);
         } else if (parameterClass == List.class) {
-            return getListValue(beanClass, parameterType, parameterClass, config, configPropName);
+            return getListValue(beanClass, parameterType, parameterClass, config, configPropName, options);
         } else if (parameterClass == Set.class) {
-            return getSetValue(beanClass, parameterType, parameterClass, config, configPropName);
+            return getSetValue(beanClass, parameterType, parameterClass, config, configPropName, options);
         } else if (parameterClass == Map.class) {
             // we could do better here, but right now we don't.
             Type[] typeArgs = ((ParameterizedType)parameterType).getActualTypeArguments();
@@ -184,17 +186,17 @@ public class ConfigBeanImpl {
             Enum enumValue = config.getEnum((Class<Enum>) parameterClass, configPropName);
             return enumValue;
         } else if (hasAtLeastOneBeanProperty(parameterClass)) {
-            return createInternal(config.getConfig(configPropName), parameterClass);
+            return createInternal(config.getConfig(configPropName), parameterClass, options);
         } else {
             throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
         }
     }
 
-    private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
-        return new HashSet((List) getListValue(beanClass, parameterType, parameterClass, config, configPropName));
+    private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName, ConfigBeanFactoryOptions options) {
+        return new HashSet((List) getListValue(beanClass, parameterType, parameterClass, config, configPropName, options));
     }
 
-    private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
+    private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName, ConfigBeanFactoryOptions options) {
         Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
 
         if (elementType == Boolean.class) {
@@ -227,7 +229,7 @@ public class ConfigBeanImpl {
             List<Object> beanList = new ArrayList<Object>();
             List<? extends Config> configList = config.getConfigList(configPropName);
             for (Config listMember : configList) {
-                beanList.add(createInternal(listMember, (Class<?>) elementType));
+                beanList.add(createInternal(listMember, (Class<?>) elementType, options));
             }
             return beanList;
         } else {

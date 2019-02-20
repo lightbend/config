@@ -57,6 +57,22 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
+    def testAllowMissingPropSetting() {
+        val configIs: InputStream = this.getClass().getClassLoader().getResourceAsStream("beanconfig/beanconfig01.conf")
+        val config: Config = ConfigFactory.parseReader(new InputStreamReader(configIs),
+            ConfigParseOptions.defaults.setSyntax(ConfigSyntax.CONF)).resolve.getConfig("validation")
+        val e = intercept[ConfigException.ValidationFailed] {
+            ConfigBeanFactory.create(config, classOf[ValidationBeanConfig], ConfigBeanFactoryOptions.defaults().setAllowMissing(true))
+        }
+
+        val expecteds = Seq(WrongType("shouldBeInt", 78, "number", "boolean"),
+            WrongType("should-be-boolean", 79, "boolean", "number"),
+            WrongType("should-be-list", 80, "list", "string"))
+
+        checkValidationException(e, expecteds)
+    }
+
+    @Test
     def testCreateBool() {
         val beanConfig: BooleansConfig = ConfigBeanFactory.create(loadConfig().getConfig("booleans"), classOf[BooleansConfig])
         assertNotNull(beanConfig)
