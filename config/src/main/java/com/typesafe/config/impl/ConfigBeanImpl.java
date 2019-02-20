@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -185,9 +186,16 @@ public class ConfigBeanImpl {
             return enumValue;
         } else if (hasAtLeastOneBeanProperty(parameterClass)) {
             return createInternal(config.getConfig(configPropName), parameterClass);
+        } else if (parameterClass.isArray()) {
+            return ((List) getListValue(beanClass, parameterType, parameterClass, config, configPropName)).toArray(dummyArrayOf(parameterClass.getComponentType()));
         } else {
             throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
         }
+    }
+
+    //Merely an utility method to trick generics and produce an empty array of the desired type
+    private static <T> T[] dummyArrayOf(Class<T> type) {
+        return (T[]) Array.newInstance(type, 0);
     }
 
     private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
@@ -195,7 +203,12 @@ public class ConfigBeanImpl {
     }
 
     private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
-        Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
+        Type elementType;
+        if (parameterClass.isArray()) {
+            elementType = parameterClass.getComponentType();
+        } else {
+            elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
+        }
 
         if (elementType == Boolean.class) {
             return config.getBooleanList(configPropName);

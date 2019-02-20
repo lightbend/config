@@ -10,6 +10,7 @@ import java.io.{ InputStream, InputStreamReader }
 import java.time.Duration
 
 import beanconfig._
+import org.hamcrest.core.Is.is
 import org.junit.Assert._
 import org.junit._
 
@@ -48,10 +49,10 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigBeanFactory.create(config, classOf[ValidationBeanConfig])
         }
 
-        val expecteds = Seq(Missing("propNotListedInConfig", 77, "string"),
-            WrongType("shouldBeInt", 78, "number", "boolean"),
-            WrongType("should-be-boolean", 79, "boolean", "number"),
-            WrongType("should-be-list", 80, "list", "string"))
+        val expecteds = Seq(Missing("propNotListedInConfig", 78, "string"),
+            WrongType("shouldBeInt", 79, "number", "boolean"),
+            WrongType("should-be-boolean", 80, "boolean", "number"),
+            WrongType("should-be-list", 81, "list", "string"))
 
         checkValidationException(e, expecteds)
     }
@@ -130,6 +131,9 @@ class ConfigBeanFactoryTest extends TestUtils {
         stringsConfigTwo.setYes("testYesTwo")
 
         assertEquals(List(stringsConfigOne, stringsConfigTwo).asJava, beanConfig.getOfStringBean)
+
+        assertEquals(3, beanConfig.getArrayOfString.length)
+        assertThat(beanConfig.getArrayOfString, is(Array[String]("a", "b", "c")))
     }
 
     @Test
