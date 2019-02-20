@@ -81,6 +81,49 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
+    def testCreateMap() {
+        val beanConfig: MapsConfig = ConfigBeanFactory.create(loadConfig().getConfig("maps"), classOf[MapsConfig])
+        assertNotNull(beanConfig)
+
+        assertNotNull(beanConfig.getStringMap)
+        assertEquals("value1", beanConfig.getStringMap.get("key1"))
+        assertEquals("value2", beanConfig.getStringMap.get("key2"))
+
+        assertNotNull(beanConfig.getBeanMap)
+        val bean1 = beanConfig.getBeanMap.get("bean1")
+        assertNotNull(bean1)
+        assertEquals("testString1", bean1.getAbcd)
+        assertEquals("testYes1", bean1.getYes)
+
+        val bean2 = beanConfig.getBeanMap.get("bean2")
+        assertNotNull(bean2)
+        assertEquals("testString2", bean2.getAbcd)
+        assertEquals("testYes2", bean2.getYes)
+
+        val mapOfMaps = beanConfig.getMapOfMaps
+        assertNotNull(mapOfMaps)
+        assertEquals(2, mapOfMaps.size())
+        val stringMap1 = mapOfMaps.get("stringMap1")
+        assertNotNull(stringMap1)
+        assertEquals(2, stringMap1.size())
+        val stringsConfig1 = stringMap1.get("key1a")
+        assertNotNull(stringsConfig1)
+        assertEquals("testString1a", stringsConfig1.getAbcd)
+        assertEquals("testYes1a", stringsConfig1.getYes)
+        val stringsConfig2 = stringMap1.get("key2a")
+        assertNotNull(stringsConfig2)
+        assertEquals("testString2a", stringsConfig2.getAbcd)
+        assertEquals("testYes2a", stringsConfig2.getYes)
+        val stringMap2 = mapOfMaps.get("stringMap2")
+        assertNotNull(stringMap2)
+        assertEquals(1, stringMap2.size())
+        val stringsConfig3 = stringMap2.get("key1b")
+        assertNotNull(stringsConfig3)
+        assertEquals("testString1b", stringsConfig3.getAbcd)
+        assertEquals("testYes1b", stringsConfig3.getYes)
+    }
+
+    @Test
     def testCreateNumber() {
         val beanConfig: NumbersConfig = ConfigBeanFactory.create(loadConfig().getConfig("numbers"), classOf[NumbersConfig])
         assertNotNull(beanConfig)
@@ -257,15 +300,6 @@ class ConfigBeanFactoryTest extends TestUtils {
     def testUnsupportedMapKey() {
         val e = intercept[ConfigException.BadBean] {
             ConfigBeanFactory.create(parseConfig("map={}"), classOf[UnsupportedMapKeyConfig])
-        }
-        assertTrue("unsupported map type error", e.getMessage.contains("unsupported Map"))
-        assertTrue("error about the right property", e.getMessage.contains("'map'"))
-    }
-
-    @Test
-    def testUnsupportedMapValue() {
-        val e = intercept[ConfigException.BadBean] {
-            ConfigBeanFactory.create(parseConfig("map={}"), classOf[UnsupportedMapValueConfig])
         }
         assertTrue("unsupported map type error", e.getMessage.contains("unsupported Map"))
         assertTrue("error about the right property", e.getMessage.contains("'map'"))
