@@ -7,6 +7,7 @@ public class MapsConfig {
     private Map<String, StringsConfig> beanMap;
     private Map<String, String> stringMap;
     private Map<String, Map<String, StringsConfig>> mapOfMaps;
+    private Map<String, String> stringMapWithDots;
 
     public Map<String, StringsConfig> getBeanMap() {
         return beanMap;
@@ -30,5 +31,13 @@ public class MapsConfig {
 
     public void setMapOfMaps(Map<String, Map<String, StringsConfig>> mapOfMaps) {
         this.mapOfMaps = mapOfMaps;
+    }
+
+    public Map<String, String> getStringMapWithDots() {
+        return stringMapWithDots;
+    }
+
+    public void setStringMapWithDots(Map<String, String> stringMapWithDots) {
+        this.stringMapWithDots = stringMapWithDots;
     }
 }
