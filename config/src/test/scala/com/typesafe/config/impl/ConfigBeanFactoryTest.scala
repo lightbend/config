@@ -121,6 +121,10 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertNotNull(stringsConfig3)
         assertEquals("testString1b", stringsConfig3.getAbcd)
         assertEquals("testYes1b", stringsConfig3.getYes)
+
+        assertNotNull(beanConfig.getStringMapWithDots)
+        assertEquals("value1", beanConfig.getStringMapWithDots.get("prefix.key1"))
+        assertEquals("value2", beanConfig.getStringMapWithDots.get("prefix1.prefix2.key2"))
     }
 
     @Test

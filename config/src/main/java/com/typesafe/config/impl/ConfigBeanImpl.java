@@ -21,6 +21,7 @@ import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 import com.typesafe.config.Optional;
+import com.typesafe.config.ConfigUtil;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch.
@@ -193,7 +194,8 @@ public class ConfigBeanImpl {
         Map result = new HashMap<>();
         final Config subConfig = config.getConfig(configPropName);
         for (Map.Entry<String, ConfigValue> configValueEntry : subConfig.root().entrySet()) {
-            result.put(configValueEntry.getKey(), getValue(beanClass, typeArgs[1], typeToClass(typeArgs[1], beanClass, configValueEntry.getKey()), subConfig, configValueEntry.getKey()));
+            //Use quoted key name to allow keys with dots on their names
+            result.put(configValueEntry.getKey(), getValue(beanClass, typeArgs[1], typeToClass(typeArgs[1], beanClass, configValueEntry.getKey()), subConfig, ConfigUtil.quoteString(configValueEntry.getKey())));
         }
         return result;
     }
