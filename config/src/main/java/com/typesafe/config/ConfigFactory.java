@@ -210,7 +210,8 @@ public final class ConfigFactory {
      * @return resolved configuration with overrides and fallbacks added
      */
     public static Config load(ClassLoader loader, Config config, ConfigResolveOptions resolveOptions) {
-        return defaultOverrides(loader).withFallback(config).withFallback(defaultReference(loader))
+        return defaultOverrides(loader).withFallback(config)
+                .withFallback(ConfigImpl.verifiedUnresolvedReference(loader))
                 .resolve(resolveOptions);
     }
 

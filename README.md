@@ -71,7 +71,6 @@ to merge it in.
     - [Inheritance](#inheritance)
     - [Optional system or env variable overrides](#optional-system-or-env-variable-overrides)
   - [Concatenation](#concatenation)
-  - [`reference.conf` can't refer to `application.conf`](#referenceconf-cant-refer-to-applicationconf)
 - [Miscellaneous Notes](#miscellaneous-notes)
   - [Debugging Your Configuration](#debugging-your-configuration)
   - [Supports Java 8 and Later](#supports-java-8-and-later)
@@ -277,23 +276,14 @@ system properties.
 The substitution syntax `${foo.bar}` will be resolved
 twice. First, all the `reference.conf` files are merged and then
 the result gets resolved. Second, all the `application.conf` are
-layered over the `reference.conf` and the result of that gets
-resolved again.
+layered over the unresolved `reference.conf` and the result of that
+gets resolved again.
 
 The implication of this is that the `reference.conf` stack has to
 be self-contained; you can't leave an undefined value `${foo.bar}`
-to be provided by `application.conf`, or refer to `${foo.bar}` in
-a way that you want to allow `application.conf` to
-override. However, `application.conf` can refer to a `${foo.bar}`
-in `reference.conf`.
-
-This can be frustrating at times, but possible workarounds
-include:
-
-  * putting an `application.conf` in a library jar, alongside the
-`reference.conf`, with values intended for later resolution.
-  * putting some logic in code instead of building up values in the
-    config itself.
+to be provided by `application.conf`. It is however possible to
+override a variable that `reference.conf` refers to, as long as
+`reference.conf` also defines that variable itself.
 
 ### Merging config trees
 
@@ -736,14 +726,6 @@ Note: Play/Akka 2.0 have an earlier version that supports string
 concatenation, but not object/array concatenation. `+=` does not
 work in Play/Akka 2.0 either. Post-2.0 versions support these
 features.
-
-### `reference.conf` can't refer to `application.conf`
-
-Please see <a
-href="#note-about-resolving-substitutions-in-referenceconf-and-applicationconf">this
-earlier section</a>; all `reference.conf` have substitutions
-resolved first, without `application.conf` in the stack, so the
-reference stack has to be self-contained.
 
 ## Miscellaneous Notes
 
