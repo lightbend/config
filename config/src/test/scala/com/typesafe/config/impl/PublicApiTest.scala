@@ -654,6 +654,28 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
+    def supportsEnvFirstConfigLoadingStrategy(): Unit = {
+        assertEquals("config.strategy is not set", null, System.getProperty("config.strategy"))
+
+        TestEnvFirstStrategy.putEnvVar("CONFIG_a", "5")
+        System.setProperty("config.strategy", classOf[EnvFirstConfigLoadingStrategy].getCanonicalName)
+
+        try {
+            val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
+                Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+
+            val configA1 = withContextClassLoader(loaderA1) {
+                ConfigFactory.load()
+            }
+
+            assertEquals(5, configA1.getInt("a"))
+        } finally {
+            System.clearProperty("config.strategy")
+            TestEnvFirstStrategy.removeEnvVar("CONFIG_a")
+        }
+    }
+
+    @Test
     def usesContextClassLoaderForApplicationConf() {
         val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
             Map("application.conf" -> resourceFile("a_1.conf").toURI.toURL()))
@@ -1145,4 +1167,11 @@ object TestStrategy {
     private var invocations = 0
     def getIncovations() = invocations
     def increment() = invocations += 1
+}
+
+object TestEnvFirstStrategy extends EnvFirstConfigLoadingStrategy {
+    def putEnvVar(key: String, value: String) =
+        EnvFirstConfigLoadingStrategy.env.put(key, value)
+    def removeEnvVar(key: String) =
+        EnvFirstConfigLoadingStrategy.env.remove(key)
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suppressions PUBLIC "-//Puppy Crawl//DTD Suppressions 1.1//EN"
-    "http://www.puppycrawl.com/dtds/suppressions_1_1.dtd">
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
 <suppressions>
   <!-- don't care about javadoc coverage of methods in impl -->
   <suppress checks="JavadocMethod"
