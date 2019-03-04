@@ -36,6 +36,7 @@ import java.util.concurrent.Callable;
  */
 public final class ConfigFactory {
     private static final String STRATEGY_PROPERTY_NAME = "config.strategy";
+    private static final String OVERRIDE_WITH_ENV_PROPERTY_NAME = "config.override_with_env_vars";
 
     private ConfigFactory() {
     }
@@ -383,7 +384,11 @@ public final class ConfigFactory {
      * @return the default override configuration
      */
     public static Config defaultOverrides() {
-        return systemProperties();
+        if (!getOverrideWithEnv()) {
+            return systemProperties();
+        } else {
+            return systemEnvironmentOverrides().withFallback(systemProperties());
+        }
     }
 
     /**
@@ -394,7 +399,7 @@ public final class ConfigFactory {
      * @return the default override configuration
      */
     public static Config defaultOverrides(ClassLoader loader) {
-        return systemProperties();
+        return defaultOverrides();
     }
 
     /**
@@ -547,6 +552,50 @@ public final class ConfigFactory {
      */
     public static Config systemProperties() {
         return ConfigImpl.systemPropertiesAsConfig();
+    }
+
+    /**
+     * Gets a <code>Config</code> containing the system's environment variables
+     * used to override configuration keys.
+     * Environment variables taken in considerations are starting with
+     * {@code CONFIG_FORCE_}
+     * 
+     * <p>
+     * Environment variables are mangled in the following way after stripping the prefix "CONFIG_FORCE_":
+     * <table border="1">
+     * <tr>
+     *     <th bgcolor="silver">Env Var</th>
+     *     <th bgcolor="silver">Config</th>
+     * </tr>
+     * <tr>
+     *     <td>_&nbsp;&nbsp;&nbsp;[1 underscore]</td>
+     *     <td>. [dot]</td>
+     * </tr>
+     * <tr>
+     *     <td>__&nbsp;&nbsp;[2 underscore]</td>
+     *     <td>- [dash]</td>
+     *  </tr>
+     * <tr>
+     *     <td>___&nbsp;[3 underscore]</td>
+     *     <td>_ [underscore]</td>
+     * </tr>
+     * </table>
+     * 
+     * <p>
+     * A variable like: {@code CONFIG_FORCE_a_b__c___d}
+     * is translated to a config key: {@code a.b-c_d}
+     * 
+     * <p>
+     * This method can return a global immutable singleton, so it's preferred
+     * over parsing system properties yourself.
+     * <p>
+     * {@link #defaultOverrides} will include the system system environment variables as
+     * overrides if `config.override_with_env_vars` is set to `true`.
+     *
+     * @return system environment variable overrides parsed into a <code>Config</code>
+     */
+    public static Config systemEnvironmentOverrides() {
+        return ConfigImpl.envVariablesOverridesAsConfig();
     }
 
     /**
@@ -1062,5 +1111,11 @@ public final class ConfigFactory {
         } else {
             return new DefaultConfigLoadingStrategy();
         }
+    }
+
+    private static Boolean getOverrideWithEnv() {
+        String overrideWithEnv = System.getProperties().getProperty(OVERRIDE_WITH_ENV_PROPERTY_NAME);
+
+        return Boolean.parseBoolean(overrideWithEnv);
     }
 }

@@ -654,24 +654,22 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
-    def supportsEnvFirstConfigLoadingStrategy(): Unit = {
-        assertEquals("config.strategy is not set", null, System.getProperty("config.strategy"))
+    def loadEnvironmentVariablesOverridesIfConfigured(): Unit = {
+        assertEquals("config.override_with_env_vars is not set", null, System.getProperty("config.override_with_env_vars"))
 
-        TestEnvFirstStrategy.putEnvVar("CONFIG_a", "5")
-        System.setProperty("config.strategy", classOf[EnvFirstConfigLoadingStrategy].getCanonicalName)
+        System.setProperty("config.override_with_env_vars", "true")
 
         try {
-            val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
-                Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
+            val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
+                Map("reference.conf" -> resourceFile("b_2.conf").toURI.toURL()))
 
-            val configA1 = withContextClassLoader(loaderA1) {
+            val configB2 = withContextClassLoader(loaderB2) {
                 ConfigFactory.load()
             }
 
-            assertEquals(5, configA1.getInt("a"))
+            assertEquals(5, configB2.getInt("b"))
         } finally {
-            System.clearProperty("config.strategy")
-            TestEnvFirstStrategy.removeEnvVar("CONFIG_a")
+            System.clearProperty("config.override_with_env_vars")
         }
     }
 
@@ -1167,11 +1165,4 @@ object TestStrategy {
     private var invocations = 0
     def getIncovations() = invocations
     def increment() = invocations += 1
-}
-
-object TestEnvFirstStrategy extends EnvFirstConfigLoadingStrategy {
-    def putEnvVar(key: String, value: String) =
-        EnvFirstConfigLoadingStrategy.env.put(key, value)
-    def removeEnvVar(key: String) =
-        EnvFirstConfigLoadingStrategy.env.remove(key)
 }
