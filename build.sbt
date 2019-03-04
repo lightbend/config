@@ -85,7 +85,17 @@ lazy val configLib =  Project("config", file("config"))
     Test/ run / fork                       := true
 
     //env vars for tests
-    Test / envVars                         ++= Map("testList.0" -> "0", "testList.1" -> "1")
+    Test / envVars                         ++= Map("testList.0" -> "0",
+      "testList.1" -> "1",
+      "CONFIG_FORCE_b" -> "5",
+      "CONFIG_FORCE_testList_0" -> "10",
+      "CONFIG_FORCE_testList_1" -> "11",
+      "CONFIG_FORCE_42___a" -> "1",
+      "CONFIG_FORCE_a_b_c" -> "2",
+      "CONFIG_FORCE_a__c" -> "3",
+      "CONFIG_FORCE_a___c" -> "4",
+      "CONFIG_FORCE_akka_version" -> "foo",
+      "CONFIG_FORCE_akka_event__handler__dispatcher_max__pool__size" -> "10")
 
     OsgiKeys.exportPackage                 := Seq("com.typesafe.config", "com.typesafe.config.impl")
     publish                                := sys.error("use publishSigned instead of plain publish")

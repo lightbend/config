@@ -32,6 +32,7 @@ import com.typesafe.config.impl.SimpleIncluder.NameSource;
  * For use only by the {@link com.typesafe.config} package.
  */
 public class ConfigImpl {
+    private static final String ENV_VAR_OVERRIDE_PREFIX = "CONFIG_FORCE_";
 
     private static class LoaderCache {
         private Config currentSystemProperties;
@@ -358,6 +359,57 @@ public class ConfigImpl {
         // ConfigFactory.invalidateCaches() relies on this having the side
         // effect that it drops all caches
         EnvVariablesHolder.envVariables = loadEnvVariables();
+    }
+
+    private static AbstractConfigObject loadEnvVariablesOverrides() {
+        Map<String, String> env = new HashMap(System.getenv());
+        Map<String, String> result = new HashMap(System.getenv());
+        for (String key : env.keySet()) {
+            if (key.startsWith(ENV_VAR_OVERRIDE_PREFIX)) {
+                StringBuilder builder = new StringBuilder();
+
+                String strippedPrefix = key.substring(ENV_VAR_OVERRIDE_PREFIX.length(), key.length());
+
+                int underscores = 0;
+                for (char c : strippedPrefix.toCharArray()) {
+                    if (c == '_') {
+                        underscores++;
+                    } else {
+                        switch (underscores) {
+                            case 1: builder.append('.');
+                                    break;
+                            case 2: builder.append('-');
+                                    break;
+                            case 3: builder.append('_');
+                                    break;
+                        }
+                        underscores = 0;
+                        builder.append(c);
+                    }
+                }
+
+                String propertyKey = builder.toString();
+                result.put(propertyKey, env.get(key));
+            }
+        }
+
+        return PropertiesParser.fromStringMap(newSimpleOrigin("env variables overrides"), result);
+    }
+
+    private static class EnvVariablesOverridesHolder {
+        static volatile AbstractConfigObject envVariables = loadEnvVariablesOverrides();
+    }
+
+    static AbstractConfigObject envVariablesOverridesAsConfigObject() {
+        try {
+            return EnvVariablesOverridesHolder.envVariables;
+        } catch (ExceptionInInitializerError e) {
+            throw ConfigImplUtil.extractInitializerError(e);
+        }
+    }
+
+    public static Config envVariablesOverridesAsConfig() {
+        return envVariablesOverridesAsConfigObject().toConfig();
     }
 
     public static Config defaultReference(final ClassLoader loader) {
