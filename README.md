@@ -675,6 +675,24 @@ value just disappear if the substitution is not found:
     // this array could have one or two elements
     path = [ "a", ${?OPTIONAL_A} ]
 
+By setting the JVM property `-Dconfig.override_with_env_vars=true`
+it is possible to override any configuration value using environment
+variables even if an explicit substitution is not specified.
+
+The environment variable value will override any pre-existing value
+and also any value provided as Java property.
+
+With this option enabled only environment variables starting with
+`CONFIG_FORCE_` are considered, and the name is mangled as follows:
+
+  - the prefix `CONFIG_FORCE_` is stripped
+  - single underscore(`_`) is converted into a dot(`.`)
+  - double underscore(`__`) is converted into a dash(`-`)
+  - triple underscore(`___`) is converted into a single underscore(`_`)
+
+i.e. The environment variable `CONFIG_FORCE_a_b__c___d` set the
+configuration key `a.b-c_d`
+
 ### Concatenation
 
 Values _on the same line_ are concatenated (for strings and
