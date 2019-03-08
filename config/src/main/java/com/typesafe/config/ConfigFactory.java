@@ -384,10 +384,10 @@ public final class ConfigFactory {
      * @return the default override configuration
      */
     public static Config defaultOverrides() {
-        if (!getOverrideWithEnv()) {
-            return systemProperties();
-        } else {
+        if (getOverrideWithEnv()) {
             return systemEnvironmentOverrides().withFallback(systemProperties());
+        } else {
+            return systemProperties();
         }
     }
 
@@ -589,7 +589,7 @@ public final class ConfigFactory {
      * This method can return a global immutable singleton, so it's preferred
      * over parsing system properties yourself.
      * <p>
-     * {@link #defaultOverrides} will include the system system environment variables as
+     * {@link #defaultOverrides} will include the system environment variables as
      * overrides if `config.override_with_env_vars` is set to `true`.
      *
      * @return system environment variable overrides parsed into a <code>Config</code>
