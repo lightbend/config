@@ -893,6 +893,10 @@ format.
 
   * https://github.com/akkadotnet/HOCON
 
+#### Rust port
+
+  * https://github.com/mockersf/hocon.rs
+
 #### Linting tool
 
    * A web based linting tool http://www.hoconlint.com/
