@@ -693,6 +693,15 @@ With this option enabled only environment variables starting with
 i.e. The environment variable `CONFIG_FORCE_a_b__c___d` set the
 configuration key `a.b-c_d`
 
+Rationale the name mangling:
+
+Most shells (e.g. bash, sh, etc.) doesn't support any character other
+than alphanumeric and `_` in environment variables names.
+In HOCON the default separator is `.` so it is directly translated to a
+single `_` for convenience; `-` and `_` are less often present in config
+keys but they have to be representable and the only possible mapping is
+`_` repeated.
+
 ### Concatenation
 
 Values _on the same line_ are concatenated (for strings and
