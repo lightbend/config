@@ -364,6 +364,14 @@ public class ConfigImpl {
     private static AbstractConfigObject loadEnvVariablesOverrides() {
         Map<String, String> env = new HashMap(System.getenv());
         Map<String, String> result = new HashMap(System.getenv());
+        // Rationale on name mangling:
+        //
+        // Most shells (e.g. bash, sh, etc.) doesn't support any character other
+        // than alphanumeric and `_` in environment variables names.
+        // In HOCON the default separator is `.` so it is directly translated to a
+        // single `_` for convenience; `-` and `_` are less often present in config
+        // keys but they have to be representable and the only possible mapping is
+        // `_` repeated.
         for (String key : env.keySet()) {
             if (key.startsWith(ENV_VAR_OVERRIDE_PREFIX)) {
                 StringBuilder builder = new StringBuilder();
@@ -410,6 +418,12 @@ public class ConfigImpl {
 
     public static Config envVariablesOverridesAsConfig() {
         return envVariablesOverridesAsConfigObject().toConfig();
+    }
+
+    public static void reloadEnvVariablesOverridesConfig() {
+        // ConfigFactory.invalidateCaches() relies on this having the side
+        // effect that it drops all caches
+        EnvVariablesOverridesHolder.envVariables = loadEnvVariablesOverrides();
     }
 
     public static Config defaultReference(final ClassLoader loader) {
