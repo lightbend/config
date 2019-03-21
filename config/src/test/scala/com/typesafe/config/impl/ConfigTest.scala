@@ -1091,6 +1091,22 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def testEnvVariablesNameMangling() {
+        assertEquals("a", ConfigImplUtil.envVariableAsProperty("prefix_a", "prefix_"))
+        assertEquals("a.b", ConfigImplUtil.envVariableAsProperty("prefix_a_b", "prefix_"))
+        assertEquals("a.b.c", ConfigImplUtil.envVariableAsProperty("prefix_a_b_c", "prefix_"))
+        assertEquals("a.b-c-d", ConfigImplUtil.envVariableAsProperty("prefix_a_b__c__d", "prefix_"))
+        assertEquals("a.b_c_d", ConfigImplUtil.envVariableAsProperty("prefix_a_b___c___d", "prefix_"))
+
+        intercept[ConfigException.BadPath] {
+            ConfigImplUtil.envVariableAsProperty("prefix_____", "prefix_")
+        }
+        intercept[ConfigException.BadPath] {
+            ConfigImplUtil.envVariableAsProperty("prefix_a_b___c____d", "prefix_")
+        }
+    }
+
+    @Test
     def testLoadWithEnvSubstitutions() {
         System.setProperty("config.override_with_env_vars", "true")
 
