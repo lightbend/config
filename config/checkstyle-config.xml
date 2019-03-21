@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE module PUBLIC
-    "-//Puppy Crawl//DTD Check Configuration 1.3//EN"
+<!DOCTYPE checkstyle-packages PUBLIC
+    "-//Checkstyle//DTD Package Names Configuration 1.3//EN"
     "https://checkstyle.org/dtds/configuration_1_3.dtd">
-
 <module name="Checker">
   <module name="SuppressionFilter">
     <property name="file" value="config/checkstyle-suppressions.xml"/>
