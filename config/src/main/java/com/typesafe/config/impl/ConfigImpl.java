@@ -361,43 +361,15 @@ public class ConfigImpl {
         EnvVariablesHolder.envVariables = loadEnvVariables();
     }
 
+
+
     private static AbstractConfigObject loadEnvVariablesOverrides() {
         Map<String, String> env = new HashMap(System.getenv());
         Map<String, String> result = new HashMap(System.getenv());
-        // Rationale on name mangling:
-        //
-        // Most shells (e.g. bash, sh, etc.) doesn't support any character other
-        // than alphanumeric and `_` in environment variables names.
-        // In HOCON the default separator is `.` so it is directly translated to a
-        // single `_` for convenience; `-` and `_` are less often present in config
-        // keys but they have to be representable and the only possible mapping is
-        // `_` repeated.
+
         for (String key : env.keySet()) {
             if (key.startsWith(ENV_VAR_OVERRIDE_PREFIX)) {
-                StringBuilder builder = new StringBuilder();
-
-                String strippedPrefix = key.substring(ENV_VAR_OVERRIDE_PREFIX.length(), key.length());
-
-                int underscores = 0;
-                for (char c : strippedPrefix.toCharArray()) {
-                    if (c == '_') {
-                        underscores++;
-                    } else {
-                        switch (underscores) {
-                            case 1: builder.append('.');
-                                    break;
-                            case 2: builder.append('-');
-                                    break;
-                            case 3: builder.append('_');
-                                    break;
-                        }
-                        underscores = 0;
-                        builder.append(c);
-                    }
-                }
-
-                String propertyKey = builder.toString();
-                result.put(propertyKey, env.get(key));
+                result.put(ConfigImplUtil.envVariableAsProperty(key, ENV_VAR_OVERRIDE_PREFIX), env.get(key));
             }
         }
 
