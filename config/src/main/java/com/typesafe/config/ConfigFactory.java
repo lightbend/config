@@ -502,6 +502,7 @@ public final class ConfigFactory {
         // all caches
         ConfigImpl.reloadSystemPropertiesConfig();
         ConfigImpl.reloadEnvVariablesConfig();
+        ConfigImpl.reloadEnvVariablesOverridesConfig();
     }
 
     /**
