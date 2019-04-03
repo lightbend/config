@@ -654,6 +654,26 @@ class PublicApiTest extends TestUtils {
     }
 
     @Test
+    def loadEnvironmentVariablesOverridesIfConfigured(): Unit = {
+        assertEquals("config.override_with_env_vars is not set", null, System.getProperty("config.override_with_env_vars"))
+
+        System.setProperty("config.override_with_env_vars", "true")
+
+        try {
+            val loaderB2 = new TestClassLoader(this.getClass().getClassLoader(),
+                Map("reference.conf" -> resourceFile("b_2.conf").toURI.toURL()))
+
+            val configB2 = withContextClassLoader(loaderB2) {
+                ConfigFactory.load()
+            }
+
+            assertEquals(5, configB2.getInt("b"))
+        } finally {
+            System.clearProperty("config.override_with_env_vars")
+        }
+    }
+
+    @Test
     def usesContextClassLoaderForApplicationConf() {
         val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
             Map("application.conf" -> resourceFile("a_1.conf").toURI.toURL()))
