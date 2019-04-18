@@ -1,3 +1,15 @@
+# 1.3.4: April 18, 2018
+
+- it is now possible to override any configuration setting from environment variables ([#620](/../../pull/620)) thanks to [@andreaTP](https://github.com/andreaTP)
+- added support for integer keys that are longer than `Int` ([#568](/../../pull/568)) thanks to [@michalmela](https://github.com/michalmela)
+- `Missing` exception now has a reference to the origin `Config` ([#585](/../../pull/585)) thanks to [@vagola](https://github.com/vagola)
+- performance improvements to `resolve()` ([#578](/../../pull/578)) thanks to [@sam-token](https://github.com/sam-token)
+- config file syntax is now resolved when parsing `InputStream` ([#573](/../../pull/573)) thanks to [@ntviet18](https://github.com/ntviet18)
+- it is now possible to use `@Optional` on keys that are reserved words ([#570](/../../pull/570)) thanks to [@radist-nt](https://github.com/radist-nt)
+- `ValidationProblem` is now serializable ([#437](/../../pull/437)) thanks to [@iantabolt](https://github.com/iantabolt)
+
+All of the merged PRs can be found in the [release milestone](https://github.com/lightbend/config/milestone/4?closed=1).
+
 # 1.3.3: February 22, 2018
 
 - artifact now includes `Automatic-Module-Name` which makes it consumable as Java 9 module.
