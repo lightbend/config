@@ -1,4 +1,4 @@
-# 1.3.4: April 18, 2018
+# 1.3.4: April 18, 2019
 
 - it is now possible to override any configuration setting from environment variables ([#620](/../../pull/620)) thanks to [@andreaTP](https://github.com/andreaTP)
 - added support for integer keys that are longer than `Int` ([#568](/../../pull/568)) thanks to [@michalmela](https://github.com/michalmela)
