@@ -16,7 +16,7 @@ script:
 
 jobs:
   include:
-  - env: JDK=adopt@1.8.202-08
+  - env: JDK=adopt@1.8.212-03
   - env: JDK=adopt@1.11.0-1
 
 before_cache:
