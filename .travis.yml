@@ -7,10 +7,17 @@ before_install:
   # using jabba for custom jdk management
   - curl -sL https://raw.githubusercontent.com/shyiko/jabba/0.11.2/install.sh | bash && . ~/.jabba/jabba.sh
   - jabba install adopt@1.8.202-08
-  - java -version
+  - jabba install adopt@1.11.0-1
 
 script:
+  - jabba use $JDK
+  - java -version
   - sbt ++$TRAVIS_SCALA_VERSION test doc
+
+jobs:
+  include:
+  - env: JDK=adopt@1.8.202-08
+  - env: JDK=adopt@1.11.0-1
 
 before_cache:
   # Remove to avoid unnecessary cache updates

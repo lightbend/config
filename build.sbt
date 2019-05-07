@@ -151,7 +151,8 @@ lazy val commonSettings: Seq[Setting[_]] = Def.settings(
   unpublished,
   scalariformPreferences := scalariformPreferences.value
     .setPreference(IndentSpaces, 4)
-    .setPreference(FirstArgumentOnNewline, Preserve)
+    .setPreference(FirstArgumentOnNewline, Preserve),
+  Compile / compile / javacOptions ++= Seq("-source", "1.8", "-target", "1.8"),
 )
 
 def proj(id: String, base: File) = Project(id, base) settings commonSettings
