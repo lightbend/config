@@ -5,8 +5,8 @@ language: scala
 
 before_install:
   # using jabba for custom jdk management
-   - curl -sL https://git.io/jabba | bash && . ~/.jabba/jabba.sh
-   - jabba install adopt@1.8.212-03
+  - curl -sL https://git.io/jabba | bash && . ~/.jabba/jabba.sh
+  - jabba install adopt@1.8.212-03
   - jabba install adopt@1.11.0-3
 
 script:
