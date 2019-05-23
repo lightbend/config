@@ -706,9 +706,12 @@ string `foo` are concatenated into a string `42 foo`:
 When concatenating values into a string, leading and trailing
 whitespace is stripped but whitespace between values is kept.
 
-Unquoted strings also support substitutions of course:
+Quoted or unquoted strings can also concatenate with substitutions of course:
 
     tasks-url : ${base-url}/tasks
+    tasks-url : ${base-url}"tasks:colon-must-be-quoted"
+
+Note: the `${}` syntax must be outside the quotes!
 
 A concatenation can refer to earlier values of the same field:
 
