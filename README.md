@@ -709,9 +709,9 @@ whitespace is stripped but whitespace between values is kept.
 Quoted or unquoted strings can also concatenate with substitutions of course:
 
     tasks-url : ${base-url}/tasks
-    tasks-url : ${base-url}”tasks:colon-must-be-quoted”
+    tasks-url : ${base-url}"tasks:colon-must-be-quoted"
 
-Note: the `${}` syntax must be outside the quotes!  
+Note: the `${}` syntax must be outside the quotes!
 
 A concatenation can refer to earlier values of the same field:
 
