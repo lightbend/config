@@ -924,7 +924,7 @@ format.
 
    * https://hocon-playground.herokuapp.com/
 
-# Maintanance notes
+# Maintenance notes
 
 ## License
 
