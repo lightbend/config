@@ -886,7 +886,7 @@ format.
 #### Scala port
 
   * SHocon https://github.com/akka-js/shocon (Supports Scala.js and Scala Native)
-  * sconfig https://github.com/ekrich/sconfig
+  * sconfig https://github.com/ekrich/sconfig (Supports JVM, Scala Native, and Scala.js)
 
 #### Ruby port
 
