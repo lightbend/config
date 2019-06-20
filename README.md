@@ -545,6 +545,8 @@ tree that you could have written (less conveniently) in JSON.
     there is a syntax `${?a.b}` to permit them to be missing.
   - `+=` syntax to append elements to arrays, `path += "/bin"`
   - multi-line strings with triple quotes as in Python or Scala
+    (For every line in this string leading prefix consisting of blanks
+    or control characters followed by | (margin char) is striped)
 
 ### Examples of HOCON
 

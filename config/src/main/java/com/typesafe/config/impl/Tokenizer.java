@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Queue;
 
 import com.typesafe.config.ConfigException;
@@ -513,12 +514,64 @@ final class Tokenizer {
                 if (third == '"') {
                     sbOrig.appendCodePoint(third);
                     appendTripleQuotedString(sb, sbOrig);
+                    sb = stripMargin(sb,'|');
                 } else {
                     putBack(third);
                 }
 
             }
             return Tokens.newString(lineOrigin, sb.toString(), sbOrig.toString());
+        }
+
+        private StringBuilder stripMargin(StringBuilder sb, char marginChar) {
+            StringBuilder out = new StringBuilder();
+            StringBuilderLinesIterator sbli = new StringBuilderLinesIterator(sb);
+
+            while (sbli.hasNext()) {
+                String line = sbli.next();
+                int len = line.length();
+                int index = 0;
+                while (index < len && line.charAt(index) <= ' ') index += 1;
+                out.append((index < len && line.charAt(index) == marginChar) ? line.substring(index + 1) : line);
+            }
+
+            return out;
+        }
+
+        private static class StringBuilderLinesIterator implements Iterator<String> {
+
+            private final int len;
+            private final StringBuilder sb;
+            private int index;
+
+
+            public StringBuilderLinesIterator(StringBuilder sb) {
+                this.sb = sb;
+                this.len = sb.length();
+                this.index = 0;
+            }
+
+            @Override
+            public boolean hasNext() {
+                return index < len;
+            }
+
+            @Override
+            public String next() {
+                if (index >= len) throw new NoSuchElementException("next on empty iterator");
+                int start = index;
+                while (index < len && !isLineBreak(sb.charAt(index))) index += 1;
+                index += 1;
+                return sb.substring(start, min(index, len));
+            }
+
+            private int min(int index, int len) {
+                return index < len ? index : len;
+            }
+
+            private boolean isLineBreak(char inChar) {
+                return inChar == '\n';
+            }
         }
 
         private Token pullPlusEquals() throws ProblemException {

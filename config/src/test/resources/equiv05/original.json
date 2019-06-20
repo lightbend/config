@@ -12,5 +12,14 @@
   "g1" : "\"hello",
   "g2" : "\"\"hello",
   "h" : "\"\"",
-  "i" : "foo\"\"bar"
+  "i" : "foo\"\"bar",
+  "n1" : "hello\nworld",
+  "n2" : "hello\nworld\n",
+  "n3" : "   hello  |world",
+  "n4" : "hello\nworld",
+  "n5" : "\n\n",
+  "n6" : {
+    "language" : "python",
+    "code" : "\nfor item in range(10)\n     <some expression>\n"
+  }
 }
