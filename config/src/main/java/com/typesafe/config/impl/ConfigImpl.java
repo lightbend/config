@@ -302,7 +302,13 @@ public class ConfigImpl {
         final Properties systemProperties = System.getProperties();
         final Properties systemPropertiesCopy = new Properties();
         synchronized (systemProperties) {
-            systemPropertiesCopy.putAll(systemProperties);
+            for (Map.Entry<Object, Object> entry: systemProperties.entrySet()) {
+                // Java 11 introduces 'java.version.date', but we don't want that to
+                // overwrite 'java.version'
+                if (!entry.getKey().toString().startsWith("java.version.")) {
+                    systemPropertiesCopy.put(entry.getKey(), entry.getValue());
+                }
+            }
         }
         return systemPropertiesCopy;
     }
