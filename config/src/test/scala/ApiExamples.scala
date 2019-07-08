@@ -7,6 +7,7 @@ import com.typesafe.config._
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 import language.implicitConversions
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 /**
  * This is to show how the API works and to be sure it's usable
@@ -23,7 +24,7 @@ class ApiExamples {
         val a: Int = conf.getInt("ints.fortyTwo")
         val child: Config = conf.getConfig("ints")
         val b: Int = child.getInt("fortyTwo")
-        val ms: Long = conf.getMilliseconds("durations.halfSecond")
+        val ms: Long = conf.getDuration("durations.halfSecond", MILLISECONDS)
 
         // a Config has an associated tree of values, with a ConfigObject
         // at the root. The ConfigObject implements java.util.Map

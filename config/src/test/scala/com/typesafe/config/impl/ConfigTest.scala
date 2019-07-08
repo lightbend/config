@@ -3,7 +3,7 @@
  */
 package com.typesafe.config.impl
 
-import java.time.temporal.{ ChronoUnit, TemporalUnit }
+import java.time.temporal.ChronoUnit
 
 import org.junit.Assert._
 import org.junit._
@@ -629,11 +629,11 @@ class ConfigTest extends TestUtils {
         }
 
         intercept[ConfigException.Null] {
-            conf.getMilliseconds("nulls.null")
+            conf.getDuration("nulls.null")
         }
 
         intercept[ConfigException.Null] {
-            conf.getNanoseconds("nulls.null")
+            conf.getDuration("nulls.null", NANOSECONDS)
         }
 
         intercept[ConfigException.Null] {
@@ -662,11 +662,11 @@ class ConfigTest extends TestUtils {
         }
 
         intercept[ConfigException.WrongType] {
-            conf.getMilliseconds("ints")
+            conf.getDuration("ints")
         }
 
         intercept[ConfigException.WrongType] {
-            conf.getNanoseconds("ints")
+            conf.getDuration("ints", NANOSECONDS)
         }
 
         intercept[ConfigException.WrongType] {
@@ -693,11 +693,11 @@ class ConfigTest extends TestUtils {
         // should throw BadValue on things that don't parse
         // as durations and sizes
         intercept[ConfigException.BadValue] {
-            conf.getMilliseconds("strings.a")
+            conf.getDuration("strings.a")
         }
 
         intercept[ConfigException.BadValue] {
-            conf.getNanoseconds("strings.a")
+            conf.getDuration("strings.a", NANOSECONDS)
         }
 
         intercept[ConfigException.BadValue] {
@@ -756,18 +756,6 @@ class ConfigTest extends TestUtils {
 
         // should get durations
         def asNanos(secs: Int) = TimeUnit.SECONDS.toNanos(secs)
-        assertEquals(1000L, conf.getMilliseconds("durations.second"))
-        assertEquals(asNanos(1), conf.getNanoseconds("durations.second"))
-        assertEquals(1000L, conf.getMilliseconds("durations.secondAsNumber"))
-        assertEquals(asNanos(1), conf.getNanoseconds("durations.secondAsNumber"))
-        assertEquals(Seq(1000L, 2000L, 3000L, 4000L),
-            conf.getMillisecondsList("durations.secondsList").asScala)
-        assertEquals(Seq(asNanos(1), asNanos(2), asNanos(3), asNanos(4)),
-            conf.getNanosecondsList("durations.secondsList").asScala)
-        assertEquals(500L, conf.getMilliseconds("durations.halfSecond"))
-        assertEquals(4878955355435272204L, conf.getNanoseconds("durations.largeNanos"))
-        assertEquals(4878955355435272204L, conf.getNanoseconds("durations.plusLargeNanos"))
-        assertEquals(-4878955355435272204L, conf.getNanoseconds("durations.minusLargeNanos"))
 
         // get durations as java.time.Duration
         assertEquals(1000L, conf.getDuration("durations.second").toMillis)

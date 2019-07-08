@@ -10,6 +10,7 @@ import org.junit.Assert._
 import org.junit._
 import com.typesafe.config._
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.{ MILLISECONDS, NANOSECONDS }
 
 class UnitParserTest extends TestUtils {
 
@@ -82,9 +83,9 @@ class UnitParserTest extends TestUtils {
         assertEquals("could get 1d from conf as days",
             1L, conf.getDuration("foo", TimeUnit.DAYS))
         assertEquals("could get 1d from conf as nanos",
-            dayInNanos, conf.getNanoseconds("foo"))
+            dayInNanos, conf.getDuration("foo", NANOSECONDS))
         assertEquals("could get 1d from conf as millis",
-            TimeUnit.DAYS.toMillis(1), conf.getMilliseconds("foo"))
+            TimeUnit.DAYS.toMillis(1), conf.getDuration("foo", MILLISECONDS))
     }
 
     @Test

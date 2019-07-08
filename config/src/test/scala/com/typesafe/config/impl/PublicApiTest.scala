@@ -5,15 +5,18 @@ package com.typesafe.config.impl
 
 import org.junit.Assert._
 import org.junit._
+
 import scala.collection.JavaConverters._
 import com.typesafe.config._
 import java.util.{ Collections, TimeZone, TreeSet }
 import java.io.File
+
 import scala.collection.mutable
 import equiv03.SomethingInEquiv03
 import java.io.StringReader
 import java.net.URL
 import java.time.Duration
+import java.util.concurrent.TimeUnit.MILLISECONDS
 
 class PublicApiTest extends TestUtils {
 
@@ -32,7 +35,7 @@ class PublicApiTest extends TestUtils {
         val a = conf.getInt("ints.fortyTwo")
         val child = conf.getConfig("ints")
         val c = child.getInt("fortyTwo")
-        val ms = conf.getMilliseconds("durations.halfSecond")
+        val ms = conf.getDuration("durations.halfSecond", MILLISECONDS)
 
         // should have used system variables
         if (System.getenv("HOME") != null)
