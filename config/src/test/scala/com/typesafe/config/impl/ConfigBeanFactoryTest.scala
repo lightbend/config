@@ -3,10 +3,9 @@
  */
 package com.typesafe.config.impl
 
-import beanconfig.EnumsConfig.{ Solution, Problem }
-import com.typesafe.config._
-
-import java.io.{ InputStream, InputStreamReader }
+import beanconfig.EnumsConfig.{Problem, Solution}
+import com.typesafe.config.{ConfigBeanFactory, _}
+import java.io.{InputStream, InputStreamReader}
 import java.time.Duration
 
 import beanconfig._
@@ -277,6 +276,26 @@ class ConfigBeanFactoryTest extends TestUtils {
             ConfigBeanFactory.create(ConfigFactory.empty(), classOf[DifferentFieldNameFromAccessorsConfig])
         }
         assertTrue("only one missing value error", e.getMessage.contains("No setting"))
+    }
+
+    @Test
+    def testConstructor(): Unit = {
+        val bean = ConfigBeanFactory.create(loadConfig().getConfig("constructor"), classOf[ConstructorConfig])
+        val nestedBean = bean.getNested
+
+        assertEquals("foo", "fooString", bean.getFoo)
+        assertNull("bar", bean.getBar)
+        assertNotNull("nested", nestedBean)
+        assertEquals("nestedFooString", nestedBean.getFoo)
+        assertEquals("baz", "bazString", bean.getBaz)
+    }
+
+    @Test
+    def testMultipleConstructors(): Unit = {
+        val e = intercept[ConfigException.BadBean] {
+            ConfigBeanFactory.create(ConfigFactory.empty(), classOf[MultipleConstructorsConfig])
+        }
+        assertTrue("multiple constructors", e.getMessage.contains("needs a single constructor"))
     }
 
     private def loadConfig(): Config = {

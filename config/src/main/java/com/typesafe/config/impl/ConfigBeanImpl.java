@@ -1,12 +1,15 @@
 package com.typesafe.config.impl;
 
 import java.beans.BeanInfo;
+import java.beans.ConstructorProperties;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -77,9 +80,31 @@ public class ConfigBeanImpl {
                 beanProps.add(beanProp);
             }
 
+            ConstructorInfo<T> classConstructor = getConstructor(clazz);
             // Try to throw all validation issues at once (this does not comprehensively
             // find every issue, but it should find common ones).
             List<ConfigException.ValidationProblem> problems = new ArrayList<ConfigException.ValidationProblem>();
+            for (int i = 0; i < classConstructor.getParamsCount(); i++) {
+                Parameter parameter = classConstructor.getParameter(i);
+                String parameterName = classConstructor.getParameterName(i);
+
+                Class<?> parameterClass = parameter.getType();
+                ConfigValueType expectedType = getValueTypeOrNull(parameterClass);
+                if (expectedType != null) {
+                    String name = originalNames.get(parameterName);
+                    if (name == null)
+                        name = parameterName;
+                    Path path = Path.newKey(name);
+                    AbstractConfigValue configValue = configProps.get(parameterName);
+                    if (configValue != null) {
+                        SimpleConfig.checkValid(path, expectedType, configValue, problems);
+                    } else {
+                        if (!isOptionalParameter(parameter)) {
+                            SimpleConfig.addMissing(problems, expectedType, path, config.origin());
+                        }
+                    }
+                }
+            }
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
                 Class<?> parameterClass = setter.getParameterTypes()[0];
@@ -105,8 +130,33 @@ public class ConfigBeanImpl {
                 throw new ConfigException.ValidationFailed(problems);
             }
 
-            // Fill in the bean instance
-            T bean = clazz.newInstance();
+            // Create constructor parameters
+            Object[] constructorArgs = new Object[classConstructor.getParamsCount()];
+            for (int i = 0; i < classConstructor.getParamsCount(); i++) {
+                String parameterName = classConstructor.getParameterName(i);
+                Parameter parameter = classConstructor.getParameter(i);
+                Type parameterType = parameter.getParameterizedType();
+                Class<?> parameterClass = parameter.getType();
+                String configPropName = originalNames.get(parameterName);
+
+                Object parameterValue;
+                // Is the property key missing in the config?
+                if (configPropName == null) {
+                    // If so, continue if the field is marked as @{link Optional}
+                    if (isOptionalParameter(parameter)) {
+                        parameterValue = null;
+                    } else {
+                        // Otherwise, raise a {@link Missing} exception right here
+                        throw new ConfigException.Missing(parameterName);
+                    }
+                } else {
+                    parameterValue = getValue(clazz, parameterType, parameterClass, config, configPropName);
+                }
+                constructorArgs[i] = parameterValue;
+            }
+
+            // Create and fill the bean instance
+            T bean = classConstructor.constructor.newInstance(constructorArgs);
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
                 Type parameterType = setter.getGenericParameterTypes()[0];
@@ -183,7 +233,7 @@ public class ConfigBeanImpl {
             @SuppressWarnings("unchecked")
             Enum enumValue = config.getEnum((Class<Enum>) parameterClass, configPropName);
             return enumValue;
-        } else if (hasAtLeastOneBeanProperty(parameterClass)) {
+        } else if (hasAtLeastOneBeanProperty(parameterClass) || hasPropertiesBindedToConstructor(parameterClass)) {
             return createInternal(config.getConfig(configPropName), parameterClass);
         } else {
             throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
@@ -223,7 +273,7 @@ public class ConfigBeanImpl {
             @SuppressWarnings("unchecked")
             List<Enum> enumValues = config.getEnumList((Class<Enum>) elementType, configPropName);
             return enumValues;
-        } else if (hasAtLeastOneBeanProperty((Class<?>) elementType)) {
+        } else if (hasAtLeastOneBeanProperty((Class<?>) elementType) || hasPropertiesBindedToConstructor((Class<?>) elementType)) {
             List<Object> beanList = new ArrayList<Object>();
             List<? extends Config> configList = config.getConfigList(configPropName);
             for (Config listMember : configList) {
@@ -283,9 +333,23 @@ public class ConfigBeanImpl {
         return false;
     }
 
+    private static boolean hasPropertiesBindedToConstructor(Class<?> clazz) {
+        for (Constructor<?> constructor : clazz.getConstructors()) {
+            ConstructorProperties annotation = constructor.getAnnotation(ConstructorProperties.class);
+            if (annotation != null) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
         Field field = getField(beanClass, beanProp.getName());
         return field != null ? field.getAnnotationsByType(Optional.class).length > 0 : beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0;
+    }
+
+    private static boolean isOptionalParameter(Parameter parameter) {
+        return parameter.getAnnotation(Optional.class) != null;
     }
 
     private static Field getField(Class beanClass, String fieldName) {
@@ -301,5 +365,51 @@ public class ConfigBeanImpl {
             return null;
         }
         return getField(beanClass, fieldName);
+    }
+
+    private static <T> ConstructorInfo<T> getConstructor(Class beanClass) {
+        List<ConstructorInfo<T>> classConstructors = new ArrayList<ConstructorInfo<T>>();
+        for (Constructor<?> constructor : beanClass.getConstructors()) {
+            ConstructorProperties annotation = constructor.getAnnotation(ConstructorProperties.class);
+            if (annotation != null) {
+                classConstructors.add(new ConstructorInfo<T>((Constructor<T>)constructor, annotation.value()));
+            }
+        }
+        ConstructorInfo<T> targetConstructor;
+        if (classConstructors.size() > 1) {
+            throw new ConfigException.BadBean(beanClass.getName() + " needs a single constructor marked with @ConstructorProperties to be used as a bean");
+        } else if (classConstructors.isEmpty()) {
+            try {
+                //If there are no constructors marked with @ConstructorProperties, try to use default class constructor
+                targetConstructor = new ConstructorInfo<>((Constructor<T>)beanClass.getConstructor(), new String[]{});
+            } catch (NoSuchMethodException e) {
+                throw new ConfigException.BadBean(beanClass.getName() + " needs a public no-args constructor to be used as a bean", e);
+            }
+        } else {
+            targetConstructor = classConstructors.get(0);
+        }
+        return targetConstructor;
+    }
+
+    private static class ConstructorInfo<T> {
+        private final Constructor<T> constructor;
+        private final String[] parameterNames;
+
+        ConstructorInfo(Constructor<T> constructor, String[] parameterNames) {
+            this.constructor = constructor;
+            this.parameterNames = parameterNames;
+        }
+
+        String getParameterName(int index) {
+            return parameterNames[index];
+        }
+
+        Parameter getParameter(int index) {
+            return constructor.getParameters()[index];
+        }
+
+        int getParamsCount() {
+            return constructor.getParameterCount();
+        }
     }
 }
