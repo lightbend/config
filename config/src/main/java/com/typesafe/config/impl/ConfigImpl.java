@@ -387,9 +387,13 @@ public class ConfigImpl {
      * is self contained and doesn't depend on any higher level configuration
      * files.
      */
-    public static Config verifiedUnresolvedReference(final ClassLoader loader) {
+    public static Config defaultReferenceUnresolved(final ClassLoader loader) {
         // First, verify that `reference.conf` resolves by itself.
-        defaultReference(loader);
+        try {
+            defaultReference(loader);
+        } catch (ConfigException.UnresolvedSubstitution e) {
+            throw e.addExtraDetail("Could not resolve substitution in reference.conf to a value: %s. All reference.conf files are required to be fully, independently resolvable, and should not require the presence of values for substitutions from further up the hierarchy.");
+        }
         // Now load the unresolved version
         return unresolvedReference(loader);
     }
