@@ -1152,6 +1152,28 @@ include "onclasspath"
         // missing underneath missing
         intercept[ConfigException.Missing] { conf.getIsNull("x.c.y") }
     }
+
+    @Test
+    def applicationConfCanOverrideReferenceConf(): Unit = {
+        val loader = new TestClassLoader(this.getClass.getClassLoader,
+            Map(
+                "reference.conf" -> resourceFile("test13-reference-with-substitutions.conf").toURI.toURL,
+                "application.conf" -> resourceFile("test13-application-override-substitutions.conf").toURI.toURL))
+
+        assertEquals("b", ConfigFactory.defaultReference(loader).getString("a"))
+        assertEquals("overridden", ConfigFactory.load(loader).getString("a"))
+    }
+
+    @Test(expected = classOf[ConfigException.UnresolvedSubstitution])
+    def referenceConfMustResolveIndependently(): Unit = {
+        val loader = new TestClassLoader(this.getClass.getClassLoader,
+            Map(
+                "reference.conf" -> resourceFile("test13-reference-bad-substitutions.conf").toURI.toURL,
+                "application.conf" -> resourceFile("test13-application-override-substitutions.conf").toURI.toURL))
+
+        ConfigFactory.load(loader)
+    }
+
 }
 
 class TestStrategy extends DefaultConfigLoadingStrategy {

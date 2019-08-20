@@ -211,7 +211,8 @@ public final class ConfigFactory {
      * @return resolved configuration with overrides and fallbacks added
      */
     public static Config load(ClassLoader loader, Config config, ConfigResolveOptions resolveOptions) {
-        return defaultOverrides(loader).withFallback(config).withFallback(defaultReference(loader))
+        return defaultOverrides(loader).withFallback(config)
+                .withFallback(ConfigImpl.defaultReferenceUnresolved(loader))
                 .resolve(resolveOptions);
     }
 
@@ -366,6 +367,56 @@ public final class ConfigFactory {
      */
     public static Config defaultReference(ClassLoader loader) {
         return ConfigImpl.defaultReference(loader);
+    }
+
+    /**
+     * Obtains the default reference configuration, which is currently created
+     * by merging all resources "reference.conf" found on the classpath and
+     * overriding the result with system properties.
+     *
+     * <p>
+     * While the returned reference configuration is guaranteed to be
+     * resolvable (that is, there will be no substitutions that cannot be
+     * resolved), it is returned in an unresolved state for the purpose of
+     * allowing substitutions to be overridden by a config layer that falls
+     * back to this one.
+     *
+     * <p>
+     * Libraries and frameworks should ship with a "reference.conf" in their
+     * jar.
+     *
+     * <p>
+     * The reference config must be looked up in the class loader that contains
+     * the libraries that you want to use with this config, so the
+     * "reference.conf" for each library can be found. Use
+     * {@link #defaultReference(ClassLoader)} if the context class loader is not
+     * suitable.
+     *
+     * <p>
+     * The {@link #load()} methods merge this configuration for you
+     * automatically.
+     *
+     * <p>
+     * Future versions may look for reference configuration in more places. It
+     * is not guaranteed that this method <em>only</em> looks at
+     * "reference.conf".
+     *
+     * @return the unresolved default reference config for the context class
+     *         loader
+     */
+    public static Config defaultReferenceUnresolved() {
+        return defaultReferenceUnresolved(checkedContextClassLoader("defaultReferenceUnresolved"));
+    }
+
+    /**
+     * Like {@link #defaultReferenceUnresolved()} but allows you to specify a
+     * class loader to use rather than the current context class loader.
+     *
+     * @param loader class loader to look for resources in
+     * @return the unresolved default reference config for this class loader
+     */
+    public static Config defaultReferenceUnresolved(ClassLoader loader) {
+        return ConfigImpl.defaultReferenceUnresolved(loader);
     }
 
     /**
