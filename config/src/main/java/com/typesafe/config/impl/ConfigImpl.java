@@ -408,14 +408,40 @@ public class ConfigImpl {
         return computeCachedConfig(loader, "defaultReference", new Callable<Config>() {
             @Override
             public Config call() {
-                Config unresolvedResources = Parseable
-                        .newResources("reference.conf",
-                                ConfigParseOptions.defaults().setClassLoader(loader))
-                        .parse().toConfig();
+                Config unresolvedResources = unresolvedReference(loader);
                 return systemPropertiesAsConfig().withFallback(unresolvedResources).resolve();
             }
         });
     }
+
+    private static Config unresolvedReference(final ClassLoader loader) {
+        return computeCachedConfig(loader, "unresolvedReference", new Callable<Config>() {
+            @Override
+            public Config call() {
+                return Parseable.newResources("reference.conf",
+                        ConfigParseOptions.defaults().setClassLoader(loader))
+                    .parse().toConfig();
+            }
+        });
+    }
+
+    /**
+     * This returns the unresolved reference configuration, but before doing so,
+     * it verifies that the reference configuration resolves, to ensure that it
+     * is self contained and doesn't depend on any higher level configuration
+     * files.
+     */
+    public static Config defaultReferenceUnresolved(final ClassLoader loader) {
+        // First, verify that `reference.conf` resolves by itself.
+        try {
+            defaultReference(loader);
+        } catch (ConfigException.UnresolvedSubstitution e) {
+            throw e.addExtraDetail("Could not resolve substitution in reference.conf to a value: %s. All reference.conf files are required to be fully, independently resolvable, and should not require the presence of values for substitutions from further up the hierarchy.");
+        }
+        // Now load the unresolved version
+        return unresolvedReference(loader);
+    }
+
 
     private static class DebugHolder {
         private static String LOADS = "loads";
