@@ -364,7 +364,7 @@ final class SimpleConfigOrigin implements ConfigOrigin {
             Iterator<? extends ConfigOrigin> i = stack.iterator();
             return mergeTwo((SimpleConfigOrigin) i.next(), (SimpleConfigOrigin) i.next());
         } else {
-            List<SimpleConfigOrigin> remaining = new ArrayList<SimpleConfigOrigin>();
+            List<SimpleConfigOrigin> remaining = new ArrayList<SimpleConfigOrigin>(stack.size());
             for (ConfigOrigin o : stack) {
                 remaining.add((SimpleConfigOrigin) o);
             }
