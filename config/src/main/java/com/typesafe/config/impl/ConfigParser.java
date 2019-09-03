@@ -59,7 +59,7 @@ final class ConfigParser {
             if (flavor == ConfigSyntax.JSON)
                 throw new ConfigException.BugOrBroken("Found a concatenation node in JSON");
 
-            List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
+            List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>(n.children().size());
 
             for (AbstractConfigNode node : n.children()) {
                 AbstractConfigValue v = null;
