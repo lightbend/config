@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigFormat;
 import com.typesafe.config.ConfigIncludeContext;
 import com.typesafe.config.ConfigIncluder;
 import com.typesafe.config.ConfigIncluderClasspath;
@@ -177,7 +178,7 @@ class SimpleIncluder implements FullIncluder {
             boolean gotSomething = false;
             List<ConfigException.IO> fails = new ArrayList<ConfigException.IO>();
 
-            ConfigSyntax syntax = options.getSyntax();
+            ConfigFormat syntax = options.getSyntax();
 
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
             if (syntax == null || syntax == ConfigSyntax.CONF) {

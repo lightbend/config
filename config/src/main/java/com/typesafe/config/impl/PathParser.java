@@ -3,13 +3,18 @@
  */
 package com.typesafe.config.impl;
 
+import java.io.StringReader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFormat;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValueType;
-
-import java.io.StringReader;
-import java.util.*;
 
 final class PathParser {
     static class Element {
@@ -34,7 +39,7 @@ final class PathParser {
         return parsePathNode(path, ConfigSyntax.CONF);
     }
 
-    static ConfigNodePath parsePathNode(String path, ConfigSyntax flavor) {
+    static ConfigNodePath parsePathNode(String path, ConfigFormat flavor) {
         StringReader reader = new StringReader(path);
 
         try {
@@ -80,7 +85,7 @@ final class PathParser {
     }
 
     protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
-                                                            ConfigOrigin origin, String originalText, ConfigSyntax flavor) {
+                                                            ConfigOrigin origin, String originalText, ConfigFormat flavor) {
         ArrayList<Token> pathTokens = new ArrayList<Token>();
         Path path = parsePathExpression(expression, origin, originalText, pathTokens, flavor);
         return new ConfigNodePath(path, pathTokens);
@@ -90,7 +95,7 @@ final class PathParser {
     protected static Path parsePathExpression(Iterator<Token> expression,
                                             ConfigOrigin origin, String originalText,
                                             ArrayList<Token> pathTokens,
-                                            ConfigSyntax flavor) {
+                                            ConfigFormat flavor) {
         // each builder in "buf" is an element in the path.
         List<Element> buf = new ArrayList<Element>();
         buf.add(new Element("", false));
@@ -179,7 +184,7 @@ final class PathParser {
         return pb.result();
     }
 
-    private static Collection<Token> splitTokenOnPeriod(Token t, ConfigSyntax flavor) {
+    private static Collection<Token> splitTokenOnPeriod(Token t, ConfigFormat flavor) {
         String tokenText = t.tokenText();
         if (tokenText.equals(".")) {
             return Collections.singletonList(t);

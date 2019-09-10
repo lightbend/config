@@ -9,13 +9,13 @@ import com.typesafe.config.*;
 
 final class ConfigDocumentParser {
     static ConfigNodeRoot parse(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
-        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ConfigFormat syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
         ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parse();
     }
 
     static AbstractConfigNodeValue parseValue(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
-        ConfigSyntax syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ConfigFormat syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
         ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parseSingleValue();
     }
@@ -24,14 +24,14 @@ final class ConfigDocumentParser {
         private int lineNumber;
         final private Stack<Token> buffer;
         final private Iterator<Token> tokens;
-        final private ConfigSyntax flavor;
+        final private ConfigFormat flavor;
         final private ConfigOrigin baseOrigin;
         // this is the number of "equals" we are inside,
         // used to modify the error message to reflect that
         // someone may think this is .properties format.
         int equalsCount;
 
-        ParseContext(ConfigSyntax flavor, ConfigOrigin origin, Iterator<Token> tokens) {
+        ParseContext(ConfigFormat flavor, ConfigOrigin origin, Iterator<Token> tokens) {
             lineNumber = 1;
             buffer = new Stack<Token>();
             this.tokens = tokens;

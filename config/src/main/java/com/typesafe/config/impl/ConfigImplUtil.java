@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFormat;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
 
@@ -287,7 +288,7 @@ final public class ConfigImplUtil {
      * @param filename configuration filename
      * @return configuration syntax if a match is found. Otherwise, null.
      */
-    public static ConfigSyntax syntaxFromExtension(String filename) {
+    public static ConfigFormat syntaxFromExtension(String filename) {
         if (filename == null)
             return null;
         else if (filename.endsWith(".json"))

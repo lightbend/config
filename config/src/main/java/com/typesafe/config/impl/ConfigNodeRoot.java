@@ -1,11 +1,11 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigException;
-import com.typesafe.config.ConfigOrigin;
-import com.typesafe.config.ConfigSyntax;
-
 import java.util.ArrayList;
 import java.util.Collection;
+
+import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFormat;
+import com.typesafe.config.ConfigOrigin;
 
 final class ConfigNodeRoot extends ConfigNodeComplexValue {
     final private ConfigOrigin origin;
@@ -29,7 +29,7 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
         throw new ConfigException.BugOrBroken("ConfigNodeRoot did not contain a value");
     }
 
-    protected ConfigNodeRoot setValue(String desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
+    protected ConfigNodeRoot setValue(String desiredPath, AbstractConfigNodeValue value, ConfigFormat flavor) {
         ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(children);
         for (int i = 0; i < childrenCopy.size(); i++) {
             AbstractConfigNode node = childrenCopy.get(i);

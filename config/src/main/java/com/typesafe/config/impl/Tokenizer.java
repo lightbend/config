@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Queue;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFormat;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
 
@@ -48,7 +49,7 @@ final class Tokenizer {
      * Tokenizes a Reader. Does not close the reader; you have to arrange to do
      * that after you're done with the returned iterator.
      */
-    static Iterator<Token> tokenize(ConfigOrigin origin, Reader input, ConfigSyntax flavor) {
+    static Iterator<Token> tokenize(ConfigOrigin origin, Reader input, ConfigFormat flavor) {
         return new TokenIterator(origin, input, flavor != ConfigSyntax.JSON);
     }
 

@@ -1,9 +1,10 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigSyntax;
-
 import java.util.ArrayList;
 import java.util.Collection;
+
+import com.typesafe.config.ConfigFormat;
+import com.typesafe.config.ConfigSyntax;
 
 final class ConfigNodeObject extends ConfigNodeComplexValue {
     ConfigNodeObject(Collection<AbstractConfigNode> children) {
@@ -36,7 +37,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         return false;
     }
 
-    protected ConfigNodeObject changeValueOnPath(Path desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
+    protected ConfigNodeObject changeValueOnPath(Path desiredPath, AbstractConfigNodeValue value, ConfigFormat flavor) {
         ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children);
         boolean seenNonMatching = false;
         // Copy the value so we can change it to null but not modify the original parameter
@@ -103,12 +104,12 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         return setValueOnPath(desiredPath, value, ConfigSyntax.CONF);
     }
 
-    public ConfigNodeObject setValueOnPath(String desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
+    public ConfigNodeObject setValueOnPath(String desiredPath, AbstractConfigNodeValue value, ConfigFormat flavor) {
         ConfigNodePath path = PathParser.parsePathNode(desiredPath, flavor);
         return setValueOnPath(path, value, flavor);
     }
 
-    private ConfigNodeObject setValueOnPath(ConfigNodePath desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
+    private ConfigNodeObject setValueOnPath(ConfigNodePath desiredPath, AbstractConfigNodeValue value, ConfigFormat flavor) {
         ConfigNodeObject node = changeValueOnPath(desiredPath.value(), value, flavor);
 
         // If the desired Path did not exist, add it
@@ -163,7 +164,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         return indentation;
     }
 
-    protected ConfigNodeObject addValueOnPath(ConfigNodePath desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
+    protected ConfigNodeObject addValueOnPath(ConfigNodePath desiredPath, AbstractConfigNodeValue value, ConfigFormat flavor) {
         Path path = desiredPath.value();
         ArrayList<AbstractConfigNode> childrenCopy = new ArrayList<AbstractConfigNode>(super.children);
         ArrayList<AbstractConfigNode> indentation = new ArrayList<AbstractConfigNode>(indentation());
@@ -274,7 +275,7 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         return new ConfigNodeObject(childrenCopy);
     }
 
-    public ConfigNodeObject removeValueOnPath(String desiredPath, ConfigSyntax flavor) {
+    public ConfigNodeObject removeValueOnPath(String desiredPath, ConfigFormat flavor) {
         Path path = PathParser.parsePathNode(desiredPath, flavor).value();
         return changeValueOnPath(path, null, flavor);
     }
