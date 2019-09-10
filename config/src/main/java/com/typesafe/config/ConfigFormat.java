@@ -35,6 +35,24 @@ public interface ConfigFormat {
 	
 	/**
 	 * 
+	 * @param acceptsContentString "Content-Type" header returned from an http response 
+	 * @return
+	 */
+	default boolean acceptsContent(String contentType) {
+		if(contentType==null) {
+			return acceptsMimeType(contentType);
+		}
+		String[] contentTypes = contentType.split("[;]");
+		boolean accepted = false;
+		for(int i=0;!accepted&&i<contentTypes.length;i++) {
+			String mimeType = contentTypes[i];
+			accepted = acceptsMimeType(mimeType);
+		}
+		return accepted;
+	}
+	
+	/**
+	 * 
 	 * @param extension
 	 * @return {@code true} if the given {@code extension} is acceptable by this format
 	 */
