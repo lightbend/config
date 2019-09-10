@@ -14,12 +14,14 @@ import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAmount;
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -144,38 +146,84 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             return v;
     }
 
-    static private AbstractConfigValue findKey(AbstractConfigObject self, String key,
-            ConfigValueType expected, Path originalPath) {
-        return throwIfNull(findKeyOrNull(self, key, expected, originalPath), expected, originalPath);
+    static private AbstractConfigValue findKey(AbstractConfigValue self, String key, Path originalPath,ConfigValueType expected,ConfigValueType...other) {
+        return throwIfNull(findKeyOrNull(self, key, originalPath,expected,other), expected, originalPath);
     }
-
-    static private AbstractConfigValue findKeyOrNull(AbstractConfigObject self, String key,
-            ConfigValueType expected, Path originalPath) {
-        AbstractConfigValue v = self.peekAssumingResolved(key, originalPath);
-        if (v == null)
+    static private AbstractConfigValue findKeyOrNull(AbstractConfigValue self, String key,
+            Path originalPath,ConfigValueType expectedType, ConfigValueType...otherExpectedTypes) {
+        AbstractConfigValue v = null;
+        if(self!=null) {
+        	if(self instanceof AbstractConfigObject) {
+        		v=((AbstractConfigObject)self).peekAssumingResolved(key, originalPath);
+        	} else if(self instanceof ConfigList) {
+        		int numericKey = Integer.parseInt(key);
+        		v=(AbstractConfigValue) ((ConfigList)self).get(numericKey);
+        	}
+        }
+        if (v == null) {
             throw new ConfigException.Missing(self.origin(), originalPath.render());
-
-        if (expected != null)
-            v = DefaultTransformer.transform(v, expected);
-
-        if (expected != null && (v.valueType() != expected && v.valueType() != ConfigValueType.NULL))
-            throw new ConfigException.WrongType(v.origin(), originalPath.render(), expected.name(),
+        }
+        List<ConfigValueType> expectedTypes = new ArrayList<ConfigValueType>(1+otherExpectedTypes.length);
+        expectedTypes.add(expectedType);
+        expectedTypes.addAll(Arrays.asList(otherExpectedTypes));
+        try {
+        	v=isValidTypeOrNullType(v, expectedTypes);
+        } catch (TypeNotMatchedException e) {
+        	List<String> expectedNames = expectedTypes.stream().map(et->et!=null?et.name():null).collect(Collectors.toList()); 
+        	throw new ConfigException.WrongType(v.origin(), originalPath.render(), String.join(", ", expectedNames),
                     v.valueType().name());
-        else
-            return v;
+        }
+        return v;
     }
-
-    static private AbstractConfigValue findOrNull(AbstractConfigObject self, Path path,
+    
+    private static class TypeNotMatchedException extends RuntimeException {
+		private static final long serialVersionUID = 5144274303070342359L;
+		public TypeNotMatchedException() {
+			super("Type could not be matched");
+		}
+    }
+    
+    static private AbstractConfigValue isValidTypeOrNullType(AbstractConfigValue v, List<ConfigValueType> expectedTypes) {
+        boolean matched = false;
+        for(int i=0;!matched&&i<expectedTypes.size();i++) {
+        	AbstractConfigValue copy = v.newCopy(v.origin());
+        	ConfigValueType expected = expectedTypes.get(i);
+        	if (expected != null) {
+                copy = DefaultTransformer.transform(v, expected);
+        	}
+            matched = !(expected != null && (copy.valueType() != expected && copy.valueType() != ConfigValueType.NULL));
+            if(matched) {
+            	v=copy;
+            }
+        }
+        if(!matched) {
+        	throw new TypeNotMatchedException();
+        }
+        return v;
+    }
+    
+    static private AbstractConfigValue findOrNull(AbstractConfigValue self, Path path,
             ConfigValueType expected, Path originalPath) {
         try {
             String key = path.first();
+            ConfigValueType exp = ConfigValueType.OBJECT;
             Path next = path.remainder();
             if (next == null) {
-                return findKeyOrNull(self, key, expected, originalPath);
+                return findKeyOrNull(self, key, originalPath,expected);
             } else {
-                AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
-                        ConfigValueType.OBJECT,
-                        originalPath.subPath(0, originalPath.length() - next.length()));
+            	String nextKey = next.first();
+            	ConfigValueType oth = null;
+            	if(nextKey!=null) {
+            		if(nextKey.matches("[0-9]+")) {
+            			oth=ConfigValueType.LIST;
+            		}
+            	}
+            	AbstractConfigValue o = findKey(self, key,
+                        originalPath.subPath(0, originalPath.length() - next.length()),
+                            exp, oth==null?
+                                new ConfigValueType[0]
+                                :new ConfigValueType[]{oth});
+            	
                 assert (o != null); // missing was supposed to throw
                 return findOrNull(o, next, expected, originalPath);
             }
