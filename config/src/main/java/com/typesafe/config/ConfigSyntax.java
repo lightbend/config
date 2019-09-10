@@ -3,6 +3,11 @@
  */
 package com.typesafe.config;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 /**
  * The syntax of a character stream (<a href="http://json.org">JSON</a>, <a
  * href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>
@@ -11,7 +16,7 @@ package com.typesafe.config;
  * >Java properties</a>).
  * 
  */
-public enum ConfigSyntax {
+public enum ConfigSyntax implements ConfigFormat{
     /**
      * Pedantically strict <a href="http://json.org">JSON</a> format; no
      * comments, no unexpected commas, no duplicate keys in the same object.
@@ -33,4 +38,33 @@ public enum ConfigSyntax {
      * file extension and <code>text/x-java-properties</code> Content-Type.
      */
     PROPERTIES;
+	
+	private final Set<String> extensions;
+	private final Set<String> mimeTypes;
+	
+	private ConfigSyntax(String...mimeTypes) {
+		Set<String> extensionsToUse = new LinkedHashSet<String>(1);
+		Set<String> mimeTypesToUse = new LinkedHashSet<String>(mimeTypes.length);
+		extensionsToUse.add(name().toLowerCase());
+		mimeTypesToUse.addAll(Arrays.asList(mimeTypes));
+		this.extensions=Collections.unmodifiableSet(extensionsToUse);
+		this.mimeTypes=Collections.unmodifiableSet(mimeTypesToUse);
+	}
+
+	/**
+	 * @see ConfigFormat#getExtensions()
+	 */
+	@Override
+	public Set<String> getExtensions() {
+		return this.extensions;
+	}
+
+	/**
+	 * @see ConfigFormat#getMimeTypes()
+	 */
+	@Override
+	public Set<String> getMimeTypes() {
+		return this.mimeTypes;
+	}
+	
 }
