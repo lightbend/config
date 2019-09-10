@@ -14,16 +14,30 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
-import java.io.ObjectInputStream.GetField;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 
-import com.typesafe.config.*;
-import com.typesafe.config.parser.*;
+import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigFormat;
+import com.typesafe.config.ConfigIncludeContext;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigParseOptions;
+import com.typesafe.config.ConfigParseable;
+import com.typesafe.config.ConfigSyntax;
+import com.typesafe.config.ConfigValue;
+import com.typesafe.config.parser.ConfigDocument;
+import com.typesafe.config.spi.ConfigProvider;
 
 /**
  * Internal implementation detail, not ABI stable, do not touch. For use only by
@@ -256,13 +270,18 @@ public abstract class Parseable implements ConfigParseable {
 
 	private AbstractConfigValue rawParseValue(Reader reader, ConfigOrigin origin, ConfigParseOptions finalOptions)
 			throws IOException {
-		if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
-			return PropertiesParser.parse(reader, origin);
-		} else {
-			Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
-			ConfigNodeRoot document = ConfigDocumentParser.parse(tokens, origin, finalOptions);
-			return ConfigParser.parse(document, origin, finalOptions, includeContext());
+		ConfigProvider cp = ConfigProviderService.getInstance().getByConfigParseOptions(finalOptions);
+		if(cp!=null) {
+			return (AbstractConfigValue) cp.rawParseValue(reader, origin, finalOptions, includeContext());
 		}
+		return null;
+//		if (finalOptions.getSyntax() == ConfigSyntax.PROPERTIES) {
+//			return PropertiesParser.parse(reader, origin);
+//		} else {
+//			Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
+//			ConfigNodeRoot document = ConfigDocumentParser.parse(tokens, origin, finalOptions);
+//			return ConfigParser.parse(document, origin, finalOptions, includeContext());
+//		}
 	}
 
 	// this is parseDocument without post-processing the IOException or handling
@@ -502,7 +521,7 @@ public abstract class Parseable implements ConfigParseable {
 		private static String acceptContentType(ConfigParseOptions options) {
 			if (options.getSyntax() == null)
 				return null;
-			return options.getSyntax().acceptsContent();
+			return options.getSyntax().acceptContent();
 		}
 
 		@Override

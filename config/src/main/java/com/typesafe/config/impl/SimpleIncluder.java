@@ -167,9 +167,9 @@ class SimpleIncluder implements FullIncluder {
     // loading app.{conf,json,properties} from the filesystem.
     static ConfigObject fromBasename(NameSource source, String name, ConfigParseOptions options) {
         ConfigObject obj;
-        if (name.endsWith(".conf") || name.endsWith(".json") || name.endsWith(".properties")) {
+        if (name.endsWith(".conf") || name.endsWith(".json") || name.endsWith(".properties") || name.endsWith(".yml")) {
             ConfigParseable p = source.nameToParseable(name, options);
-
+            	
             obj = p.parse(p.options().setAllowMissing(options.getAllowMissing()));
         } else {
             ConfigParseable confHandle = source.nameToParseable(name + ".conf", options);

@@ -1,0 +1,3 @@
+com.typesafe.config.impl.HoconConfigProvider
+com.typesafe.config.impl.JsonConfigProvider
+com.typesafe.config.impl.PropertiesConfigProvider
