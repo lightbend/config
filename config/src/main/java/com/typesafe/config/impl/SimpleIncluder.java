@@ -8,6 +8,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
@@ -21,6 +23,7 @@ import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigParseable;
 import com.typesafe.config.ConfigSyntax;
+import com.typesafe.config.spi.ConfigProvider;
 
 class SimpleIncluder implements FullIncluder {
 
@@ -160,6 +163,11 @@ class SimpleIncluder implements FullIncluder {
             }
         }
     };
+    
+    private static String getExtension(String str) {
+    	int lastDot = str.lastIndexOf('.');
+    	return str.substring(lastDot+1);
+    }
 
     // this function is a little tricky because there are three places we're
     // trying to use it; for 'include "basename"' in a .conf file, for
@@ -167,50 +175,32 @@ class SimpleIncluder implements FullIncluder {
     // loading app.{conf,json,properties} from the filesystem.
     static ConfigObject fromBasename(NameSource source, String name, ConfigParseOptions options) {
         ConfigObject obj;
-        if (name.endsWith(".conf") || name.endsWith(".json") || name.endsWith(".properties") || name.endsWith(".yml")) {
+         
+        String extension = getExtension(name);
+        if (ConfigProviderService.getInstance().supportsExtension(extension)) {
             ConfigParseable p = source.nameToParseable(name, options);
             	
             obj = p.parse(p.options().setAllowMissing(options.getAllowMissing()));
         } else {
-            ConfigParseable confHandle = source.nameToParseable(name + ".conf", options);
-            ConfigParseable jsonHandle = source.nameToParseable(name + ".json", options);
-            ConfigParseable propsHandle = source.nameToParseable(name + ".properties", options);
             boolean gotSomething = false;
             List<ConfigException.IO> fails = new ArrayList<ConfigException.IO>();
-
             ConfigFormat syntax = options.getSyntax();
-
+            List<ConfigProvider> providers = ConfigProviderService.getInstance().getProviders().collect(Collectors.toList());
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
-            if (syntax == null || syntax == ConfigSyntax.CONF) {
-                try {
-                    obj = confHandle.parse(confHandle.options().setAllowMissing(false)
-                            .setSyntax(ConfigSyntax.CONF));
-                    gotSomething = true;
-                } catch (ConfigException.IO e) {
-                    fails.add(e);
-                }
-            }
-
-            if (syntax == null || syntax == ConfigSyntax.JSON) {
-                try {
-                    ConfigObject parsed = jsonHandle.parse(jsonHandle.options()
-                            .setAllowMissing(false).setSyntax(ConfigSyntax.JSON));
-                    obj = obj.withFallback(parsed);
-                    gotSomething = true;
-                } catch (ConfigException.IO e) {
-                    fails.add(e);
-                }
-            }
-
-            if (syntax == null || syntax == ConfigSyntax.PROPERTIES) {
-                try {
-                    ConfigObject parsed = propsHandle.parse(propsHandle.options()
-                            .setAllowMissing(false).setSyntax(ConfigSyntax.PROPERTIES));
-                    obj = obj.withFallback(parsed);
-                    gotSomething = true;
-                } catch (ConfigException.IO e) {
-                    fails.add(e);
-                }
+            for(int i=0;i<providers.size();i++) {
+            	ConfigProvider provider = providers.get(i);
+            	Set<String> extensions = provider.getExtensions();
+            	for(String ext: extensions) {
+            		ConfigParseable handle = source.nameToParseable(name+"."+ext, options);
+            		if(syntax==null||syntax.isSameAs(provider.getFormat())) {
+            			try {
+            				obj=handle.parse(handle.options().setAllowMissing(false).setSyntax(provider.getFormat()));
+            				gotSomething=true;
+            			}catch(ConfigException.IO e) {
+            				fails.add(e);
+            			}
+            		}
+            	}
             }
 
             if (!options.getAllowMissing() && !gotSomething) {

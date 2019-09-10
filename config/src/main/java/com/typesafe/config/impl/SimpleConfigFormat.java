@@ -14,10 +14,12 @@ public class SimpleConfigFormat implements ConfigFormat {
 	private final Set<String> extensions;
 	private final Set<String> mimeTypes;
 
-	SimpleConfigFormat(String... extensions) {
+	public SimpleConfigFormat(String... extensions) {
 		this(Arrays.asList(extensions));
 	}
 
+	
+	
 	public SimpleConfigFormat(List<String> extensions, String... mimeTypes) {
 		Set<String> toUse = new LinkedHashSet<String>(extensions != null ? extensions.size() : 0);
 		if (extensions != null) {

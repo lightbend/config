@@ -25,6 +25,9 @@ public class ConfigProviderService {
 		this.loader=ServiceLoader.load(ConfigProvider.class);
 	}
 	
+	public boolean supportsExtension(String extension) {
+		return getProviders().anyMatch(provider->provider.acceptsExtension(extension));
+	}
 	
 	ServiceLoader<ConfigProvider> getLoader(){
 		if(this.loader==null) {
