@@ -79,6 +79,11 @@ public interface ConfigFormat {
 		return acceptsExtension(extension);
 	}
 	
+	default boolean test(String resource) {
+		String extension = getExtension(resource);
+		return acceptsExtension(extension);
+	}
+	
 	static String getExtension(File file) {
 		String extension = null;
 		if(file!=null) {
