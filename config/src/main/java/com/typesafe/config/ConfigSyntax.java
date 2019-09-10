@@ -23,21 +23,21 @@ public enum ConfigSyntax implements ConfigFormat{
      * Associated with the <code>.json</code> file extension and
      * <code>application/json</code> Content-Type.
      */
-    JSON,
+    JSON("application/json"),
     /**
      * The JSON-superset <a
      * href="https://github.com/lightbend/config/blob/master/HOCON.md"
      * >HOCON</a> format. Associated with the <code>.conf</code> file extension
      * and <code>application/hocon</code> Content-Type.
      */
-    CONF,
+    CONF("application/hocon"),
     /**
      * Standard <a href=
      * "http://download.oracle.com/javase/7/docs/api/java/util/Properties.html#load%28java.io.Reader%29"
      * >Java properties</a> format. Associated with the <code>.properties</code>
      * file extension and <code>text/x-java-properties</code> Content-Type.
      */
-    PROPERTIES;
+    PROPERTIES("text/x-java-properties");
 	
 	private final Set<String> extensions;
 	private final Set<String> mimeTypes;
