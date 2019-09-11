@@ -9,17 +9,34 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.typesafe.config.ConfigFormat;
+import com.typesafe.config.ConfigSyntax;
 
+/**
+ * This is a basic implementation of {@link ConfigFormat} all fields are
+ * immutable and any setter create new instances of a ConfigFormat object
+ * 
+ *
+ * 
+ * @author jamesratzlaff
+ * @see ConfigSyntax
+ */
 public class SimpleConfigFormat implements ConfigFormat {
 	private final Set<String> extensions;
 	private final Set<String> mimeTypes;
 
+	/**
+	 * 
+	 * @param extensions - the file extensions that this ConfigFormat supports 
+	 */
 	public SimpleConfigFormat(String... extensions) {
 		this(Arrays.asList(extensions));
 	}
 
-	
-	
+	/**
+	 * 
+	 * @param extensions - a {@link List} of extensions that this ConfigFormat supports
+	 * @param mimeTypes - the mime-types that are associated with this format
+	 */
 	public SimpleConfigFormat(List<String> extensions, String... mimeTypes) {
 		Set<String> toUse = new LinkedHashSet<String>(extensions != null ? extensions.size() : 0);
 		if (extensions != null) {
@@ -33,6 +50,11 @@ public class SimpleConfigFormat implements ConfigFormat {
 		this.mimeTypes = Collections.unmodifiableSet(mToUse);
 	}
 
+	/**
+	 * 
+	 * @param extensions - a {@link Set}{@link String &lt;String&gt;} of extensions that this ConfigFormat supports
+	 * @param mimeTypes - a {@link Set}{@link String &lt;String&gt;} of mime types associated with this format 
+	 */
 	public SimpleConfigFormat(Set<String> extensions, Set<String> mimeTypes) {
 		this.extensions = Collections.unmodifiableSet(extensions == null ? Collections.emptySet()
 				: new LinkedHashSet<String>(extensions.stream().filter(Objects::nonNull).map(String::toLowerCase)
@@ -60,7 +82,6 @@ public class SimpleConfigFormat implements ConfigFormat {
 		result = prime * result + ((mimeTypes == null) ? 0 : mimeTypes.hashCode());
 		return result;
 	}
-
 
 	@Override
 	public boolean equals(Object obj) {

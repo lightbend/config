@@ -15,8 +15,11 @@ import java.util.stream.Collectors;
 import com.typesafe.config.impl.SimpleConfigFormat;
 
 /**
- * @author jamesratzlaff
- *
+ * This class represents commonly known metadata about a
+ *         given config format
+ * @author jamesratzlaff 
+ * @see SimpleConfigFormat
+ * @see ConfigSyntax
  */
 public interface ConfigFormat {
 

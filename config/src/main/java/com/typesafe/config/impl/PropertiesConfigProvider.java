@@ -7,7 +7,13 @@ import com.typesafe.config.ConfigIncludeContext;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
+import com.typesafe.config.spi.ConfigProvider;
 
+/**
+ * This {@link ConfigProvider} supports in plain 'ol .properties files
+ * @author jamesratzlaff
+ *
+ */
 public class PropertiesConfigProvider extends AbstractConfigProvider{
 	
 	public PropertiesConfigProvider() {

@@ -9,7 +9,13 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.ConfigValue;
+import com.typesafe.config.spi.ConfigProvider;
 
+/**
+ * This {@link ConfigProvider} supports JSON files
+ * @author jamesratzlaff
+ *
+ */
 public class JsonConfigProvider extends AbstractConfigProvider{
 
 	public JsonConfigProvider() {
