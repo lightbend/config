@@ -67,9 +67,6 @@ public enum ConfigSyntax implements ConfigFormat{
 		return this.mimeTypes;
 	}
 	
-	public static void main(String[] args) {
-		System.out.println(CONF.withExtensions("json").withMimeTypes("application/json"));
-		System.out.println(CONF.withExtensions("conf"));
-	}
+	
 	
 }

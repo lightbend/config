@@ -187,7 +187,7 @@ class SimpleIncluder implements FullIncluder {
             ConfigFormat syntax = options.getSyntax();
             List<ConfigProvider> providers = ConfigProviderService.getInstance().getProviders().collect(Collectors.toList());
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
-            for(int i=0;!gotSomething&&i<providers.size();i++) {
+            for(int i=0;i<providers.size();i++) {
             	ConfigProvider provider = providers.get(i);
             	Set<String> extensions = provider.getExtensions();
             	for(String ext: extensions) {
