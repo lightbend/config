@@ -12,7 +12,7 @@ import com.typesafe.config.ConfigValue;
 import com.typesafe.config.spi.ConfigProvider;
 
 /**
- * This {@link ConfigProvider} is supports HOCON format .conf files
+ * This {@link ConfigProvider} is supports HOCON format .conf files.
  * @author jamesratzlaff
  *
  */

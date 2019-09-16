@@ -16,7 +16,7 @@ import com.typesafe.config.impl.SimpleConfigFormat;
 
 /**
  * This class represents commonly known metadata about a
- *         given config format
+ *         given config format.
  * @author jamesratzlaff
  * @see SimpleConfigFormat
  * @see ConfigSyntax
@@ -25,13 +25,13 @@ public interface ConfigFormat {
 
     /**
      *
-     * @return a set of lowercase extensions acceptable by this format
+     * @return a {@link Set}{@link String &lt;String&gt;} of lowercase extensions acceptable by this format
      */
     Set<String> getExtensions();
 
     /**
      *
-     * @return a set of lowercase mime-types acceptable by this format
+     * @return a {@link Set}{@link String &lt;String&gt;} of lowercase mime-types acceptable by this format
      */
     Set<String> getMimeTypes();
 
@@ -47,7 +47,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param extensions
+     * @param extensions the file extension (prefixed period excluded) that the ConfigFormat is compatible with
      * @return a new instance of a ConfigFormat object that has the given extensions
      *         and {@code this} instance's mimeType values. If the extension as a
      *         {@link Set} are the same as {@code this} instances
@@ -73,7 +73,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param mimeTypes
+     * @param mimeTypes the mime types that the Config format is associated with
      * @return a new instance of a ConfigFormat object that has the given mimeTypes
      *         and {@code this} instance's extension values. If the mimeTypes as a
      *         {@link Set} are the same as {@code this} instances
@@ -99,7 +99,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param other
+     * @param other some other ConfigFormat object
      * @return {@code true} if the values of {@code this}{@link #getExtensions()
      *         .getExtensions()} and {@link #getMimeTypes()} are equal to
      *         {@code other} respective values
@@ -128,7 +128,7 @@ public interface ConfigFormat {
      *
      * @param contentType "Content-Type" header returned from an http
      *                             response
-     * @return
+     * @return {@code true} if this ConfigFormat is associated to any of the given mime-types, otherwise {@code false}
      */
     default boolean acceptsContent(String contentType) {
         if (contentType == null) {
@@ -145,7 +145,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param extension
+     * @param extension the extension (period excluded) to test against
      * @return {@code true} if the given {@code extension} is acceptable by this
      *         format
      */
@@ -155,8 +155,8 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param mimeType
-     * @return {@code true} if mimeType is a mimeType that this ConfigFormat accepts
+     * @param mimeType the mime type to test for association to {@code this} ConfigFormat instance
+     * @return {@code true} if mimeType is a mimeType that this ConfigFormat accepts, otherwise {@code false}
      */
     default boolean acceptsMimeType(String mimeType) {
         return getMimeTypes().contains(mimeType != null ? mimeType.toLowerCase() : null);
@@ -164,7 +164,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param url
+     * @param url the {@link URL url} to test for extension compatibility
      * @return {@code true} if the given {@link URL url} has an extension acceptable
      *         by this ConfigFormat
      */
@@ -175,7 +175,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param file
+     * @param file the {@link File file} to test for extension compatibility
      * @return {@code true} if the given {@link File file} has an extension
      *         acceptable by this ConfigFormat
      */
@@ -186,7 +186,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param path
+     * @param path the {@link Path path} to test for extension compatibility
      * @return {@code true} if the given {@link Path path} has an extension
      *         acceptable by this ConfigFormat
      */
@@ -197,7 +197,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param resource
+     * @param resource the resource to test for extension compatibility
      * @return {@code true} if the given resource path has an extension acceptable
      *         by this ConfigFormat
      */
@@ -206,6 +206,11 @@ public interface ConfigFormat {
         return acceptsExtension(extension);
     }
 
+    /**
+     *
+     * @param file the {@link File} to get the extension of
+     * @return the file's extension
+     */
     static String getExtension(File file) {
         String extension = null;
         if (file != null) {
@@ -214,6 +219,11 @@ public interface ConfigFormat {
         return extension;
     }
 
+    /**
+     *
+     * @param path the {@link Path} to get the extension of
+     * @return the path's extension
+     */
     static String getExtension(Path path) {
         String extension = null;
         if (path != null) {
@@ -222,6 +232,11 @@ public interface ConfigFormat {
         return extension;
     }
 
+    /**
+     *
+     * @param str the string to get the extension of
+     * @return the string's extension
+     */
     static String getExtension(String str) {
         String extension = null;
         if (str != null && !str.isEmpty()) {
@@ -233,6 +248,11 @@ public interface ConfigFormat {
         return extension;
     }
 
+    /**
+     *
+     * @param url the {@link URL} to get the extension of
+     * @return the url's extension
+     */
     static String getExtension(URL url) {
         String extension = null;
         if (url != null) {

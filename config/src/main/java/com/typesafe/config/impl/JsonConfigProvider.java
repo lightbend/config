@@ -12,7 +12,7 @@ import com.typesafe.config.ConfigValue;
 import com.typesafe.config.spi.ConfigProvider;
 
 /**
- * This {@link ConfigProvider} supports JSON files
+ * This {@link ConfigProvider} supports JSON files.
  * @author jamesratzlaff
  *
  */

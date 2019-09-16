@@ -49,7 +49,7 @@ public interface ConfigProvider extends ConfigFormat, Comparable<ConfigProvider>
 
 	/**
 	 * This is the key method a subclass should implement to get their custom loader
-	 * working with TypeSafe config
+	 * working with TypeSafe config.
 	 * 
 	 * @param reader         the reader which reads in the data associated to the
 	 *                       config file
@@ -58,7 +58,7 @@ public interface ConfigProvider extends ConfigFormat, Comparable<ConfigProvider>
 	 * @param includeContext the {@link ConfigIncludeContext} for this parser, this
 	 *                       can be null in some situation, such as when parsing
 	 *                       properties
-	 * @return a {@link ConfigValue} (most likely a {@link ConfigObject}
+	 * @return a {@link ConfigValue} (most likely a {@link com.typesafe.config.ConfigObject}
 	 * @throws IOException if an IOException occurs
 	 */
 	ConfigValue rawParseValue(Reader reader, ConfigOrigin origin, ConfigParseOptions finalOptions,

@@ -13,7 +13,7 @@ import com.typesafe.config.ConfigSyntax;
 
 /**
  * This is a basic implementation of {@link ConfigFormat} all fields are
- * immutable and any setter create new instances of a ConfigFormat object
+ * immutable and any setter create new instances of a ConfigFormat object.
  * 
  *
  * 

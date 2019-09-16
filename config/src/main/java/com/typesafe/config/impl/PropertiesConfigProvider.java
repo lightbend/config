@@ -10,7 +10,7 @@ import com.typesafe.config.ConfigSyntax;
 import com.typesafe.config.spi.ConfigProvider;
 
 /**
- * This {@link ConfigProvider} supports in plain 'ol .properties files
+ * This {@link ConfigProvider} supports in plain 'ol .properties files.
  * @author jamesratzlaff
  *
  */

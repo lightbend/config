@@ -52,6 +52,8 @@ public enum ConfigSyntax implements ConfigFormat{
 	}
 
 	/**
+	 *
+	 * @return a {@link Set}{@link String &lt;String&gt;} of lowercase extensions acceptable by this format
 	 * @see ConfigFormat#getExtensions()
 	 */
 	@Override
@@ -60,6 +62,7 @@ public enum ConfigSyntax implements ConfigFormat{
 	}
 
 	/**
+	 * @return a {@link Set}{@link String &lt;String&gt;} of lowercase mime-types acceptable by this format
 	 * @see ConfigFormat#getMimeTypes()
 	 */
 	@Override

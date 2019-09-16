@@ -8,7 +8,7 @@ import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.spi.ConfigProvider;
 
 /**'
- * This service contains all of the {@link ConfigProvider ConfigProviders} for load/parsing different config formats 
+ * This service contains all of the {@link ConfigProvider ConfigProviders} for load/parsing different config formats.
  * 
  * @author jamesratzlaff
  *
