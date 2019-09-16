@@ -811,7 +811,6 @@ class ConfigValueTest extends TestUtils {
         val v = ConfigValueFactory.fromAnyRef(42)
         val config = v.atPath("a")
         assertEquals(parseConfig("a=42"), config)
-        var derp = config.getValue("a") eq v
         assertTrue(config.getValue("a") eq v)
         assertTrue(config.origin.description.contains("atPath"))
     }
