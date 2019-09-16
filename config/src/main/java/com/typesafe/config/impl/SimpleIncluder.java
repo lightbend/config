@@ -1,5 +1,5 @@
 /**
- *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
+ * Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
 package com.typesafe.config.impl;
 
@@ -123,7 +123,7 @@ class SimpleIncluder implements FullIncluder {
     }
 
     static ConfigObject includeResourceWithoutFallback(final ConfigIncludeContext context,
-            String resource) {
+                                                       String resource) {
         return ConfigFactory.parseResourcesAnySyntax(resource, context.parseOptions()).root();
     }
 
@@ -162,11 +162,13 @@ class SimpleIncluder implements FullIncluder {
                 return p;
             }
         }
-    };
-    
+    }
+
+    ;
+
     private static String getExtension(String str) {
-    	int lastDot = str.lastIndexOf('.');
-    	return str.substring(lastDot+1);
+        int lastDot = str.lastIndexOf('.');
+        return str.substring(lastDot + 1);
     }
 
     // this function is a little tricky because there are three places we're
@@ -175,11 +177,11 @@ class SimpleIncluder implements FullIncluder {
     // loading app.{conf,json,properties} from the filesystem.
     static ConfigObject fromBasename(NameSource source, String name, ConfigParseOptions options) {
         ConfigObject obj;
-         
+
         String extension = getExtension(name);
         if (ConfigProviderService.getInstance().supportsExtension(extension)) {
             ConfigParseable p = source.nameToParseable(name, options);
-            	
+
             obj = p.parse(p.options().setAllowMissing(options.getAllowMissing()));
         } else {
             boolean gotSomething = false;
@@ -187,20 +189,29 @@ class SimpleIncluder implements FullIncluder {
             ConfigFormat syntax = options.getSyntax();
             List<ConfigProvider> providers = ConfigProviderService.getInstance().getProviders().collect(Collectors.toList());
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
-            for(int i=0;i<providers.size();i++) {
-            	ConfigProvider provider = providers.get(i);
-            	Set<String> extensions = provider.getExtensions();
-            	for(String ext: extensions) {
-            		ConfigParseable handle = source.nameToParseable(name+"."+ext, options);
-            		if(syntax==null||syntax.isSameAs(provider.getFormat())) {
-            			try {
-            				obj=handle.parse(handle.options().setAllowMissing(false).setSyntax(provider.getFormat()));
-            				gotSomething=true;
-            			}catch(ConfigException.IO e) {
-            				fails.add(e);
-            			}
-            		}
-            	}
+            for (int i = 0; i < providers.size(); i++) {
+                ConfigProvider provider = providers.get(i);
+                Set<String> extensions = provider.getExtensions();
+                for (String ext : extensions) {
+                    ConfigParseable handle = source.nameToParseable(name + "." + ext, options);
+                    if (syntax == null || syntax.isSameAs(provider.getFormat())) {
+                        try {
+                            ConfigObject parsed = null;
+                            if (provider.getFormat() == ConfigSyntax.CONF) {
+                                obj = handle.parse(handle.options().setAllowMissing(false).setSyntax(provider.getFormat()));
+                            } else {
+                                parsed = handle.parse(handle.options()
+                                        .setAllowMissing(false).setSyntax(provider.getFormat()));
+                            }
+                            if (parsed != null) {
+                                obj = obj.withFallback(parsed);
+                            }
+                            gotSomething = true;
+                        } catch (ConfigException.IO e) {
+                            fails.add(e);
+                        }
+                    }
+                }
             }
 
             if (!options.getAllowMissing() && !gotSomething) {
@@ -230,7 +241,7 @@ class SimpleIncluder implements FullIncluder {
                 if (ConfigImpl.traceLoadsEnabled()) {
                     ConfigImpl.trace("Did not find '" + name
                             + "' with any extension (.conf, .json, .properties); but '" + name
-                                    + "' is allowed to be missing. Exceptions from load attempts should have been logged above.");
+                            + "' is allowed to be missing. Exceptions from load attempts should have been logged above.");
                 }
             }
         }
