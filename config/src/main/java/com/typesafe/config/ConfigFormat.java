@@ -126,7 +126,7 @@ public interface ConfigFormat {
 
     /**
      *
-     * @param acceptsContentString "Content-Type" header returned from an http
+     * @param contentType "Content-Type" header returned from an http
      *                             response
      * @return
      */
