@@ -168,6 +168,9 @@ class SimpleIncluder implements FullIncluder {
 
     private static String getExtension(String str) {
         int lastDot = str.lastIndexOf('.');
+        if (lastDot == -1) {
+            return null;
+        }
         return str.substring(lastDot + 1);
     }
 
