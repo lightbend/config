@@ -72,7 +72,7 @@ public class ConfigProviderService {
 	 * @return the first {@link ConfigProvider} that handles <i>all</i> of the extension presented by {@code cpo}
 	 */
 	public ConfigProvider getByConfigParseOptions(ConfigParseOptions cpo) {
-		return getProviders().filter(configProvider->configProvider.getExtensions().containsAll(cpo.getSyntax().getExtensions())).findFirst().orElse(null);
+		return getProviders().filter(configProvider->configProvider.getExtensions().containsAll(cpo.getFormat().getExtensions())).findFirst().orElse(null);
 	}
 	
 	

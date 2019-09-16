@@ -21,11 +21,11 @@ final class SimpleConfigDocument implements ConfigDocument {
             throw new ConfigException.BugOrBroken("null value for " + path + " passed to withValueText");
         SimpleConfigOrigin origin = SimpleConfigOrigin.newSimple("single value parsing");
         StringReader reader = new StringReader(newValue);
-        Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, parseOptions.getSyntax());
+        Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, parseOptions.getFormat());
         AbstractConfigNodeValue parsedValue = ConfigDocumentParser.parseValue(tokens, origin, parseOptions);
         reader.close();
 
-        return new SimpleConfigDocument(configNodeTree.setValue(path, parsedValue, parseOptions.getSyntax()), parseOptions);
+        return new SimpleConfigDocument(configNodeTree.setValue(path, parsedValue, parseOptions.getFormat()), parseOptions);
     }
 
     @Override
@@ -39,7 +39,7 @@ final class SimpleConfigDocument implements ConfigDocument {
 
     @Override
     public ConfigDocument withoutPath(String path) {
-        return new SimpleConfigDocument(configNodeTree.setValue(path, null, parseOptions.getSyntax()), parseOptions);
+        return new SimpleConfigDocument(configNodeTree.setValue(path, null, parseOptions.getFormat()), parseOptions);
     }
 
     @Override

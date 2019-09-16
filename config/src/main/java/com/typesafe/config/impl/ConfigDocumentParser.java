@@ -9,13 +9,13 @@ import com.typesafe.config.*;
 
 final class ConfigDocumentParser {
     static ConfigNodeRoot parse(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
-        ConfigFormat syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ConfigFormat syntax = options.getFormat() == null ? ConfigSyntax.CONF : options.getFormat();
         ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parse();
     }
 
     static AbstractConfigNodeValue parseValue(Iterator<Token> tokens, ConfigOrigin origin, ConfigParseOptions options) {
-        ConfigFormat syntax = options.getSyntax() == null ? ConfigSyntax.CONF : options.getSyntax();
+        ConfigFormat syntax = options.getFormat() == null ? ConfigSyntax.CONF : options.getFormat();
         ParseContext context = new ParseContext(syntax, origin, tokens);
         return context.parseSingleValue();
     }

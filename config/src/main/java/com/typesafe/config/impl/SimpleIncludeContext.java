@@ -46,6 +46,6 @@ class SimpleIncludeContext implements ConfigIncludeContext {
 
     @Override
     public ConfigIncludeContext setParseOptions(ConfigParseOptions options) {
-        return new SimpleIncludeContext(parseable, options.setSyntax(null).setOriginDescription(null));
+        return new SimpleIncludeContext(parseable, options.setFormat(null).setOriginDescription(null));
     }
 }

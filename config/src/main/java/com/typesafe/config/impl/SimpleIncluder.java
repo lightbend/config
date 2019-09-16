@@ -37,7 +37,7 @@ class SimpleIncluder implements FullIncluder {
     static ConfigParseOptions clearForInclude(ConfigParseOptions options) {
         // the class loader and includer are inherited, but not this other
         // stuff.
-        return options.setSyntax(null).setOriginDescription(null).setAllowMissing(true);
+        return options.setFormat(null).setOriginDescription(null).setAllowMissing(true);
     }
 
     // this is the heuristic includer
@@ -189,7 +189,7 @@ class SimpleIncluder implements FullIncluder {
         } else {
             boolean gotSomething = false;
             List<ConfigException.IO> fails = new ArrayList<ConfigException.IO>();
-            ConfigFormat syntax = options.getSyntax();
+            ConfigFormat syntax = options.getFormat();
             List<ConfigProvider> providers = ConfigProviderService.getInstance().getProviders().collect(Collectors.toList());
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
             for (int i = 0; i < providers.size(); i++) {
@@ -201,10 +201,10 @@ class SimpleIncluder implements FullIncluder {
                         try {
                             ConfigObject parsed = null;
                             if (provider.getFormat() == ConfigSyntax.CONF) {
-                                obj = handle.parse(handle.options().setAllowMissing(false).setSyntax(provider.getFormat()));
+                                obj = handle.parse(handle.options().setAllowMissing(false).setFormat(provider.getFormat()));
                             } else {
                                 parsed = handle.parse(handle.options()
-                                        .setAllowMissing(false).setSyntax(provider.getFormat()));
+                                        .setAllowMissing(false).setFormat(provider.getFormat()));
                             }
                             if (parsed != null) {
                                 obj = obj.withFallback(parsed);

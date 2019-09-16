@@ -20,7 +20,7 @@ final class ConfigParser {
     static AbstractConfigValue parse(ConfigNodeRoot document,
                                      ConfigOrigin origin, ConfigParseOptions options,
                                      ConfigIncludeContext includeContext) {
-        ParseContext context = new ParseContext(options.getSyntax(), origin, document,
+        ParseContext context = new ParseContext(options.getFormat(), origin, document,
                 SimpleIncluder.makeFull(options.getIncluder()), includeContext);
         return context.parse();
     }

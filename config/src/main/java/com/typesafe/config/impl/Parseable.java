@@ -72,14 +72,14 @@ public abstract class Parseable implements ConfigParseable {
 	}
 
 	private ConfigParseOptions fixupOptions(ConfigParseOptions baseOptions) {
-		ConfigFormat syntax = baseOptions.getSyntax();
+		ConfigFormat syntax = baseOptions.getFormat();
 		if (syntax == null) {
 			syntax = guessSyntax();
 		}
 		if (syntax == null) {
 			syntax = ConfigSyntax.CONF;
 		}
-		ConfigParseOptions modified = baseOptions.setSyntax(syntax);
+		ConfigParseOptions modified = baseOptions.setFormat(syntax);
 
 		// make sure the app-provided includer falls back to default
 		modified = modified.appendIncluder(ConfigImpl.defaultIncluder());
@@ -252,11 +252,11 @@ public abstract class Parseable implements ConfigParseable {
 
 		ConfigParseOptions optionsWithContentType;
 		if (contentType != null) {
-			if (ConfigImpl.traceLoadsEnabled() && finalOptions.getSyntax() != null)
-				trace("Overriding syntax " + finalOptions.getSyntax() + " with Content-Type which specified "
+			if (ConfigImpl.traceLoadsEnabled() && finalOptions.getFormat() != null)
+				trace("Overriding syntax " + finalOptions.getFormat() + " with Content-Type which specified "
 						+ contentType);
 
-			optionsWithContentType = finalOptions.setSyntax(contentType);
+			optionsWithContentType = finalOptions.setFormat(contentType);
 		} else {
 			optionsWithContentType = finalOptions;
 		}
@@ -294,11 +294,11 @@ public abstract class Parseable implements ConfigParseable {
 
 		ConfigParseOptions optionsWithContentType;
 		if (contentType != null) {
-			if (ConfigImpl.traceLoadsEnabled() && finalOptions.getSyntax() != null)
-				trace("Overriding syntax " + finalOptions.getSyntax() + " with Content-Type which specified "
+			if (ConfigImpl.traceLoadsEnabled() && finalOptions.getFormat() != null)
+				trace("Overriding syntax " + finalOptions.getFormat() + " with Content-Type which specified "
 						+ contentType);
 
-			optionsWithContentType = finalOptions.setSyntax(contentType);
+			optionsWithContentType = finalOptions.setFormat(contentType);
 		} else {
 			optionsWithContentType = finalOptions;
 		}
@@ -312,7 +312,7 @@ public abstract class Parseable implements ConfigParseable {
 
 	private ConfigDocument rawParseDocument(Reader reader, ConfigOrigin origin, ConfigParseOptions finalOptions)
 			throws IOException {
-		Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
+		Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getFormat());
 		return new SimpleConfigDocument(ConfigDocumentParser.parse(tokens, origin, finalOptions), finalOptions);
 	}
 
@@ -519,9 +519,9 @@ public abstract class Parseable implements ConfigParseable {
 		}
 
 		private static String acceptContentType(ConfigParseOptions options) {
-			if (options.getSyntax() == null)
+			if (options.getFormat() == null)
 				return null;
-			return options.getSyntax().acceptContent();
+			return options.getFormat().acceptContent();
 		}
 
 		@Override

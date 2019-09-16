@@ -56,12 +56,21 @@ public final class ConfigParseOptions {
      *            a syntax or {@code null} for best guess
      * @return options with the syntax set
      */
-    public ConfigParseOptions setSyntax(ConfigFormat syntax) {
+    public ConfigParseOptions setFormat(ConfigFormat syntax) {
         if (this.syntax == syntax)
             return this;
         else
             return new ConfigParseOptions(syntax, this.originDescription, this.allowMissing,
                     this.includer, this.classLoader);
+    }
+    
+    /**
+     * @deprecated use {@link #setFormat(ConfigFormat)} instead
+     * @param syntax
+     * @return options with the syntax set
+     */
+    public ConfigParseOptions setSyntax(ConfigSyntax syntax) {
+    	return setFormat(syntax);
     }
 
     /**
@@ -73,15 +82,26 @@ public final class ConfigParseOptions {
      */
     public ConfigParseOptions setSyntaxFromFilename(String filename) {
         ConfigFormat syntax = ConfigImplUtil.syntaxFromExtension(filename);
-        return setSyntax(syntax);
+        return setFormat(syntax);
     }
 
     /**
      * Gets the current syntax option, which may be null for "any".
      * @return the current syntax or null
      */
-    public ConfigFormat getSyntax() {
+    public ConfigFormat getFormat() {
         return syntax;
+    }
+    /**
+     * @deprecated use {@link #getFormat()} instead.
+     * @return the current syntax or null
+     */
+    public ConfigSyntax getSyntax() {
+    	ConfigFormat format = getFormat();
+    	if(format != null && (format instanceof ConfigSyntax)) {
+    		return (ConfigSyntax)format;
+    	}
+    	return null;
     }
 
     /**

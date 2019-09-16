@@ -25,7 +25,7 @@ public class JsonConfigProvider extends AbstractConfigProvider{
 	@Override
 	public ConfigValue rawParseValue(Reader reader, ConfigOrigin origin, ConfigParseOptions finalOptions,
 			ConfigIncludeContext includeContext) throws IOException {
-		Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getSyntax());
+		Iterator<Token> tokens = Tokenizer.tokenize(origin, reader, finalOptions.getFormat());
 		ConfigNodeRoot document = ConfigDocumentParser.parse(tokens, origin, finalOptions);
 		return ConfigParser.parse(document, origin, finalOptions, includeContext);
 	}
