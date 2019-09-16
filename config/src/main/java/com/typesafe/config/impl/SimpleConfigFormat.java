@@ -26,7 +26,7 @@ public class SimpleConfigFormat implements ConfigFormat {
 
 	/**
 	 * 
-	 * @param extensions - the file extensions that this ConfigFormat supports 
+	 * @param extensions - the file extensions that this ConfigFormat supports
 	 */
 	public SimpleConfigFormat(String... extensions) {
 		this(Arrays.asList(extensions));
@@ -34,34 +34,50 @@ public class SimpleConfigFormat implements ConfigFormat {
 
 	/**
 	 * 
-	 * @param extensions - a {@link List} of extensions that this ConfigFormat supports
-	 * @param mimeTypes - the mime-types that are associated with this format
+	 * @param extensions - a {@link List} of extensions that this ConfigFormat
+	 *                   supports
+	 * @param mimeTypes  - the mime-types that are associated with this format
 	 */
 	public SimpleConfigFormat(List<String> extensions, String... mimeTypes) {
-		Set<String> toUse = new LinkedHashSet<String>(extensions != null ? extensions.size() : 0);
+		Set<String> toUse = new LinkedHashSet<String>(
+				extensions != null ? extensions.size() : 0);
 		if (extensions != null) {
-			toUse.addAll(
-					extensions.stream().filter(Objects::nonNull).map(String::toLowerCase).collect(Collectors.toList()));
+			toUse.addAll(extensions
+					.stream()
+					.filter(Objects::nonNull)
+					.map(String::toLowerCase)
+					.collect(Collectors.toList()));
 		}
 		this.extensions = Collections.unmodifiableSet(toUse);
 		Set<String> mToUse = new LinkedHashSet<String>(mimeTypes.length);
-		mToUse.addAll(Arrays.asList(mimeTypes).stream().filter(Objects::nonNull).map(String::toLowerCase)
+		mToUse.addAll(Arrays.asList(mimeTypes).stream()
+				.filter(Objects::nonNull)
+				.map(String::toLowerCase)
 				.collect(Collectors.toList()));
 		this.mimeTypes = Collections.unmodifiableSet(mToUse);
 	}
 
 	/**
 	 * 
-	 * @param extensions - a {@link Set}{@link String &lt;String&gt;} of extensions that this ConfigFormat supports
-	 * @param mimeTypes - a {@link Set}{@link String &lt;String&gt;} of mime types associated with this format 
+	 * @param extensions - a {@link Set}{@link String &lt;String&gt;} of extensions
+	 *                   that this ConfigFormat supports
+	 * @param mimeTypes  - a {@link Set}{@link String &lt;String&gt;} of mime types
+	 *                   associated with this format
 	 */
 	public SimpleConfigFormat(Set<String> extensions, Set<String> mimeTypes) {
-		this.extensions = Collections.unmodifiableSet(extensions == null ? Collections.emptySet()
-				: new LinkedHashSet<String>(extensions.stream().filter(Objects::nonNull).map(String::toLowerCase)
-						.collect(Collectors.toList())));
-		this.mimeTypes = Collections.unmodifiableSet(mimeTypes == null ? Collections.emptySet()
-				: new LinkedHashSet<String>(mimeTypes.stream().filter(Objects::nonNull).map(String::toLowerCase)
-						.collect(Collectors.toList())));
+		this.extensions = Collections
+				.unmodifiableSet(extensions == null ? Collections.emptySet()
+						: new LinkedHashSet<String>(extensions.stream()
+								.filter(Objects::nonNull)
+								.map(String::toLowerCase)
+								.collect(Collectors.toList())));
+		this.mimeTypes = Collections.unmodifiableSet(
+				mimeTypes == null ? Collections.emptySet()
+						: new LinkedHashSet<String>(
+								mimeTypes.stream()
+										.filter(Objects::nonNull)
+										.map(String::toLowerCase)
+										.collect(Collectors.toList())));
 	}
 
 	@Override
@@ -107,7 +123,8 @@ public class SimpleConfigFormat implements ConfigFormat {
 
 	@Override
 	public String toString() {
-		return "SimpleConfigFormat [extensions=" + extensions + ", mimeTypes=" + mimeTypes + "]";
+		return "SimpleConfigFormat [extensions=" + extensions + 
+				", mimeTypes=" + mimeTypes+ "]";
 	}
 
 }

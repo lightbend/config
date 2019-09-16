@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
+ *   Copyright (C) 2011-2012 Typesafe Inc. <http://typesafe.com>
  */
 package com.typesafe.config.impl;
 
@@ -9,7 +9,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
@@ -123,7 +122,7 @@ class SimpleIncluder implements FullIncluder {
     }
 
     static ConfigObject includeResourceWithoutFallback(final ConfigIncludeContext context,
-                                                       String resource) {
+            String resource) {
         return ConfigFactory.parseResourcesAnySyntax(resource, context.parseOptions()).root();
     }
 
@@ -162,9 +161,7 @@ class SimpleIncluder implements FullIncluder {
                 return p;
             }
         }
-    }
-
-    ;
+    };
 
     private static String getExtension(String str) {
         int lastDot = str.lastIndexOf('.');
@@ -180,7 +177,6 @@ class SimpleIncluder implements FullIncluder {
     // loading app.{conf,json,properties} from the filesystem.
     static ConfigObject fromBasename(NameSource source, String name, ConfigParseOptions options) {
         ConfigObject obj;
-
         String extension = getExtension(name);
         if (ConfigProviderService.getInstance().supportsExtension(extension)) {
             ConfigParseable p = source.nameToParseable(name, options);
@@ -190,7 +186,8 @@ class SimpleIncluder implements FullIncluder {
             boolean gotSomething = false;
             List<ConfigException.IO> fails = new ArrayList<ConfigException.IO>();
             ConfigFormat syntax = options.getFormat();
-            List<ConfigProvider> providers = ConfigProviderService.getInstance().getProviders().collect(Collectors.toList());
+            List<ConfigProvider> providers = ConfigProviderService.getInstance()
+                    .getProviders();
             obj = SimpleConfigObject.empty(SimpleConfigOrigin.newSimple(name));
             for (int i = 0; i < providers.size(); i++) {
                 ConfigProvider provider = providers.get(i);
@@ -201,7 +198,8 @@ class SimpleIncluder implements FullIncluder {
                         try {
                             ConfigObject parsed = null;
                             if (provider.getFormat() == ConfigSyntax.CONF) {
-                                obj = handle.parse(handle.options().setAllowMissing(false).setFormat(provider.getFormat()));
+                                obj = handle.parse(handle.options()
+                                		.setAllowMissing(false).setFormat(provider.getFormat()));
                             } else {
                                 parsed = handle.parse(handle.options()
                                         .setAllowMissing(false).setFormat(provider.getFormat()));
@@ -244,7 +242,7 @@ class SimpleIncluder implements FullIncluder {
                 if (ConfigImpl.traceLoadsEnabled()) {
                     ConfigImpl.trace("Did not find '" + name
                             + "' with any extension (.conf, .json, .properties); but '" + name
-                            + "' is allowed to be missing. Exceptions from load attempts should have been logged above.");
+                                    + "' is allowed to be missing. Exceptions from load attempts should have been logged above.");
                 }
             }
         }

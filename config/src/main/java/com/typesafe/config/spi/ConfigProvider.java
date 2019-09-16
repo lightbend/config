@@ -23,22 +23,27 @@ import com.typesafe.config.impl.AbstractConfigProvider;
  */
 public interface ConfigProvider extends ConfigFormat, Comparable<ConfigProvider> {
 
+	public static final int CONF_PRIORITY = -3;
+	public static final int JSON_PRIORITY = CONF_PRIORITY + 1;
+	public static final int PROPERTIES_PRIORITY = JSON_PRIORITY + 1;
+
 	/**
 	 * 
 	 * @return the priority in which this ConfigProvider should be used, with the
 	 *         highest priority given to
 	 *         {@link ConfigSyntax#CONF},{@link ConfigSyntax#JSON},{@link ConfigSyntax#PROPERTIES}
-	 *         respectively
+	 *         with priority values {@value #CONF_PRIORITY},{@value #JSON_PRIORITY},
+	 *         {@value #PROPERTIES_PRIORITY} respectively
 	 */
 	default int priority() {
 		if (getFormat() == ConfigSyntax.CONF) {
-			return Integer.MIN_VALUE;
+			return CONF_PRIORITY;
 		} else if (getFormat() == ConfigSyntax.JSON) {
-			return Integer.MIN_VALUE + 1;
+			return JSON_PRIORITY;
 		} else if (getFormat() == ConfigSyntax.PROPERTIES) {
-			return Integer.MIN_VALUE + 2;
+			return PROPERTIES_PRIORITY;
 		}
-		return Integer.MAX_VALUE;
+		return PROPERTIES_PRIORITY + 1;
 	}
 
 	/**
@@ -58,7 +63,8 @@ public interface ConfigProvider extends ConfigFormat, Comparable<ConfigProvider>
 	 * @param includeContext the {@link ConfigIncludeContext} for this parser, this
 	 *                       can be null in some situation, such as when parsing
 	 *                       properties
-	 * @return a {@link ConfigValue} (most likely a {@link com.typesafe.config.ConfigObject}
+	 * @return a {@link ConfigValue} (most likely a
+	 *         {@link com.typesafe.config.ConfigObject}
 	 * @throws IOException if an IOException occurs
 	 */
 	ConfigValue rawParseValue(Reader reader, ConfigOrigin origin, ConfigParseOptions finalOptions,
