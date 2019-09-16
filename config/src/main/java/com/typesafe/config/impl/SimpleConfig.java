@@ -191,16 +191,17 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             AbstractConfigValue copy = v.newCopy(v.origin());
             ConfigValueType expected = expectedTypes.get(i);
             if (expected != null) {
-                copy = DefaultTransformer.transform(v, expected);
+                copy = DefaultTransformer.transform(copy, expected);
             }
-            matched = !(expected != null && (copy.valueType() != expected && copy.valueType() != ConfigValueType.NULL));
+            matched = expected!=null&&!(copy.valueType() != expected && copy.valueType() != ConfigValueType.NULL);
             if (matched) {
-                v = copy;
+                v = DefaultTransformer.transform(v, expected);
             }
         }
         if (!matched) {
             throw new TypeNotMatchedException();
         }
+
         return v;
     }
 
