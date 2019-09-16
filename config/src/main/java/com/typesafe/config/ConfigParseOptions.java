@@ -66,7 +66,7 @@ public final class ConfigParseOptions {
     
     /**
      * @deprecated use {@link #setFormat(ConfigFormat)} instead
-     * @param syntax
+     * @param syntax the {@link ConfigSyntax} to use
      * @return options with the syntax set
      */
     public ConfigParseOptions setSyntax(ConfigSyntax syntax) {
@@ -98,7 +98,7 @@ public final class ConfigParseOptions {
      */
     public ConfigSyntax getSyntax() {
     	ConfigFormat format = getFormat();
-    	if(format != null && (format instanceof ConfigSyntax)) {
+    	if(format instanceof ConfigSyntax) {
     		return (ConfigSyntax)format;
     	}
     	return null;

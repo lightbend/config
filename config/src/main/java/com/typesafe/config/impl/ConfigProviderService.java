@@ -38,7 +38,7 @@ public class ConfigProviderService {
 
 	/**
 	 * 
-	 * @param extension
+	 * @param extension the extension to check for support
 	 * @return {@code true} if the is at least one {@link ConfigProvider} that
 	 *         parses files with the given extension
 	 */
@@ -89,7 +89,7 @@ public class ConfigProviderService {
 	private <T> ConfigProvider get(BiPredicate<ConfigProvider, T> predicate, final T value) {
 		Iterator<ConfigProvider> providers = getLoader().iterator();
 		ConfigProvider found = null;
-		while (found != null && providers.hasNext()) {
+		while (found == null && providers.hasNext()) {
 			ConfigProvider configProvider = providers.next();
 			boolean match = predicate.test(configProvider, value);
 			if (match) {
@@ -121,8 +121,7 @@ public class ConfigProviderService {
 	 *         extension presented by {@code cpo}
 	 */
 	public ConfigProvider getByConfigParseOptions(ConfigParseOptions cpo) {
-		return get((configProvider, opts) -> opts == null ? false
-				: configProvider.getExtensions()
+		return get((configProvider, opts) -> opts != null && configProvider.getExtensions()
 						.containsAll(opts.getFormat().getExtensions()),
 				cpo);
 	}
