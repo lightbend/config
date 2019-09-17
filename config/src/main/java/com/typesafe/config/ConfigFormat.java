@@ -212,7 +212,7 @@ public interface ConfigFormat {
 		if (contentType == null) {
 			return acceptsMimeType(contentType);
 		}
-		String[] contentTypes = contentType.split("[;]");
+		String[] contentTypes = contentType.split("\\s*[;]\\s*");
 		boolean accepted = false;
 		for (int i = 0; !accepted && i < contentTypes.length; i++) {
 			String mimeType = contentTypes[i];
