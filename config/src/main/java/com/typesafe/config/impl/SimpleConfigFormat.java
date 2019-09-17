@@ -1,12 +1,11 @@
 package com.typesafe.config.impl;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.typesafe.config.ConfigFormat;
 import com.typesafe.config.ConfigSyntax;
@@ -24,6 +23,12 @@ public class SimpleConfigFormat implements ConfigFormat {
 	private final Set<String> extensions;
 	private final Set<String> mimeTypes;
 
+	private static List<String> noNullsLowerCase(Collection<String> strs){
+		return ConfigFormat.CollectionRemapper.noNullsLowerCase(strs);
+	}
+	private static List<String> noNullsLowerCase(String...strs){
+		return ConfigFormat.CollectionRemapper.noNullsLowerCase(strs);
+	}
 	/**
 	 * 
 	 * @param extensions - the file extensions that this ConfigFormat supports
@@ -39,22 +44,8 @@ public class SimpleConfigFormat implements ConfigFormat {
 	 * @param mimeTypes  - the mime-types that are associated with this format
 	 */
 	public SimpleConfigFormat(List<String> extensions, String... mimeTypes) {
-		Set<String> toUse = new LinkedHashSet<String>(
-				extensions != null ? extensions.size() : 0);
-		if (extensions != null) {
-			toUse.addAll(extensions
-					.stream()
-					.filter(Objects::nonNull)
-					.map(String::toLowerCase)
-					.collect(Collectors.toList()));
-		}
-		this.extensions = Collections.unmodifiableSet(toUse);
-		Set<String> mToUse = new LinkedHashSet<String>(mimeTypes.length);
-		mToUse.addAll(Arrays.asList(mimeTypes).stream()
-				.filter(Objects::nonNull)
-				.map(String::toLowerCase)
-				.collect(Collectors.toList()));
-		this.mimeTypes = Collections.unmodifiableSet(mToUse);
+		this(new LinkedHashSet<String>(noNullsLowerCase(extensions)),
+			new LinkedHashSet<String>(noNullsLowerCase(mimeTypes)));
 	}
 
 	/**
@@ -66,18 +57,9 @@ public class SimpleConfigFormat implements ConfigFormat {
 	 */
 	public SimpleConfigFormat(Set<String> extensions, Set<String> mimeTypes) {
 		this.extensions = Collections
-				.unmodifiableSet(extensions == null ? Collections.emptySet()
-						: new LinkedHashSet<String>(extensions.stream()
-								.filter(Objects::nonNull)
-								.map(String::toLowerCase)
-								.collect(Collectors.toList())));
-		this.mimeTypes = Collections.unmodifiableSet(
-				mimeTypes == null ? Collections.emptySet()
-						: new LinkedHashSet<String>(
-								mimeTypes.stream()
-										.filter(Objects::nonNull)
-										.map(String::toLowerCase)
-										.collect(Collectors.toList())));
+				.unmodifiableSet(new LinkedHashSet<String>(noNullsLowerCase(extensions)));
+		this.mimeTypes = Collections
+				.unmodifiableSet(new LinkedHashSet<String>(noNullsLowerCase(mimeTypes)));
 	}
 
 	@Override
