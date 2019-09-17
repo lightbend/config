@@ -8,7 +8,9 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,7 +40,7 @@ public interface ConfigFormat {
 		 *         all nulls removed. If {@code strs} is {@code null} {@code null} will
 		 *         be returned
 		 */
-		public final static List<String> noNullsLowerCaseNullable(List<String> strs) {
+		public final static List<String> noNullsLowerCaseNullable(Collection<String> strs) {
 			return noNullsLowerCase(strs, true);
 		}
 
@@ -49,9 +51,11 @@ public interface ConfigFormat {
 		 *         all nulls removed. If {@code strs} is {@code null} an empty list will
 		 *         be returned. This should never return {@code null}
 		 */
-		public final static List<String> noNullsLowerCase(List<String> strs) {
+		public final static List<String> noNullsLowerCase(Collection<String> strs) {
 			return noNullsLowerCase(strs, false);
 		}
+		
+		
 
 		/**
 		 * 
@@ -62,7 +66,7 @@ public interface ConfigFormat {
 		 *         returned if {@code nullable} is {@code true} otherwise and enmpty
 		 *         list will be returned
 		 */
-		private final static List<String> noNullsLowerCase(List<String> strs,
+		private final static List<String> noNullsLowerCase(Collection<String> strs,
 				boolean nullable) {
 			if (strs == null) {
 				if (nullable) {
@@ -72,8 +76,9 @@ public interface ConfigFormat {
 				}
 			}
 			ArrayList<String> lowerCaseNoNull = new ArrayList<String>(strs.size());
-			for (int i = 0; i < strs.size(); i++) {
-				String str = strs.get(i);
+			Iterator<String> iterator = strs.iterator();
+			while(iterator.hasNext()) {
+				String str = iterator.next();
 				if (str != null) {
 					lowerCaseNoNull.add(str.toLowerCase());
 				}
