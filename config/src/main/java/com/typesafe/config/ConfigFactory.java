@@ -36,6 +36,7 @@ import java.util.concurrent.Callable;
  */
 public final class ConfigFactory {
     private static final String STRATEGY_PROPERTY_NAME = "config.strategy";
+    private static final String OVERRIDE_WITH_ENV_PROPERTY_NAME = "config.override_with_env_vars";
 
     private ConfigFactory() {
     }
@@ -210,7 +211,8 @@ public final class ConfigFactory {
      * @return resolved configuration with overrides and fallbacks added
      */
     public static Config load(ClassLoader loader, Config config, ConfigResolveOptions resolveOptions) {
-        return defaultOverrides(loader).withFallback(config).withFallback(defaultReference(loader))
+        return defaultOverrides(loader).withFallback(config)
+                .withFallback(ConfigImpl.defaultReferenceUnresolved(loader))
                 .resolve(resolveOptions);
     }
 
@@ -368,6 +370,56 @@ public final class ConfigFactory {
     }
 
     /**
+     * Obtains the default reference configuration, which is currently created
+     * by merging all resources "reference.conf" found on the classpath and
+     * overriding the result with system properties.
+     *
+     * <p>
+     * While the returned reference configuration is guaranteed to be
+     * resolvable (that is, there will be no substitutions that cannot be
+     * resolved), it is returned in an unresolved state for the purpose of
+     * allowing substitutions to be overridden by a config layer that falls
+     * back to this one.
+     *
+     * <p>
+     * Libraries and frameworks should ship with a "reference.conf" in their
+     * jar.
+     *
+     * <p>
+     * The reference config must be looked up in the class loader that contains
+     * the libraries that you want to use with this config, so the
+     * "reference.conf" for each library can be found. Use
+     * {@link #defaultReference(ClassLoader)} if the context class loader is not
+     * suitable.
+     *
+     * <p>
+     * The {@link #load()} methods merge this configuration for you
+     * automatically.
+     *
+     * <p>
+     * Future versions may look for reference configuration in more places. It
+     * is not guaranteed that this method <em>only</em> looks at
+     * "reference.conf".
+     *
+     * @return the unresolved default reference config for the context class
+     *         loader
+     */
+    public static Config defaultReferenceUnresolved() {
+        return defaultReferenceUnresolved(checkedContextClassLoader("defaultReferenceUnresolved"));
+    }
+
+    /**
+     * Like {@link #defaultReferenceUnresolved()} but allows you to specify a
+     * class loader to use rather than the current context class loader.
+     *
+     * @param loader class loader to look for resources in
+     * @return the unresolved default reference config for this class loader
+     */
+    public static Config defaultReferenceUnresolved(ClassLoader loader) {
+        return ConfigImpl.defaultReferenceUnresolved(loader);
+    }
+
+    /**
      * Obtains the default override configuration, which currently consists of
      * system properties. The returned override configuration will already have
      * substitutions resolved.
@@ -383,7 +435,11 @@ public final class ConfigFactory {
      * @return the default override configuration
      */
     public static Config defaultOverrides() {
-        return systemProperties();
+        if (getOverrideWithEnv()) {
+            return systemEnvironmentOverrides().withFallback(systemProperties());
+        } else {
+            return systemProperties();
+        }
     }
 
     /**
@@ -394,7 +450,7 @@ public final class ConfigFactory {
      * @return the default override configuration
      */
     public static Config defaultOverrides(ClassLoader loader) {
-        return systemProperties();
+        return defaultOverrides();
     }
 
     /**
@@ -497,6 +553,7 @@ public final class ConfigFactory {
         // all caches
         ConfigImpl.reloadSystemPropertiesConfig();
         ConfigImpl.reloadEnvVariablesConfig();
+        ConfigImpl.reloadEnvVariablesOverridesConfig();
     }
 
     /**
@@ -547,6 +604,50 @@ public final class ConfigFactory {
      */
     public static Config systemProperties() {
         return ConfigImpl.systemPropertiesAsConfig();
+    }
+
+    /**
+     * Gets a <code>Config</code> containing the system's environment variables
+     * used to override configuration keys.
+     * Environment variables taken in considerations are starting with
+     * {@code CONFIG_FORCE_}
+     * 
+     * <p>
+     * Environment variables are mangled in the following way after stripping the prefix "CONFIG_FORCE_":
+     * <table border="1">
+     * <tr>
+     *     <th bgcolor="silver">Env Var</th>
+     *     <th bgcolor="silver">Config</th>
+     * </tr>
+     * <tr>
+     *     <td>_&nbsp;&nbsp;&nbsp;[1 underscore]</td>
+     *     <td>. [dot]</td>
+     * </tr>
+     * <tr>
+     *     <td>__&nbsp;&nbsp;[2 underscore]</td>
+     *     <td>- [dash]</td>
+     *  </tr>
+     * <tr>
+     *     <td>___&nbsp;[3 underscore]</td>
+     *     <td>_ [underscore]</td>
+     * </tr>
+     * </table>
+     * 
+     * <p>
+     * A variable like: {@code CONFIG_FORCE_a_b__c___d}
+     * is translated to a config key: {@code a.b-c_d}
+     * 
+     * <p>
+     * This method can return a global immutable singleton, so it's preferred
+     * over parsing system properties yourself.
+     * <p>
+     * {@link #defaultOverrides} will include the system environment variables as
+     * overrides if `config.override_with_env_vars` is set to `true`.
+     *
+     * @return system environment variable overrides parsed into a <code>Config</code>
+     */
+    public static Config systemEnvironmentOverrides() {
+        return ConfigImpl.envVariablesOverridesAsConfig();
     }
 
     /**
@@ -1062,5 +1163,11 @@ public final class ConfigFactory {
         } else {
             return new DefaultConfigLoadingStrategy();
         }
+    }
+
+    private static Boolean getOverrideWithEnv() {
+        String overrideWithEnv = System.getProperties().getProperty(OVERRIDE_WITH_ENV_PROPERTY_NAME);
+
+        return Boolean.parseBoolean(overrideWithEnv);
     }
 }

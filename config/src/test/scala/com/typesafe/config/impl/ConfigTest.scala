@@ -1091,6 +1091,53 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def testEnvVariablesNameMangling() {
+        assertEquals("a", ConfigImplUtil.envVariableAsProperty("prefix_a", "prefix_"))
+        assertEquals("a.b", ConfigImplUtil.envVariableAsProperty("prefix_a_b", "prefix_"))
+        assertEquals("a.b.c", ConfigImplUtil.envVariableAsProperty("prefix_a_b_c", "prefix_"))
+        assertEquals("a.b-c-d", ConfigImplUtil.envVariableAsProperty("prefix_a_b__c__d", "prefix_"))
+        assertEquals("a.b_c_d", ConfigImplUtil.envVariableAsProperty("prefix_a_b___c___d", "prefix_"))
+
+        intercept[ConfigException.BadPath] {
+            ConfigImplUtil.envVariableAsProperty("prefix_____", "prefix_")
+        }
+        intercept[ConfigException.BadPath] {
+            ConfigImplUtil.envVariableAsProperty("prefix_a_b___c____d", "prefix_")
+        }
+    }
+
+    @Test
+    def testLoadWithEnvSubstitutions() {
+        System.setProperty("config.override_with_env_vars", "true")
+
+        try {
+            val loader02 = new TestClassLoader(this.getClass().getClassLoader(),
+                Map("reference.conf" -> resourceFile("test02.conf").toURI.toURL()))
+
+            val loader04 = new TestClassLoader(this.getClass().getClassLoader(),
+                Map("reference.conf" -> resourceFile("test04.conf").toURI.toURL()))
+
+            val conf02 = withContextClassLoader(loader02) {
+                ConfigFactory.load()
+            }
+
+            val conf04 = withContextClassLoader(loader04) {
+                ConfigFactory.load()
+            }
+
+            assertEquals(1, conf02.getInt("42_a"))
+            assertEquals(2, conf02.getInt("a.b.c"))
+            assertEquals(3, conf02.getInt("a-c"))
+            assertEquals(4, conf02.getInt("a_c"))
+
+            assertEquals("foo", conf04.getString("akka.version"))
+            assertEquals(10, conf04.getInt("akka.event-handler-dispatcher.max-pool-size"))
+        } finally {
+            System.clearProperty("config.override_with_env_vars")
+        }
+    }
+
+    @Test
     def renderRoundTrip() {
         val allBooleans = true :: false :: Nil
         val optionsCombos = {
