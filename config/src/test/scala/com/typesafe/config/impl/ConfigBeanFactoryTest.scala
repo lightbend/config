@@ -3,11 +3,10 @@
  */
 package com.typesafe.config.impl
 
-import beanconfig.EnumsConfig.{ Solution, Problem }
+import beanconfig.EnumsConfig.{Problem, Solution}
 import com.typesafe.config._
-
-import java.io.{ InputStream, InputStreamReader }
-import java.time.Duration
+import java.io.{InputStream, InputStreamReader}
+import java.time.{DayOfWeek, Duration}
 
 import beanconfig._
 import org.junit.Assert._
@@ -125,6 +124,21 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertNotNull(beanConfig.getStringMapWithDots)
         assertEquals("value1", beanConfig.getStringMapWithDots.get("prefix.key1"))
         assertEquals("value2", beanConfig.getStringMapWithDots.get("prefix1.prefix2.key2"))
+
+        assertNotNull(beanConfig.getEnumKeyMap)
+        assertEquals("mon", beanConfig.getEnumKeyMap.get(DayOfWeek.MONDAY))
+        assertEquals("tue", beanConfig.getEnumKeyMap.get(DayOfWeek.TUESDAY))
+        assertEquals("fri", beanConfig.getEnumKeyMap.get(DayOfWeek.FRIDAY))
+    }
+
+    @Test
+    def testInvalidEnumKey(): Unit = {
+        val e = intercept[ConfigException.BadKey] {
+            ConfigBeanFactory.create(parseConfig("enumKeyMap={\"INVALID_KEY\" : \"dummy\"}"), classOf[InvalidEnumMapKeyConfig])
+        }
+        assertTrue("invalid enum map key error", e.getMessage.contains("Invalid enum map key error"))
+        assertTrue("error about the right property", e.getMessage.contains("'INVALID_KEY'"))
+        assertTrue("error about the right enum", e.getMessage.contains("DayOfWeek"))
     }
 
     @Test

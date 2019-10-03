@@ -1,5 +1,6 @@
 package beanconfig;
 
+import java.time.DayOfWeek;
 import java.util.Map;
 
 public class MapsConfig {
@@ -8,6 +9,7 @@ public class MapsConfig {
     private Map<String, String> stringMap;
     private Map<String, Map<String, StringsConfig>> mapOfMaps;
     private Map<String, String> stringMapWithDots;
+    private Map<DayOfWeek, String> enumKeyMap;
 
     public Map<String, StringsConfig> getBeanMap() {
         return beanMap;
@@ -39,5 +41,13 @@ public class MapsConfig {
 
     public void setStringMapWithDots(Map<String, String> stringMapWithDots) {
         this.stringMapWithDots = stringMapWithDots;
+    }
+
+    public Map<DayOfWeek, String> getEnumKeyMap() {
+        return enumKeyMap;
+    }
+
+    public void setEnumKeyMap(Map<DayOfWeek, String> enumKeyMap) {
+        this.enumKeyMap = enumKeyMap;
     }
 }

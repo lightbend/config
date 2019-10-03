@@ -443,6 +443,22 @@ public abstract class ConfigException extends RuntimeException implements Serial
     }
 
     /**
+     * Exception indicating that a key was messed up, for example you may have
+     * asked for an Enum and the key text value does not exist on the requested Enum.
+     */
+    public static class BadKey extends BugOrBroken {
+        private static final long serialVersionUID = 1L;
+
+        public BadKey(String message, Throwable cause) {
+            super(message, cause);
+        }
+
+        public BadKey(String path, String message, Throwable cause) {
+            super("Invalid key at '" + path + "': " + message, cause);
+        }
+    }
+
+    /**
      * Exception that doesn't fall into any other category.
      */
     public static class Generic extends ConfigException {

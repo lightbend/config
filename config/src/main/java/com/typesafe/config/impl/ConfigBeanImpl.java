@@ -184,8 +184,9 @@ public class ConfigBeanImpl {
 
     private static Object getMapValue(Class<?> beanClass, Type parameterType, Config config, String configPropName) {
         Type[] typeArgs = ((ParameterizedType)parameterType).getActualTypeArguments();
-        if (typeArgs[0] != String.class) {
-            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported Map<" + typeArgs[0] + "," + typeArgs[1] + ">, only Map<String,?> is supported right now");
+        final boolean isEnumKey = typeArgs[0] instanceof Class && ((Class) typeArgs[0]).isEnum();
+        if (typeArgs[0] != String.class && !isEnumKey) {
+            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported Map<" + typeArgs[0] + "," + typeArgs[1] + ">, only Map<String|Enum,?> is supported right now");
         }
         //In the case of Map<String, Object> we can just unwrap
         if (typeArgs[1] == Object.class) {
@@ -195,7 +196,16 @@ public class ConfigBeanImpl {
         final Config subConfig = config.getConfig(configPropName);
         for (Map.Entry<String, ConfigValue> configValueEntry : subConfig.root().entrySet()) {
             //Use quoted key name to allow keys with dots on their names
-            result.put(configValueEntry.getKey(), getValue(beanClass, typeArgs[1], typeToClass(typeArgs[1], beanClass, configValueEntry.getKey()), subConfig, ConfigUtil.quoteString(configValueEntry.getKey())));
+            final String stringKey = configValueEntry.getKey();
+            Object key = stringKey;
+            if (isEnumKey) {
+                try {
+                    key = Enum.valueOf(((Class<Enum>) typeArgs[0]), stringKey);
+                } catch (IllegalArgumentException e) {
+                    throw new ConfigException.BadKey(stringKey, "Invalid enum map key error. Key name " + stringKey + " is not a valid member of enum " + typeArgs[0].getTypeName(), e);
+                }
+            }
+            result.put(key, getValue(beanClass, typeArgs[1], typeToClass(typeArgs[1], beanClass, stringKey), subConfig, ConfigUtil.quoteString(stringKey)));
         }
         return result;
     }
