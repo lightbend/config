@@ -446,8 +446,13 @@ public abstract class ConfigException extends RuntimeException implements Serial
      * Exception indicating that a key was messed up, for example you may have
      * asked for an Enum and the key text value does not exist on the requested Enum.
      */
-    public static class BadKey extends BugOrBroken {
+    public static class BadKey extends ConfigException {
         private static final long serialVersionUID = 1L;
+
+        public BadKey(ConfigOrigin origin, String path, String message,
+                        Throwable cause) {
+            super(origin, "Invalid key at '" + path + "': " + message, cause);
+        }
 
         public BadKey(String message, Throwable cause) {
             super(message, cause);
