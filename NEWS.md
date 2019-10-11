@@ -1,3 +1,8 @@
+# 1.4.0: October 11, 2019
+
+- `application.conf` variables can now ovverride variables in `reference.conf` [#619](https://github.com/lightbend/config/issues/167)
+- performance improvement through capacity hint for `ArrayList` [#648](https://github.com/lightbend/config/pull/648)
+
 # 1.3.4: April 18, 2019
 
 - it is now possible to override any configuration setting from environment variables ([#620](/../../pull/620)) thanks to [@andreaTP](https://github.com/andreaTP)
