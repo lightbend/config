@@ -3,21 +3,22 @@ sudo: false
 
 language: scala
 
-before_install:
-  # using jabba for custom jdk management
-  - curl -sL https://git.io/jabba | bash && . ~/.jabba/jabba.sh
-  - jabba install adopt@1.8.212-03
-  - jabba install adopt@1.11.0-3
-
-script:
-  - jabba use $JDK
-  - java -version
-  - sbt ++$TRAVIS_SCALA_VERSION test doc
+before_install: curl -Ls https://git.io/jabba | bash && . ~/.jabba/jabba.sh
+install: jabba install "adopt@~1.$TRAVIS_JDK.0-0" && jabba use "$_" && java -Xmx32m -version
 
 jobs:
   include:
-  - env: JDK=adopt@1.8.212-03
-  - env: JDK=adopt@1.11.0-3
+     - stage: jdk8
+       name: "test and docs on jdk8"
+       script: sbt ++$TRAVIS_SCALA_VERSION test doc
+     - stage: jdk11
+       name: "test and docs on jdk11"
+       script: sbt ++$TRAVIS_SCALA_VERSION test doc
+       env: TRAVIS_JDK=11
+
+env:
+  global:
+    - TRAVIS_JDK=8
 
 before_cache:
   # Remove to avoid unnecessary cache updates
