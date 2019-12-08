@@ -27,21 +27,22 @@ import com.typesafe.config.ConfigValueType;
 import com.typesafe.config.Optional;
 
 /**
- * Internal implementation detail, not ABI stable, do not touch.
- * For use only by the {@link com.typesafe.config} package.
+ * Internal implementation detail, not ABI stable, do not touch. For use only by
+ * the {@link com.typesafe.config} package.
  */
 public class ConfigBeanImpl {
 
     /**
-     * This is public ONLY for use by the "config" package, DO NOT USE this ABI
-     * may change.
-     * @param <T> type of the bean
+     * This is public ONLY for use by the "config" package, DO NOT USE this ABI may
+     * change.
+     * 
+     * @param <T>    type of the bean
      * @param config config to use
-     * @param clazz class of the bean
+     * @param clazz  class of the bean
      * @return the bean instance
      */
     public static <T> T createInternal(Config config, Class<T> clazz) {
-        if (((SimpleConfig)config).root().resolveStatus() != ResolveStatus.RESOLVED)
+        if (((SimpleConfig) config).root().resolveStatus() != ResolveStatus.RESOLVED)
             throw new ConfigException.NotResolved(
                     "need to Config#resolve() a config before using it to initialize a bean, see the API docs for Config#resolve()");
 
@@ -126,9 +127,11 @@ public class ConfigBeanImpl {
             }
             return bean;
         } catch (InstantiationException e) {
-            throw new ConfigException.BadBean(clazz.getName() + " needs a public no-args constructor to be used as a bean", e);
+            throw new ConfigException.BadBean(
+                    clazz.getName() + " needs a public no-args constructor to be used as a bean", e);
         } catch (IllegalAccessException e) {
-            throw new ConfigException.BadBean(clazz.getName() + " getters and setters are not accessible, they must be for use as a bean", e);
+            throw new ConfigException.BadBean(
+                    clazz.getName() + " getters and setters are not accessible, they must be for use as a bean", e);
         } catch (InvocationTargetException e) {
             throw new ConfigException.BadBean("Calling bean method on " + clazz.getName() + " caused an exception", e);
         }
@@ -141,7 +144,7 @@ public class ConfigBeanImpl {
     // of a nicer error message giving the name of the bad
     // setting. So, instead, we only support a limited number of
     // types plus you can always use Object, ConfigValue, Config,
-    // ConfigObject, etc.  as an escape hatch.
+    // ConfigObject, etc. as an escape hatch.
     private static Object getValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
             String configPropName) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
@@ -166,9 +169,11 @@ public class ConfigBeanImpl {
             return getSetValue(beanClass, parameterType, parameterClass, config, configPropName);
         } else if (parameterClass == Map.class) {
             // we could do better here, but right now we don't.
-            Type[] typeArgs = ((ParameterizedType)parameterType).getActualTypeArguments();
+            Type[] typeArgs = ((ParameterizedType) parameterType).getActualTypeArguments();
             if (typeArgs[0] != String.class || typeArgs[1] != Object.class) {
-                throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported Map<" + typeArgs[0] + "," + typeArgs[1] + ">, only Map<String,Object> is supported right now");
+                throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class "
+                        + beanClass.getName() + " has unsupported Map<" + typeArgs[0] + "," + typeArgs[1]
+                        + ">, only Map<String,Object> is supported right now");
             }
             return config.getObject(configPropName).unwrapped();
         } else if (parameterClass == Config.class) {
@@ -186,16 +191,19 @@ public class ConfigBeanImpl {
         } else if (hasAtLeastOneBeanProperty(parameterClass)) {
             return createInternal(config.getConfig(configPropName), parameterClass);
         } else {
-            throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
+            throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName()
+                    + " has unsupported type " + parameterType);
         }
     }
 
-    private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
+    private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
+            String configPropName) {
         return new HashSet((List) getListValue(beanClass, parameterType, parameterClass, config, configPropName));
     }
 
-    private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
-        Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
+    private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
+            String configPropName) {
+        Type elementType = ((ParameterizedType) parameterType).getActualTypeArguments()[0];
 
         if (elementType == Boolean.class) {
             return config.getBooleanList(configPropName);
@@ -231,7 +239,8 @@ public class ConfigBeanImpl {
             }
             return beanList;
         } else {
-            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName() + " has unsupported list element type " + elementType);
+            throw new ConfigException.BadBean("Bean property '" + configPropName + "' of class " + beanClass.getName()
+                    + " has unsupported list element type " + elementType);
         }
     }
 
@@ -285,7 +294,10 @@ public class ConfigBeanImpl {
 
     private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
         Field field = getField(beanClass, beanProp.getName());
-        return field != null ? field.getAnnotationsByType(Optional.class).length > 0 : beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0;
+        return field != null
+                ? field.getAnnotationsByType(Optional.class).length > 0
+                        || beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0
+                : beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0;
     }
 
     private static Field getField(Class beanClass, String fieldName) {
