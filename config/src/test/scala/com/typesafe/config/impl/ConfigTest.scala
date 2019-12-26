@@ -3,6 +3,7 @@
  */
 package com.typesafe.config.impl
 
+import java.math.BigInteger
 import java.time.temporal.{ ChronoUnit, TemporalUnit }
 
 import org.junit.Assert._
@@ -831,6 +832,10 @@ class ConfigTest extends TestUtils {
         assertEquals(Seq(1024 * 1024L, 1024 * 1024L, 1024L * 1024L),
             conf.getMemorySizeList("memsizes.megsList").asScala.map(_.toBytes))
         assertEquals(512 * 1024L, conf.getMemorySize("memsizes.halfMeg").toBytes)
+
+        assertEquals(new BigInteger("1000000000000000000000000"), conf.getMemorySize("memsizes.yottabyte").getBytes)
+        assertEquals(Seq(new BigInteger("1000000000000000000000000"), new BigInteger("500000000000000000000000")),
+            conf.getMemorySizeList("memsizes.yottabyteList").asScala.map(_.getBytes))
     }
 
     @Test

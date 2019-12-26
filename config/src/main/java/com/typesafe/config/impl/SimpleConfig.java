@@ -295,7 +295,15 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public ConfigMemorySize getMemorySize(String path) {
-        return ConfigMemorySize.ofBytes(getBytes(path));
+        BigInteger size;
+        try {
+            size = BigInteger.valueOf(getLong(path));
+        } catch (ConfigException.WrongType e) {
+            ConfigValue v = find(path, ConfigValueType.STRING);
+            size = parseBytesAsBigInteger((String) v.unwrapped(),
+                v.origin(), path);
+        }
+        return ConfigMemorySize.ofBytes(size);
     }
 
     @Deprecated
@@ -500,14 +508,43 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return l;
     }
 
+    public List<BigInteger> getBytesListAsBigInteger(String path) {
+        List<BigInteger> l = new ArrayList<>();
+        List<? extends ConfigValue> list = getList(path);
+        for (ConfigValue v : list) {
+            if (v.valueType() == ConfigValueType.NUMBER) {
+                l.add(BigInteger.valueOf(((Number) v.unwrapped()).longValue()));
+            } else if (v.valueType() == ConfigValueType.STRING) {
+                String s = (String) v.unwrapped();
+                BigInteger n = parseBytesAsBigInteger(s, v.origin(), path);
+                l.add(n);
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                    "memory size string or number of bytes", v.valueType()
+                    .name());
+            }
+        }
+        return l;
+    }
+
     @Override
     public List<ConfigMemorySize> getMemorySizeList(String path) {
-        List<Long> list = getBytesList(path);
-        List<ConfigMemorySize> builder = new ArrayList<ConfigMemorySize>();
-        for (Long v : list) {
-            builder.add(ConfigMemorySize.ofBytes(v));
+        List<ConfigMemorySize> l = new ArrayList<>();
+        List<? extends ConfigValue> list = getList(path);
+        for (ConfigValue v : list) {
+            if (v.valueType() == ConfigValueType.NUMBER) {
+                l.add(ConfigMemorySize.ofBytes(((Number) v.unwrapped()).longValue()));
+            } else if (v.valueType() == ConfigValueType.STRING) {
+                String s = (String) v.unwrapped();
+                BigInteger n = parseBytesAsBigInteger(s, v.origin(), path);
+                l.add(ConfigMemorySize.ofBytes(n));
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                    "memory size string or number of bytes", v.valueType()
+                    .name());
+            }
         }
-        return builder;
+        return l;
     }
 
     @Override
@@ -884,7 +921,48 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 return result.longValue();
             else
                 throw new ConfigException.BadValue(originForException, pathForException,
-                        "size-in-bytes value is out of range for a 64-bit long: '" + input + "'");
+                    "size-in-bytes value is out of range for a 64-bit long: '" + input + "'");
+        } catch (NumberFormatException e) {
+            throw new ConfigException.BadValue(originForException, pathForException,
+                "Could not parse size-in-bytes number '" + numberString + "'");
+        }
+    }
+
+
+    public static BigInteger parseBytesAsBigInteger(String input, ConfigOrigin originForException,
+        String pathForException) {
+        String s = ConfigImplUtil.unicodeTrim(input);
+        String unitString = getUnits(s);
+        String numberString = ConfigImplUtil.unicodeTrim(s.substring(0,
+            s.length() - unitString.length()));
+
+        // this would be caught later anyway, but the error message
+        // is more helpful if we check it here.
+        if (numberString.length() == 0) {
+            throw new ConfigException.BadValue(originForException,
+                pathForException, "No number in size-in-bytes value '"
+                                  + input + "'");
+        }
+
+        MemoryUnit units = MemoryUnit.parseUnit(unitString);
+
+        if (units == null) {
+            throw new ConfigException.BadValue(originForException, pathForException,
+                "Could not parse size-in-bytes unit '" + unitString
+                + "' (try k, K, kB, KiB, kilobytes, kibibytes)");
+        }
+
+        try {
+            BigInteger result;
+            // if the string is purely digits, parse as an integer to avoid
+            // possible precision loss; otherwise as a double.
+            if (numberString.matches("[0-9]+")) {
+                result = units.bytes.multiply(new BigInteger(numberString));
+            } else {
+                BigDecimal resultDecimal = (new BigDecimal(units.bytes)).multiply(new BigDecimal(numberString));
+                result = resultDecimal.toBigInteger();
+            }
+            return result;
         } catch (NumberFormatException e) {
             throw new ConfigException.BadValue(originForException, pathForException,
                     "Could not parse size-in-bytes number '" + numberString + "'");
