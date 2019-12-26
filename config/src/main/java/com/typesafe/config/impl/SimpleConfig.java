@@ -508,25 +508,6 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         return l;
     }
 
-    public List<BigInteger> getBytesListAsBigInteger(String path) {
-        List<BigInteger> l = new ArrayList<>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(BigInteger.valueOf(((Number) v.unwrapped()).longValue()));
-            } else if (v.valueType() == ConfigValueType.STRING) {
-                String s = (String) v.unwrapped();
-                BigInteger n = parseBytesAsBigInteger(s, v.origin(), path);
-                l.add(n);
-            } else {
-                throw new ConfigException.WrongType(v.origin(), path,
-                    "memory size string or number of bytes", v.valueType()
-                    .name());
-            }
-        }
-        return l;
-    }
-
     @Override
     public List<ConfigMemorySize> getMemorySizeList(String path) {
         List<ConfigMemorySize> l = new ArrayList<>();
