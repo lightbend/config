@@ -1,10 +1,9 @@
 /**
- * Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
+ *   Copyright (C) 2015 Typesafe Inc. <http://typesafe.com>
  */
 package com.typesafe.config;
 
 import java.math.BigInteger;
-import java.util.concurrent.TimeUnit;
 
 /**
  * An immutable class representing an amount of memory.  Use
@@ -18,9 +17,8 @@ public final class ConfigMemorySize {
     private BigInteger bytes;
 
     private ConfigMemorySize(BigInteger bytes) {
-        if (bytes.compareTo(BigInteger.ZERO) < 0) {
+        if (bytes.compareTo(BigInteger.ZERO) < 0)
             throw new IllegalArgumentException("Attempt to construct ConfigMemorySize with negative number: " + bytes);
-        }
         this.bytes = bytes;
     }
 
@@ -40,7 +38,6 @@ public final class ConfigMemorySize {
     }
 
     /**
-     *
      * Gets the size in bytes.
      *
      * @deprecated use {@link #getBytes()} to handle to bytes conversion of huge memory units.
@@ -63,7 +60,7 @@ public final class ConfigMemorySize {
     @Override
     public boolean equals(Object other) {
         if (other instanceof ConfigMemorySize) {
-            return ((ConfigMemorySize) other).bytes.equals(this.bytes);
+            return ((ConfigMemorySize)other).bytes.equals(this.bytes);
         } else {
             return false;
         }
