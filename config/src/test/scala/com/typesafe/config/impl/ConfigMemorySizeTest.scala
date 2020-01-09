@@ -28,6 +28,6 @@ class ConfigMemorySizeTest extends TestUtils {
     @Test
     def testGetBytes() {
         val yottabyte = ConfigMemorySize.ofBytes(new BigInteger("1000000000000000000000000"))
-        assertEquals(new BigInteger("1000000000000000000000000"), yottabyte.getBytes)
+        assertEquals(new BigInteger("1000000000000000000000000"), yottabyte.toBytesBigInteger)
     }
 }

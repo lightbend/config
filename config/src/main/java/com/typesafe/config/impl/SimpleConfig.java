@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -282,15 +283,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public Long getBytes(String path) {
-        Long size = null;
-        try {
-            size = getLong(path);
-        } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING);
-            size = parseBytes((String) v.unwrapped(),
-                    v.origin(), path);
-        }
-        return size;
+        return getMemorySize(path).toBytes();
     }
 
     @Override
@@ -490,22 +483,9 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public List<Long> getBytesList(String path) {
-        List<Long> l = new ArrayList<Long>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(((Number) v.unwrapped()).longValue());
-            } else if (v.valueType() == ConfigValueType.STRING) {
-                String s = (String) v.unwrapped();
-                Long n = parseBytes(s, v.origin(), path);
-                l.add(n);
-            } else {
-                throw new ConfigException.WrongType(v.origin(), path,
-                        "memory size string or number of bytes", v.valueType()
-                                .name());
-            }
-        }
-        return l;
+        return getMemorySizeList(path).stream()
+            .map(ConfigMemorySize::toBytes)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -868,45 +848,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
      */
     public static long parseBytes(String input, ConfigOrigin originForException,
             String pathForException) {
-        String s = ConfigImplUtil.unicodeTrim(input);
-        String unitString = getUnits(s);
-        String numberString = ConfigImplUtil.unicodeTrim(s.substring(0,
-                s.length() - unitString.length()));
-
-        // this would be caught later anyway, but the error message
-        // is more helpful if we check it here.
-        if (numberString.length() == 0)
-            throw new ConfigException.BadValue(originForException,
-                    pathForException, "No number in size-in-bytes value '"
-                            + input + "'");
-
-        MemoryUnit units = MemoryUnit.parseUnit(unitString);
-
-        if (units == null) {
+        BigInteger result = parseBytesAsBigInteger(input, originForException, pathForException);
+        if (result.bitLength() < 64)
+            return result.longValue();
+        else
             throw new ConfigException.BadValue(originForException, pathForException,
-                    "Could not parse size-in-bytes unit '" + unitString
-                            + "' (try k, K, kB, KiB, kilobytes, kibibytes)");
-        }
-
-        try {
-            BigInteger result;
-            // if the string is purely digits, parse as an integer to avoid
-            // possible precision loss; otherwise as a double.
-            if (numberString.matches("[0-9]+")) {
-                result = units.bytes.multiply(new BigInteger(numberString));
-            } else {
-                BigDecimal resultDecimal = (new BigDecimal(units.bytes)).multiply(new BigDecimal(numberString));
-                result = resultDecimal.toBigInteger();
-            }
-            if (result.bitLength() < 64)
-                return result.longValue();
-            else
-                throw new ConfigException.BadValue(originForException, pathForException,
-                    "size-in-bytes value is out of range for a 64-bit long: '" + input + "'");
-        } catch (NumberFormatException e) {
-            throw new ConfigException.BadValue(originForException, pathForException,
-                "Could not parse size-in-bytes number '" + numberString + "'");
-        }
+                "size-in-bytes value is out of range for a 64-bit long: '" + input + "'");
     }
 
 

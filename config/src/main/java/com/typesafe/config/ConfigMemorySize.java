@@ -46,19 +46,26 @@ public final class ConfigMemorySize {
     /**
      * Gets the size in bytes.
      *
-     * @deprecated use {@link #getBytes()} to handle to bytes conversion of huge memory units.
      * @since 1.3.0
      * @return how many bytes
      */
     public long toBytes() {
-        return bytes.longValueExact();
+        if (bytes.bitLength() < 64)
+            return bytes.longValue();
+        else
+            throw new IllegalArgumentException(
+                "size-in-bytes value is out of range for a 64-bit long: '" + bytes + "'");
     }
 
     /**
-     * Gets the size in bytes.
+     * Gets the size in bytes. The behavior of this method
+     * is the same as that of the {@link #toBytes()} method,
+     * except that the number of bytes returned as a
+     * BigInteger value. Use it when memory value in bytes
+     * doesn't fit in a long value.
      * @return how many bytes
      */
-    public BigInteger getBytes() {
+    public BigInteger toBytesBigInteger() {
         return bytes;
     }
 
