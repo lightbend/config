@@ -501,8 +501,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 l.add(ConfigMemorySize.ofBytes(n));
             } else {
                 throw new ConfigException.WrongType(v.origin(), path,
-                    "memory size string or number of bytes", v.valueType()
-                    .name());
+                        "memory size string or number of bytes", v.valueType()
+                                .name());
             }
         }
         return l;
@@ -866,18 +866,17 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
         // this would be caught later anyway, but the error message
         // is more helpful if we check it here.
-        if (numberString.length() == 0) {
+        if (numberString.length() == 0)
             throw new ConfigException.BadValue(originForException,
-                pathForException, "No number in size-in-bytes value '"
-                                  + input + "'");
-        }
+                    pathForException, "No number in size-in-bytes value '"
+                            + input + "'");
 
         MemoryUnit units = MemoryUnit.parseUnit(unitString);
 
         if (units == null) {
             throw new ConfigException.BadValue(originForException, pathForException,
-                "Could not parse size-in-bytes unit '" + unitString
-                + "' (try k, K, kB, KiB, kilobytes, kibibytes)");
+                    "Could not parse size-in-bytes unit '" + unitString
+                            + "' (try k, K, kB, KiB, kilobytes, kibibytes)");
         }
 
         try {
