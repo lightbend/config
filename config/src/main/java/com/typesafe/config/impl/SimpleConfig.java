@@ -283,20 +283,54 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public Long getBytes(String path) {
-        return getMemorySize(path).toBytes();
+        BigInteger bytes = getBytesBigInteger(path);
+        ConfigValue v = find(path, ConfigValueType.STRING);
+        return toLong(bytes,v.origin(), path);
+    }
+
+    private BigInteger getBytesBigInteger(String path) {
+        BigInteger bytes;
+        ConfigValue v = find(path, ConfigValueType.STRING);
+        try {
+            bytes = BigInteger.valueOf(getLong(path));
+        } catch (ConfigException.WrongType e) {
+            bytes = parseBytes((String) v.unwrapped(),
+                v.origin(), path);
+        }
+        if (bytes.signum() < 0)
+            throw new ConfigException.BadValue(v.origin(), path,
+                "Attempt to construct memory size with negative number: " + bytes);
+        return bytes;
+    }
+
+    private List<BigInteger> getBytesListBigInteger(String path){
+        List<BigInteger> result = new ArrayList<>();
+        List<? extends ConfigValue> list = getList(path);
+
+        for (ConfigValue v : list) {
+            BigInteger bytes;
+            if (v.valueType() == ConfigValueType.NUMBER) {
+                bytes = BigInteger.valueOf(((Number) v.unwrapped()).longValue());
+            } else if (v.valueType() == ConfigValueType.STRING) {
+                String s = (String) v.unwrapped();
+                bytes = parseBytes(s, v.origin(), path);
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                    "memory size string or number of bytes", v.valueType()
+                    .name());
+            }
+            if (bytes.signum() < 0)
+                throw new ConfigException.BadValue(v.origin(), path,
+                    "Attempt to construct ConfigMemorySize with negative number: " + bytes);
+
+            result.add(bytes);
+        }
+        return result;
     }
 
     @Override
     public ConfigMemorySize getMemorySize(String path) {
-        BigInteger size;
-        try {
-            size = BigInteger.valueOf(getLong(path));
-        } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING);
-            size = parseBytesAsBigInteger((String) v.unwrapped(),
-                v.origin(), path);
-        }
-        return ConfigMemorySize.ofBytes(size);
+        return ConfigMemorySize.ofBytes(getBytesBigInteger(path));
     }
 
     @Deprecated
@@ -483,29 +517,27 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public List<Long> getBytesList(String path) {
-        return getMemorySizeList(path).stream()
-            .map(ConfigMemorySize::toBytes)
+        ConfigValue v = find(path, ConfigValueType.LIST);
+        return getBytesListBigInteger(path).stream()
+            .map(bytes -> toLong(bytes, v.origin(), path))
             .collect(Collectors.toList());
+    }
+
+    private Long toLong(BigInteger value, ConfigOrigin originForException,
+        String pathForException){
+        if (value.bitLength() < 64) {
+            return value.longValue();
+        } else {
+            throw new ConfigException.BadValue(originForException, pathForException,
+                "size-in-bytes value is out of range for a 64-bit long: '" + value + "'");
+        }
     }
 
     @Override
     public List<ConfigMemorySize> getMemorySizeList(String path) {
-        List<ConfigMemorySize> l = new ArrayList<>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(ConfigMemorySize.ofBytes(((Number) v.unwrapped()).longValue()));
-            } else if (v.valueType() == ConfigValueType.STRING) {
-                String s = (String) v.unwrapped();
-                BigInteger n = parseBytesAsBigInteger(s, v.origin(), path);
-                l.add(ConfigMemorySize.ofBytes(n));
-            } else {
-                throw new ConfigException.WrongType(v.origin(), path,
-                        "memory size string or number of bytes", v.valueType()
-                                .name());
-            }
-        }
-        return l;
+        return getBytesListBigInteger(path).stream()
+            .map(ConfigMemorySize::ofBytes)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -846,18 +878,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
      * @throws ConfigException
      *             if string is invalid
      */
-    public static long parseBytes(String input, ConfigOrigin originForException,
-            String pathForException) {
-        BigInteger result = parseBytesAsBigInteger(input, originForException, pathForException);
-        if (result.bitLength() < 64)
-            return result.longValue();
-        else
-            throw new ConfigException.BadValue(originForException, pathForException,
-                "size-in-bytes value is out of range for a 64-bit long: '" + input + "'");
-    }
-
-
-    public static BigInteger parseBytesAsBigInteger(String input, ConfigOrigin originForException,
+    public static BigInteger parseBytes(String input, ConfigOrigin originForException,
         String pathForException) {
         String s = ConfigImplUtil.unicodeTrim(input);
         String unitString = getUnits(s);

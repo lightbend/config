@@ -17,7 +17,7 @@ public final class ConfigMemorySize {
     private BigInteger bytes;
 
     private ConfigMemorySize(BigInteger bytes) {
-        if (bytes.compareTo(BigInteger.ZERO) < 0)
+        if (bytes.signum() < 0)
             throw new IllegalArgumentException("Attempt to construct ConfigMemorySize with negative number: " + bytes);
         this.bytes = bytes;
     }
@@ -48,6 +48,9 @@ public final class ConfigMemorySize {
      *
      * @since 1.3.0
      * @return how many bytes
+     * @exception IllegalArgumentException when memory value
+     * in bytes doesn't fit in a long value. Consider using
+     * {@link #toBytesBigInteger} in this case.
      */
     public long toBytes() {
         if (bytes.bitLength() < 64)
