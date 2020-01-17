@@ -285,7 +285,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     public Long getBytes(String path) {
         BigInteger bytes = getBytesBigInteger(path);
         ConfigValue v = find(path, ConfigValueType.STRING);
-        return toLong(bytes,v.origin(), path);
+        return toLong(bytes, v.origin(), path);
     }
 
     private BigInteger getBytesBigInteger(String path) {
