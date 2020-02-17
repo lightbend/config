@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
@@ -282,20 +283,54 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public Long getBytes(String path) {
-        Long size = null;
+        BigInteger bytes = getBytesBigInteger(path);
+        ConfigValue v = find(path, ConfigValueType.STRING);
+        return toLong(bytes, v.origin(), path);
+    }
+
+    private BigInteger getBytesBigInteger(String path) {
+        BigInteger bytes;
+        ConfigValue v = find(path, ConfigValueType.STRING);
         try {
-            size = getLong(path);
+            bytes = BigInteger.valueOf(getLong(path));
         } catch (ConfigException.WrongType e) {
-            ConfigValue v = find(path, ConfigValueType.STRING);
-            size = parseBytes((String) v.unwrapped(),
-                    v.origin(), path);
+            bytes = parseBytes((String) v.unwrapped(),
+                v.origin(), path);
         }
-        return size;
+        if (bytes.signum() < 0)
+            throw new ConfigException.BadValue(v.origin(), path,
+                "Attempt to construct memory size with negative number: " + bytes);
+        return bytes;
+    }
+
+    private List<BigInteger> getBytesListBigInteger(String path){
+        List<BigInteger> result = new ArrayList<>();
+        List<? extends ConfigValue> list = getList(path);
+
+        for (ConfigValue v : list) {
+            BigInteger bytes;
+            if (v.valueType() == ConfigValueType.NUMBER) {
+                bytes = BigInteger.valueOf(((Number) v.unwrapped()).longValue());
+            } else if (v.valueType() == ConfigValueType.STRING) {
+                String s = (String) v.unwrapped();
+                bytes = parseBytes(s, v.origin(), path);
+            } else {
+                throw new ConfigException.WrongType(v.origin(), path,
+                    "memory size string or number of bytes", v.valueType()
+                    .name());
+            }
+            if (bytes.signum() < 0)
+                throw new ConfigException.BadValue(v.origin(), path,
+                    "Attempt to construct ConfigMemorySize with negative number: " + bytes);
+
+            result.add(bytes);
+        }
+        return result;
     }
 
     @Override
     public ConfigMemorySize getMemorySize(String path) {
-        return ConfigMemorySize.ofBytes(getBytes(path));
+        return ConfigMemorySize.ofBytes(getBytesBigInteger(path));
     }
 
     @Deprecated
@@ -482,32 +517,27 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public List<Long> getBytesList(String path) {
-        List<Long> l = new ArrayList<Long>();
-        List<? extends ConfigValue> list = getList(path);
-        for (ConfigValue v : list) {
-            if (v.valueType() == ConfigValueType.NUMBER) {
-                l.add(((Number) v.unwrapped()).longValue());
-            } else if (v.valueType() == ConfigValueType.STRING) {
-                String s = (String) v.unwrapped();
-                Long n = parseBytes(s, v.origin(), path);
-                l.add(n);
-            } else {
-                throw new ConfigException.WrongType(v.origin(), path,
-                        "memory size string or number of bytes", v.valueType()
-                                .name());
-            }
+        ConfigValue v = find(path, ConfigValueType.LIST);
+        return getBytesListBigInteger(path).stream()
+            .map(bytes -> toLong(bytes, v.origin(), path))
+            .collect(Collectors.toList());
+    }
+
+    private Long toLong(BigInteger value, ConfigOrigin originForException,
+        String pathForException){
+        if (value.bitLength() < 64) {
+            return value.longValue();
+        } else {
+            throw new ConfigException.BadValue(originForException, pathForException,
+                "size-in-bytes value is out of range for a 64-bit long: '" + value + "'");
         }
-        return l;
     }
 
     @Override
     public List<ConfigMemorySize> getMemorySizeList(String path) {
-        List<Long> list = getBytesList(path);
-        List<ConfigMemorySize> builder = new ArrayList<ConfigMemorySize>();
-        for (Long v : list) {
-            builder.add(ConfigMemorySize.ofBytes(v));
-        }
-        return builder;
+        return getBytesListBigInteger(path).stream()
+            .map(ConfigMemorySize::ofBytes)
+            .collect(Collectors.toList());
     }
 
     @Override
@@ -848,12 +878,12 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
      * @throws ConfigException
      *             if string is invalid
      */
-    public static long parseBytes(String input, ConfigOrigin originForException,
-            String pathForException) {
+    public static BigInteger parseBytes(String input, ConfigOrigin originForException,
+        String pathForException) {
         String s = ConfigImplUtil.unicodeTrim(input);
         String unitString = getUnits(s);
         String numberString = ConfigImplUtil.unicodeTrim(s.substring(0,
-                s.length() - unitString.length()));
+            s.length() - unitString.length()));
 
         // this would be caught later anyway, but the error message
         // is more helpful if we check it here.
@@ -880,11 +910,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                 BigDecimal resultDecimal = (new BigDecimal(units.bytes)).multiply(new BigDecimal(numberString));
                 result = resultDecimal.toBigInteger();
             }
-            if (result.bitLength() < 64)
-                return result.longValue();
-            else
-                throw new ConfigException.BadValue(originForException, pathForException,
-                        "size-in-bytes value is out of range for a 64-bit long: '" + input + "'");
+            return result;
         } catch (NumberFormatException e) {
             throw new ConfigException.BadValue(originForException, pathForException,
                     "Could not parse size-in-bytes number '" + numberString + "'");
