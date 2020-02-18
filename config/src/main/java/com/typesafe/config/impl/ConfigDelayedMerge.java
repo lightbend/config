@@ -319,7 +319,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
             if (atKey != null) {
                 sb.append(ConfigImplUtil.renderJsonString(atKey));
                 if (options.getFormatted())
-                    sb.append(" : ");
+                    sb.append(": ");
                 else
                     sb.append(":");
             }
