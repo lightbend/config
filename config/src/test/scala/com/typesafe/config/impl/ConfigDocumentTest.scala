@@ -454,7 +454,7 @@ class ConfigDocumentTest extends TestUtils {
 
         val configVal = ConfigValueFactory.fromAnyRef(Map("a" -> 1, "b" -> 2).asJava)
 
-        assertEquals("{ a : {\n     \"a\" : 1,\n     \"b\" : 2\n } }",
+        assertEquals("{ a : {\n     \"a\": 1,\n     \"b\": 2\n } }",
             configDocument.withValue("a", configVal).render)
     }
 }
