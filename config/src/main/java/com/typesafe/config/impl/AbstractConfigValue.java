@@ -340,7 +340,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
 
             if (options.getJson()) {
                 if (options.getFormatted())
-                    sb.append(" : ");
+                    sb.append(": ");
                 else
                     sb.append(":");
             } else {
