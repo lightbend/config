@@ -88,6 +88,7 @@ to merge it in.
     - [C++ port](#c-port)
     - [JavaScript port](#javascript-port)
     - [C# port](#c-port-1)
+    - [Go port](#go-port)
     - [Linting tool](#linting-tool)
     - [Online playground](#online-playground)
 
@@ -900,6 +901,10 @@ format.
 #### Rust port
 
   * https://github.com/mockersf/hocon.rs
+
+#### Go port
+
+  * https://github.com/gurkankaymak/hocon
 
 #### Linting tool
 
