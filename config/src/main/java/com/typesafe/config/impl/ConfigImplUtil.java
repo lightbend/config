@@ -94,7 +94,7 @@ final public class ConfigImplUtil {
         // only unquote if it's pure alphanumeric
         for (int i = 0; i < s.length(); ++i) {
             char c = s.charAt(i);
-            if (!(Character.isLetter(c) || Character.isDigit(c) || c == '-'))
+            if (!(Character.isLetter(c) || Character.isDigit(c) || c == '-' || c == '_'))
                 return renderJsonString(s);
         }
 
