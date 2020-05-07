@@ -1135,6 +1135,10 @@ class ConfigTest extends TestUtils {
             assertEquals(3, conf02.getInt("a-c"))
             assertEquals(4, conf02.getInt("a_c"))
 
+            intercept[ConfigException.Missing] {
+                conf02.getInt("CONFIG_FORCE_a_b_c")
+            }
+
             assertEquals("foo", conf04.getString("akka.version"))
             assertEquals(10, conf04.getInt("akka.event-handler-dispatcher.max-pool-size"))
         } finally {
