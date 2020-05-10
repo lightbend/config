@@ -3,7 +3,7 @@
  */
 package com.typesafe.config.impl
 
-import beanconfig.EnumsConfig.{ Solution, Problem }
+import beanconfig.EnumsConfig.{ Solution, Problem, TestCase }
 import com.typesafe.config._
 
 import java.io.{ InputStream, InputStreamReader }
@@ -78,6 +78,7 @@ class ConfigBeanFactoryTest extends TestUtils {
         assertNotNull(beanConfig)
         assertEquals(Problem.P1, beanConfig.getProblem)
         assertEquals(ArrayBuffer(Solution.S1, Solution.S3), beanConfig.getSolutions.asScala)
+        assertEquals(ArrayBuffer(TestCase.CaseOk, TestCase.CaseOk2), beanConfig.getCases.asScala)
     }
 
     @Test
@@ -237,11 +238,18 @@ class ConfigBeanFactoryTest extends TestUtils {
     @Test
     def testNotAnEnumField() {
         val e = intercept[ConfigException.BadValue] {
-            ConfigBeanFactory.create(parseConfig("{problem=P1,solutions=[S4]}"), classOf[EnumsConfig])
+            ConfigBeanFactory.create(parseConfig("{problem=P1,solutions=[S4],cases=[]}"), classOf[EnumsConfig])
         }
         assertTrue("invalid value error", e.getMessage.contains("Invalid value"))
         assertTrue("error about the right property", e.getMessage.contains("solutions"))
         assertTrue("error enumerates the enum constants", e.getMessage.contains("should be one of [S1, S2, S3]"))
+
+        val c = intercept[ConfigException.BadValue] {
+            ConfigBeanFactory.create(parseConfig("{problem=P1,solutions=[],cases=[caseconflict]}"), classOf[EnumsConfig])
+        }
+        assertTrue("invalid value error", c.getMessage.contains("Invalid value"))
+        assertTrue("error about the right property", c.getMessage.contains("cases"))
+        assertTrue("error enumerates the enum constants", c.getMessage.contains("should be one of [CaseOk, CaseOk2, caseOK2, CaseConflict, CASEconflict]"))
     }
 
     @Test

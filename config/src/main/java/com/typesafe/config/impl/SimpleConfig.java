@@ -457,10 +457,23 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             return Enum.valueOf(enumClass, enumName);
         } catch (IllegalArgumentException e) {
             List<String> enumNames = new ArrayList<String>();
-            Enum[] enumConstants = enumClass.getEnumConstants();
+            T[] enumConstants = enumClass.getEnumConstants();
             if (enumConstants != null) {
-                for (Enum enumConstant : enumConstants) {
+                boolean found = false;
+                T value = null;
+                for (T enumConstant : enumConstants) {
                     enumNames.add(enumConstant.name());
+                    if (enumConstant.name().equalsIgnoreCase(enumName)) {
+                        if (!found) {
+                            found = true;
+                            value = enumConstant;
+                        } else if (found) {
+                            value = null;
+                        }
+                    }
+                }
+                if (found && value != null) {
+                    return enumClass.cast(value); 
                 }
             }
             throw new ConfigException.BadValue(

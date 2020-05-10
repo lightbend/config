@@ -10,8 +10,12 @@ public class EnumsConfig {
     public enum Solution {
         S1, S2, S3;
     }
+    public enum TestCase {
+        CaseOk, CaseOk2, caseOK2, CaseConflict, CASEconflict
+    }
     Problem problem;
     List<Solution> solutions;
+    List<TestCase> cases;
 
     public Problem getProblem() {
         return problem;
@@ -27,6 +31,14 @@ public class EnumsConfig {
 
     public void setSolutions(List<Solution> solutions) {
         this.solutions = solutions;
+    }
+
+    public List<TestCase> getCases() {
+        return cases;
+    }
+
+    public void setCases(List<TestCase> cases) {
+        this.cases = cases;
     }
 
     @Override
