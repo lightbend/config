@@ -524,6 +524,7 @@ tree that you could have written (less conveniently) in JSON.
     "whatever"` to have the library do what you probably mean
     (Note: `url()`/`file()`/`classpath()` syntax is not supported
     in Play/Akka 2.0, only in later releases.)
+  - you can include files by wildcard/glob pattern; use `glob()`.
   - substitutions `foo : ${a.b}` sets key `foo` to the same value
     as the `b` field in the `a` object
   - substitutions concatenate into unquoted strings, `foo : the

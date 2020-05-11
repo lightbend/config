@@ -896,9 +896,10 @@ An _include statement_ consists of the unquoted string `include`
 followed by whitespace and then either:
  - a single _quoted_ string which is interpreted heuristically as
    URL, filename, or classpath resource.
- - `url()`, `file()`, or `classpath()` surrounding a quoted string
-   which is then interpreted as a URL, file, or classpath. The
-   string must be quoted, unlike in CSS.
+ - `url()`, `file()`, `glob()`, or `classpath()` surrounding a
+   quoted string which is then interpreted as a URL, file, file
+   wildcard/glob pattern, or classpath. The string must be quoted,
+   unlike in CSS.
  - `required()` surrounding one of the above
 
 An include statement can appear in place of an object field.
@@ -908,7 +909,7 @@ expression where an object key would be expected, then it is not
 interpreted as a path expression or a key.
 
 Instead, the next value must be a _quoted_ string or a quoted
-string surrounded by `url()`, `file()`, or `classpath()`.
+string surrounded by `url()`, `file()`, `glob()`, or `classpath()`.
 This value is the _resource name_.
 
 Together, the unquoted `include` and the resource name substitute
@@ -918,8 +919,8 @@ usual the comma may be omitted if there's a newline).
 
 If an unquoted `include` at the start of a key is followed by
 anything other than a single quoted string or the
-`url("")`/`file("")`/`classpath("")` syntax, it is invalid and an
-error should be generated.
+`url("")`/`file("")`/`glob("")`/`classpath("")` syntax, it is
+invalid and an error should be generated.
 
 There can be any amount of whitespace, including newlines, between
 the unquoted `include` and the resource name. For `url()` etc.,
@@ -1080,9 +1081,9 @@ for file: URLs.
 
 #### Include semantics: locating resources
 
-A quoted string not surrounded by `url()`, `file()`, `classpath()`
-must be interpreted heuristically. The heuristic is to treat the
-quoted string as:
+A quoted string not surrounded by `url()`, `file()`, `glob()`,
+`classpath()` must be interpreted heuristically. The heuristic is
+to treat the quoted string as:
 
  - a URL, if the quoted string is a valid URL with a known
    protocol.
@@ -1150,8 +1151,9 @@ they do support them they should do so as described above.
 
 Note that at present, if `url()`/`file()`/`classpath()` are
 specified, the included items are NOT interpreted relative to the
-including items. Relative-to-including-file paths only work with
-the heuristic `include "foo.conf"`. This may change in the future.
+including items. Relative-to-including-file paths work with the
+heuristic `include "foo.conf"` and with `glob()` (only if it's
+used from the file). This may change in the future.
 
 ### Conversion of numerically-indexed objects to arrays
 
