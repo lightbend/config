@@ -15,6 +15,7 @@ import com.typesafe.config.ConfigIncludeContext;
 import com.typesafe.config.ConfigIncluder;
 import com.typesafe.config.ConfigIncluderClasspath;
 import com.typesafe.config.ConfigIncluderFile;
+import com.typesafe.config.ConfigIncluderGlob;
 import com.typesafe.config.ConfigIncluderURL;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigParseOptions;
@@ -121,6 +122,27 @@ class SimpleIncluder implements FullIncluder {
     static ConfigObject includeResourceWithoutFallback(final ConfigIncludeContext context,
             String resource) {
         return ConfigFactory.parseResourcesAnySyntax(resource, context.parseOptions()).root();
+    }
+
+    @Override
+    public ConfigObject includeGlob(ConfigIncludeContext context, String pattern) {
+        ConfigObject obj = includeGlobWithoutFallback(context, pattern);
+
+        // now use the fallback includer if any and merge
+        // its result.
+        if (fallback != null && fallback instanceof ConfigIncluderGlob) {
+            return obj.withFallback(((ConfigIncluderGlob) fallback).includeGlob(context,
+                    pattern));
+        } else {
+            return obj;
+        }
+    }
+
+    static ConfigObject includeGlobWithoutFallback(final ConfigIncludeContext context,
+            String pattern) {
+        ConfigParseable current = context.current();
+        ConfigParseable parseable = Parseable.newGlob(pattern, current, context.parseOptions());
+        return parseable.parse(parseable.options());
     }
 
     @Override
@@ -290,6 +312,14 @@ class SimpleIncluder implements FullIncluder {
                 return ((ConfigIncluderFile) delegate).includeFile(context, what);
             else
                 return includeFileWithoutFallback(context, what);
+        }
+
+        @Override
+        public ConfigObject includeGlob(ConfigIncludeContext context, String what) {
+            if (delegate instanceof ConfigIncluderGlob)
+                return ((ConfigIncluderGlob) delegate).includeGlob(context, what);
+            else
+                return includeGlobWithoutFallback(context, what);
         }
     }
 

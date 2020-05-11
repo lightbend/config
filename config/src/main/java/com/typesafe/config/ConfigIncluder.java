@@ -8,7 +8,7 @@ package com.typesafe.config;
  * {@link ConfigParseOptions#setIncluder ConfigParseOptions.setIncluder()} to
  * customize handling of {@code include} statements in config files. You may
  * also want to implement {@link ConfigIncluderClasspath},
- * {@link ConfigIncluderFile}, and {@link ConfigIncluderURL}, or not.
+ * {@link ConfigIncluderFile}, {@link ConfigIncluderGlob}, and {@link ConfigIncluderURL}, or not.
  */
 public interface ConfigIncluder {
     /**

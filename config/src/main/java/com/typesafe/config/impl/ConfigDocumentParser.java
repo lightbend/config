@@ -366,6 +366,12 @@ final class ConfigDocumentParser {
                 if (kindText.startsWith("url(")) {
                     kind = ConfigIncludeKind.URL;
                     prefix = "url(";
+                } else if (kindText.startsWith("glob(")) {
+                    if (isRequired) {
+                        throw parseError("required(glob) is not supported");
+                    }
+                    kind = ConfigIncludeKind.GLOB;
+                    prefix = "glob(";
                 } else if (kindText.startsWith("file(")) {
                     kind = ConfigIncludeKind.FILE;
                     prefix = "file(";

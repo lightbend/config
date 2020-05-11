@@ -36,6 +36,13 @@ public interface ConfigIncludeContext {
     ConfigParseable relativeTo(String filename);
 
     /**
+     * Current parseable item with including expression.
+     * 
+     * @return parseable item with the resource doing the including
+     */
+    ConfigParseable current();
+
+    /**
      * Parse options to use (if you use another method to get a
      * {@link ConfigParseable} then use {@link ConfigParseable#options()}
      * instead though).

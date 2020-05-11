@@ -172,6 +172,10 @@ final class ConfigParser {
                     obj = (AbstractConfigObject) includer.includeURL(cic, url);
                     break;
 
+                case GLOB:
+                    obj = (AbstractConfigObject) includer.includeGlob(cic, n.name());
+                    break;
+
                 case FILE:
                     obj = (AbstractConfigObject) includer.includeFile(cic,
                             new File(n.name()));

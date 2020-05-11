@@ -1,5 +1,5 @@
 package com.typesafe.config.impl;
 
 enum ConfigIncludeKind {
-    URL, FILE, CLASSPATH, HEURISTIC
+    URL, GLOB, FILE, CLASSPATH, HEURISTIC
 }
