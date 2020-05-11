@@ -711,9 +711,15 @@ public abstract class Parseable implements ConfigParseable {
             Iterable<AbstractConfigValue> objects = Files.find(searchpath, MAX_FILES_SEARCH_DEPTH, (p, fa) -> matcher.matches(relativize.apply(p)))
                     .map(this::newFile).map(Parseable::parseValue)::iterator;
 
-            AbstractConfigObject merged = SimpleConfigObject.empty(origin);
-            for (AbstractConfigValue v : objects)
+            AbstractConfigObject merged = null;
+            for (AbstractConfigValue v : objects) {
+                if (merged == null) {
+                    merged = SimpleConfigObject.empty(origin);
+                }
                 merged = merged.withFallback(v);
+            }
+            if (merged == null)
+                throw new IOException("No files found by glob pattern '" + pattern + "' relative to path '" + relativeTo + "'");
 
             return merged;
         }
