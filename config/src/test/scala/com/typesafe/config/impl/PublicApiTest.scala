@@ -1120,6 +1120,19 @@ include "onclasspath"
     }
 
     @Test
+    def globIncludeStatement(): Unit = {
+        val file = resourceFile("file-include-glob.conf")
+        val conf = ConfigFactory.parseFile(file)
+
+        assertEquals("got subdir/a.conf", 1, conf.getInt("glob.conf"))
+        assertEquals("got subdir/a.json", 2, conf.getInt("glob.json"))
+        assertEquals("got subdir/a.properties", 3, conf.getInt("glob.properties"))
+
+        // glob pattern is treated as relative to the current file
+        assertFalse("did not get a.conf", conf.hasPath("glob.theconf"))
+    }
+
+    @Test
     def hasPathOrNullWorks(): Unit = {
         val conf = ConfigFactory.parseString("x.a=null,x.b=42")
         assertFalse("hasPath says false for null", conf.hasPath("x.a"))

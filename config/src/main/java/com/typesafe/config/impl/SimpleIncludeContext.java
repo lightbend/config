@@ -40,11 +40,6 @@ class SimpleIncludeContext implements ConfigIncludeContext {
     }
 
     @Override
-    public ConfigParseable current() {
-        return parseable;
-    }
-
-    @Override
     public ConfigParseOptions parseOptions() {
         return options;
     }

@@ -140,8 +140,7 @@ class SimpleIncluder implements FullIncluder {
 
     static ConfigObject includeGlobWithoutFallback(final ConfigIncludeContext context,
             String pattern) {
-        ConfigParseable current = context.current();
-        ConfigParseable parseable = Parseable.newGlob(pattern, current, context.parseOptions());
+        ConfigParseable parseable = Parseable.newGlob(pattern, context.parseOptions());
         return parseable.parse(parseable.options());
     }
 
