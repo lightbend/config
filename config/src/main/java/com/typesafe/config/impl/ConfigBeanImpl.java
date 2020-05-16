@@ -284,11 +284,11 @@ public class ConfigBeanImpl {
     }
 
     private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
+        if (beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0) {
+            return true;
+        }
         Field field = getField(beanClass, beanProp.getName());
-        return field != null
-                ? beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0
-                        || field.getAnnotationsByType(Optional.class).length > 0
-                : beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0;
+        return field != null && field.getAnnotationsByType(Optional.class).length > 0;
     }
 
     private static Field getField(Class beanClass, String fieldName) {
