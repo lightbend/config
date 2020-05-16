@@ -286,8 +286,8 @@ public class ConfigBeanImpl {
     private static boolean isOptionalProperty(Class beanClass, PropertyDescriptor beanProp) {
         Field field = getField(beanClass, beanProp.getName());
         return field != null
-                ? field.getAnnotationsByType(Optional.class).length > 0
-                        || beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0
+                ? beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0
+                        || field.getAnnotationsByType(Optional.class).length > 0
                 : beanProp.getReadMethod().getAnnotationsByType(Optional.class).length > 0;
     }
 
