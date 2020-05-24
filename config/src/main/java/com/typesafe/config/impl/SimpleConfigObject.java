@@ -606,7 +606,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     @Override
     public Set<String> keySet() {
-        return value.keySet();
+        return Collections.unmodifiableSet(value.keySet());
     }
 
     @Override
@@ -624,7 +624,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                     e.getKey(), e
                     .getValue()));
         }
-        return entries;
+        return Collections.unmodifiableSet(entries);
     }
 
     @Override
@@ -639,7 +639,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     @Override
     public Collection<ConfigValue> values() {
-        return new HashSet<ConfigValue>(value.values());
+        return Collections.unmodifiableCollection(value.values());
     }
 
     final private static String EMPTY_NAME = "empty config";
