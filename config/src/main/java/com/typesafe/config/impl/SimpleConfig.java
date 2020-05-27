@@ -467,7 +467,8 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
                         if (!found) {
                             found = true;
                             value = enumConstant;
-                        } else if (found) {
+                        } else {
+                            // found another match, can't determine the value
                             value = null;
                         }
                     }
