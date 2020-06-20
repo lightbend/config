@@ -8,13 +8,15 @@ public class ConstructorConfig {
   private final String foo;
   private final String bar;
   private final NestedConfig nested;
+  private final NestedWithoutAnnotation nestedWithoutAnnotation;
   private String baz;
 
-  @ConstructorProperties({"foo", "bar", "nested"})
-  public ConstructorConfig(String foo, @Optional String bar, NestedConfig nested) {
+  @ConstructorProperties({"foo", "bar", "nested", "nestedWithoutAnnotation"})
+  public ConstructorConfig(String foo, @Optional String bar, NestedConfig nested, NestedWithoutAnnotation nestedWithoutAnnotation) {
     this.foo = foo;
     this.bar = bar;
     this.nested = nested;
+    this.nestedWithoutAnnotation = nestedWithoutAnnotation;
   }
 
   public String getFoo() {
@@ -27,6 +29,10 @@ public class ConstructorConfig {
 
   public NestedConfig getNested() {
     return nested;
+  }
+
+  public NestedWithoutAnnotation getNestedWithoutAnnotation() {
+    return nestedWithoutAnnotation;
   }
 
   public String getBaz() {
@@ -49,4 +55,35 @@ public class ConstructorConfig {
       return foo;
     }
   }
+
+  public static class NestedWithoutAnnotation {
+    private final String foo;
+
+    public NestedWithoutAnnotation(String foo) {
+      this.foo = foo;
+    }
+
+    public String getFoo() {
+      return foo;
+    }
+  }
+
+  public static class ConstructorConfigSkipWithoutAnnotation extends ConstructorConfig {
+
+    @ConstructorProperties({"foo", "bar", "nested", "nestedWithoutAnnotation"})
+    public ConstructorConfigSkipWithoutAnnotation(String foo, @Optional String bar, NestedConfig nested, NestedWithAnnotation nestedWithAnnotation) {
+        super(foo, bar, nested, nestedWithAnnotation);
+    }
+
+  }
+
+  public static class NestedWithAnnotation extends NestedWithoutAnnotation {
+
+      @ConstructorProperties({"foo"})
+      public NestedWithAnnotation(String foo) {
+        super(foo);
+      }
+
+    }
+
 }

@@ -3,11 +3,13 @@
  */
 package com.typesafe.config.impl
 
-import beanconfig.EnumsConfig.{Problem, Solution}
-import com.typesafe.config.{ConfigBeanFactory, _}
-import java.io.{InputStream, InputStreamReader}
+import beanconfig.EnumsConfig.{ Problem, Solution }
+import com.typesafe.config.{ ConfigBeanFactory, _ }
+import java.io.{ InputStream, InputStreamReader }
 import java.time.Duration
 
+import beanconfig.ConstructorConfig.NestedConfig
+import beanconfig.ConstructorConfig.ConstructorConfigSkipWithoutAnnotation
 import beanconfig._
 import org.junit.Assert._
 import org.junit._
@@ -280,14 +282,17 @@ class ConfigBeanFactoryTest extends TestUtils {
 
     @Test
     def testConstructor(): Unit = {
-        val bean = ConfigBeanFactory.create(loadConfig().getConfig("constructor"), classOf[ConstructorConfig])
+        val cls = if (compiledWithNames()) classOf[ConstructorConfig] else classOf[ConstructorConfigSkipWithoutAnnotation]
+        val bean = ConfigBeanFactory.create(loadConfig().getConfig("constructor"), cls)
         val nestedBean = bean.getNested
+        val nestedNoAnnotation = bean.getNestedWithoutAnnotation
 
         assertEquals("foo", "fooString", bean.getFoo)
         assertNull("bar", bean.getBar)
         assertNotNull("nested", nestedBean)
         assertEquals("nestedFooString", nestedBean.getFoo)
         assertEquals("baz", "bazString", bean.getBaz)
+        assertEquals("nestedWithoutAnnotationString", nestedNoAnnotation.getFoo)
     }
 
     @Test
@@ -295,7 +300,30 @@ class ConfigBeanFactoryTest extends TestUtils {
         val e = intercept[ConfigException.BadBean] {
             ConfigBeanFactory.create(ConfigFactory.empty(), classOf[MultipleConstructorsConfig])
         }
-        assertTrue("multiple constructors", e.getMessage.contains("needs a single constructor"))
+        assertTrue("multiple constructors", e.getMessage.contains("needs a single public constructor"))
+    }
+
+    @Test
+    def testNoAnnotationSingleConstructor(): Unit = {
+        if (compiledWithNames()) {
+            val bean = ConfigBeanFactory.create(loadConfig().getConfig("constructor"), classOf[ConstructorConfigNoAnnotation])
+            val nestedBean = bean.getNested
+
+            assertEquals("foo", "fooString", bean.getFoo)
+            assertNull("bar", bean.getBar)
+            assertNotNull("nested", nestedBean)
+            assertEquals("nestedFooString", nestedBean.getFoo)
+            assertEquals("baz", "bazString", bean.getBaz)
+        } else {
+            val e = intercept[ConfigException.BadBean] {
+                ConfigBeanFactory.create(ConfigFactory.empty(), classOf[ConstructorConfigNoAnnotation])
+            }
+            assertTrue("no constructor", e.getMessage.contains("needs a single public constructor"))
+        }
+    }
+
+    private def compiledWithNames(): Boolean = {
+        classOf[ConstructorConfigNoAnnotation].getConstructor(classOf[String], classOf[String], classOf[NestedConfig]).getParameters()(0).isNamePresent
     }
 
     private def loadConfig(): Config = {
