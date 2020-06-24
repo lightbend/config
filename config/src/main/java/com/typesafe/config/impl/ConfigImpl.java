@@ -371,7 +371,7 @@ public class ConfigImpl {
 
     private static AbstractConfigObject loadEnvVariablesOverrides() {
         Map<String, String> env = new HashMap(System.getenv());
-        Map<String, String> result = new HashMap(System.getenv());
+        Map<String, String> result = new HashMap();
 
         for (String key : env.keySet()) {
             if (key.startsWith(ENV_VAR_OVERRIDE_PREFIX)) {
