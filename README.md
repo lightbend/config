@@ -482,9 +482,11 @@ and
 
 ### ConfigBeanFactory
 
-As of version 1.3.0, if you have a Java object that follows
-JavaBean conventions (zero-args constructor, getters and setters),
-you can automatically initialize it from a `Config`.
+You can initialize some class from a `Config`, if a class contains 
+a no-arg constructor, or a public constructor annotated with `java.beans.ConstructorProperties` 
+or a constructor which have a parameter names. The constructor parameter name will be used to 
+lookup the field in the config object. Then will be gathered all bean properties, 
+that have getters and setters and corresponding fields from the config will be injected into them.
 
 Use
 `ConfigBeanFactory.create(config.getConfig("subtree-that-matches-bean"),
