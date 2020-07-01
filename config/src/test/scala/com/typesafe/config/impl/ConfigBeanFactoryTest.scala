@@ -296,6 +296,14 @@ class ConfigBeanFactoryTest extends TestUtils {
     }
 
     @Test
+    def testPrivateConstructor(): Unit = {
+        val e = intercept[ConfigException.BadBean] {
+            ConfigBeanFactory.create(ConfigFactory.empty(), classOf[PrivateConstructorConfig])
+        }
+        assertTrue(e.getMessage.contains("needs a public no-args constructor to be used as a bean"))
+    }
+
+    @Test
     def testMultipleConstructors(): Unit = {
         val e = intercept[ConfigException.BadBean] {
             ConfigBeanFactory.create(ConfigFactory.empty(), classOf[MultipleConstructorsConfig])

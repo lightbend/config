@@ -372,7 +372,7 @@ public class ConfigBeanImpl {
         return getField(beanClass, fieldName);
     }
 
-    private static <T> ConstructorInfo<T> getConstructor(Class beanClass) {
+    private static <T> ConstructorInfo<T> getConstructor(Class<T> beanClass) {
         ConstructorInfo<T> targetConstructor = null;
         Constructor<T> firstPublicConstructor = null;
         boolean single = true;
@@ -393,7 +393,7 @@ public class ConfigBeanImpl {
                 }
             }
         }
-        if (targetConstructor == null && single && firstPublicConstructor.getParameterCount() > 0) {
+        if (targetConstructor == null && single && firstPublicConstructor != null && firstPublicConstructor.getParameterCount() > 0) {
             //If there is only one public constructor with parameters and bean is compiled with `-parameters` argument, try to use it
             List<String> parameters = new ArrayList<>();
             for (Parameter parameter : firstPublicConstructor.getParameters()) {
