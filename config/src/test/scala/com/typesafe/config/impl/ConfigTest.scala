@@ -252,20 +252,16 @@ class ConfigTest extends TestUtils {
         val obj2 = parseObject("""{ "a" : 2 }""")
         val obj3 = parseObject("""{ "a" : { "b" : ${d}, "c" : ${e} }, "d" : 43, "e" : 44, "f" : 42 }""")
 
-        associativeMerge(Seq(obj1, obj2, obj3)) { unresolved =>
-            val merged = resolveNoSystem(unresolved, unresolved)
-            assertEquals(42, merged.getInt("a.b"))
-            assertEquals(4, merged.root.size)
-            assertEquals(1, merged.getObject("a").size())
-        }
+        val merged = obj1.withFallback(obj2.withFallback(obj3)).toConfig.resolve()
+        assertEquals(42, merged.getInt("a.b"))
+        assertEquals(4, merged.root.size)
+        assertEquals(1, merged.getObject("a").size())
 
-        associativeMerge(Seq(obj3, obj2, obj1)) { unresolved =>
-            val merged2 = resolveNoSystem(unresolved, unresolved)
-            assertEquals(43, merged2.getInt("a.b"))
-            assertEquals(44, merged2.getInt("a.c"))
-            assertEquals(4, merged2.root.size)
-            assertEquals(2, merged2.getObject("a").size())
-        }
+        val merged2 = obj3.withFallback(obj2.withFallback(obj1)).toConfig.resolve()
+        assertEquals(43, merged2.getInt("a.b"))
+        assertEquals(44, merged2.getInt("a.c"))
+        assertEquals(4, merged2.root.size)
+        assertEquals(2, merged2.getObject("a").size())
     }
 
     @Test

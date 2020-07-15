@@ -326,6 +326,23 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     @Test
+    def ignoreHiddenUndefinedSubstOfDifferentType() {
+        // if a substitution is overridden then it shouldn't matter that it's undefined
+        val obj = parseObject("""
+foo = ""
+foo {
+  bar = ${override-me}
+}
+foo {
+  bar = "bar"
+}                                 
+""")
+
+        val resolved = resolve(obj)
+        assertEquals("bar", resolved.getString("foo.bar"))
+    }
+
+    @Test
     def objectDoesNotHideUndefinedSubst() {
         // if a substitution is overridden by an object we still need to
         // evaluate the substitution
