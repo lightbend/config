@@ -11,8 +11,7 @@ import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueType;
 
 /**
- * ConfigReference replaces ConfigReference (the older class kept for back
- * compat) and represents the ${} substitution syntax. It can resolve to any
+ * ConfigReference represents the ${} substitution syntax. It can resolve to any
  * kind of value.
  */
 final class ConfigReference extends AbstractConfigValue implements Unmergeable {
