@@ -129,9 +129,18 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
             if (ConfigImpl.traceSubstitutionsEnabled())
                 ConfigImpl.trace(newContext.depth(), "Resolving highest-priority item in delayed merge " + end
                         + " against " + sourceForEnd + " endWasRemoved=" + (source != sourceForEnd));
-            ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(end, sourceForEnd);
-            AbstractConfigValue resolvedEnd = result.value;
-            newContext = result.context;
+
+
+            AbstractConfigValue resolvedEnd = null;
+            try {
+                ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(end, sourceForEnd);
+                resolvedEnd = result.value;
+                newContext = result.context;
+            } catch (ConfigException.UnresolvedSubstitution e) {
+                if (!shouldIgnoreUnresolvedSubstitutionFor(merged, end)) {
+                    throw e;
+                }
+            }
 
             if (resolvedEnd != null) {
                 if (merged == null) {
@@ -150,6 +159,17 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         }
 
         return ResolveResult.make(newContext, merged);
+    }
+
+    private static boolean shouldIgnoreUnresolvedSubstitutionFor(AbstractConfigValue merged, AbstractConfigValue end) {
+        if (merged instanceof AbstractConfigObject && end instanceof AbstractConfigObject) {
+
+            AbstractConfigObject mergedObject = (AbstractConfigObject) merged;
+            AbstractConfigObject endObject = (AbstractConfigObject) end;
+
+            return mergedObject.keySet().containsAll(endObject.keySet());
+        }
+        return false;
     }
 
     @Override

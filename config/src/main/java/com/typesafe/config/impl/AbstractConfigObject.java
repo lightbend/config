@@ -136,18 +136,6 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
 
     @Override
     public AbstractConfigObject withFallback(ConfigMergeable mergeable) {
-        if (ignoresFallbacks()) {
-            return this;
-        }
-        
-        if (mergeable instanceof ConfigString
-                || mergeable instanceof ConfigNumber
-                || mergeable instanceof ConfigBoolean) {
-            return resolveStatus() == ResolveStatus.RESOLVED 
-                    ? (AbstractConfigObject) withFallbacksIgnored()
-                    : this;
-        }
-
         return (AbstractConfigObject) super.withFallback(mergeable);
     }
 
