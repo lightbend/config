@@ -326,10 +326,52 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     @Test
+    def ignoreHiddenUndefinedSubstNestedInsideObject() {
+        val obj = parseObject("""
+foo {
+  bar = ${override-me}
+}
+foo {
+  bar = "bar"
+}
+""")
+
+        val resolved = resolve(obj)
+        assertEquals("bar", resolved.getString("foo.bar"))
+    }
+
+    @Test
+    def ignoreHiddenUndefinedSubstNestedInsideObjectWhenOverridingNonObject() {
+        val obj = parseObject("""
+foo = ""
+foo {
+  bar = ${override-me}
+}
+foo {
+  bar = "bar"
+}
+""")
+
+        val resolved = resolve(obj)
+        assertEquals("bar", resolved.getString("foo.bar"))
+    }
+
+    @Test
     def objectDoesNotHideUndefinedSubst() {
         // if a substitution is overridden by an object we still need to
         // evaluate the substitution
         val obj = parseObject("""a=${nonexistent},a={ b : 42 }""")
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("Could not resolve"))
+    }
+
+    @Test
+    def objectDoesNotHideNestedUndefinedSubst() {
+        // if a substitution nested inside an object is overridden by an object we still need to
+        // evaluate the substitution
+        val obj = parseObject("""a.b=${nonexistent},a.b={ c : 42 }""")
         val e = intercept[ConfigException.UnresolvedSubstitution] {
             resolve(obj)
         }

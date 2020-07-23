@@ -189,6 +189,34 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         return new ConfigDelayedMerge(origin, stack);
     }
 
+    static protected List<AbstractConfigValue> consolidateObjects(Collection<AbstractConfigValue> stack) {
+        // this matters because when we resolve a delayed merge, we're going to walk over the
+        // stack resolving each item; if we have two objects in the stack that haven't been
+        // merged, then we would resolve things more aggressively than actually required.
+        // For example, if we have:
+        // foo : { bar : ${undefined} }
+        // foo : { bar : 42 }
+        // then we want to merge the two values of foo before we try to resolve them recursively,
+        // which will mean that the "bar : 42" wins and we never try to resolve ${undefined}.
+        List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
+        for (AbstractConfigValue v : stack) {
+            if (newStack.isEmpty()) {
+                newStack.add(v);
+            } else {
+                AbstractConfigValue previous = newStack.get(newStack.size() - 1);
+                // this feels like a pretty big kluge but not sure yet how to do it more nicely.
+                if (previous instanceof AbstractConfigObject && v instanceof AbstractConfigObject) {
+                    newStack.remove(newStack.size() - 1);
+                    newStack.add(previous.withFallback(v));
+                } else {
+                    newStack.add(v);
+                }
+            }
+        }
+
+        return newStack;
+    }
+
     protected final AbstractConfigValue mergedWithTheUnmergeable(
             Collection<AbstractConfigValue> stack, Unmergeable fallback) {
         requireNotIgnoringFallbacks();
@@ -198,7 +226,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
         newStack.addAll(stack);
         newStack.addAll(fallback.unmergedValues());
-        return constructDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack);
+        return constructDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), consolidateObjects(newStack));
     }
 
     private final AbstractConfigValue delayMerge(Collection<AbstractConfigValue> stack,
@@ -210,7 +238,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         List<AbstractConfigValue> newStack = new ArrayList<AbstractConfigValue>();
         newStack.addAll(stack);
         newStack.add(fallback);
-        return constructDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), newStack);
+        return constructDelayedMerge(AbstractConfigObject.mergeOrigins(newStack), consolidateObjects(newStack));
     }
 
     protected final AbstractConfigValue mergedWithObject(Collection<AbstractConfigValue> stack,
