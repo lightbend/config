@@ -24,3 +24,8 @@ more revision will likely be needed.
 # Making a release
 
 See RELEASING.md
+
+# Running the single test you're working on
+
+I tend to forget this sbt syntax, in the sbt shell:
+`testOnly -- -Dconfig.trace=substitutions --tests=nameOfTestMethod`
