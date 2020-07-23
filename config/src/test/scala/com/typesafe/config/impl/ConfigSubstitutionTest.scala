@@ -357,6 +357,23 @@ foo {
     }
 
     @Test
+    def ignoreHiddenUndefinedSubstIndirectlyNestedInsideObjectWhenOverridingNonObject() {
+        val obj = parseObject("""
+containsundefined {
+  bar = ${override-me}
+}
+foo = ""
+foo = ${containsundefined}
+foo {
+  bar = "bar"
+}
+""")
+
+        val resolved = resolve(obj)
+        assertEquals("bar", resolved.getString("foo.bar"))
+    }
+
+    @Test
     def objectDoesNotHideUndefinedSubst() {
         // if a substitution is overridden by an object we still need to
         // evaluate the substitution
