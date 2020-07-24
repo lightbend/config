@@ -32,8 +32,12 @@ final class ResolveContext {
         this.memos = memos;
         this.options = options;
         this.restrictToChild = restrictToChild;
-        this.resolveStack = Collections.unmodifiableList(resolveStack);
-        this.cycleMarkers = Collections.unmodifiableSet(cycleMarkers);
+        // we don't defensively copy/wrap these because Collections.unmodifiableList etc.
+        // nest infinitely in a way that causes stack overflow (they don't check to avoid
+        // multiple wrappers). But they should be treated as immutable because they end
+        // up shared between multiple ResolveContext.
+        this.resolveStack = resolveStack;
+        this.cycleMarkers = cycleMarkers;
     }
 
     private static Set<AbstractConfigValue> newCycleMarkers() {
