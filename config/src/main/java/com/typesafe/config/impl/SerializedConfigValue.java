@@ -43,6 +43,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
     // this is the version used by Java serialization, if it increments it's
     // essentially an ABI break and bad
     private static final long serialVersionUID = 1L;
+    private static final int MAX_BYTES_LENGTH = 65535;
 
     // this is how we try to be extensible
     static enum SerializedField {
