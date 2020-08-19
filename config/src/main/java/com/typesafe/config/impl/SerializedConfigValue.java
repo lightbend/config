@@ -287,6 +287,16 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
                 m.put(field, v);
         }
     }
+    
+   private static Collection<String> splitt(String value, int charSize) {
+        List<String> strings = new ArrayList<String>();
+        int index = 0;
+        while (index < value.length()) {
+            strings.add(value.substring(index, Math.min(index + charSize, value.length())));
+            index += charSize;
+        }
+        return strings;
+    }
 
     private static void writeValueData(DataOutput out, ConfigValue value) throws IOException {
         SerializedValueType st = SerializedValueType.forValue(value);
@@ -311,7 +321,19 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             out.writeUTF(((ConfigNumber) value).transformToString());
             break;
         case STRING:
-            out.writeUTF(((ConfigString) value).unwrapped());
+            String strVal = ((ConfigString) value).unwrapped();
+            List<String> values = new ArrayList<>();
+            if (strVal.getBytes().length >= MAX_BYTES_LENGTH) {
+                    values.addAll(splitt(strVal, 32767));
+            } else {
+                    values.add(strVal);
+                }
+
+            out.writeInt(values.size());
+            for (String evalue : values) {
+                out.writeUTF(evalue);
+            }
+
             break;
         case LIST:
             ConfigList list = (ConfigList) value;
@@ -355,7 +377,12 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             String sd = in.readUTF();
             return new ConfigDouble(origin, vd, sd);
         case STRING:
-            return new ConfigString.Quoted(origin, in.readUTF());
+            int read_times = in.readInt();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < read_times; i++){
+                sb.append(in.readUTF());
+            }
+            return new ConfigString.Quoted(origin, sb.toString());
         case LIST:
             int listSize = in.readInt();
             List<AbstractConfigValue> list = new ArrayList<AbstractConfigValue>(listSize);
