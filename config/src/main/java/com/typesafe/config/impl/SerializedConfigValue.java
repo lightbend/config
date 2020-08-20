@@ -389,6 +389,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             for (int i = 0; i < read_times; i++){
                 sb.append(in.readUTF());
             }
+             longStr = false;
             return new ConfigString.Quoted(origin, sb.toString());
         case LIST:
             int listSize = in.readInt();
