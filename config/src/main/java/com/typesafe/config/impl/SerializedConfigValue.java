@@ -44,6 +44,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
     // essentially an ABI break and bad
     private static final long serialVersionUID = 1L;
     private static final int MAX_BYTES_LENGTH = 65535;
+    private static boolean longStr = false;
 
     // this is how we try to be extensible
     static enum SerializedField {
@@ -324,14 +325,16 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             break;
         case STRING:
             String strVal = ((ConfigString) value).unwrapped();
+            if (strVal.length() > MAX_BYTES_LENGTH)
+                longStr = true;
             List<String> values = new ArrayList<>();
             if (strVal.getBytes().length >= MAX_BYTES_LENGTH) {
                     values.addAll(splitt(strVal, 32767));
             } else {
                     values.add(strVal);
                 }
-
-            out.writeInt(values.size());
+            if (longStr)
+                out.writeInt(values.size());
             for (String evalue : values) {
                 out.writeUTF(evalue);
             }
@@ -379,7 +382,9 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             String sd = in.readUTF();
             return new ConfigDouble(origin, vd, sd);
         case STRING:
-            int read_times = in.readInt();
+            int read_times = 1;
+            if (longStr)
+                read_times = in.readInt();
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < read_times; i++){
                 sb.append(in.readUTF());
