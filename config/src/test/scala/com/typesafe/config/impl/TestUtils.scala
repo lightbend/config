@@ -258,6 +258,27 @@ abstract trait TestUtils {
 
         b.asInstanceOf[T]
     }
+    
+    
+    protected def checkSerializableLongStringComp(o: SerializedConfigValue) = {
+        assertTrue(o.getClass.getSimpleName + " not an instance of Serializable", o.isInstanceOf[java.io.Serializable])
+
+        val a = o.asInstanceOf[java.io.Serializable]
+
+        val b = try {
+            copyViaSerialize(a)
+        } catch {
+            case nf: ClassNotFoundException =>
+                throw new AssertionError("failed to make a copy via serialization, " +
+                    "possibly caused by http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6446627",
+                    nf)
+            case e: Exception =>
+                e.printStackTrace(System.err)
+                throw new AssertionError("failed to make a copy via serialization", e)
+        }
+
+        b.asInstanceOf[ConfigValue]
+    }
 
     protected def checkSerializable[T: Manifest](o: T): T = {
         checkEqualObjects(o, o)
