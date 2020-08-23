@@ -883,6 +883,18 @@ class ConfigValueTest extends TestUtils {
         assertEquals(parseConfig("a.b=42"), config)
         assertEquals(42, config.getInt("a.b"))
     }
+    
+    @Test
+    def serializeLongStringTest() {
+        var str = "A long long String"
+        var i = 0
+        for (i <- 0 to 10000)
+            str += "HelloHelloHello"
+        val v = ConfigValueFactory.fromAnyRef(str)
+        val concertTicket = new SerializedConfigValue(v)
+        val output = checkSerializableLongStringComp(concertTicket)
+        assertEquals(str, output.unwrapped)
+
 
     @Test
     def withValueInsideExistingObject() {
