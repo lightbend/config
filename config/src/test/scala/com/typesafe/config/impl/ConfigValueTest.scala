@@ -894,6 +894,7 @@ class ConfigValueTest extends TestUtils {
         val concertTicket = new SerializedConfigValue(v)
         val output = checkSerializableLongStringComp(concertTicket)
         assertEquals(str, output.unwrapped)
+    }
 
 
     @Test
