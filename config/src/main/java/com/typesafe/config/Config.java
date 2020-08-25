@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  * You can find an example app and library <a
  * href="https://github.com/lightbend/config/tree/master/examples">on
  * GitHub</a>. Also be sure to read the <a
- * href="package-summary.html#package_description">package overview</a> which
+ * href="package-summary.html#package.description">package overview</a> which
  * describes the big picture as shown in those examples.
  * 
  * <p>
