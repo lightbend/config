@@ -356,7 +356,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
         }
     }
 
-    private static AbstractConfigValue readValueData(DataInput in, SimpleConfigOrigin origin, int readTimes)
+    private static AbstractConfigValue readValueData(DataInput in, SimpleConfigOrigin origin, int l)
             throws IOException {
         int stb = in.readUnsignedByte();
         SerializedValueType st = SerializedValueType.forInt(stb);
@@ -380,7 +380,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             String sd = in.readUTF();
             return new ConfigDouble(origin, vd, sd);
         case STRING:
-
+            int readTimes =  l/ MAX_BYTES_LENGTH + ((l % MAX_BYTES_LENGTH == 0) ? 0 : 1);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < readTimes; i++){
                 sb.append(in.readUTF());
@@ -434,9 +434,8 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             } else if (code == SerializedField.VALUE_DATA) {
                 if (origin == null)
                     throw new IOException("Origin must be stored before value data");
-                in.readInt(); // discard length
-                int readTimes =  l/ MAX_BYTES_LENGTH + ((l % MAX_BYTES_LENGTH == 0) ? 0 : 1);
-                value = readValueData(in, origin, readTimes);
+                int l = in.readInt(); // discard length
+                value = readValueData(in, origin, l);
   
             } else if (code == SerializedField.VALUE_ORIGIN) {
                 in.readInt(); // discard length
