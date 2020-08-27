@@ -44,11 +44,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
     // essentially an ABI break and bad
     private static final long serialVersionUID = 1L;
     private static final int MAX_BYTES_LENGTH = 65535;
-    private static boolean longStr = false; //serves as a signal between writeValueData() and readValueData(). 
-    //If a long string is written by calling writeValueData(), its storage size is also recorded. 
-    //Thus, the subsequent readDataValue() will first read the size and decide how many times it should call readUTF() 
-    //to finish reading the whole string. 
-    //Otherwise, readValueData() will read strings directly using a single readUTF().
+
 
     // this is how we try to be extensible
     static enum SerializedField {
@@ -329,16 +325,14 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             break;
         case STRING:
             String strVal = ((ConfigString) value).unwrapped();
-            if (strVal.length() > MAX_BYTES_LENGTH)
-                longStr = true;
+ 
             List<String> values = new ArrayList<>();
             if (strVal.getBytes().length >= MAX_BYTES_LENGTH) {
                     values.addAll(split(strVal, MAX_BYTES_LENGTH));
             } else {
                     values.add(strVal);
                 }
-            if (longStr)
-                out.writeInt(values.size());
+ 
             for (String evalue : values) {
                 out.writeUTF(evalue);
             }
@@ -362,7 +356,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
         }
     }
 
-    private static AbstractConfigValue readValueData(DataInput in, SimpleConfigOrigin origin)
+    private static AbstractConfigValue readValueData(DataInput in, SimpleConfigOrigin origin, int readTimes)
             throws IOException {
         int stb = in.readUnsignedByte();
         SerializedValueType st = SerializedValueType.forInt(stb);
@@ -386,14 +380,11 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             String sd = in.readUTF();
             return new ConfigDouble(origin, vd, sd);
         case STRING:
-            int read_times = 1;
-            if (longStr)
-                read_times = in.readInt();
+
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < read_times; i++){
+            for (int i = 0; i < readTimes; i++){
                 sb.append(in.readUTF());
             }
-             longStr = false;
             return new ConfigString.Quoted(origin, sb.toString());
         case LIST:
             int listSize = in.readInt();
@@ -444,7 +435,9 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
                 if (origin == null)
                     throw new IOException("Origin must be stored before value data");
                 in.readInt(); // discard length
-                value = readValueData(in, origin);
+                int readTimes =  l/ MAX_BYTES_LENGTH + ((l % MAX_BYTES_LENGTH == 0) ? 0 : 1);
+                value = readValueData(in, origin, readTimes);
+  
             } else if (code == SerializedField.VALUE_ORIGIN) {
                 in.readInt(); // discard length
                 origin = readOrigin(in, baseOrigin);
