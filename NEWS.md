@@ -1,3 +1,9 @@
+# 1.4.1: September 22, 2020
+
+- Added support for memory units which don't fit in a long when transformed to bytes [#172](https://github.com/lightbend/config/issues/172)
+- Avoid loading all the environment variables as configurations [#686](https://github.com/lightbend/config/pull/686)
+- Fix for StackOverflowError when OS has a lot of environment variables [#700](https://github.com/lightbend/config/issues/700)
+
 # 1.4.0: October 11, 2019
 
 - `application.conf` variables can now override variables in `reference.conf` [#619](https://github.com/lightbend/config/issues/167)
