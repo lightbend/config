@@ -1095,6 +1095,29 @@ public final class ConfigFactory {
     /**
      * Parse only any application replacement (specified by one of config.{resource,file,url}), returning
      * an empty Config if no overrides were set.
+     *
+     * @return a {@link java.util.Optional} containing any specified replacement, or {@link Optional#empty()}
+     * if none was specified.
+     */
+    public static java.util.Optional<Config> parseApplicationReplacement() {
+        return parseApplicationReplacement(ConfigParseOptions.defaults());
+    }
+
+    /**
+     * Like {@link #parseApplicationReplacement()} but allows you to specify a class loader
+     * ti yse rather than the current context class loader.
+     *
+     * @param loader the class loader
+     * @return a {@link java.util.Optional} containing any specified replacement, or {@link Optional#empty()}
+     * if none was specified.
+     */
+    public static java.util.Optional<Config> parseApplicationReplacement(ClassLoader loader) {
+        return parseApplicationReplacement(ConfigParseOptions.defaults().setClassLoader(loader));
+    }
+
+    /**
+     * Like {@link #parseApplicationReplacement()} but allows you to specify parse options.
+     *
      * @param parseOptions parse options
      * @return a {@link java.util.Optional} containing any specified replacement, or {@link Optional#empty()}
      * if none was specified.
