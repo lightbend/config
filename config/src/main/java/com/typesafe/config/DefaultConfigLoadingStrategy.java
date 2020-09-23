@@ -1,11 +1,5 @@
 package com.typesafe.config;
 
-import com.typesafe.config.impl.*;
-
-import java.io.File;
-import java.net.MalformedURLException;
-import java.net.URL;
-
 /**
  * Default config loading strategy. Able to load resource, file or URL.
  * Behavior may be altered by defining one of VM properties
