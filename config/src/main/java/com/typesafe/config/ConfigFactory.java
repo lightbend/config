@@ -1123,12 +1123,8 @@ public final class ConfigFactory {
      * if none was specified.
      */
     public static java.util.Optional<Config> parseApplicationReplacement(ConfigParseOptions parseOptions) {
+        ensureClassLoader(parseOptions, "parseApplicationReplacement");
         ClassLoader loader = parseOptions.getClassLoader();
-
-        if (loader == null)
-            throw new ConfigException.BugOrBroken(
-                "ClassLoader should have been set here; bug in ConfigFactory. "
-                    + "(You can probably work around this bug by passing in a class loader or calling currentThread().setContextClassLoader() though.)");
 
         int specified = 0;
 
