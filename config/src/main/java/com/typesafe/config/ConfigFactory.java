@@ -11,6 +11,7 @@ import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
@@ -1095,9 +1096,10 @@ public final class ConfigFactory {
      * Parse only any application replacement (specified by one of config.{resource,file,url}), returning
      * an empty Config if no overrides were set.
      * @param parseOptions parse options
-     * @return the parsed configuration
+     * @return a {@link java.util.Optional} containing any specified replacement, or {@link Optional#empty()}
+     * if none was specified.
      */
-    public static Config parseApplicationReplacement(ConfigParseOptions parseOptions) {
+    public static java.util.Optional<Config> parseApplicationReplacement(ConfigParseOptions parseOptions) {
         ClassLoader loader = parseOptions.getClassLoader();
 
         if (loader == null)
@@ -1120,7 +1122,7 @@ public final class ConfigFactory {
             specified += 1;
 
         if (specified == 0) {
-            return ConfigImpl.emptyConfig("TODO: what to put here? Should something else be returned?");
+            return java.util.Optional.empty();
         } else if (specified > 1) {
             throw new ConfigException.Generic("You set more than one of config.file='" + file
                 + "', config.url='" + url + "', config.resource='" + resource
@@ -1133,12 +1135,12 @@ public final class ConfigFactory {
                     resource = resource.substring(1);
                 // this deliberately does not parseResourcesAnySyntax; if
                 // people want that they can use an include statement.
-                return ConfigFactory.parseResources(loader, resource, overrideOptions);
+                return java.util.Optional.of(ConfigFactory.parseResources(loader, resource, overrideOptions));
             } else if (file != null) {
-                return ConfigFactory.parseFile(new File(file), overrideOptions);
+                return java.util.Optional.of(ConfigFactory.parseFile(new File(file), overrideOptions));
             } else {
                 try {
-                    return ConfigFactory.parseURL(new URL(url), overrideOptions);
+                    return java.util.Optional.of(ConfigFactory.parseURL(new URL(url), overrideOptions));
                 } catch (MalformedURLException e) {
                     throw new ConfigException.Generic("Bad URL in config.url system property: '"
                         + url + "': " + e.getMessage(), e);

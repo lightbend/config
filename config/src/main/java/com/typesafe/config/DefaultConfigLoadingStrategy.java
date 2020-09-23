@@ -8,11 +8,7 @@ package com.typesafe.config;
 public class DefaultConfigLoadingStrategy implements ConfigLoadingStrategy {
     @Override
     public Config parseApplicationConfig(ConfigParseOptions parseOptions) {
-        Config applicationReplacement = ConfigFactory.parseApplicationReplacement(parseOptions);
-        if (applicationReplacement.isEmpty()) {
-            return ConfigFactory.parseResourcesAnySyntax("application", parseOptions);
-        } else {
-            return applicationReplacement;
-        }
+        return ConfigFactory.parseApplicationReplacement(parseOptions)
+            .orElseGet(() -> ConfigFactory.parseResourcesAnySyntax("application", parseOptions));
     }
 }
