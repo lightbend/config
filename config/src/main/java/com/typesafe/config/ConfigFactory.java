@@ -8,8 +8,10 @@ import com.typesafe.config.impl.Parseable;
 
 import java.io.File;
 import java.io.Reader;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.Callable;
 
@@ -1088,6 +1090,89 @@ public final class ConfigFactory {
      */
     public static Config parseResourcesAnySyntax(String resourceBasename) {
         return parseResourcesAnySyntax(resourceBasename, ConfigParseOptions.defaults());
+    }
+
+    /**
+     * Parse only any application replacement (specified by one of config.{resource,file,url}), returning
+     * an empty Config if no overrides were set.
+     *
+     * @since 1.4.1
+     *
+     * @return a {@link java.util.Optional} containing any specified replacement, or {@link Optional#empty()}
+     * if none was specified.
+     */
+    public static java.util.Optional<Config> parseApplicationReplacement() {
+        return parseApplicationReplacement(ConfigParseOptions.defaults());
+    }
+
+    /**
+     * Like {@link #parseApplicationReplacement()} but allows you to specify a class loader
+     * ti yse rather than the current context class loader.
+     *
+     * @since 1.4.1
+     *
+     * @param loader the class loader
+     * @return a {@link java.util.Optional} containing any specified replacement, or {@link Optional#empty()}
+     * if none was specified.
+     */
+    public static java.util.Optional<Config> parseApplicationReplacement(ClassLoader loader) {
+        return parseApplicationReplacement(ConfigParseOptions.defaults().setClassLoader(loader));
+    }
+
+    /**
+     * Like {@link #parseApplicationReplacement()} but allows you to specify parse options.
+     *
+     * @since 1.4.1
+     *
+     * @param parseOptions parse options
+     * @return a {@link java.util.Optional} containing any specified replacement, or {@link Optional#empty()}
+     * if none was specified.
+     */
+    public static java.util.Optional<Config> parseApplicationReplacement(ConfigParseOptions parseOptions) {
+        ensureClassLoader(parseOptions, "parseApplicationReplacement");
+        ClassLoader loader = parseOptions.getClassLoader();
+
+        int specified = 0;
+
+        // override application.conf with config.file, config.resource,
+        // config.url if requested.
+        String resource = System.getProperty("config.resource");
+        if (resource != null)
+            specified += 1;
+        String file = System.getProperty("config.file");
+        if (file != null)
+            specified += 1;
+        String url = System.getProperty("config.url");
+        if (url != null)
+            specified += 1;
+
+        if (specified == 0) {
+            return java.util.Optional.empty();
+        } else if (specified > 1) {
+            throw new ConfigException.Generic("You set more than one of config.file='" + file
+                + "', config.url='" + url + "', config.resource='" + resource
+                + "'; don't know which one to use!");
+        } else {
+            // the override file/url/resource MUST be present or it's an error
+            ConfigParseOptions overrideOptions = parseOptions.setAllowMissing(false);
+            if (resource != null) {
+                if (resource.startsWith("/"))
+                    resource = resource.substring(1);
+                // this deliberately does not parseResourcesAnySyntax; if
+                // people want that they can use an include statement.
+                return java.util.Optional.of(ConfigFactory.parseResources(loader, resource, overrideOptions));
+            } else if (file != null) {
+                return java.util.Optional.of(ConfigFactory.parseFile(new File(file), overrideOptions));
+            } else {
+                try {
+                    return java.util.Optional.of(ConfigFactory.parseURL(new URL(url), overrideOptions));
+                } catch (MalformedURLException e) {
+                    throw new ConfigException.Generic("Bad URL in config.url system property: '"
+                        + url + "': " + e.getMessage(), e);
+                }
+            }
+        }
+
     }
 
     /**
