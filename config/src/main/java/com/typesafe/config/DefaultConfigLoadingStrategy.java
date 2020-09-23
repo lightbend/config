@@ -8,11 +8,11 @@ package com.typesafe.config;
 public class DefaultConfigLoadingStrategy implements ConfigLoadingStrategy {
     @Override
     public Config parseApplicationConfig(ConfigParseOptions parseOptions) {
-        Config overrideConfig = ConfigFactory.parseApplicationOverride(parseOptions);
-        if (overrideConfig.isEmpty()) {
+        Config applicationReplacement = ConfigFactory.parseApplicationReplacement(parseOptions);
+        if (applicationReplacement.isEmpty()) {
             return ConfigFactory.parseResourcesAnySyntax("application", parseOptions);
         } else {
-            return overrideConfig;
+            return applicationReplacement;
         }
     }
 }

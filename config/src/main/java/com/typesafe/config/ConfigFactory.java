@@ -1091,12 +1091,12 @@ public final class ConfigFactory {
     }
 
     /**
-     * Parse only any application overrides (those specified by config.{resource,file,url}), returning
+     * Parse only any application replacement (specified by one of config.{resource,file,url}), returning
      * an empty Config if no overrides were set.
      * @param parseOptions parse options
      * @return the parsed configuration
      */
-    public static Config parseApplicationOverride(ConfigParseOptions parseOptions) {
+    public static Config parseApplicationReplacement(ConfigParseOptions parseOptions) {
         ClassLoader loader = parseOptions.getClassLoader();
 
         if (loader == null)
