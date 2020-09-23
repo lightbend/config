@@ -8,7 +8,8 @@ import com.typesafe.config.impl.Parseable;
 
 import java.io.File;
 import java.io.Reader;
-import java.net.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Callable;
