@@ -684,6 +684,20 @@ With this option enabled only environment variables starting with
 i.e. The environment variable `CONFIG_FORCE_a_b__c___d` set the
 configuration key `a.b-c_d`
 
+### Set array values from env variables
+
+Setting the value of array items from environment variables requires
+specifing the index in the array for the value. So, while in HOCON 
+you can set multiple values into an array or append to an array:
+
+    ## HOCON
+    items = ["a", "b"]
+    items += "c"
+
+using java arguments you specify the exact position:
+
+    -Ditems.0="a" -Ditems.1="b"
+
 ### Concatenation
 
 Values _on the same line_ are concatenated (for strings and
