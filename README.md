@@ -694,7 +694,7 @@ you can set multiple values into an array or append to an array:
     items = ["a", "b"]
     items += "c"
 
-using environment variables you specify the exact position:
+using java arguments you specify the exact position:
 
     -Ditems.0="a" -Ditems.1="b"
 
