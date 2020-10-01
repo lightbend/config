@@ -686,7 +686,7 @@ configuration key `a.b-c_d`
 
 ### Set array values from env variables
 
-Setting the value of array items from environment variables requires
+Setting the value of array items from system properties requires
 specifing the index in the array for the value. So, while in HOCON 
 you can set multiple values into an array or append to an array:
 
@@ -694,7 +694,7 @@ you can set multiple values into an array or append to an array:
     items = ["a", "b"]
     items += "c"
 
-using java arguments you specify the exact position:
+Using java arguments you specify the exact position:
 
     -Ditems.0="a" -Ditems.1="b"
 
