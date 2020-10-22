@@ -1,8 +1,7 @@
 # 1.4.1: October 22, 2020
 
- - improve set array values section ([#711](/../../pull/771)) thanks to [@andreaTP](https://github.com/andreaTP)
- - introduce docs for arrays on env vars ([#706](/../../pull/706)) and ([#710](/../../pull/710)) thanks to [@ignasi35](https://github.com/ignasi35)
- - split out a helper method for parsing only application overrides ([#708](/../../pull/708)) and ([#709](/../../pull/709)) thanks to [@bbaldino](https://github.com/bbaldino)
+ - introduce docs for arrays on env vars ([#706](/../../pull/706)), ([#710](/../../pull/710)) and ([#711](/../../pull/771)) thanks to [@ignasi35](https://github.com/ignasi35) and [@andreaTP](https://github.com/andreaTP)
+ - add a helper method for parsing only application overrides ([#708](/../../pull/708)) and ([#709](/../../pull/709)) thanks to [@bbaldino](https://github.com/bbaldino)
  - remove unmodifiable collection wrappers in ResolveContext ([#701](/../../pull/701)) thanks to [@havocp](https://github.com/havocp)
  - support for huge memory units ([#663](/../../pull/663)) thanks to [@mpryahin](https://github.com/mpryahin)
  - inherit optional and getter evaluation ([#660](/../../pull/660)) thanks to [@derKrischan](https://github.com/derKrischan)
