@@ -292,168 +292,180 @@
 <span class="sourceLineNo">284</span>    public static class UnresolvedSubstitution extends Parse {<a name="line.284"></a>
 <span class="sourceLineNo">285</span>        private static final long serialVersionUID = 1L;<a name="line.285"></a>
 <span class="sourceLineNo">286</span><a name="line.286"></a>
-<span class="sourceLineNo">287</span>        public UnresolvedSubstitution(ConfigOrigin origin, String detail, Throwable cause) {<a name="line.287"></a>
-<span class="sourceLineNo">288</span>            super(origin, "Could not resolve substitution to a value: " + detail, cause);<a name="line.288"></a>
-<span class="sourceLineNo">289</span>        }<a name="line.289"></a>
-<span class="sourceLineNo">290</span><a name="line.290"></a>
-<span class="sourceLineNo">291</span>        public UnresolvedSubstitution(ConfigOrigin origin, String detail) {<a name="line.291"></a>
-<span class="sourceLineNo">292</span>            this(origin, detail, null);<a name="line.292"></a>
-<span class="sourceLineNo">293</span>        }<a name="line.293"></a>
-<span class="sourceLineNo">294</span>    }<a name="line.294"></a>
-<span class="sourceLineNo">295</span><a name="line.295"></a>
-<span class="sourceLineNo">296</span>    /**<a name="line.296"></a>
-<span class="sourceLineNo">297</span>     * Exception indicating that you tried to use a function that requires<a name="line.297"></a>
-<span class="sourceLineNo">298</span>     * substitutions to be resolved, but substitutions have not been resolved<a name="line.298"></a>
-<span class="sourceLineNo">299</span>     * (that is, {@link Config#resolve} was not called). This is always a bug in<a name="line.299"></a>
-<span class="sourceLineNo">300</span>     * either application code or the library; it's wrong to write a handler for<a name="line.300"></a>
-<span class="sourceLineNo">301</span>     * this exception because you should be able to fix the code to avoid it by<a name="line.301"></a>
-<span class="sourceLineNo">302</span>     * adding calls to {@link Config#resolve}.<a name="line.302"></a>
-<span class="sourceLineNo">303</span>     */<a name="line.303"></a>
-<span class="sourceLineNo">304</span>    public static class NotResolved extends BugOrBroken {<a name="line.304"></a>
-<span class="sourceLineNo">305</span>        private static final long serialVersionUID = 1L;<a name="line.305"></a>
-<span class="sourceLineNo">306</span><a name="line.306"></a>
-<span class="sourceLineNo">307</span>        public NotResolved(String message, Throwable cause) {<a name="line.307"></a>
-<span class="sourceLineNo">308</span>            super(message, cause);<a name="line.308"></a>
-<span class="sourceLineNo">309</span>        }<a name="line.309"></a>
-<span class="sourceLineNo">310</span><a name="line.310"></a>
-<span class="sourceLineNo">311</span>        public NotResolved(String message) {<a name="line.311"></a>
-<span class="sourceLineNo">312</span>            this(message, null);<a name="line.312"></a>
-<span class="sourceLineNo">313</span>        }<a name="line.313"></a>
-<span class="sourceLineNo">314</span>    }<a name="line.314"></a>
-<span class="sourceLineNo">315</span><a name="line.315"></a>
-<span class="sourceLineNo">316</span>    /**<a name="line.316"></a>
-<span class="sourceLineNo">317</span>     * Information about a problem that occurred in {@link Config#checkValid}. A<a name="line.317"></a>
-<span class="sourceLineNo">318</span>     * {@link ConfigException.ValidationFailed} exception thrown from<a name="line.318"></a>
-<span class="sourceLineNo">319</span>     * &lt;code&gt;checkValid()&lt;/code&gt; includes a list of problems encountered.<a name="line.319"></a>
-<span class="sourceLineNo">320</span>     */<a name="line.320"></a>
-<span class="sourceLineNo">321</span>    public static class ValidationProblem implements Serializable {<a name="line.321"></a>
+<span class="sourceLineNo">287</span>        private final String detail;<a name="line.287"></a>
+<span class="sourceLineNo">288</span><a name="line.288"></a>
+<span class="sourceLineNo">289</span>        public UnresolvedSubstitution(ConfigOrigin origin, String detail, Throwable cause) {<a name="line.289"></a>
+<span class="sourceLineNo">290</span>            super(origin, "Could not resolve substitution to a value: " + detail, cause);<a name="line.290"></a>
+<span class="sourceLineNo">291</span>            this.detail = detail;<a name="line.291"></a>
+<span class="sourceLineNo">292</span>        }<a name="line.292"></a>
+<span class="sourceLineNo">293</span><a name="line.293"></a>
+<span class="sourceLineNo">294</span>        public UnresolvedSubstitution(ConfigOrigin origin, String detail) {<a name="line.294"></a>
+<span class="sourceLineNo">295</span>            this(origin, detail, null);<a name="line.295"></a>
+<span class="sourceLineNo">296</span>        }<a name="line.296"></a>
+<span class="sourceLineNo">297</span><a name="line.297"></a>
+<span class="sourceLineNo">298</span>        private UnresolvedSubstitution(UnresolvedSubstitution wrapped, ConfigOrigin origin, String message) {<a name="line.298"></a>
+<span class="sourceLineNo">299</span>            super(origin, message, wrapped);<a name="line.299"></a>
+<span class="sourceLineNo">300</span>            this.detail = wrapped.detail;<a name="line.300"></a>
+<span class="sourceLineNo">301</span>        }<a name="line.301"></a>
+<span class="sourceLineNo">302</span><a name="line.302"></a>
+<span class="sourceLineNo">303</span>        public UnresolvedSubstitution addExtraDetail(String extra) {<a name="line.303"></a>
+<span class="sourceLineNo">304</span>            return new UnresolvedSubstitution(this, origin(), String.format(extra, detail));<a name="line.304"></a>
+<span class="sourceLineNo">305</span>        }<a name="line.305"></a>
+<span class="sourceLineNo">306</span>    }<a name="line.306"></a>
+<span class="sourceLineNo">307</span><a name="line.307"></a>
+<span class="sourceLineNo">308</span>    /**<a name="line.308"></a>
+<span class="sourceLineNo">309</span>     * Exception indicating that you tried to use a function that requires<a name="line.309"></a>
+<span class="sourceLineNo">310</span>     * substitutions to be resolved, but substitutions have not been resolved<a name="line.310"></a>
+<span class="sourceLineNo">311</span>     * (that is, {@link Config#resolve} was not called). This is always a bug in<a name="line.311"></a>
+<span class="sourceLineNo">312</span>     * either application code or the library; it's wrong to write a handler for<a name="line.312"></a>
+<span class="sourceLineNo">313</span>     * this exception because you should be able to fix the code to avoid it by<a name="line.313"></a>
+<span class="sourceLineNo">314</span>     * adding calls to {@link Config#resolve}.<a name="line.314"></a>
+<span class="sourceLineNo">315</span>     */<a name="line.315"></a>
+<span class="sourceLineNo">316</span>    public static class NotResolved extends BugOrBroken {<a name="line.316"></a>
+<span class="sourceLineNo">317</span>        private static final long serialVersionUID = 1L;<a name="line.317"></a>
+<span class="sourceLineNo">318</span><a name="line.318"></a>
+<span class="sourceLineNo">319</span>        public NotResolved(String message, Throwable cause) {<a name="line.319"></a>
+<span class="sourceLineNo">320</span>            super(message, cause);<a name="line.320"></a>
+<span class="sourceLineNo">321</span>        }<a name="line.321"></a>
 <span class="sourceLineNo">322</span><a name="line.322"></a>
-<span class="sourceLineNo">323</span>        final private String path;<a name="line.323"></a>
-<span class="sourceLineNo">324</span>        final private transient ConfigOrigin origin;<a name="line.324"></a>
-<span class="sourceLineNo">325</span>        final private String problem;<a name="line.325"></a>
-<span class="sourceLineNo">326</span><a name="line.326"></a>
-<span class="sourceLineNo">327</span>        public ValidationProblem(String path, ConfigOrigin origin, String problem) {<a name="line.327"></a>
-<span class="sourceLineNo">328</span>            this.path = path;<a name="line.328"></a>
-<span class="sourceLineNo">329</span>            this.origin = origin;<a name="line.329"></a>
-<span class="sourceLineNo">330</span>            this.problem = problem;<a name="line.330"></a>
-<span class="sourceLineNo">331</span>        }<a name="line.331"></a>
-<span class="sourceLineNo">332</span><a name="line.332"></a>
-<span class="sourceLineNo">333</span>        /**<a name="line.333"></a>
-<span class="sourceLineNo">334</span>         * Returns the config setting causing the problem.<a name="line.334"></a>
-<span class="sourceLineNo">335</span>         * @return the path of the problem setting<a name="line.335"></a>
-<span class="sourceLineNo">336</span>         */<a name="line.336"></a>
-<span class="sourceLineNo">337</span>        public String path() {<a name="line.337"></a>
-<span class="sourceLineNo">338</span>            return path;<a name="line.338"></a>
-<span class="sourceLineNo">339</span>        }<a name="line.339"></a>
-<span class="sourceLineNo">340</span><a name="line.340"></a>
-<span class="sourceLineNo">341</span>        /**<a name="line.341"></a>
-<span class="sourceLineNo">342</span>         * Returns where the problem occurred (origin may include info on the<a name="line.342"></a>
-<span class="sourceLineNo">343</span>         * file, line number, etc.).<a name="line.343"></a>
-<span class="sourceLineNo">344</span>         * @return the origin of the problem setting<a name="line.344"></a>
-<span class="sourceLineNo">345</span>         */<a name="line.345"></a>
-<span class="sourceLineNo">346</span>        public ConfigOrigin origin() {<a name="line.346"></a>
-<span class="sourceLineNo">347</span>            return origin;<a name="line.347"></a>
-<span class="sourceLineNo">348</span>        }<a name="line.348"></a>
-<span class="sourceLineNo">349</span><a name="line.349"></a>
-<span class="sourceLineNo">350</span>        /**<a name="line.350"></a>
-<span class="sourceLineNo">351</span>         * Returns a description of the problem.<a name="line.351"></a>
-<span class="sourceLineNo">352</span>         * @return description of the problem<a name="line.352"></a>
-<span class="sourceLineNo">353</span>         */<a name="line.353"></a>
-<span class="sourceLineNo">354</span>        public String problem() {<a name="line.354"></a>
-<span class="sourceLineNo">355</span>            return problem;<a name="line.355"></a>
-<span class="sourceLineNo">356</span>        }<a name="line.356"></a>
-<span class="sourceLineNo">357</span><a name="line.357"></a>
-<span class="sourceLineNo">358</span>        // We customize serialization because ConfigOrigin isn't<a name="line.358"></a>
-<span class="sourceLineNo">359</span>        // serializable and we don't want it to be<a name="line.359"></a>
-<span class="sourceLineNo">360</span>        private void writeObject(java.io.ObjectOutputStream out) throws IOException {<a name="line.360"></a>
-<span class="sourceLineNo">361</span>            out.defaultWriteObject();<a name="line.361"></a>
-<span class="sourceLineNo">362</span>            ConfigImplUtil.writeOrigin(out, origin);<a name="line.362"></a>
-<span class="sourceLineNo">363</span>        }<a name="line.363"></a>
-<span class="sourceLineNo">364</span><a name="line.364"></a>
-<span class="sourceLineNo">365</span>        private void readObject(java.io.ObjectInputStream in) throws IOException,<a name="line.365"></a>
-<span class="sourceLineNo">366</span>                ClassNotFoundException {<a name="line.366"></a>
-<span class="sourceLineNo">367</span>            in.defaultReadObject();<a name="line.367"></a>
-<span class="sourceLineNo">368</span>            ConfigOrigin origin = ConfigImplUtil.readOrigin(in);<a name="line.368"></a>
-<span class="sourceLineNo">369</span>            setOriginField(this, ValidationProblem.class, origin);<a name="line.369"></a>
-<span class="sourceLineNo">370</span>        }<a name="line.370"></a>
-<span class="sourceLineNo">371</span><a name="line.371"></a>
-<span class="sourceLineNo">372</span>        @Override<a name="line.372"></a>
-<span class="sourceLineNo">373</span>        public String toString() {<a name="line.373"></a>
-<span class="sourceLineNo">374</span>            return "ValidationProblem(" + path + "," + origin + "," + problem + ")";<a name="line.374"></a>
+<span class="sourceLineNo">323</span>        public NotResolved(String message) {<a name="line.323"></a>
+<span class="sourceLineNo">324</span>            this(message, null);<a name="line.324"></a>
+<span class="sourceLineNo">325</span>        }<a name="line.325"></a>
+<span class="sourceLineNo">326</span>    }<a name="line.326"></a>
+<span class="sourceLineNo">327</span><a name="line.327"></a>
+<span class="sourceLineNo">328</span>    /**<a name="line.328"></a>
+<span class="sourceLineNo">329</span>     * Information about a problem that occurred in {@link Config#checkValid}. A<a name="line.329"></a>
+<span class="sourceLineNo">330</span>     * {@link ConfigException.ValidationFailed} exception thrown from<a name="line.330"></a>
+<span class="sourceLineNo">331</span>     * &lt;code&gt;checkValid()&lt;/code&gt; includes a list of problems encountered.<a name="line.331"></a>
+<span class="sourceLineNo">332</span>     */<a name="line.332"></a>
+<span class="sourceLineNo">333</span>    public static class ValidationProblem implements Serializable {<a name="line.333"></a>
+<span class="sourceLineNo">334</span><a name="line.334"></a>
+<span class="sourceLineNo">335</span>        final private String path;<a name="line.335"></a>
+<span class="sourceLineNo">336</span>        final private transient ConfigOrigin origin;<a name="line.336"></a>
+<span class="sourceLineNo">337</span>        final private String problem;<a name="line.337"></a>
+<span class="sourceLineNo">338</span><a name="line.338"></a>
+<span class="sourceLineNo">339</span>        public ValidationProblem(String path, ConfigOrigin origin, String problem) {<a name="line.339"></a>
+<span class="sourceLineNo">340</span>            this.path = path;<a name="line.340"></a>
+<span class="sourceLineNo">341</span>            this.origin = origin;<a name="line.341"></a>
+<span class="sourceLineNo">342</span>            this.problem = problem;<a name="line.342"></a>
+<span class="sourceLineNo">343</span>        }<a name="line.343"></a>
+<span class="sourceLineNo">344</span><a name="line.344"></a>
+<span class="sourceLineNo">345</span>        /**<a name="line.345"></a>
+<span class="sourceLineNo">346</span>         * Returns the config setting causing the problem.<a name="line.346"></a>
+<span class="sourceLineNo">347</span>         * @return the path of the problem setting<a name="line.347"></a>
+<span class="sourceLineNo">348</span>         */<a name="line.348"></a>
+<span class="sourceLineNo">349</span>        public String path() {<a name="line.349"></a>
+<span class="sourceLineNo">350</span>            return path;<a name="line.350"></a>
+<span class="sourceLineNo">351</span>        }<a name="line.351"></a>
+<span class="sourceLineNo">352</span><a name="line.352"></a>
+<span class="sourceLineNo">353</span>        /**<a name="line.353"></a>
+<span class="sourceLineNo">354</span>         * Returns where the problem occurred (origin may include info on the<a name="line.354"></a>
+<span class="sourceLineNo">355</span>         * file, line number, etc.).<a name="line.355"></a>
+<span class="sourceLineNo">356</span>         * @return the origin of the problem setting<a name="line.356"></a>
+<span class="sourceLineNo">357</span>         */<a name="line.357"></a>
+<span class="sourceLineNo">358</span>        public ConfigOrigin origin() {<a name="line.358"></a>
+<span class="sourceLineNo">359</span>            return origin;<a name="line.359"></a>
+<span class="sourceLineNo">360</span>        }<a name="line.360"></a>
+<span class="sourceLineNo">361</span><a name="line.361"></a>
+<span class="sourceLineNo">362</span>        /**<a name="line.362"></a>
+<span class="sourceLineNo">363</span>         * Returns a description of the problem.<a name="line.363"></a>
+<span class="sourceLineNo">364</span>         * @return description of the problem<a name="line.364"></a>
+<span class="sourceLineNo">365</span>         */<a name="line.365"></a>
+<span class="sourceLineNo">366</span>        public String problem() {<a name="line.366"></a>
+<span class="sourceLineNo">367</span>            return problem;<a name="line.367"></a>
+<span class="sourceLineNo">368</span>        }<a name="line.368"></a>
+<span class="sourceLineNo">369</span><a name="line.369"></a>
+<span class="sourceLineNo">370</span>        // We customize serialization because ConfigOrigin isn't<a name="line.370"></a>
+<span class="sourceLineNo">371</span>        // serializable and we don't want it to be<a name="line.371"></a>
+<span class="sourceLineNo">372</span>        private void writeObject(java.io.ObjectOutputStream out) throws IOException {<a name="line.372"></a>
+<span class="sourceLineNo">373</span>            out.defaultWriteObject();<a name="line.373"></a>
+<span class="sourceLineNo">374</span>            ConfigImplUtil.writeOrigin(out, origin);<a name="line.374"></a>
 <span class="sourceLineNo">375</span>        }<a name="line.375"></a>
-<span class="sourceLineNo">376</span>    }<a name="line.376"></a>
-<span class="sourceLineNo">377</span><a name="line.377"></a>
-<span class="sourceLineNo">378</span>    /**<a name="line.378"></a>
-<span class="sourceLineNo">379</span>     * Exception indicating that {@link Config#checkValid} found validity<a name="line.379"></a>
-<span class="sourceLineNo">380</span>     * problems. The problems are available via the {@link #problems()} method.<a name="line.380"></a>
-<span class="sourceLineNo">381</span>     * The &lt;code&gt;getMessage()&lt;/code&gt; of this exception is a potentially very<a name="line.381"></a>
-<span class="sourceLineNo">382</span>     * long string listing all the problems found.<a name="line.382"></a>
-<span class="sourceLineNo">383</span>     */<a name="line.383"></a>
-<span class="sourceLineNo">384</span>    public static class ValidationFailed extends ConfigException {<a name="line.384"></a>
-<span class="sourceLineNo">385</span>        private static final long serialVersionUID = 1L;<a name="line.385"></a>
-<span class="sourceLineNo">386</span><a name="line.386"></a>
-<span class="sourceLineNo">387</span>        final private Iterable&lt;ValidationProblem&gt; problems;<a name="line.387"></a>
-<span class="sourceLineNo">388</span><a name="line.388"></a>
-<span class="sourceLineNo">389</span>        public ValidationFailed(Iterable&lt;ValidationProblem&gt; problems) {<a name="line.389"></a>
-<span class="sourceLineNo">390</span>            super(makeMessage(problems), null);<a name="line.390"></a>
-<span class="sourceLineNo">391</span>            this.problems = problems;<a name="line.391"></a>
-<span class="sourceLineNo">392</span>        }<a name="line.392"></a>
-<span class="sourceLineNo">393</span><a name="line.393"></a>
-<span class="sourceLineNo">394</span>        public Iterable&lt;ValidationProblem&gt; problems() {<a name="line.394"></a>
-<span class="sourceLineNo">395</span>            return problems;<a name="line.395"></a>
-<span class="sourceLineNo">396</span>        }<a name="line.396"></a>
-<span class="sourceLineNo">397</span><a name="line.397"></a>
-<span class="sourceLineNo">398</span>        private static String makeMessage(Iterable&lt;ValidationProblem&gt; problems) {<a name="line.398"></a>
-<span class="sourceLineNo">399</span>            StringBuilder sb = new StringBuilder();<a name="line.399"></a>
-<span class="sourceLineNo">400</span>            for (ValidationProblem p : problems) {<a name="line.400"></a>
-<span class="sourceLineNo">401</span>                sb.append(p.origin().description());<a name="line.401"></a>
-<span class="sourceLineNo">402</span>                sb.append(": ");<a name="line.402"></a>
-<span class="sourceLineNo">403</span>                sb.append(p.path());<a name="line.403"></a>
-<span class="sourceLineNo">404</span>                sb.append(": ");<a name="line.404"></a>
-<span class="sourceLineNo">405</span>                sb.append(p.problem());<a name="line.405"></a>
-<span class="sourceLineNo">406</span>                sb.append(", ");<a name="line.406"></a>
-<span class="sourceLineNo">407</span>            }<a name="line.407"></a>
-<span class="sourceLineNo">408</span>            if (sb.length() == 0)<a name="line.408"></a>
-<span class="sourceLineNo">409</span>                throw new ConfigException.BugOrBroken(<a name="line.409"></a>
-<span class="sourceLineNo">410</span>                        "ValidationFailed must have a non-empty list of problems");<a name="line.410"></a>
-<span class="sourceLineNo">411</span>            sb.setLength(sb.length() - 2); // chop comma and space<a name="line.411"></a>
-<span class="sourceLineNo">412</span><a name="line.412"></a>
-<span class="sourceLineNo">413</span>            return sb.toString();<a name="line.413"></a>
-<span class="sourceLineNo">414</span>        }<a name="line.414"></a>
-<span class="sourceLineNo">415</span>    }<a name="line.415"></a>
-<span class="sourceLineNo">416</span><a name="line.416"></a>
-<span class="sourceLineNo">417</span>    /**<a name="line.417"></a>
-<span class="sourceLineNo">418</span>     * Some problem with a JavaBean we are trying to initialize.<a name="line.418"></a>
-<span class="sourceLineNo">419</span>     * @since 1.3.0<a name="line.419"></a>
-<span class="sourceLineNo">420</span>     */<a name="line.420"></a>
-<span class="sourceLineNo">421</span>    public static class BadBean extends BugOrBroken {<a name="line.421"></a>
-<span class="sourceLineNo">422</span>        private static final long serialVersionUID = 1L;<a name="line.422"></a>
-<span class="sourceLineNo">423</span><a name="line.423"></a>
-<span class="sourceLineNo">424</span>        public BadBean(String message, Throwable cause) {<a name="line.424"></a>
-<span class="sourceLineNo">425</span>            super(message, cause);<a name="line.425"></a>
+<span class="sourceLineNo">376</span><a name="line.376"></a>
+<span class="sourceLineNo">377</span>        private void readObject(java.io.ObjectInputStream in) throws IOException,<a name="line.377"></a>
+<span class="sourceLineNo">378</span>                ClassNotFoundException {<a name="line.378"></a>
+<span class="sourceLineNo">379</span>            in.defaultReadObject();<a name="line.379"></a>
+<span class="sourceLineNo">380</span>            ConfigOrigin origin = ConfigImplUtil.readOrigin(in);<a name="line.380"></a>
+<span class="sourceLineNo">381</span>            setOriginField(this, ValidationProblem.class, origin);<a name="line.381"></a>
+<span class="sourceLineNo">382</span>        }<a name="line.382"></a>
+<span class="sourceLineNo">383</span><a name="line.383"></a>
+<span class="sourceLineNo">384</span>        @Override<a name="line.384"></a>
+<span class="sourceLineNo">385</span>        public String toString() {<a name="line.385"></a>
+<span class="sourceLineNo">386</span>            return "ValidationProblem(" + path + "," + origin + "," + problem + ")";<a name="line.386"></a>
+<span class="sourceLineNo">387</span>        }<a name="line.387"></a>
+<span class="sourceLineNo">388</span>    }<a name="line.388"></a>
+<span class="sourceLineNo">389</span><a name="line.389"></a>
+<span class="sourceLineNo">390</span>    /**<a name="line.390"></a>
+<span class="sourceLineNo">391</span>     * Exception indicating that {@link Config#checkValid} found validity<a name="line.391"></a>
+<span class="sourceLineNo">392</span>     * problems. The problems are available via the {@link #problems()} method.<a name="line.392"></a>
+<span class="sourceLineNo">393</span>     * The &lt;code&gt;getMessage()&lt;/code&gt; of this exception is a potentially very<a name="line.393"></a>
+<span class="sourceLineNo">394</span>     * long string listing all the problems found.<a name="line.394"></a>
+<span class="sourceLineNo">395</span>     */<a name="line.395"></a>
+<span class="sourceLineNo">396</span>    public static class ValidationFailed extends ConfigException {<a name="line.396"></a>
+<span class="sourceLineNo">397</span>        private static final long serialVersionUID = 1L;<a name="line.397"></a>
+<span class="sourceLineNo">398</span><a name="line.398"></a>
+<span class="sourceLineNo">399</span>        final private Iterable&lt;ValidationProblem&gt; problems;<a name="line.399"></a>
+<span class="sourceLineNo">400</span><a name="line.400"></a>
+<span class="sourceLineNo">401</span>        public ValidationFailed(Iterable&lt;ValidationProblem&gt; problems) {<a name="line.401"></a>
+<span class="sourceLineNo">402</span>            super(makeMessage(problems), null);<a name="line.402"></a>
+<span class="sourceLineNo">403</span>            this.problems = problems;<a name="line.403"></a>
+<span class="sourceLineNo">404</span>        }<a name="line.404"></a>
+<span class="sourceLineNo">405</span><a name="line.405"></a>
+<span class="sourceLineNo">406</span>        public Iterable&lt;ValidationProblem&gt; problems() {<a name="line.406"></a>
+<span class="sourceLineNo">407</span>            return problems;<a name="line.407"></a>
+<span class="sourceLineNo">408</span>        }<a name="line.408"></a>
+<span class="sourceLineNo">409</span><a name="line.409"></a>
+<span class="sourceLineNo">410</span>        private static String makeMessage(Iterable&lt;ValidationProblem&gt; problems) {<a name="line.410"></a>
+<span class="sourceLineNo">411</span>            StringBuilder sb = new StringBuilder();<a name="line.411"></a>
+<span class="sourceLineNo">412</span>            for (ValidationProblem p : problems) {<a name="line.412"></a>
+<span class="sourceLineNo">413</span>                sb.append(p.origin().description());<a name="line.413"></a>
+<span class="sourceLineNo">414</span>                sb.append(": ");<a name="line.414"></a>
+<span class="sourceLineNo">415</span>                sb.append(p.path());<a name="line.415"></a>
+<span class="sourceLineNo">416</span>                sb.append(": ");<a name="line.416"></a>
+<span class="sourceLineNo">417</span>                sb.append(p.problem());<a name="line.417"></a>
+<span class="sourceLineNo">418</span>                sb.append(", ");<a name="line.418"></a>
+<span class="sourceLineNo">419</span>            }<a name="line.419"></a>
+<span class="sourceLineNo">420</span>            if (sb.length() == 0)<a name="line.420"></a>
+<span class="sourceLineNo">421</span>                throw new ConfigException.BugOrBroken(<a name="line.421"></a>
+<span class="sourceLineNo">422</span>                        "ValidationFailed must have a non-empty list of problems");<a name="line.422"></a>
+<span class="sourceLineNo">423</span>            sb.setLength(sb.length() - 2); // chop comma and space<a name="line.423"></a>
+<span class="sourceLineNo">424</span><a name="line.424"></a>
+<span class="sourceLineNo">425</span>            return sb.toString();<a name="line.425"></a>
 <span class="sourceLineNo">426</span>        }<a name="line.426"></a>
-<span class="sourceLineNo">427</span><a name="line.427"></a>
-<span class="sourceLineNo">428</span>        public BadBean(String message) {<a name="line.428"></a>
-<span class="sourceLineNo">429</span>            this(message, null);<a name="line.429"></a>
-<span class="sourceLineNo">430</span>        }<a name="line.430"></a>
-<span class="sourceLineNo">431</span>    }<a name="line.431"></a>
-<span class="sourceLineNo">432</span><a name="line.432"></a>
-<span class="sourceLineNo">433</span>    /**<a name="line.433"></a>
-<span class="sourceLineNo">434</span>     * Exception that doesn't fall into any other category.<a name="line.434"></a>
-<span class="sourceLineNo">435</span>     */<a name="line.435"></a>
-<span class="sourceLineNo">436</span>    public static class Generic extends ConfigException {<a name="line.436"></a>
-<span class="sourceLineNo">437</span>        private static final long serialVersionUID = 1L;<a name="line.437"></a>
-<span class="sourceLineNo">438</span><a name="line.438"></a>
-<span class="sourceLineNo">439</span>        public Generic(String message, Throwable cause) {<a name="line.439"></a>
-<span class="sourceLineNo">440</span>            super(message, cause);<a name="line.440"></a>
-<span class="sourceLineNo">441</span>        }<a name="line.441"></a>
-<span class="sourceLineNo">442</span><a name="line.442"></a>
-<span class="sourceLineNo">443</span>        public Generic(String message) {<a name="line.443"></a>
-<span class="sourceLineNo">444</span>            this(message, null);<a name="line.444"></a>
-<span class="sourceLineNo">445</span>        }<a name="line.445"></a>
-<span class="sourceLineNo">446</span>    }<a name="line.446"></a>
-<span class="sourceLineNo">447</span><a name="line.447"></a>
-<span class="sourceLineNo">448</span>}<a name="line.448"></a>
+<span class="sourceLineNo">427</span>    }<a name="line.427"></a>
+<span class="sourceLineNo">428</span><a name="line.428"></a>
+<span class="sourceLineNo">429</span>    /**<a name="line.429"></a>
+<span class="sourceLineNo">430</span>     * Some problem with a JavaBean we are trying to initialize.<a name="line.430"></a>
+<span class="sourceLineNo">431</span>     * @since 1.3.0<a name="line.431"></a>
+<span class="sourceLineNo">432</span>     */<a name="line.432"></a>
+<span class="sourceLineNo">433</span>    public static class BadBean extends BugOrBroken {<a name="line.433"></a>
+<span class="sourceLineNo">434</span>        private static final long serialVersionUID = 1L;<a name="line.434"></a>
+<span class="sourceLineNo">435</span><a name="line.435"></a>
+<span class="sourceLineNo">436</span>        public BadBean(String message, Throwable cause) {<a name="line.436"></a>
+<span class="sourceLineNo">437</span>            super(message, cause);<a name="line.437"></a>
+<span class="sourceLineNo">438</span>        }<a name="line.438"></a>
+<span class="sourceLineNo">439</span><a name="line.439"></a>
+<span class="sourceLineNo">440</span>        public BadBean(String message) {<a name="line.440"></a>
+<span class="sourceLineNo">441</span>            this(message, null);<a name="line.441"></a>
+<span class="sourceLineNo">442</span>        }<a name="line.442"></a>
+<span class="sourceLineNo">443</span>    }<a name="line.443"></a>
+<span class="sourceLineNo">444</span><a name="line.444"></a>
+<span class="sourceLineNo">445</span>    /**<a name="line.445"></a>
+<span class="sourceLineNo">446</span>     * Exception that doesn't fall into any other category.<a name="line.446"></a>
+<span class="sourceLineNo">447</span>     */<a name="line.447"></a>
+<span class="sourceLineNo">448</span>    public static class Generic extends ConfigException {<a name="line.448"></a>
+<span class="sourceLineNo">449</span>        private static final long serialVersionUID = 1L;<a name="line.449"></a>
+<span class="sourceLineNo">450</span><a name="line.450"></a>
+<span class="sourceLineNo">451</span>        public Generic(String message, Throwable cause) {<a name="line.451"></a>
+<span class="sourceLineNo">452</span>            super(message, cause);<a name="line.452"></a>
+<span class="sourceLineNo">453</span>        }<a name="line.453"></a>
+<span class="sourceLineNo">454</span><a name="line.454"></a>
+<span class="sourceLineNo">455</span>        public Generic(String message) {<a name="line.455"></a>
+<span class="sourceLineNo">456</span>            this(message, null);<a name="line.456"></a>
+<span class="sourceLineNo">457</span>        }<a name="line.457"></a>
+<span class="sourceLineNo">458</span>    }<a name="line.458"></a>
+<span class="sourceLineNo">459</span><a name="line.459"></a>
+<span class="sourceLineNo">460</span>}<a name="line.460"></a>
 
 
 

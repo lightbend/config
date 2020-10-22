@@ -1,0 +1,3 @@
+com.typesafe.config
+com.typesafe.config.impl
+com.typesafe.config.parser
