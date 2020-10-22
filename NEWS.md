@@ -3,10 +3,9 @@
  - introduce docs for arrays on env vars ([#706](/../../pull/706)), ([#710](/../../pull/710)) and ([#711](/../../pull/771)) thanks to [@ignasi35](https://github.com/ignasi35) and [@andreaTP](https://github.com/andreaTP)
  - add a helper method for parsing only application overrides ([#708](/../../pull/708)) and ([#709](/../../pull/709)) thanks to [@bbaldino](https://github.com/bbaldino)
  - remove unmodifiable collection wrappers in ResolveContext ([#701](/../../pull/701)) thanks to [@havocp](https://github.com/havocp)
- - support for huge memory units ([#663](/../../pull/663)) thanks to [@mpryahin](https://github.com/mpryahin)
+ - added support for memory units which don't fit in a long when transformed to bytes ([#663](/../../pull/663)) thanks to [@mpryahin](https://github.com/mpryahin)
  - inherit optional and getter evaluation ([#660](/../../pull/660)) thanks to [@derKrischan](https://github.com/derKrischan)
  - a few other bug fixes
-
 
 # 1.4.0: October 11, 2019
 
