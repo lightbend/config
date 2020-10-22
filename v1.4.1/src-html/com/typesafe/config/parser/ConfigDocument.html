@@ -1,0 +1,154 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package com.typesafe.config.parser;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>import com.typesafe.config.ConfigValue;<a name="line.3"></a>
+<span class="sourceLineNo">004</span><a name="line.4"></a>
+<span class="sourceLineNo">005</span>/**<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * Represents an individual HOCON or JSON file, preserving all<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * formatting and syntax details.  This can be used to replace<a name="line.7"></a>
+<span class="sourceLineNo">008</span> * individual values and exactly render the original text of the<a name="line.8"></a>
+<span class="sourceLineNo">009</span> * input.<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * &lt;p&gt;<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * Because this object is immutable, it is safe to use from multiple threads and<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * there's no need for "defensive copies."<a name="line.13"></a>
+<span class="sourceLineNo">014</span> *<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * &lt;p&gt;<a name="line.15"></a>
+<span class="sourceLineNo">016</span> * &lt;em&gt;Do not implement interface {@code ConfigDocument}&lt;/em&gt;; it should only be<a name="line.16"></a>
+<span class="sourceLineNo">017</span> * implemented by the config library. Arbitrary implementations will not work<a name="line.17"></a>
+<span class="sourceLineNo">018</span> * because the library internals assume a specific concrete implementation.<a name="line.18"></a>
+<span class="sourceLineNo">019</span> * Also, this interface is likely to grow new methods over time, so third-party<a name="line.19"></a>
+<span class="sourceLineNo">020</span> * implementations will break.<a name="line.20"></a>
+<span class="sourceLineNo">021</span> */<a name="line.21"></a>
+<span class="sourceLineNo">022</span>public interface ConfigDocument {<a name="line.22"></a>
+<span class="sourceLineNo">023</span>    /**<a name="line.23"></a>
+<span class="sourceLineNo">024</span>     * Returns a new ConfigDocument that is a copy of the current ConfigDocument,<a name="line.24"></a>
+<span class="sourceLineNo">025</span>     * but with the desired value set at the desired path. If the path exists, it will<a name="line.25"></a>
+<span class="sourceLineNo">026</span>     * remove all duplicates before the final occurrence of the path, and replace the value<a name="line.26"></a>
+<span class="sourceLineNo">027</span>     * at the final occurrence of the path. If the path does not exist, it will be added. If<a name="line.27"></a>
+<span class="sourceLineNo">028</span>     * the document has an array as the root value, an exception will be thrown.<a name="line.28"></a>
+<span class="sourceLineNo">029</span>     *<a name="line.29"></a>
+<span class="sourceLineNo">030</span>     * @param path the path at which to set the desired value<a name="line.30"></a>
+<span class="sourceLineNo">031</span>     * @param newValue the value to set at the desired path, represented as a string. This<a name="line.31"></a>
+<span class="sourceLineNo">032</span>     *                 string will be parsed into a ConfigNode using the same options used to<a name="line.32"></a>
+<span class="sourceLineNo">033</span>     *                 parse the entire document, and the text will be inserted<a name="line.33"></a>
+<span class="sourceLineNo">034</span>     *                 as-is into the document. Leading and trailing comments, whitespace, or<a name="line.34"></a>
+<span class="sourceLineNo">035</span>     *                 newlines are not allowed, and if present an exception will be thrown.<a name="line.35"></a>
+<span class="sourceLineNo">036</span>     *                 If a concatenation is passed in for newValue but the document was parsed<a name="line.36"></a>
+<span class="sourceLineNo">037</span>     *                 with JSON, the first value in the concatenation will be parsed and inserted<a name="line.37"></a>
+<span class="sourceLineNo">038</span>     *                 into the ConfigDocument.<a name="line.38"></a>
+<span class="sourceLineNo">039</span>     * @return a copy of the ConfigDocument with the desired value at the desired path<a name="line.39"></a>
+<span class="sourceLineNo">040</span>     */<a name="line.40"></a>
+<span class="sourceLineNo">041</span>    ConfigDocument withValueText(String path, String newValue);<a name="line.41"></a>
+<span class="sourceLineNo">042</span><a name="line.42"></a>
+<span class="sourceLineNo">043</span>    /**<a name="line.43"></a>
+<span class="sourceLineNo">044</span>     * Returns a new ConfigDocument that is a copy of the current<a name="line.44"></a>
+<span class="sourceLineNo">045</span>     * ConfigDocument, but with the desired value set at the<a name="line.45"></a>
+<span class="sourceLineNo">046</span>     * desired path. Works like {@link #withValueText(String, String)},<a name="line.46"></a>
+<span class="sourceLineNo">047</span>     * but takes a ConfigValue instead of a string.<a name="line.47"></a>
+<span class="sourceLineNo">048</span>     *<a name="line.48"></a>
+<span class="sourceLineNo">049</span>     * @param path the path at which to set the desired value<a name="line.49"></a>
+<span class="sourceLineNo">050</span>     * @param newValue the value to set at the desired path, represented as a ConfigValue.<a name="line.50"></a>
+<span class="sourceLineNo">051</span>     *                 The rendered text of the ConfigValue will be inserted into the<a name="line.51"></a>
+<span class="sourceLineNo">052</span>     *                 ConfigDocument.<a name="line.52"></a>
+<span class="sourceLineNo">053</span>     * @return a copy of the ConfigDocument with the desired value at the desired path<a name="line.53"></a>
+<span class="sourceLineNo">054</span>     */<a name="line.54"></a>
+<span class="sourceLineNo">055</span>    ConfigDocument withValue(String path, ConfigValue newValue);<a name="line.55"></a>
+<span class="sourceLineNo">056</span><a name="line.56"></a>
+<span class="sourceLineNo">057</span>    /**<a name="line.57"></a>
+<span class="sourceLineNo">058</span>     * Returns a new ConfigDocument that is a copy of the current ConfigDocument, but with<a name="line.58"></a>
+<span class="sourceLineNo">059</span>     * all values at the desired path removed. If the path does not exist in the document,<a name="line.59"></a>
+<span class="sourceLineNo">060</span>     * a copy of the current document will be returned. If there is an array at the root, an exception<a name="line.60"></a>
+<span class="sourceLineNo">061</span>     * will be thrown.<a name="line.61"></a>
+<span class="sourceLineNo">062</span>     *<a name="line.62"></a>
+<span class="sourceLineNo">063</span>     * @param path the path to remove from the document<a name="line.63"></a>
+<span class="sourceLineNo">064</span>     * @return a copy of the ConfigDocument with the desired value removed from the document.<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     */<a name="line.65"></a>
+<span class="sourceLineNo">066</span>    ConfigDocument withoutPath(String path);<a name="line.66"></a>
+<span class="sourceLineNo">067</span><a name="line.67"></a>
+<span class="sourceLineNo">068</span>    /**<a name="line.68"></a>
+<span class="sourceLineNo">069</span>     * Returns a boolean indicating whether or not a ConfigDocument has a value at the desired path.<a name="line.69"></a>
+<span class="sourceLineNo">070</span>     * null counts as a value for purposes of this check.<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * @param path the path to check<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     * @return true if the path exists in the document, otherwise false<a name="line.72"></a>
+<span class="sourceLineNo">073</span>     */<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    boolean hasPath(String path);<a name="line.74"></a>
+<span class="sourceLineNo">075</span><a name="line.75"></a>
+<span class="sourceLineNo">076</span>    /**<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     * The original text of the input, modified if necessary with<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     * any replaced or added values.<a name="line.78"></a>
+<span class="sourceLineNo">079</span>     * @return the modified original text<a name="line.79"></a>
+<span class="sourceLineNo">080</span>     */<a name="line.80"></a>
+<span class="sourceLineNo">081</span>    String render();<a name="line.81"></a>
+<span class="sourceLineNo">082</span>}<a name="line.82"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
