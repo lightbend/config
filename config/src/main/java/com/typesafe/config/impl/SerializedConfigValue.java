@@ -328,10 +328,10 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
  
             List<String> values = new ArrayList<>();
             if (strVal.getBytes().length >= MAX_BYTES_LENGTH) {
-                    values.addAll(split(strVal, MAX_BYTES_LENGTH));
+                    values.addAll(split(strVal, MAX_BYTES_LENGTH/2)); // A char variable is typically 2-byte large.
             } else {
                     values.add(strVal);
-                }
+            }
  
             for (String evalue : values) {
                 out.writeUTF(evalue);
@@ -356,7 +356,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
         }
     }
 
-    private static AbstractConfigValue readValueData(DataInput in, SimpleConfigOrigin origin, int l)
+    private static AbstractConfigValue readValueData(DataInput in, SimpleConfigOrigin origin, int byteLength)
             throws IOException {
         int stb = in.readUnsignedByte();
         SerializedValueType st = SerializedValueType.forInt(stb);
@@ -380,7 +380,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             String sd = in.readUTF();
             return new ConfigDouble(origin, vd, sd);
         case STRING:
-            int readTimes =  l/ MAX_BYTES_LENGTH + ((l % MAX_BYTES_LENGTH == 0) ? 0 : 1);
+            int readTimes =  byteLength/ MAX_BYTES_LENGTH + ((byteLength % MAX_BYTES_LENGTH == 0) ? 0 : 1);
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < readTimes; i++){
                 sb.append(in.readUTF());
@@ -434,8 +434,8 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             } else if (code == SerializedField.VALUE_DATA) {
                 if (origin == null)
                     throw new IOException("Origin must be stored before value data");
-                int l = in.readInt(); // discard length
-                value = readValueData(in, origin, l);
+                int byteLength = in.readInt()*2; //The byte length of the String to be read. Multiplied by 2 is because one char takes 2 bytes generally.
+                value = readValueData(in, origin, byteLength);
   
             } else if (code == SerializedField.VALUE_ORIGIN) {
                 in.readInt(); // discard length
