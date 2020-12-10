@@ -867,7 +867,7 @@ format.
 
 #### Scala wrappers for the Java library
 
-  * Ficus https://github.com/ceedubs/ficus
+  * Ficus https://github.com/iheartradio/ficus
   * configz https://github.com/arosien/configz
   * configs https://github.com/kxbmap/configs
   * config-annotation https://github.com/zhongl/config-annotation
