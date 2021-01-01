@@ -32,7 +32,8 @@ import com.typesafe.config.impl.SimpleIncluder.NameSource;
  * For use only by the {@link com.typesafe.config} package.
  */
 public class ConfigImpl {
-    private static final String ENV_VAR_OVERRIDE_PREFIX = "CONFIG_FORCE_";
+    private static final String ENV_VAR_OVERRIDE_PREFIX_PROPERTY_NAME = "config.override_with_env_vars_prefix";
+    private static final String ENV_VAR_OVERRIDE_DEFAULT_PREFIX = "CONFIG_FORCE_";
 
     private static class LoaderCache {
         private Config currentSystemProperties;
@@ -373,9 +374,12 @@ public class ConfigImpl {
         Map<String, String> env = new HashMap(System.getenv());
         Map<String, String> result = new HashMap();
 
+        String customPrefix = System.getProperty(ENV_VAR_OVERRIDE_PREFIX_PROPERTY_NAME);
+        String prefix = customPrefix != null ? customPrefix : ENV_VAR_OVERRIDE_DEFAULT_PREFIX;
+
         for (String key : env.keySet()) {
-            if (key.startsWith(ENV_VAR_OVERRIDE_PREFIX)) {
-                result.put(ConfigImplUtil.envVariableAsProperty(key, ENV_VAR_OVERRIDE_PREFIX), env.get(key));
+            if (key.startsWith(prefix)) {
+                result.put(ConfigImplUtil.envVariableAsProperty(key, prefix), env.get(key));
             }
         }
 

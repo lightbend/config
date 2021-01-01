@@ -681,8 +681,13 @@ With this option enabled only environment variables starting with
   - double underscore(`__`) is converted into a dash(`-`)
   - triple underscore(`___`) is converted into a single underscore(`_`)
 
-i.e. The environment variable `CONFIG_FORCE_a_b__c___d` set the
-configuration key `a.b-c_d`
+i.e. The environment variable `CONFIG_FORCE_a_b__c___d` sets the
+configuration key `a.b-c_d`.
+
+The `CONFIG_FORCE_` prefix can be customized if needed: the JVM
+property `-Dconfig.override_with_env_vars_prefix=<CUSTOM_PREFIX>`
+will set it equal to `<CUSTOM_PREFIX>`. All other mangling rules
+still apply.
 
 ### Set array values outside configuration files
 
@@ -781,7 +786,7 @@ If you have trouble with your configuration, some useful tips.
    Play/Akka 2.0.
  - Use `myConfig.root().render()` to get a `Config` as a
    string with comments showing where each value came from.
-   This string can be printed out on console or logged to 
+   This string can be printed out on console or logged to
    a file etc.
  - If you see errors like
    `com.typesafe.config.ConfigException$Missing: No configuration setting found for key foo`,
@@ -940,7 +945,7 @@ format.
 
 The license is Apache 2.0, see LICENSE-2.0.txt.
 
-## Maintained by 
+## Maintained by
 
 This project is maintained mostly by [@havocp](https://github.com/havocp) and [@akka-team](https://github.com/orgs/lightbend/teams/akka-team/members).
 
