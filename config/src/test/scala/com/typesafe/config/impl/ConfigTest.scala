@@ -1147,6 +1147,36 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def testLoadWithEnvSubstitutionsCustomPrefix(): Unit = {
+        System.setProperty("config.override_with_env_vars", "true")
+        System.setProperty("config.override_with_env_vars_prefix", "CUSTOM_PREFIX_")
+
+        try {
+            ConfigFactory.invalidateCaches()
+
+            val loader02 = new TestClassLoader(this.getClass().getClassLoader(),
+                Map("reference.conf" -> resourceFile("test02.conf").toURI.toURL()))
+
+            val conf02 = withContextClassLoader(loader02) {
+                ConfigFactory.load()
+            }
+
+            assertEquals(200, conf02.getInt("a.b.c"))
+            assertEquals(260, conf02.getInt("a_c"))
+
+            intercept[ConfigException.Missing] {
+                conf02.getInt("CONFIG_FORCE_a_b_c")
+                conf02.getInt("CUSTOM_PREFIX_a_b_c")
+            }
+
+        } finally {
+            System.clearProperty("config.override_with_env_vars")
+            System.clearProperty("config.override_with_env_vars_prefix")
+            ConfigFactory.invalidateCaches()
+        }
+    }
+
+    @Test
     def renderRoundTrip() {
         val allBooleans = true :: false :: Nil
         val optionsCombos = {

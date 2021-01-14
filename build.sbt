@@ -92,6 +92,7 @@ lazy val configLib =  Project("config", file("config"))
       "CONFIG_FORCE_testList_1" -> "11",
       "CONFIG_FORCE_42___a" -> "1",
       "CONFIG_FORCE_a_b_c" -> "2",
+      "CUSTOM_PREFIX_a_b_c" -> "200",
       "CONFIG_FORCE_a__c" -> "3",
       "CONFIG_FORCE_a___c" -> "4",
       "CONFIG_FORCE_akka_version" -> "foo",
