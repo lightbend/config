@@ -925,6 +925,9 @@ format.
 #### Go port
 
   * https://github.com/gurkankaymak/hocon
+ 
+#### Erlang port
+  * https://github.com/emqx/hocon
 
 #### Linting tool
 
