@@ -682,7 +682,8 @@ With this option enabled only environment variables starting with
   - triple underscore(`___`) is converted into a single underscore(`_`)
 
 i.e. The environment variable `CONFIG_FORCE_a_b__c___d` sets the
-configuration key `a.b-c_d`.
+configuration key `a.b-c_d` (NOTE: keys are case-sensitive, so
+`CONFIG_FORCE_ab` is different from `CONFIG_FORCE_AB`.
 
 The `CONFIG_FORCE_` prefix can be customized if needed: the JVM
 property `-Dconfig.override_with_env_vars_prefix=<CUSTOM_PREFIX>`
