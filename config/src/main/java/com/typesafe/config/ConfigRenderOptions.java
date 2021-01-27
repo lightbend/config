@@ -3,6 +3,8 @@
  */
 package com.typesafe.config;
 
+import java.util.regex.Pattern;
+
 /**
  * <p>
  * A set of options related to rendering a {@link ConfigValue}. Passed to
@@ -21,13 +23,17 @@ public final class ConfigRenderOptions {
     private final boolean comments;
     private final boolean formatted;
     private final boolean json;
+    private final Pattern maskRegex;
+    private final static Pattern defaultNoMasking = null;
+    private final static Pattern defaultMaskRegex = Pattern.compile("(secret|passphrase|password)");
 
     private ConfigRenderOptions(boolean originComments, boolean comments, boolean formatted,
-            boolean json) {
+            boolean json, Pattern maskRegex) {
         this.originComments = originComments;
         this.comments = comments;
         this.formatted = formatted;
         this.json = json;
+        this.maskRegex = maskRegex;
     }
 
     /**
@@ -38,7 +44,7 @@ public final class ConfigRenderOptions {
      * @return the default render options
      */
     public static ConfigRenderOptions defaults() {
-        return new ConfigRenderOptions(true, true, true, true);
+        return new ConfigRenderOptions(true, true, true, true, defaultNoMasking);
     }
 
     /**
@@ -48,7 +54,7 @@ public final class ConfigRenderOptions {
      * @return the concise render options
      */
     public static ConfigRenderOptions concise() {
-        return new ConfigRenderOptions(false, false, false, true);
+        return new ConfigRenderOptions(false, false, false, true, defaultNoMasking);
     }
 
     /**
@@ -64,7 +70,7 @@ public final class ConfigRenderOptions {
         if (value == comments)
             return this;
         else
-            return new ConfigRenderOptions(originComments, value, formatted, json);
+            return new ConfigRenderOptions(originComments, value, formatted, json, maskRegex);
     }
 
     /**
@@ -97,7 +103,7 @@ public final class ConfigRenderOptions {
         if (value == originComments)
             return this;
         else
-            return new ConfigRenderOptions(value, comments, formatted, json);
+            return new ConfigRenderOptions(value, comments, formatted, json, maskRegex);
     }
 
     /**
@@ -122,7 +128,7 @@ public final class ConfigRenderOptions {
         if (value == formatted)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, value, json);
+            return new ConfigRenderOptions(originComments, comments, value, json, maskRegex);
     }
 
     /**
@@ -150,7 +156,51 @@ public final class ConfigRenderOptions {
         if (value == json)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, formatted, value);
+            return new ConfigRenderOptions(originComments, comments, formatted, value, maskRegex);
+    }
+
+    /**
+     * Returns options with supplied masking regex.
+     * <p>
+     * If config key matches regex pattern, it will mask it's value with "*** Value is masked ***" during render()
+     *
+     * @param value pattern for masking key's value.
+     * @return options with supplied masking regex.
+     */
+    public ConfigRenderOptions setMaskingRegex(Pattern value) {
+        if (value == maskRegex)
+            return this;
+        else
+            return new ConfigRenderOptions(originComments, comments, formatted, json, value);
+    }
+
+    /**
+     * Returns option with default masking regex: (secret|passphrase|password) .
+     *
+     * @see #setMaskingRegex(Pattern) if you need to specify your own masking regex.
+     * @return options with supplied default masking regex.
+     */
+    public ConfigRenderOptions setDefaultMaskingRegex() {
+        return setMaskingRegex(defaultMaskRegex);
+    }
+
+    /**
+     * Returns wheter the options enable potential masking of config values during render.
+     *
+     * @return true if it should be checking config key's value should be masked or not.
+     */
+    public boolean isMasking() {
+        return maskRegex != null;
+    }
+
+    /**
+     * Returns active masking regex.
+     *
+     * @see #isMasking() to check wether masking is enabled or not.
+     * @return Pattern|null masking regex if enabled.
+     */
+    public Pattern getMaskingRegex() {
+        return maskRegex;
     }
 
     /**

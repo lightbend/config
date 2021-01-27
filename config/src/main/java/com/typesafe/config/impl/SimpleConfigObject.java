@@ -485,6 +485,9 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 AbstractConfigValue v;
                 v = value.get(k);
 
+                if (options.isMasking() && v.resolveStatus().equals(ResolveStatus.RESOLVED) && options.getMaskingRegex().matcher(k).find())
+                    v = new ConfigString.Quoted(value.get(k).origin(), "*** Value is masked ***");
+
                 if (options.getOriginComments()) {
                     String[] lines = v.origin().description().split("\n");
                     for (String l : lines) {

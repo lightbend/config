@@ -1149,17 +1149,20 @@ class ConfigTest extends TestUtils {
     @Test
     def renderRoundTrip() {
         val allBooleans = true :: false :: Nil
+        val noMasking = Nil
         val optionsCombos = {
             for (
                 formatted <- allBooleans;
                 originComments <- allBooleans;
                 comments <- allBooleans;
-                json <- allBooleans
+                json <- allBooleans;
+                maskings <- noMasking
             ) yield ConfigRenderOptions.defaults()
                 .setFormatted(formatted)
                 .setOriginComments(originComments)
                 .setComments(comments)
                 .setJson(json)
+                .setMaskingRegex(maskings)
         }
 
         for (i <- 1 to 10) {
@@ -1227,6 +1230,35 @@ class ConfigTest extends TestUtils {
         assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
         val resolved2 = unresolved.resolve()
         assertTrue("after resolution, config is now resolved", resolved2.isResolved)
+    }
+
+    @Test
+    def renderWithResolvedConfigReturnsSecretKeyValueMasked() {
+        val resolvedMaskedConfig = ConfigFactory.parseString("{ deepStructure { secret = thisWasSecret } }")
+            .root()
+            .render(ConfigRenderOptions.defaults().setDefaultMaskingRegex())
+        assertTrue("resolvedMaskedConfig mask's secret key's value", resolvedMaskedConfig.contains("\"secret\" : \"*** Value is masked ***\""))
+    }
+
+    @Test
+    def renderWithUnresolvedConfigReturnsSecretKeyValueWithConfigReferenceUnmasked() {
+        val unresolvedMaskedConfig = ConfigFactory.parseString("{ deepStructure { secret = ${secretFoo}, secretFoo=thisWasSecret } }")
+            .root
+            .render(ConfigRenderOptions.defaults().setDefaultMaskingRegex())
+        assertTrue(
+            "unresolvedMaskedConfig do not mask secret key value when value is config reference",
+            unresolvedMaskedConfig.contains("\"secret\" : ${secretFoo}"))
+        assertTrue("unresolvedMaskedConfig secret key reference's value should be masked", unresolvedMaskedConfig.contains("\"secretFoo\" : \"*** Value is masked ***\""))
+    }
+
+    @Test
+    def renderWithUnresolvedConfigWhereSecretKeyReferenceDoesNotMatchMaskRegexReturnSecretKeyReferenceValueUnmasked(): Unit = {
+        // Limitation by current implementation (!)
+        // Test to demostrate this is currently intended until a someone improves with a better implementation.
+        val unresolvedMaskedConfig = ConfigFactory.parseString("{ deepStructure { secret = ${a}, a=thisWasSecretOops } }")
+            .root
+            .render(ConfigRenderOptions.defaults().setDefaultMaskingRegex())
+        assertTrue("foo", unresolvedMaskedConfig.contains("\"a\" : \"thisWasSecretOops\""))
     }
 
     @Test
