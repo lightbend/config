@@ -258,8 +258,6 @@ final class PathParser {
     private static Path fastPathBuild(Path tail, String s, int end) {
         // lastIndexOf takes last index it should look at, end - 1 not end
         int splitAt = s.lastIndexOf('.', end - 1);
-        ArrayList<Token> tokens = new ArrayList<Token>();
-        tokens.add(Tokens.newUnquotedText(null, s));
         // this works even if splitAt is -1; then we start the substring at 0
         Path withOneMoreElement = new Path(s.substring(splitAt + 1, end), tail);
         if (splitAt < 0) {
