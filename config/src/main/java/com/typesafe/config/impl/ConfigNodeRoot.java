@@ -1,13 +1,14 @@
 package com.typesafe.config.impl;
 
+import java.util.*;
+
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
+import com.typesafe.config.parser.ConfigNode;
+import com.typesafe.config.parser.ConfigNodeVisitor;
 
-import java.util.ArrayList;
-import java.util.Collection;
-
-final class ConfigNodeRoot extends ConfigNodeComplexValue {
+final class ConfigNodeRoot extends ConfigNodeComplexValue implements com.typesafe.config.parser.ConfigNodeRoot {
     final private ConfigOrigin origin;
 
     ConfigNodeRoot(Collection<AbstractConfigNode> children, ConfigOrigin origin) {
@@ -27,6 +28,11 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
             }
         }
         throw new ConfigException.BugOrBroken("ConfigNodeRoot did not contain a value");
+    }
+
+    @Override
+    public List<ConfigNode> getChildren() {
+        return Collections.singletonList(value());
     }
 
     protected ConfigNodeRoot setValue(String desiredPath, AbstractConfigNodeValue value, ConfigSyntax flavor) {
@@ -63,5 +69,10 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
             }
         }
         throw new ConfigException.BugOrBroken("ConfigNodeRoot did not contain a value");
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        return visitor.visitRoot(this);
     }
 }

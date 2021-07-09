@@ -2,8 +2,13 @@ package com.typesafe.config.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
-final class ConfigNodeInclude extends AbstractConfigNode {
+import com.typesafe.config.parser.ConfigNode;
+import com.typesafe.config.parser.ConfigNodeVisitor;
+
+final class ConfigNodeInclude extends AbstractConfigNode implements com.typesafe.config.parser.ConfigNodeInclude {
     final private ArrayList<AbstractConfigNode> children;
     final private ConfigIncludeKind kind;
     final private boolean isRequired;
@@ -42,5 +47,15 @@ final class ConfigNodeInclude extends AbstractConfigNode {
             }
         }
         return null;
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        return visitor.visitInclude(this);
+    }
+
+    @Override
+    public List<ConfigNode> getChildren() {
+        return Collections.unmodifiableList(children);
     }
 }

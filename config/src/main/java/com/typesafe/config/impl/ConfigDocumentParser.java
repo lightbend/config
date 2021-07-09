@@ -258,7 +258,7 @@ final class ConfigDocumentParser {
             return v;
         }
 
-        private ConfigNodePath parseKey(Token token) {
+        private ConfigNodeParsedPath parseKey(Token token) {
             if (flavor == ConfigSyntax.JSON) {
                 if (Tokens.isValueWithType(token, ConfigValueType.STRING)) {
                     return PathParser.parsePathNodeExpression(Collections.singletonList(token).iterator(),
@@ -447,7 +447,7 @@ final class ConfigDocumentParser {
                 } else {
                     keyValueNodes = new ArrayList<AbstractConfigNode>();
                     Token keyToken = t;
-                    ConfigNodePath path = parseKey(keyToken);
+                    ConfigNodeParsedPath path = parseKey(keyToken);
                     keyValueNodes.add(path);
                     Token afterKey = nextTokenCollectingWhitespace(keyValueNodes);
                     boolean insideEquals = false;

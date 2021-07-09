@@ -8,8 +8,10 @@ import java.io.Serializable;
 
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.parser.ConfigNodeDouble;
+import com.typesafe.config.parser.ConfigNodeVisitor;
 
-final class ConfigDouble extends ConfigNumber implements Serializable {
+final class ConfigDouble extends ConfigNumber implements Serializable, ConfigNodeDouble {
 
     private static final long serialVersionUID = 2L;
 
@@ -57,5 +59,15 @@ final class ConfigDouble extends ConfigNumber implements Serializable {
     // serialization all goes through SerializedConfigValue
     private Object writeReplace() throws ObjectStreamException {
         return new SerializedConfigValue(this);
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        return visitor.visitDouble(this);
+    }
+
+    @Override
+    public double getValue() {
+        return value;
     }
 }

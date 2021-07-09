@@ -30,11 +30,11 @@ final class PathParser {
 
     static ConfigOrigin apiOrigin = SimpleConfigOrigin.newSimple("path parameter");
 
-    static ConfigNodePath parsePathNode(String path) {
+    static ConfigNodeParsedPath parsePathNode(String path) {
         return parsePathNode(path, ConfigSyntax.CONF);
     }
 
-    static ConfigNodePath parsePathNode(String path, ConfigSyntax flavor) {
+    static ConfigNodeParsedPath parsePathNode(String path, ConfigSyntax flavor) {
         StringReader reader = new StringReader(path);
 
         try {
@@ -74,16 +74,16 @@ final class PathParser {
         return parsePathExpression(expression, origin, originalText, null, ConfigSyntax.CONF);
     }
 
-    protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
+    protected static ConfigNodeParsedPath parsePathNodeExpression(Iterator<Token> expression,
                                                             ConfigOrigin origin) {
         return parsePathNodeExpression(expression, origin, null, ConfigSyntax.CONF);
     }
 
-    protected static ConfigNodePath parsePathNodeExpression(Iterator<Token> expression,
+    protected static ConfigNodeParsedPath parsePathNodeExpression(Iterator<Token> expression,
                                                             ConfigOrigin origin, String originalText, ConfigSyntax flavor) {
         ArrayList<Token> pathTokens = new ArrayList<Token>();
         Path path = parsePathExpression(expression, origin, originalText, pathTokens, flavor);
-        return new ConfigNodePath(path, pathTokens);
+        return new ConfigNodeParsedPath(path, pathTokens);
     }
 
     // originalText may be null if not available

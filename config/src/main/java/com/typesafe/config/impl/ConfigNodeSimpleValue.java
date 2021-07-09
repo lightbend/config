@@ -4,10 +4,12 @@
 package com.typesafe.config.impl;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.parser.*;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 final class ConfigNodeSimpleValue extends AbstractConfigNodeValue {
     final Token token;
@@ -33,6 +35,21 @@ final class ConfigNodeSimpleValue extends AbstractConfigNodeValue {
             boolean optional = Tokens.getSubstitutionOptional(token);
 
             return new ConfigReference(token.origin(), new SubstitutionExpression(path, optional));
+        }
+        throw new ConfigException.BugOrBroken("ConfigNodeSimpleValue did not contain a valid value token");
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        if (Tokens.isValue(token) || Tokens.isUnquotedText(token))
+            return ((ConfigNode)value()).accept(visitor);
+        else if (Tokens.isSubstitution(token)) {
+            List<Token> expression = Tokens.getSubstitutionPathExpression(token);
+            boolean optional = Tokens.getSubstitutionOptional(token);
+
+            return visitor.visitReference(new ConfigNodeReference(token.origin(),
+                    expression.stream().map(x -> new ConfigNodeSingleToken(x)).collect(Collectors.toUnmodifiableList()),
+                    optional));
         }
         throw new ConfigException.BugOrBroken("ConfigNodeSimpleValue did not contain a valid value token");
     }

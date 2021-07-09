@@ -9,6 +9,8 @@ import java.io.Serializable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.parser.ConfigNodeNull;
+import com.typesafe.config.parser.ConfigNodeVisitor;
 
 /**
  * This exists because sometimes null is not the same as missing. Specifically,
@@ -18,7 +20,7 @@ import com.typesafe.config.ConfigValueType;
  * not.
  *
  */
-final class ConfigNull extends AbstractConfigValue implements Serializable {
+final class ConfigNull extends AbstractConfigValue implements Serializable, ConfigNodeNull {
 
     private static final long serialVersionUID = 2L;
 
@@ -54,5 +56,10 @@ final class ConfigNull extends AbstractConfigValue implements Serializable {
     // serialization all goes through SerializedConfigValue
     private Object writeReplace() throws ObjectStreamException {
         return new SerializedConfigValue(this);
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        return visitor.visitNull(this);
     }
 }

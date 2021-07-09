@@ -3,13 +3,16 @@
  */
 package com.typesafe.config.impl;
 
-import com.typesafe.config.ConfigException;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-final class ConfigNodeField extends AbstractConfigNode {
+import com.typesafe.config.ConfigException;
+import com.typesafe.config.parser.ConfigNode;
+import com.typesafe.config.parser.ConfigNodePath;
+import com.typesafe.config.parser.ConfigNodeVisitor;
+
+final class ConfigNodeField extends AbstractConfigNode implements com.typesafe.config.parser.ConfigNodeField {
     final private ArrayList<AbstractConfigNode> children;
 
     public ConfigNodeField(Collection<AbstractConfigNode> children) {
@@ -45,10 +48,10 @@ final class ConfigNodeField extends AbstractConfigNode {
         throw new ConfigException.BugOrBroken("Field node doesn't have a value");
     }
 
-    public ConfigNodePath path() {
+    public ConfigNodeParsedPath path() {
         for (int i = 0; i < children.size(); i++) {
-            if (children.get(i) instanceof ConfigNodePath) {
-                return (ConfigNodePath)children.get(i);
+            if (children.get(i) instanceof ConfigNodeParsedPath) {
+                return (ConfigNodeParsedPath)children.get(i);
             }
         }
         throw new ConfigException.BugOrBroken("Field node doesn't have a path");
@@ -74,5 +77,20 @@ final class ConfigNodeField extends AbstractConfigNode {
             }
         }
         return comments;
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        return visitor.visitField(this);
+    }
+
+    @Override
+    public ConfigNodePath getPath() {
+        return path().toUnparsed(origin());
+    }
+
+    @Override
+    public ConfigNode getValue() {
+        return value();
     }
 }

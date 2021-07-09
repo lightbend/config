@@ -1,10 +1,10 @@
 package com.typesafe.config.impl;
 
-import com.typesafe.config.*;
-import com.typesafe.config.parser.ConfigDocument;
-
 import java.io.StringReader;
 import java.util.Iterator;
+
+import com.typesafe.config.*;
+import com.typesafe.config.parser.ConfigDocument;
 
 final class SimpleConfigDocument implements ConfigDocument {
     private ConfigNodeRoot configNodeTree;
@@ -59,5 +59,10 @@ final class SimpleConfigDocument implements ConfigDocument {
     @Override
     public int hashCode() {
         return render().hashCode();
+    }
+
+    @Override
+    public com.typesafe.config.parser.ConfigNodeRoot getRoot() {
+        return configNodeTree;
     }
 }

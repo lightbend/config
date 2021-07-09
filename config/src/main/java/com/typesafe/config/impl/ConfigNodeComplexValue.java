@@ -5,6 +5,8 @@ package com.typesafe.config.impl;
 
 import java.util.*;
 
+import com.typesafe.config.parser.ConfigNode;
+
 abstract class ConfigNodeComplexValue extends AbstractConfigNodeValue {
     final protected ArrayList<AbstractConfigNode> children;
 
@@ -49,4 +51,8 @@ abstract class ConfigNodeComplexValue extends AbstractConfigNodeValue {
     // for use in the indentText() method so we can avoid a gross if/else statement
     // checking the type of this
     abstract ConfigNodeComplexValue newNode(Collection<AbstractConfigNode> nodes);
+
+    public List<ConfigNode> getChildren() {
+        return Collections.unmodifiableList(children);
+    }
 }

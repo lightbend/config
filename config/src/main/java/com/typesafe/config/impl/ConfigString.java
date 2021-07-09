@@ -9,8 +9,10 @@ import java.io.Serializable;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.parser.ConfigNodeString;
+import com.typesafe.config.parser.ConfigNodeVisitor;
 
-abstract class ConfigString extends AbstractConfigValue implements Serializable {
+abstract class ConfigString extends AbstractConfigValue implements Serializable, ConfigNodeString{
 
     private static final long serialVersionUID = 2L;
 
@@ -75,6 +77,16 @@ abstract class ConfigString extends AbstractConfigValue implements Serializable 
 
     @Override
     String transformToString() {
+        return value;
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        return visitor.visitString(this);
+    }
+
+    @Override
+    public String getValue() {
         return value;
     }
 

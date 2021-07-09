@@ -8,8 +8,10 @@ import java.io.Serializable;
 
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
+import com.typesafe.config.parser.ConfigNodeBoolean;
+import com.typesafe.config.parser.ConfigNodeVisitor;
 
-final class ConfigBoolean extends AbstractConfigValue implements Serializable {
+final class ConfigBoolean extends AbstractConfigValue implements Serializable, ConfigNodeBoolean {
 
     private static final long serialVersionUID = 2L;
 
@@ -43,5 +45,15 @@ final class ConfigBoolean extends AbstractConfigValue implements Serializable {
     // serialization all goes through SerializedConfigValue
     private Object writeReplace() throws ObjectStreamException {
         return new SerializedConfigValue(this);
+    }
+
+    @Override
+    public <T> T accept(ConfigNodeVisitor<T> visitor) {
+        return visitor.visitBoolean(this);
+    }
+
+    @Override
+    public boolean getValue() {
+        return value;
     }
 }

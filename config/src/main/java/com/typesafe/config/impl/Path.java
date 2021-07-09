@@ -229,4 +229,14 @@ final class Path {
     static Path newPath(String path) {
         return PathParser.parsePath(path);
     }
+
+    public List<String> toUnmodifiableJava() {
+        List<String> ls = new LinkedList<>();
+        Path here = this;
+        while (here != null) {
+            ls.add(here.first);
+            here = here.remainder;
+        }
+        return Collections.unmodifiableList(ls);
+    }
 }
