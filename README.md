@@ -887,7 +887,9 @@ format.
   * beamly-core.config https://github.com/beamly/beamly-core.config
 
 #### Kotlin wrappers for the Java library
+
   * config4k https://github.com/config4k/config4k
+  * hoplite https://github.com/sksamuel/hoplite
 
 #### Scala port
 
