@@ -47,8 +47,8 @@ lazy val root = (project in file("."))
     doc                                    := (configLib / Compile / doc).value
     packageDoc / aggregate                 := false
     packageDoc                             := (configLib / Compile / packageDoc).value
-    checkstyle / aggregate                 := false
-    checkstyle                             := (configLib / Compile / checkstyle).value
+//    checkstyle / aggregate                 := false
+//    checkstyle                             := (configLib / Compile / checkstyle).value
     PgpKeys.publishSigned / aggregate      := false
     PgpKeys.publishSigned                  := (configLib / PgpKeys.publishSigned).value
     PgpKeys.publishLocalSigned / aggregate := false
@@ -105,40 +105,42 @@ lazy val configLib =  Project("config", file("config"))
       .setPreference(IndentSpaces, 4)
       .setPreference(FirstArgumentOnNewline, Preserve)
 
-    checkstyleConfigLocation               := CheckstyleConfigLocation.File((baseDirectory.value / "checkstyle-config.xml").toString)
+//    checkstyleConfigLocation               := CheckstyleConfigLocation.File((baseDirectory.value / "checkstyle-config.xml").toString)
 
-    Compile / checkstyle := {
-      val log = streams.value.log
-      (Compile / checkstyle).value
-      val resultFile = (Compile / checkstyleOutputFile).value
-      val results = scala.xml.XML.loadFile(resultFile)
-      val errorFiles = results \\ "checkstyle" \\ "file"
-
-      def errorFromXml(node: scala.xml.NodeSeq): (String, String, String) = {
-        val line: String = (node \ "@line" text)
-        val msg: String = (node \ "@message" text)
-        val source: String = (node \ "@source" text)
-        (line, msg, source)
-      }
-      def errorsFromXml(fileNode: scala.xml.NodeSeq): Seq[(String, String, String, String)] = {
-        val name: String = (fileNode \ "@name" text)
-        val errors = (fileNode \\ "error") map { e => errorFromXml(e) }
-        errors map { case (line, error, source) => (name, line, error, source) }
-      }
-
-      val errors = errorFiles flatMap { f => errorsFromXml(f) }
-
-      if (errors.nonEmpty) {
-        for (e <- errors) {
-          log.error(s"${e._1}:${e._2}: ${e._3} (from ${e._4})")
-        }
-        throw new RuntimeException(s"Checkstyle failed with ${errors.size} errors")
-      }
-      log.info("No errors from checkstyle")
-    }
+//    Compile / checkstyle := {
+//      val log = streams.value.log
+//      (Compile / checkstyle).value
+//      val resultFile = (Compile / checkstyleOutputFile).value
+//      val results = scala.xml.XML.loadFile(resultFile)
+//      val errorFiles = results \\ "checkstyle" \\ "file"
+//
+//      def errorFromXml(node: scala.xml.NodeSeq): (String, String, String) = {
+//        val line: String = (node \ "@line" text)
+//        val msg: String = (node \ "@message" text)
+//        val source: String = (node \ "@source" text)
+//        (line, msg, source)
+//      }
+//      def errorsFromXml(fileNode: scala.xml.NodeSeq): Seq[(String, String, String, String)] = {
+//        val name: String = (fileNode \ "@name" text)
+//        val errors = (fileNode \\ "error") map { e => errorFromXml(e) }
+//        errors map { case (line, error, source) => (name, line, error, source) }
+//      }
+//
+//      val errors = errorFiles flatMap { f => errorsFromXml(f) }
+//
+//      if (errors.nonEmpty) {
+//        for (e <- errors) {
+//          log.error(s"${e._1}:${e._2}: ${e._3} (from ${e._4})")
+//        }
+//        throw new RuntimeException(s"Checkstyle failed with ${errors.size} errors")
+//      }
+//      log.info("No errors from checkstyle")
+//    }
 
     // add checkstyle as a dependency of doc
-    Compile / doc                          := ((Compile / doc).dependsOn(Compile / checkstyle)).value
+    Compile / doc                          := (Compile / doc)
+//      .dependsOn(Compile / checkstyle)
+      .value
 
     findbugsReportType                     := Some(FindbugsReport.Html)
     findbugsReportPath                     := Some(crossTarget.value / "findbugs.html")

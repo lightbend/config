@@ -617,9 +617,10 @@ public final class ConfigFactory {
      * <p>
      * Environment variables are mangled in the following way after stripping the prefix "CONFIG_FORCE_":
      * <table border="1">
+     *     <caption>Mangling of environment variables</caption>
      * <tr>
-     *     <th bgcolor="silver">Env Var</th>
-     *     <th bgcolor="silver">Config</th>
+     *     <th>Env Var</th>
+     *     <th>Config</th>
      * </tr>
      * <tr>
      *     <td>_&nbsp;&nbsp;&nbsp;[1 underscore]</td>
