@@ -1,7 +1,7 @@
 Configuration library for JVM languages.
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config)
-[![Build Status](https://travis-ci.org/lightbend/config.svg?branch=master)](https://travis-ci.org/lightbend/config)
+[![Build Status](https://github.com/lightbend/config/actions/workflows/ci.yml/badge.svg)](https://github.com/lightbend/config/actions/workflows/ci.yml)
 
 If you have questions or are working on a pull request or just
 curious, please feel welcome to join the chat room:
@@ -120,7 +120,7 @@ Link for direct download if you don't use a dependency manager:
 ### Release Notes
 
 Please see NEWS.md in this directory,
-https://github.com/lightbend/config/blob/master/NEWS.md
+https://github.com/lightbend/config/blob/main/NEWS.md
 
 ### API docs
 
@@ -128,7 +128,7 @@ https://github.com/lightbend/config/blob/master/NEWS.md
  - also published in jar form
  - consider reading this README first for an intro
  - for questions about the `.conf` file format, read
-   [HOCON.md](https://github.com/lightbend/config/blob/master/HOCON.md)
+   [HOCON.md](https://github.com/lightbend/config/blob/main/HOCON.md)
    in this directory
 
 ### Bugs and Patches
@@ -142,7 +142,7 @@ account - it takes 30 seconds.  You can do this at
 https://www.lightbend.com/contribute/cla
 
 Please see
-[CONTRIBUTING](https://github.com/lightbend/config/blob/master/CONTRIBUTING.md)
+[CONTRIBUTING](https://github.com/lightbend/config/blob/main/CONTRIBUTING.md)
 for more including how to make a release.
 
 ### Build
@@ -163,7 +163,7 @@ Scala dependency.
 
 ### Longer Examples
 
-See the examples in the `examples/` [directory](https://github.com/lightbend/config/tree/master/examples).
+See the examples in the `examples/` [directory](https://github.com/lightbend/config/tree/main/examples).
 
 You can run these from the sbt console with the commands `project
 config-simple-app-java` and then `run`.
@@ -436,7 +436,7 @@ this:
 Using the `Config` interface, you could write
 `conf.getInt("foo.bar")`. The `foo.bar` string is called a _path
 expression_
-([HOCON.md](https://github.com/lightbend/config/blob/master/HOCON.md)
+([HOCON.md](https://github.com/lightbend/config/blob/main/HOCON.md)
 has the syntax details for these expressions). Iterating over this
 `Config`, you would get two entries; `"foo.bar" : 42` and
 `"foo.baz" : 43`. When iterating a `Config` you will not find
@@ -492,7 +492,7 @@ particular value manually).
 
 The JSON superset is called "Human-Optimized Config Object
 Notation" or HOCON, and files use the suffix `.conf`.  See
-[HOCON.md](https://github.com/lightbend/config/blob/master/HOCON.md)
+[HOCON.md](https://github.com/lightbend/config/blob/main/HOCON.md)
 in this directory for more detail.
 
 After processing a `.conf` file, the result is always just a JSON
@@ -803,7 +803,7 @@ have expressed interest in a branch off of 1.3.x supporting
 Java 7. If you want to work on that branch you might bring it up
 on [chat](https://gitter.im/lightbend/config). We can release a
 jar for Java 7 if someone(s) steps up to maintain the branch. The
-master branch does not use Java 8 "gratuitously" but some APIs
+main branch does not use Java 8 "gratuitously" but some APIs
 that use Java 8 types will need to be removed.
 
 ### Rationale for Supported File Formats

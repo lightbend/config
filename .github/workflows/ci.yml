@@ -4,15 +4,14 @@ on:
   push:
 jobs:
   test:
+    runs-on: ubuntu-latest
+    if: github.repository == 'lightbend/config'
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            java: 8
-          - os: windows-latest
-            java: 17
-    runs-on: ${{ matrix.os }}
+          - java: 8
+          - java: 11
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -23,4 +22,4 @@ jobs:
           java-version: ${{ matrix.java }}
       - name: Build and test
         shell: bash
-        run: sbt -v +test +doc
+        run: sbt -v test doc
