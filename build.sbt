@@ -49,11 +49,10 @@ lazy val root = (project in file("."))
     packageDoc                             := (configLib / Compile / packageDoc).value
     checkstyle / aggregate                 := false
     checkstyle                             := (configLib / Compile / checkstyle).value
-    useGpg                                 := true
     PgpKeys.publishSigned / aggregate      := false
-    PgpKeys.publishSigned                  := (PgpKeys.publishSigned in configLib).value
+    PgpKeys.publishSigned                  := (configLib / PgpKeys.publishSigned).value
     PgpKeys.publishLocalSigned / aggregate := false
-    PgpKeys.publishLocalSigned             := (PgpKeys.publishLocalSigned in configLib).value
+    PgpKeys.publishLocalSigned             := (configLib / PgpKeys.publishLocalSigned).value
   })
 
 lazy val configLib =  Project("config", file("config"))

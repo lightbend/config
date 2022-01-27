@@ -12,6 +12,7 @@ jobs:
         include:
           - java: 8
           - java: 11
+          - java: 17
     steps:
       - name: Checkout
         uses: actions/checkout@v2

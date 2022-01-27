@@ -14,17 +14,17 @@ object LinkSourcePlugin extends AutoPlugin {
   override def requires = JvmPlugin
   override lazy val projectSettings: Seq[Def.Setting[_ >: Option[String] with Task[Seq[String]] with Task[File] <: Product]] = Seq(
     javadocSourceBaseUrl := None,
-    javacOptions in (Compile, doc) := {
-      val old = (javacOptions in doc).value
+    Compile / doc / javacOptions := {
+      val old = (doc / javacOptions).value
       if (old.contains("-linksource"))
         old
       else
         "-linksource" +: old
     },
-    (doc in Compile) := {
-      val result = (doc in Compile).value
+    (Compile / doc) := {
+      val result = (Compile / doc).value
 
-      val dir = (target in doc in Compile).value
+      val dir = (Compile / doc / target).value
 
       (javadocSourceBaseUrl.value, streams.value) match {
         case (Some(url), streamz) =>
