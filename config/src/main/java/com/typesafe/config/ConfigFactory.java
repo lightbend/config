@@ -8,6 +8,7 @@ import com.typesafe.config.impl.Parseable;
 
 import java.io.File;
 import java.io.Reader;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
@@ -1241,7 +1242,11 @@ public final class ConfigFactory {
 
         if (className != null) {
             try {
-                return ConfigLoadingStrategy.class.cast(Class.forName(className).newInstance());
+                return Class.forName(className).asSubclass(ConfigLoadingStrategy.class).getDeclaredConstructor().newInstance();
+            } catch (InvocationTargetException e) {
+                Throwable cause = e.getCause();
+                if (cause == null) throw new ConfigException.BugOrBroken("Failed to load strategy: " + className, e);
+                else throw new ConfigException.BugOrBroken("Failed to load strategy: " + className, cause);
             } catch (Throwable e) {
                 throw new ConfigException.BugOrBroken("Failed to load strategy: " + className, e);
             }

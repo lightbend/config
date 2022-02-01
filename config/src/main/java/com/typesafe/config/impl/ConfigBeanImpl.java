@@ -106,7 +106,7 @@ public class ConfigBeanImpl {
             }
 
             // Fill in the bean instance
-            T bean = clazz.newInstance();
+            T bean = clazz.getDeclaredConstructor().newInstance();
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
                 Type parameterType = setter.getGenericParameterTypes()[0];
@@ -125,8 +125,10 @@ public class ConfigBeanImpl {
                 setter.invoke(bean, unwrapped);
             }
             return bean;
-        } catch (InstantiationException e) {
+        } catch (NoSuchMethodException e) {
             throw new ConfigException.BadBean(clazz.getName() + " needs a public no-args constructor to be used as a bean", e);
+        } catch (InstantiationException e) {
+            throw new ConfigException.BadBean(clazz.getName() + " needs to be instantiable to be used as a bean", e);
         } catch (IllegalAccessException e) {
             throw new ConfigException.BadBean(clazz.getName() + " getters and setters are not accessible, they must be for use as a bean", e);
         } catch (InvocationTargetException e) {
