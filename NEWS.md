@@ -1,4 +1,4 @@
-# 1.4.2: Februari 2, 2022
+# 1.4.2: February 2, 2022
 
  - Avoid instantiating arbitrary classes ([#758](/../../pull/758)) thanks to [@vlsi](https://github.com/vlsi) for the report and [@raboof](https://github.com/raboof) for the patch
  - Various project infrastructure improvements ([#755](/../../pull/755), [#757](/../../pull/757)) thanks to [@ennru](https://github.com/ennru)
