@@ -2,7 +2,7 @@
 
  - Avoid instantiating arbitrary classes ([#758](/../../pull/758)) thanks to [@vlsi](https://github.com/vlsi) for the report and [@raboof](https://github.com/raboof) for the patch
  - Various project infrastructure improvements ([#755](/../../pull/755), [#757](/../../pull/757)) thanks to [@ennru](https://github.com/ennru)
- - Add hoplite to Kotline wrappers ([#749](/../../pull/749)) thanks to [@sksamuel](https://github.com/sksamuel)
+ - Add hoplite to Kotlin wrappers ([#749](/../../pull/749)) thanks to [@sksamuel](https://github.com/sksamuel)
  - Remove unnecessary array ([#730](/../../issues/730)) thanks to [@hkupty](https://github.com/hkupty)
  - Add erlang port to README ([#722](/../../pull/722)) thanks to [@6293](https://github.com/6293)
  - Update repo path for Ficus ([#694](/../../pull/694)) thanks to [@joyfulvillage](https://github.com/joyfulvillage)
