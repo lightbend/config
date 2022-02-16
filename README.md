@@ -914,6 +914,7 @@ format.
 
 #### JavaScript port
 
+  * https://github.com/josephtzeng/hocon-parser
   * https://github.com/yellowblood/hocon-js (missing features, under development)
 
 #### C# port
