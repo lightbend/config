@@ -530,6 +530,10 @@ public abstract class Parseable implements ConfigParseable {
                     connection.setRequestProperty("Accept", acceptContent);
                 }
 
+                if (System.getProperty("config.url_auth_header") != null) {
+                    connection.setRequestProperty("Authorization", System.getProperty("config.url_auth_header"));
+                }
+
                 connection.connect();
 
                 // save content type for later

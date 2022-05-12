@@ -255,7 +255,8 @@ system properties can be used to force a different config source
    basename, i.e. `application.conf` not `application`
  - `config.file` specifies a filesystem path, again
    it should include the extension, not be a basename
- - `config.url` specifies a URL
+ - `config.url` specifies a URL (if it requires some kind of authentication/authorization,
+   you may specify `config.url_auth_header` property to pass the string to `Authorization` header)
 
  **Note**: you need to pass `-Dconfig.file=path/to/config-file` before the jar itself, e.g. `java -Dconfig.file=path/to/config-file.conf -jar path/to/jar-file.jar`. Same applies for `-Dconfig.resource=config-file.conf`
 
