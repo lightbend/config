@@ -33,6 +33,7 @@ import com.typesafe.config.impl.SimpleIncluder.NameSource;
  */
 public class ConfigImpl {
     private static final String ENV_VAR_OVERRIDE_PREFIX = "CONFIG_FORCE_";
+    private static final String CONFIG_CONTENT_OVERRIDES_KEY = "config.config_content";
 
     private static class LoaderCache {
         private Config currentSystemProperties;
@@ -403,6 +404,31 @@ public class ConfigImpl {
         // effect that it drops all caches
         EnvVariablesOverridesHolder.envVariables = loadEnvVariablesOverrides();
     }
+
+    private static Config loadConfigContentOverrides(Config systemPropertiesConfig) {
+        String configOverrides = "";
+        if (systemPropertiesConfig.hasPath(CONFIG_CONTENT_OVERRIDES_KEY)) {
+            configOverrides = systemPropertiesConfig.getString(CONFIG_CONTENT_OVERRIDES_KEY);
+        }
+        return Parseable.newString(configOverrides, ConfigParseOptions.defaults())
+                .parse().toConfig();
+    }
+    private static class ConfigContentOverridesHolder {
+        static volatile Config configContent = loadConfigContentOverrides(systemPropertiesAsConfig());
+    }
+    public static Config configContentOverrides() {
+        try {
+            return ConfigContentOverridesHolder.configContent;
+        } catch (ExceptionInInitializerError e) {
+            throw ConfigImplUtil.extractInitializerError(e);
+        }
+    }
+
+    public static void reloadContentOverridesConfig() {
+        reloadSystemPropertiesConfig();
+        ConfigContentOverridesHolder.configContent = loadConfigContentOverrides(systemPropertiesAsConfig());
+    }
+
 
     public static Config defaultReference(final ClassLoader loader) {
         return computeCachedConfig(loader, "defaultReference", new Callable<Config>() {

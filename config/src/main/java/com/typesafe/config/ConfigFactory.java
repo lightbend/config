@@ -439,9 +439,9 @@ public final class ConfigFactory {
      */
     public static Config defaultOverrides() {
         if (getOverrideWithEnv()) {
-            return systemEnvironmentOverrides().withFallback(systemProperties());
+            return systemEnvironmentOverrides().withFallback(systemProperties().withFallback(configContentOverrides()));
         } else {
-            return systemProperties();
+            return systemProperties().withFallback(configContentOverrides());
         }
     }
 
@@ -669,6 +669,20 @@ public final class ConfigFactory {
      */
     public static Config systemEnvironment() {
         return ConfigImpl.envVariablesAsConfig();
+    }
+
+    /**
+     * Obtains <code>Config</code> by parsing content of reserved system property <code>config.config_content</code>.
+     * <code>Config</code> is parsed using default {@link ConfigParseOptions}
+     * <p>
+     *     Values parsed from <code>config.config_content</code>
+     *     can be overridden by other system properties or environment variables.
+     * </p>
+     *
+     * @return <code>Config</code>
+     */
+    public static Config configContentOverrides() {
+        return ConfigImpl.configContentOverrides();
     }
 
     /**

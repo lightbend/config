@@ -1277,4 +1277,24 @@ class ConfigSubstitutionTest extends TestUtils {
         val resolved2 = resolve(obj2)
         assertEquals(parseObject("{ x : 42, y : 42 }"), resolved2.getConfig("a").root)
     }
+
+    @Test
+    def configContentPropertyOverridesConf(): Unit = {
+        val configContentProperty = "config.config_content"
+        val content = "array1=[]\nnull1=i_am_not_null_now\narray2=[\"Hello\", \"world!\"]"
+
+        try {
+            System.setProperty(configContentProperty, content)
+            ConfigImpl.reloadContentOverridesConfig()
+
+            val config = ConfigFactory.load("validate-reference.conf")
+
+            assertEquals(Seq(), config.getIntList("array1").asScala)
+            assertEquals(Seq("Hello", "world!"), config.getStringList("array2").asScala)
+            assertEquals("i_am_not_null_now", config.getString("null1"))
+            assertEquals(11, config.getInt("int2"))
+        } finally {
+            System.clearProperty(configContentProperty)
+        }
+    }
 }
