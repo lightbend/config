@@ -939,7 +939,7 @@ format.
 
 #### Online playground
 
-   * https://hocon-playground.herokuapp.com/
+   * https://hocon-playground.avelier.dev/
 
 # Maintenance notes
 
