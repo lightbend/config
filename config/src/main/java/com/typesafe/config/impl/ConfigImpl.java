@@ -233,6 +233,8 @@ public class ConfigImpl {
             // Double, Integer, or Long.
             if (object instanceof Double) {
                 return new ConfigDouble(origin, (Double) object, null);
+            } else if (object instanceof Float) {
+                return new ConfigFloat(origin, (Float) object, null);
             } else if (object instanceof Integer) {
                 return new ConfigInt(origin, (Integer) object, null);
             } else if (object instanceof Long) {

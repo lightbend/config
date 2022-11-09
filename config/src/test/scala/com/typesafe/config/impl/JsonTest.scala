@@ -41,6 +41,8 @@ class JsonTest extends TestUtils {
                 lift.JInt(BigInt(v.unwrapped()))
             case v: ConfigLong =>
                 lift.JInt(BigInt(v.unwrapped()))
+            case v: ConfigFloat =>
+                lift.JDouble(v.unwrapped().doubleValue())
             case v: ConfigDouble =>
                 lift.JDouble(v.unwrapped())
             case v: ConfigString =>

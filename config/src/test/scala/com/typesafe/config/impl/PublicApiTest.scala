@@ -131,6 +131,7 @@ class PublicApiTest extends TestUtils {
     def fromJavaNumbers() {
         testFromValue(intValue(5), 5: java.lang.Integer)
         testFromValue(longValue(6), 6: java.lang.Long)
+        testFromValue(floatValue(2.718f), 2.718f: java.lang.Float)
         testFromValue(doubleValue(3.14), 3.14: java.lang.Double)
 
         class WeirdNumber(v: Double) extends java.lang.Number {

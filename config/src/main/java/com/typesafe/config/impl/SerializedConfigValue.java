@@ -85,6 +85,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
         BOOLEAN(ConfigValueType.BOOLEAN),
         INT(ConfigValueType.NUMBER),
         LONG(ConfigValueType.NUMBER),
+        FLOAT(ConfigValueType.NUMBER),
         DOUBLE(ConfigValueType.NUMBER),
         STRING(ConfigValueType.STRING),
         LIST(ConfigValueType.LIST),
@@ -110,6 +111,8 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
                     return INT;
                 else if (value instanceof ConfigLong)
                     return LONG;
+                else if (value instanceof ConfigFloat)
+                    return FLOAT;
                 else if (value instanceof ConfigDouble)
                     return DOUBLE;
             } else {
@@ -306,6 +309,10 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             out.writeLong(((ConfigLong) value).unwrapped());
             out.writeUTF(((ConfigNumber) value).transformToString());
             break;
+        case FLOAT:
+            out.writeFloat(((ConfigFloat) value).unwrapped());
+            out.writeUTF(((ConfigNumber) value).transformToString());
+            break;
         case DOUBLE:
             out.writeDouble(((ConfigDouble) value).unwrapped());
             out.writeUTF(((ConfigNumber) value).transformToString());
@@ -350,6 +357,10 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             long vl = in.readLong();
             String sl = in.readUTF();
             return new ConfigLong(origin, vl, sl);
+        case FLOAT:
+            float vf = in.readFloat();
+            String sf = in.readUTF();
+            return new ConfigFloat(origin, vf, sf);
         case DOUBLE:
             double vd = in.readDouble();
             String sd = in.readUTF();
@@ -468,7 +479,7 @@ class SerializedConfigValue extends AbstractConfigValue implements Externalizabl
             if (code == SerializedField.END_MARKER) {
                 return;
             }
-            
+
             DataInput input = fieldIn(in);
             if (code == SerializedField.ROOT_VALUE) {
                 this.value = readValue(input, null /* baseOrigin */);

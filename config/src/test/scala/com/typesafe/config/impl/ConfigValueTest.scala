@@ -422,6 +422,7 @@ class ConfigValueTest extends TestUtils {
         // isn't super important since it's just for debugging
         intValue(10).toString()
         longValue(11).toString()
+        floatValue(2.718f).toString()
         doubleValue(3.14).toString()
         stringValue("hi").toString()
         nullValue.toString()
