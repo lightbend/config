@@ -20,7 +20,7 @@ class ConfigNodeTest extends TestUtils {
         assertEquals(node.render(), token.tokenText())
     }
 
-    private def fieldNodeTest(key: ConfigNodePath, value: AbstractConfigNodeValue, newValue: AbstractConfigNodeValue) {
+    private def fieldNodeTest(key: ConfigNodeParsedPath, value: AbstractConfigNodeValue, newValue: AbstractConfigNodeValue) {
         val keyValNode = nodeKeyValuePair(key, value)
         assertEquals(key.render() + " : " + value.render(), keyValNode.render())
         assertEquals(key.render, keyValNode.path().render())

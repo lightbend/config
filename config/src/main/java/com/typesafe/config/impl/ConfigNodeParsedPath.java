@@ -5,6 +5,7 @@ package com.typesafe.config.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.stream.Collectors;
 
 import com.typesafe.config.ConfigException;
@@ -55,7 +56,7 @@ final class ConfigNodeParsedPath extends AbstractConfigNode {
 
     public ConfigNodeUnparsedPath toUnparsed(ConfigOrigin origin) {
         return new ConfigNodeUnparsedPath(
-                tokens.stream().map(tok -> new ConfigNodeSingleToken(tok)).collect(Collectors.toUnmodifiableList()),
+                Collections.unmodifiableList(tokens.stream().map(tok -> new ConfigNodeSingleToken(tok)).collect(Collectors.toList())),
                 origin);
     }
 

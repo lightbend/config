@@ -48,7 +48,7 @@ final class ConfigNodeSimpleValue extends AbstractConfigNodeValue {
             boolean optional = Tokens.getSubstitutionOptional(token);
 
             return visitor.visitReference(new ConfigNodeReference(token.origin(),
-                    expression.stream().map(x -> new ConfigNodeSingleToken(x)).collect(Collectors.toUnmodifiableList()),
+                    Collections.unmodifiableList(expression.stream().map(x -> new ConfigNodeSingleToken(x)).collect(Collectors.toList())),
                     optional));
         }
         throw new ConfigException.BugOrBroken("ConfigNodeSimpleValue did not contain a valid value token");

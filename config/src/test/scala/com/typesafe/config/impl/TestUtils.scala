@@ -696,7 +696,7 @@ abstract trait TestUtils {
     def nodeComma = new ConfigNodeSingleToken(Tokens.COMMA)
     def nodeLine(line: Integer) = new ConfigNodeSingleToken(tokenLine(line))
     def nodeWhitespace(whitespace: String) = new ConfigNodeSingleToken(tokenWhitespace(whitespace))
-    def nodeKeyValuePair(key: ConfigNodePath, value: AbstractConfigNodeValue) = {
+    def nodeKeyValuePair(key: ConfigNodeParsedPath, value: AbstractConfigNodeValue) = {
         val nodes = List(key, nodeSpace, nodeColon, nodeSpace, value)
         new ConfigNodeField(nodes.asJavaCollection)
     }
