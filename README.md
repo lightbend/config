@@ -257,6 +257,8 @@ system properties can be used to force a different config source
    it should include the extension, not be a basename
  - `config.url` specifies a URL
 
+ **Note**: you need to pass `-Dconfig.file=path/to/config-file` before the jar itself, e.g. `java -Dconfig.file=path/to/config-file.conf -jar path/to/jar-file.jar`. Same applies for `-Dconfig.resource=config-file.conf`
+
 These system properties specify a _replacement_ for
 `application.{conf,json,properties}`, not an addition. They only
 affect apps using the default `ConfigFactory.load()`
@@ -937,7 +939,7 @@ format.
 
 #### Online playground
 
-   * https://hocon-playground.herokuapp.com/
+   * https://hocon-playground.avelier.dev/
 
 # Maintenance notes
 
