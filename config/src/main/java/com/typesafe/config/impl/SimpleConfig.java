@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigException.BadPath;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigMemorySize;
 import com.typesafe.config.ConfigMergeable;
@@ -174,11 +175,21 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             if (next == null) {
                 return findKeyOrNull(self, key, expected, originalPath);
             } else {
-                AbstractConfigObject o = (AbstractConfigObject) findKey(self, key,
-                        ConfigValueType.OBJECT,
-                        originalPath.subPath(0, originalPath.length() - next.length()));
-                assert (o != null); // missing was supposed to throw
-                return findOrNull(o, next, expected, originalPath);
+
+                AbstractConfigValue nextValue =
+                        findKey(self,
+                                key,
+                                null,
+                                originalPath.subPath(0, originalPath.length() - next.length()));
+
+                if (nextValue instanceof AbstractConfigObject) {
+                    AbstractConfigObject o = (AbstractConfigObject) nextValue;
+                    return findOrNull(o, next, expected, originalPath);
+                } else if (nextValue instanceof SimpleConfigList) {
+                    SimpleConfigList o = (SimpleConfigList) nextValue;
+                    return findOrNull(o, next, expected, originalPath);
+                }
+                return nextValue;
             }
         } catch (ConfigException.NotResolved e) {
             throw ConfigImpl.improveNotResolved(path, e);
@@ -193,6 +204,42 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
         Path path = Path.newPath(pathExpression);
         return find(path, expected, path);
     }
+
+    static private AbstractConfigValue findOrNull(SimpleConfigList self,
+                                                  Path path,
+                                                  ConfigValueType expected,
+                                                  Path originalPath)
+        {
+            try {
+                Integer index = Integer.valueOf(path.first());
+                    Path next = path.remainder();
+                    if (next == null) {
+                        try {
+                            return self.get(index);
+                        } catch (IndexOutOfBoundsException e) {
+                            throw new BadPath(originalPath.render(),
+                                              String.format("Path index %d exceeds the configuration list length %d",
+                                                            index, self.size()));
+                            }
+                        }
+
+                    if (self.get(index) instanceof AbstractConfigObject) {
+
+                        return findOrNull((AbstractConfigObject) self.get(index), next, expected, originalPath);
+
+                    } else if (self.get(index) instanceof SimpleConfigList) {
+
+                        return findOrNull((SimpleConfigList) self.get(index), next, expected, originalPath);
+                    }
+                    throw new BadPath(originalPath.render(),
+                                      String.format("Attempted to retrieve key %s on non-object %s",
+                                                    self.get(index),
+                                                    self));
+            } catch (ConfigException.NotResolved e) {
+                throw ConfigImpl.improveNotResolved(path, e);
+            }
+        }
+
 
     private AbstractConfigValue findOrNull(Path pathExpression, ConfigValueType expected, Path originalPath) {
         return findOrNull(object, pathExpression, expected, originalPath);

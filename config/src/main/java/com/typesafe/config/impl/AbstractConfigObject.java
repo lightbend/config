@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.typesafe.config.ConfigException;
+import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigMergeable;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigOrigin;
@@ -104,6 +105,8 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
             } else {
                 if (v instanceof AbstractConfigObject) {
                     return peekPath((AbstractConfigObject) v, next);
+                } else if (v instanceof SimpleConfigList) {
+                    return peekListPath((SimpleConfigList) v, next);
                 } else {
                     return null;
                 }
@@ -112,6 +115,37 @@ abstract class AbstractConfigObject extends AbstractConfigValue implements Confi
             throw ConfigImpl.improveNotResolved(path, e);
         }
     }
+
+      private static AbstractConfigValue peekListPath(SimpleConfigList self, Path path)
+        {
+          try {
+            Integer current = Integer.valueOf(path.first());
+              if(path.remainder() == null) {
+                return self.get(current);
+              }
+
+              AbstractConfigValue v =
+                      self.get(current) instanceof AbstractConfigObject ?
+                      ((AbstractConfigObject) self.get(current)).attemptPeekWithPartialResolve(path.remainder().first()) :
+                              peekListPath((SimpleConfigList) self.get(current), path.remainder());
+
+              Path next = path.remainder().remainder();
+              if (next == null) {
+                return v;
+              } else {
+                if (v instanceof AbstractConfigObject) {
+                    return peekPath((AbstractConfigObject) v, next);
+                } else if (v instanceof SimpleConfigList) {
+                    return peekListPath((SimpleConfigList) v, next);
+                } else {
+                    return next.remainder() == null ? v : null;
+                }
+              }
+          } catch (ConfigException.NotResolved e) {
+            throw ConfigImpl.improveNotResolved(path, e);
+          }
+        }
+
 
     @Override
     public ConfigValueType valueType() {

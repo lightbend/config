@@ -3,16 +3,18 @@
  */
 package com.typesafe.config.impl
 
-import beanconfig.EnumsConfig.{ Solution, Problem }
+import beanconfig.EnumsConfig.{ Problem, Solution }
 import com.typesafe.config._
 
 import java.io.{ InputStream, InputStreamReader }
 import java.time.Duration
-
 import beanconfig._
+import com.typesafe.config.ConfigException.BadPath
 import org.junit.Assert._
 import org.junit._
 
+import java.util
+import java.util.Collections
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ArrayBuffer
 
@@ -130,6 +132,32 @@ class ConfigBeanFactoryTest extends TestUtils {
         stringsConfigTwo.setYes("testYesTwo")
 
         assertEquals(List(stringsConfigOne, stringsConfigTwo).asJava, beanConfig.getOfStringBean)
+    }
+    @Test
+    def testCanAccessListByElement() {
+        val listConfig: Config = loadConfig().getConfig("arrays")
+        Assert.assertTrue(listConfig.getList("empty").isEmpty)
+        Assert.assertTrue(listConfig.hasPath("ofObject.0"))
+        Assert.assertEquals(2, listConfig.getInt("ofInt.1"))
+        Assert.assertEquals("c", listConfig.getString("ofString.2"))
+        Assert.assertEquals("c", listConfig.getString("ofArray.2.2"))
+        Assert.assertEquals(listConfig.getList("ofArray.2").unwrapped(), List("a", "b", "c").asJava);
+        Assert.assertTrue(listConfig.hasPath("ofArray.2"))
+        Assert.assertTrue(listConfig.hasPath("ofArray.2.2"))
+        Assert.assertTrue(listConfig.hasPath("ofObject.0.byteObj.byteVal"))
+        Assert.assertEquals("1", listConfig.getString("ofObject.0.byteObj.byteVal"))
+        Assert.assertFalse(listConfig.hasPath("ofObject.0.byteObj.byteVal.non"))
+        Assert.assertTrue(listConfig.getIsNull("ofNull.0"))
+        Assert.assertFalse(listConfig.hasPath("ofNull.0"))
+
+        try {
+            listConfig.getString("empty.1")
+            Assert.fail();
+        } catch {
+            case e: BadPath => {}
+            case e: Exception => Assert.fail()
+        }
+
     }
 
     @Test
