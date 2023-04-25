@@ -24,7 +24,7 @@ import com.typesafe.config.ConfigValueType;
  */
 final class ConfigConcatenation extends AbstractConfigValue implements Unmergeable, Container {
 
-    final private List<AbstractConfigValue> pieces;
+    final List<AbstractConfigValue> pieces;
 
     ConfigConcatenation(ConfigOrigin origin, List<AbstractConfigValue> pieces) {
         super(origin);

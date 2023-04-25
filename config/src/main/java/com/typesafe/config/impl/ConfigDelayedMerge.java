@@ -56,7 +56,47 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
     @Override
     ResolveResult<? extends AbstractConfigValue> resolveSubstitutions(ResolveContext context, ResolveSource source)
             throws NotPossibleToResolve {
+        SimpleConfigList nonRecursiveList = tryResolveSubstitutionsNonRecursiveOptimisticConfigList(stack, origin());
+        if (nonRecursiveList != null) {
+            return ResolveResult.make(context, nonRecursiveList);
+        }
         return resolveSubstitutions(this, stack, context, source);
+    }
+
+    /**
+     * Optimize loading of large configs with many += array builders:
+     * 1. Parsing time in one case down from 14sec to 40ms...
+     * 2. non-recursive - no StackOverflowError
+     * */
+    static SimpleConfigList tryResolveSubstitutionsNonRecursiveOptimisticConfigList(
+        List<AbstractConfigValue> stack,
+        ConfigOrigin origin
+    ) {
+        Object prevRef = null;
+        SimpleConfigList acc = null;
+        for (int i = stack.size() - 1; i >= 0; i--) {
+            AbstractConfigValue end = stack.get(i);
+            if (end instanceof ConfigConcatenation) {
+                List<AbstractConfigValue> pieces = ((ConfigConcatenation) end).pieces;
+                if (pieces.size() == 2) {
+                    AbstractConfigValue left = pieces.get(0);
+                    AbstractConfigValue right = pieces.get(1);
+                    if (left instanceof ConfigReference && right instanceof SimpleConfigList) {
+                        if (prevRef == null || prevRef.equals(left)) {
+                            if (acc == null) {
+                                acc = new SimpleConfigList(origin, Collections.emptyList());
+                            }
+                            acc = acc.concatenate(((SimpleConfigList) right));
+                            prevRef = left;
+                            continue;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        return acc;
     }
 
     // static method also used by ConfigDelayedMergeObject
