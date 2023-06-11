@@ -1363,8 +1363,8 @@ class ConfigTest extends TestUtils {
     @Test
     def overrideUsingEnvVarAtChildLevel() {
         val conf = ConfigFactory.load("override-using-env-var-at-child-level.conf")
-        assertEquals("2", conf.getList("dev.catalog.aws-access-key-id").get(0))
-        assertEquals("2", conf.getList("dev.catalog.aws-access-list-key-id").get(0))
+        assertEquals("2", conf.getString("dev.catalog.aws-access-key-id"))
+        assertEquals(Seq("2"), conf.getStringList("dev.catalog.aws-access-list-key-id").asScala)
     }
 
 }

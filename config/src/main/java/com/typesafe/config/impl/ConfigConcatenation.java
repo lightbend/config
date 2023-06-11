@@ -290,4 +290,9 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             p.render(sb, indent, atRoot, options);
         }
     }
+
+    public AbstractConfigValue getOverridePiece() {
+        return this.pieces.get(1);
+    }
+
 }

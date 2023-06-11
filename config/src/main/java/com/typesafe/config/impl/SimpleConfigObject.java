@@ -212,6 +212,19 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                 return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
                         ignoresFallbacks);
             }
+            if (old.getValue() instanceof ConfigConcatenation) {
+                ConfigConcatenation configConcatenation = (ConfigConcatenation) old.getValue();
+                if (configConcatenation.getOverridePiece() == child) {
+                    if (replacement != null) {
+                        configConcatenation.replaceChild(child, replacement);
+                    }
+                    else {
+                        newChildren.remove(old.getKey());
+                    }
+                    return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
+                            ignoresFallbacks);
+                }
+            }
         }
         throw new ConfigException.BugOrBroken("SimpleConfigObject.replaceChild did not find " + child + " in " + this);
     }
