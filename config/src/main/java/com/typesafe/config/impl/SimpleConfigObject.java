@@ -214,15 +214,16 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             }
             if (old.getValue() instanceof ConfigConcatenation) {
                 ConfigConcatenation configConcatenation = (ConfigConcatenation) old.getValue();
-                if (configConcatenation.getOverridePiece() == child) {
-                    if (replacement != null) {
-                        configConcatenation.replaceChild(child, replacement);
+                for (AbstractConfigValue piece: configConcatenation.getPieces()) {
+                    if (piece == child) {
+                        if (replacement != null) {
+                            configConcatenation.replaceChild(child, replacement);
+                        } else {
+                            // probably child should be removed from the concatenation
+                        }
+                        return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
+                                ignoresFallbacks);
                     }
-                    else {
-                        newChildren.remove(old.getKey());
-                    }
-                    return new SimpleConfigObject(origin(), newChildren, ResolveStatus.fromValues(newChildren.values()),
-                            ignoresFallbacks);
                 }
             }
         }

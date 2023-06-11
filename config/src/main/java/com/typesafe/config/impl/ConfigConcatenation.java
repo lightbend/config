@@ -291,8 +291,8 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         }
     }
 
-    public AbstractConfigValue getOverridePiece() {
-        return this.pieces.get(1);
+    public List<AbstractConfigValue> getPieces() {
+        return this.pieces;
     }
 
 }
