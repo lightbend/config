@@ -3,17 +3,15 @@
  */
 package com.typesafe.config.impl
 
-import java.math.BigInteger
-import java.time.temporal.{ ChronoUnit, TemporalUnit }
-
+import com.typesafe.config._
 import org.junit.Assert._
 import org.junit._
-import com.typesafe.config._
-import java.util.concurrent.TimeUnit
 
+import java.math.BigInteger
+import java.time.temporal.ChronoUnit
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit._
 import scala.collection.JavaConverters._
-import com.typesafe.config.ConfigResolveOptions
-import java.util.concurrent.TimeUnit.{ DAYS, HOURS, MICROSECONDS, MILLISECONDS, MINUTES, NANOSECONDS, SECONDS }
 
 class ConfigTest extends TestUtils {
 
@@ -1360,6 +1358,13 @@ class ConfigTest extends TestUtils {
             runFallbackTest("x=${a.b.c}", "x=${a.b.c}", false, new DummyResolver("x.", "", null))
         }
         assertTrue(e.getMessage.contains("${a.b.c}"))
+    }
+
+    @Test
+    def overrideUsingEnvVarAtChildLevel() {
+        val conf = ConfigFactory.load("override-using-env-var-at-child-level.conf")
+        assertEquals("2", conf.getList("dev.catalog.aws-access-key-id").get(0))
+        assertEquals("2", conf.getList("dev.catalog.aws-access-list-key-id").get(0))
     }
 
 }
