@@ -1,11 +1,7 @@
-Configuration library for JVM languages.
+# Configuration library for JVM languages.
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config)
 [![Build Status](https://github.com/lightbend/config/actions/workflows/ci.yml/badge.svg)](https://github.com/lightbend/config/actions/workflows/ci.yml)
-
-If you have questions or are working on a pull request or just
-curious, please feel welcome to join the chat room:
-[![Join chat https://gitter.im/lightbend/config](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/lightbend/config?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ## Overview
 
@@ -98,8 +94,7 @@ to merge it in.
 
 ### Binary Releases
 
-Version 1.2.1 and earlier were built for Java 6, while newer
-versions (1.3.0 and above) will be built for Java 8.
+Typesafe Config is compatible with Java 8 and above.
 
 You can find published releases on Maven Central.
 
@@ -132,6 +127,8 @@ https://github.com/lightbend/config/blob/main/NEWS.md
    in this directory
 
 ### Bugs and Patches
+
+**NOTE: Please read [Readme #Maintained-by](https://github.com/lightbend/config#Maintained-by) before investing time to suggest changes to this library.**
 
 Report bugs to the GitHub issue tracker. Send patches as pull
 requests on GitHub.
@@ -949,6 +946,6 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 
 ## Maintained by 
 
-This project is maintained mostly by [@havocp](https://github.com/havocp) and [@akka-team](https://github.com/orgs/lightbend/teams/akka-team/members).
+The "Typesafe Config" library is an important foundation to how Akka and other JVM libraries manage configuration. We at [Lightbend](https://lightbend.com) consider the functionality of this library as complete. We will make sure "Typesafe Config" keeps up with future JVM versions, but will rarely make any other changes.
 
-Feel free to ping above maintainers for code review or discussions. Pull requests are very welcome–thanks in advance!
+We are thankful for all the work [@havocp](https://github.com/havocp) has put into creating the library initially and supporting its users over many more years, even after leaving Lightbend.
