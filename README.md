@@ -128,7 +128,7 @@ https://github.com/lightbend/config/blob/main/NEWS.md
 
 ### Bugs and Patches
 
-**NOTE: Please read [Readme #Maintained-by](https://github.com/lightbend/config#Maintained-by) before investing time to suggest changes to this library.**
+**NOTE: Please read [Readme #Maintained-by](https://github.com/lightbend/config#Maintained-by) before spending time suggesting changes to this library.**
 
 Report bugs to the GitHub issue tracker. Send patches as pull
 requests on GitHub.
