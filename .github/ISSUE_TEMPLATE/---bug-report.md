@@ -2,6 +2,6 @@
 name: "\U0001F41B Bug report"
 ---
 
-This library is considered "complete", please view bugs you might identify rather as features, or maybe as wrinkles of worn code.
+This library is considered feature complete. We will make sure "Typesafe Config" keeps up with future JVM versions, but will rarely make any other changes.
 
 See [Readme #Maintained-by](https://github.com/lightbend/config#Maintained-by)

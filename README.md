@@ -946,6 +946,6 @@ The license is Apache 2.0, see LICENSE-2.0.txt.
 
 ## Maintained by 
 
-The "Typesafe Config" library is an important foundation to how Akka and other JVM libraries manage configuration. We at [Lightbend](https://lightbend.com) consider the functionality of this library as complete. We will make sure "Typesafe Config" keeps up with future JVM versions, but will rarely make any other changes.
+The "Typesafe Config" library is an important foundation to how Akka and other JVM libraries manage configuration. We at [Lightbend](https://lightbend.com) consider the functionality of this library as feature complete. We will make sure "Typesafe Config" keeps up with future JVM versions, but will rarely make any other changes.
 
 We are thankful for all the work [@havocp](https://github.com/havocp) has put into creating the library initially and supporting its users over many more years, even after leaving Lightbend.

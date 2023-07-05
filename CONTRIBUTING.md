@@ -1,6 +1,6 @@
 # Submitting pull requests
 
-**NOTE: Please read [Readme #Maintained-by](https://github.com/lightbend/config#Maintained-by) before investing time in suggesting changes to this library.**
+**NOTE: Please read [Readme #Maintained-by](https://github.com/lightbend/config#Maintained-by) before spending time suggesting changes to this library.**
 
 
 Pull requests should go via GitHub; there are some nice
