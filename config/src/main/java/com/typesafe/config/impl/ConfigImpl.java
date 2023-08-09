@@ -25,6 +25,7 @@ import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigParseable;
 import com.typesafe.config.ConfigValue;
+import com.typesafe.config.SystemOverride;
 import com.typesafe.config.impl.SimpleIncluder.NameSource;
 
 /**
@@ -299,7 +300,7 @@ public class ConfigImpl {
 
     private static Properties getSystemProperties() {
         // Avoid ConcurrentModificationException due to parallel setting of system properties by copying properties
-        final Properties systemProperties = System.getProperties();
+        final Properties systemProperties = SystemOverride.getProperties();
         final Properties systemPropertiesCopy = new Properties();
         synchronized (systemProperties) {
             for (Map.Entry<Object, Object> entry: systemProperties.entrySet()) {
@@ -342,7 +343,7 @@ public class ConfigImpl {
     }
 
     private static AbstractConfigObject loadEnvVariables() {
-        return PropertiesParser.fromStringMap(newSimpleOrigin("env variables"), System.getenv());
+        return PropertiesParser.fromStringMap(newSimpleOrigin("env variables"), SystemOverride.getenv());
     }
 
     private static class EnvVariablesHolder {
@@ -370,8 +371,8 @@ public class ConfigImpl {
 
 
     private static AbstractConfigObject loadEnvVariablesOverrides() {
-        Map<String, String> env = new HashMap(System.getenv());
-        Map<String, String> result = new HashMap();
+        Map<String, String> env = new HashMap<>(SystemOverride.getenv());
+        Map<String, String> result = new HashMap<>();
 
         for (String key : env.keySet()) {
             if (key.startsWith(ENV_VAR_OVERRIDE_PREFIX)) {
@@ -453,7 +454,7 @@ public class ConfigImpl {
             result.put(SUBSTITUTIONS, false);
 
             // People do -Dconfig.trace=foo,bar to enable tracing of different things
-            String s = System.getProperty("config.trace");
+            String s = SystemOverride.getProperty("config.trace");
             if (s == null) {
                 return result;
             } else {
@@ -464,7 +465,7 @@ public class ConfigImpl {
                     } else if (k.equals(SUBSTITUTIONS)) {
                         result.put(SUBSTITUTIONS, true);
                     } else {
-                        System.err.println("config.trace property contains unknown trace topic '"
+                        SystemOverride.err().println("config.trace property contains unknown trace topic '"
                                 + k + "'");
                     }
                 }
@@ -503,15 +504,15 @@ public class ConfigImpl {
     }
 
     public static void trace(String message) {
-        System.err.println(message);
+        SystemOverride.err().println(message);
     }
 
     public static void trace(int indentLevel, String message) {
         while (indentLevel > 0) {
-            System.err.print("  ");
+            SystemOverride.err().print("  ");
             indentLevel -= 1;
         }
-        System.err.println(message);
+        SystemOverride.err().println(message);
     }
 
     // the basic idea here is to add the "what" and have a canonical
