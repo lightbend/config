@@ -89,7 +89,6 @@ public class SystemOverride {
             return System.getenv();
         }
 
-        @Override
         public PrintStream err() {
             return System.err;
         }
@@ -109,29 +108,24 @@ public class SystemOverride {
             this.errorStream = errorStream;
         }
 
-        @Override
         public Properties getProperties() {
             Properties result = new Properties();
             result.putAll(systemProperties);
             return result;
         }
 
-        @Override
         public String getProperty(String propertyKey) {
             return systemProperties.get(propertyKey);
         }
 
-        @Override
         public String getenv(String environmentVariableName) {
             return environmentVariables.get(environmentVariableName);
         }
 
-        @Override
         public Map<String, String> getenv() {
             return environmentVariables;
         }
 
-        @Override
         public PrintStream err() {
             return errorStream;
         }
