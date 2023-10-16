@@ -5,5 +5,6 @@ enum OriginType {
     GENERIC,
     FILE,
     URL,
-    RESOURCE
+    RESOURCE,
+    ENV_VARIABLE
 }

@@ -357,8 +357,20 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
     }
 
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
-        Object u = unwrapped();
-        sb.append(u.toString());
+        if (hideEnvVariableValue(options)) {
+            sb.append("<env variable>");
+        } else {
+            Object u = unwrapped();
+            sb.append(u.toString());
+        }
+    }
+
+    protected boolean hideEnvVariableValue(ConfigRenderOptions options) {
+        return !options.getShowEnvVariableValues() && origin.originType() == OriginType.ENV_VARIABLE;
+    }
+
+    protected void appendHiddenEnvVariableValue(StringBuilder sb) {
+        sb.append("\"<env variable>\"");
     }
 
     @Override

@@ -77,6 +77,10 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         return newResource(resource, null);
     }
 
+    static SimpleConfigOrigin newEnvVariable(String description) {
+        return new SimpleConfigOrigin(description, -1, -1, OriginType.ENV_VARIABLE, null, null, null);
+    }
+
     @Override
     public SimpleConfigOrigin withLineNumber(int lineNumber) {
         if (lineNumber == this.lineNumber && lineNumber == this.endLineNumber) {
@@ -137,6 +141,10 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         } else {
             return description + ": " + lineNumber + "-" + endLineNumber;
         }
+    }
+
+    OriginType originType() {
+        return originType;
     }
 
     @Override
@@ -484,7 +492,11 @@ final class SimpleConfigOrigin implements ConfigOrigin {
         Number originTypeOrdinal = (Number) m.get(SerializedField.ORIGIN_TYPE);
         if (originTypeOrdinal == null)
             throw new IOException("Missing ORIGIN_TYPE field");
-        OriginType originType = OriginType.values()[originTypeOrdinal.byteValue()];
+        OriginType originType;
+        if (originTypeOrdinal.byteValue() < OriginType.values().length)
+            originType = OriginType.values()[originTypeOrdinal.byteValue()];
+        else
+            originType = OriginType.GENERIC; // ENV_VARIABLE was added in a later version
         String urlOrNull = (String) m.get(SerializedField.ORIGIN_URL);
         String resourceOrNull = (String) m.get(SerializedField.ORIGIN_RESOURCE);
         @SuppressWarnings("unchecked")

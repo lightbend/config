@@ -342,7 +342,7 @@ public class ConfigImpl {
     }
 
     private static AbstractConfigObject loadEnvVariables() {
-        return PropertiesParser.fromStringMap(newSimpleOrigin("env variables"), System.getenv());
+        return PropertiesParser.fromStringMap(newEnvVariable("env variables"), System.getenv());
     }
 
     private static class EnvVariablesHolder {
@@ -543,5 +543,9 @@ public class ConfigImpl {
 
     public static ConfigOrigin newURLOrigin(URL url) {
         return SimpleConfigOrigin.newURL(url);
+    }
+
+    public static ConfigOrigin newEnvVariable(String description) {
+        return SimpleConfigOrigin.newEnvVariable(description);
     }
 }

@@ -95,7 +95,11 @@ lazy val configLib =  Project("config", file("config"))
       "CONFIG_FORCE_a__c" -> "3",
       "CONFIG_FORCE_a___c" -> "4",
       "CONFIG_FORCE_akka_version" -> "foo",
-      "CONFIG_FORCE_akka_event__handler__dispatcher_max__pool__size" -> "10")
+      "CONFIG_FORCE_akka_event__handler__dispatcher_max__pool__size" -> "10",
+      "SECRET_A" -> "A", // ConfigTest.renderShowEnvVariableValues
+      "SECRET_B" -> "B", // ConfigTest.renderShowEnvVariableValues
+      "SECRET_C" -> "C" // ConfigTest.renderShowEnvVariableValues
+    )
 
     OsgiKeys.exportPackage                 := Seq("com.typesafe.config", "com.typesafe.config.impl")
     publish                                := sys.error("use publishSigned instead of plain publish")
