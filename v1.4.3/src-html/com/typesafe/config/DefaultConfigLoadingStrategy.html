@@ -1,0 +1,86 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>package com.typesafe.config;<a name="line.1"></a>
+<span class="sourceLineNo">002</span><a name="line.2"></a>
+<span class="sourceLineNo">003</span>/**<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * Default config loading strategy. Able to load resource, file or URL.<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * Behavior may be altered by defining one of VM properties<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * {@code config.resource}, {@code config.file} or {@code config.url}<a name="line.6"></a>
+<span class="sourceLineNo">007</span> */<a name="line.7"></a>
+<span class="sourceLineNo">008</span>public class DefaultConfigLoadingStrategy implements ConfigLoadingStrategy {<a name="line.8"></a>
+<span class="sourceLineNo">009</span>    @Override<a name="line.9"></a>
+<span class="sourceLineNo">010</span>    public Config parseApplicationConfig(ConfigParseOptions parseOptions) {<a name="line.10"></a>
+<span class="sourceLineNo">011</span>        return ConfigFactory.parseApplicationReplacement(parseOptions)<a name="line.11"></a>
+<span class="sourceLineNo">012</span>            .orElseGet(() -&gt; ConfigFactory.parseResourcesAnySyntax("application", parseOptions));<a name="line.12"></a>
+<span class="sourceLineNo">013</span>    }<a name="line.13"></a>
+<span class="sourceLineNo">014</span>}<a name="line.14"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
