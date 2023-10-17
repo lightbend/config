@@ -27,7 +27,7 @@ public interface ConfigMergeable {
      * 
      * <p>
      * The semantics of merging are described in the <a
-     * href="https://github.com/lightbend/config/blob/master/HOCON.md">spec
+     * href="https://github.com/lightbend/config/blob/main/HOCON.md">spec
      * for HOCON</a>. Merging typically occurs when either the same object is
      * created twice in the same file, or two config files are both loaded. For
      * example:
