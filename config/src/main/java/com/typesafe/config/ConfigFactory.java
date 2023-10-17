@@ -1137,13 +1137,13 @@ public final class ConfigFactory {
 
         // override application.conf with config.file, config.resource,
         // config.url if requested.
-        String resource = System.getProperty("config.resource");
+        String resource = SystemOverride.getProperty("config.resource");
         if (resource != null)
             specified += 1;
-        String file = System.getProperty("config.file");
+        String file = SystemOverride.getProperty("config.file");
         if (file != null)
             specified += 1;
-        String url = System.getProperty("config.url");
+        String url = SystemOverride.getProperty("config.url");
         if (url != null)
             specified += 1;
 
@@ -1238,7 +1238,7 @@ public final class ConfigFactory {
     }
 
     private static ConfigLoadingStrategy getConfigLoadingStrategy() {
-        String className = System.getProperties().getProperty(STRATEGY_PROPERTY_NAME);
+        String className = SystemOverride.getProperties().getProperty(STRATEGY_PROPERTY_NAME);
 
         if (className != null) {
             try {
@@ -1256,7 +1256,7 @@ public final class ConfigFactory {
     }
 
     private static Boolean getOverrideWithEnv() {
-        String overrideWithEnv = System.getProperties().getProperty(OVERRIDE_WITH_ENV_PROPERTY_NAME);
+        String overrideWithEnv = SystemOverride.getProperties().getProperty(OVERRIDE_WITH_ENV_PROPERTY_NAME);
 
         return Boolean.parseBoolean(overrideWithEnv);
     }

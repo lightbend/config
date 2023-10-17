@@ -10,6 +10,7 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigResolveOptions
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.SystemOverride
 import scala.collection.JavaConverters._
 
 class ConfigSubstitutionTest extends TestUtils {
@@ -731,11 +732,20 @@ class ConfigSubstitutionTest extends TestUtils {
             |"a": ${testList}
             """.stripMargin)
 
-        System.setProperty("testList.0", "0")
-        System.setProperty("testList.1", "1")
-        ConfigImpl.reloadSystemPropertiesConfig()
+        val systemProperties = Map(
+            "testList.0" -> "0",
+            "testList.1" -> "1"
+        ).asJava
 
-        val resolved = resolve(ConfigFactory.systemProperties().withFallback(props).root.asInstanceOf[AbstractConfigObject])
+        val resolved = SystemOverride.withSystemOverride(
+            systemProperties,
+            new java.util.HashMap[String, String](),
+            System.err,
+            () => {
+                ConfigImpl.reloadSystemPropertiesConfig()
+                resolve(ConfigFactory.systemProperties().withFallback(props).root.asInstanceOf[AbstractConfigObject])
+            }
+        )
 
         assertEquals(List("0", "1"), resolved.getList("a").unwrapped().asScala)
     }
