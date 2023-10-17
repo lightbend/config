@@ -101,12 +101,12 @@ You can find published releases on Maven Central.
     <dependency>
         <groupId>com.typesafe</groupId>
         <artifactId>config</artifactId>
-        <version>1.4.2</version>
+        <version>1.4.3</version>
     </dependency>
 
 sbt dependency:
 
-    libraryDependencies += "com.typesafe" % "config" % "1.4.2"
+    libraryDependencies += "com.typesafe" % "config" % "1.4.3"
 
 Link for direct download if you don't use a dependency manager:
 
