@@ -545,4 +545,8 @@ public class ConfigImpl {
     public static ConfigOrigin newURLOrigin(URL url) {
         return SimpleConfigOrigin.newURL(url);
     }
+
+    public static ConfigOrigin newEnvVariable(String description) {
+        return SimpleConfigOrigin.newEnvVariable(description);
+    }
 }

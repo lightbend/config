@@ -1208,6 +1208,35 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def renderShowEnvVariableValues(): Unit = {
+        val config = ConfigFactory.load("env-variables")
+        assertEquals("A", config.getString("secret"))
+        assertEquals("B", config.getStringList("secrets").get(0))
+        assertEquals("C", config.getStringList("secrets").get(1))
+        val hideRenderOpt = ConfigRenderOptions.defaults().setShowEnvVariableValues(false)
+        val rendered1 = config.root().render(hideRenderOpt)
+        assertTrue(rendered1.contains(""""secret" : "<env variable>""""))
+        assertTrue(rendered1.contains(
+            """|    "secrets" : [
+               |        # env variables
+               |        "<env variable>",
+               |        # env variables
+               |        "<env variable>"
+               |    ]""".stripMargin))
+
+        val showRenderOpt = ConfigRenderOptions.defaults()
+        val rendered2 = config.root().render(showRenderOpt)
+        assertTrue(rendered2.contains(""""secret" : "A""""))
+        assertTrue(rendered2.contains(
+            """|    "secrets" : [
+               |        # env variables
+               |        "B",
+               |        # env variables
+               |        "C"
+               |    ]""".stripMargin))
+    }
+
+    @Test
     def serializeRoundTrip() {
         for (i <- 1 to 10) {
             val numString = i.toString

@@ -6,7 +6,7 @@ package com.typesafe.config;
 /**
  * A set of options related to resolving substitutions. Substitutions use the
  * <code>${foo.bar}</code> syntax and are documented in the <a
- * href="https://github.com/lightbend/config/blob/master/HOCON.md">HOCON</a>
+ * href="https://github.com/lightbend/config/blob/main/HOCON.md">HOCON</a>
  * spec.
  * <p>
  * Typically this class would be used with the method
