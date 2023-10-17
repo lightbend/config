@@ -21,13 +21,15 @@ public final class ConfigRenderOptions {
     private final boolean comments;
     private final boolean formatted;
     private final boolean json;
+    private final boolean showEnvVariableValues;
 
     private ConfigRenderOptions(boolean originComments, boolean comments, boolean formatted,
-            boolean json) {
+            boolean json, boolean showEnvVariableValues) {
         this.originComments = originComments;
         this.comments = comments;
         this.formatted = formatted;
         this.json = json;
+        this.showEnvVariableValues = showEnvVariableValues;
     }
 
     /**
@@ -38,7 +40,7 @@ public final class ConfigRenderOptions {
      * @return the default render options
      */
     public static ConfigRenderOptions defaults() {
-        return new ConfigRenderOptions(true, true, true, true);
+        return new ConfigRenderOptions(true, true, true, true, true);
     }
 
     /**
@@ -48,7 +50,7 @@ public final class ConfigRenderOptions {
      * @return the concise render options
      */
     public static ConfigRenderOptions concise() {
-        return new ConfigRenderOptions(false, false, false, true);
+        return new ConfigRenderOptions(false, false, false, true, true);
     }
 
     /**
@@ -64,7 +66,7 @@ public final class ConfigRenderOptions {
         if (value == comments)
             return this;
         else
-            return new ConfigRenderOptions(originComments, value, formatted, json);
+            return new ConfigRenderOptions(originComments, value, formatted, json, showEnvVariableValues);
     }
 
     /**
@@ -97,7 +99,7 @@ public final class ConfigRenderOptions {
         if (value == originComments)
             return this;
         else
-            return new ConfigRenderOptions(value, comments, formatted, json);
+            return new ConfigRenderOptions(value, comments, formatted, json, showEnvVariableValues);
     }
 
     /**
@@ -122,7 +124,7 @@ public final class ConfigRenderOptions {
         if (value == formatted)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, value, json);
+            return new ConfigRenderOptions(originComments, comments, value, json, showEnvVariableValues);
     }
 
     /**
@@ -150,7 +152,32 @@ public final class ConfigRenderOptions {
         if (value == json)
             return this;
         else
-            return new ConfigRenderOptions(originComments, comments, formatted, value);
+            return new ConfigRenderOptions(originComments, comments, formatted, value, showEnvVariableValues);
+    }
+
+    /**
+     * Returns options with showEnvVariableValues toggled. This controls if values set from
+     * environment variables are included in the rendered string.
+     *
+     * @param value
+     *            true to include environment variable values in the render
+     * @return options with requested setting for environment variables
+     */
+    public ConfigRenderOptions setShowEnvVariableValues(boolean value) {
+        if (value == showEnvVariableValues)
+            return this;
+        else
+            return new ConfigRenderOptions(originComments, comments, formatted, json, value);
+    }
+
+    /**
+     * Returns whether the options enable rendering of environment variable values. This method is mostly used
+     * by the config lib internally, not by applications.
+     *
+     * @return true if environment variable values should be rendered
+     */
+    public boolean getShowEnvVariableValues() {
+        return showEnvVariableValues;
     }
 
     /**
@@ -174,6 +201,8 @@ public final class ConfigRenderOptions {
             sb.append("formatted,");
         if (json)
             sb.append("json,");
+        if (showEnvVariableValues)
+            sb.append("showEnvVariableValues,");
         if (sb.charAt(sb.length() - 1) == ',')
             sb.setLength(sb.length() - 1);
         sb.append(")");
