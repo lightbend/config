@@ -153,7 +153,7 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
 
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
-        sb.append(expr.toString());
+        sb.append(expr.changePath(expr.path.subPath(prefixLength)).toString());
     }
 
     SubstitutionExpression expression() {
