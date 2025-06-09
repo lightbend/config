@@ -88,6 +88,20 @@ class BadMapTest extends TestUtils {
         }
     }
 
+    @Test
+    def negativeEntryHash(): Unit = {
+        class Key(value: Int) {
+            override def hashCode(): Int = value
+        }
+
+        var map = new BadMap[Key, String]()
+        val negativeHashKey = new Key(Integer.MIN_VALUE)
+        map = map.copyingPut(negativeHashKey, "value")
+          .copyingPut(new Key(2), "other value")
+          .copyingPut(new Key(3), "yet another value")
+        assertEquals(map.get(negativeHashKey), "value")
+    }
+
     private class UniqueKeyWithHash(hash: Int) {
         override def hashCode(): Int = hash
     }
