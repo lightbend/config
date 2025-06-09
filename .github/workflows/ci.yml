@@ -2,6 +2,8 @@ name: CI
 on:
   pull_request:
   push:
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,6 +22,8 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
+      - name: Setup sbt launcher
+        uses: sbt/setup-sbt@v1
       - name: Build and test
         shell: bash
         run: sbt -v test doc
