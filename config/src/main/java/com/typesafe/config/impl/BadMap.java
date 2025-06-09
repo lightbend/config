@@ -74,7 +74,7 @@ final class BadMap<K,V> {
     }
 
     private static void store(Entry[] entries, Entry e) {
-        int i = e.hash % entries.length;
+        int i = Math.abs(e.hash % entries.length);
         Entry old = entries[i]; // old may be null
         if (old == null && e.next == null) {
             // share the entry since it has no "next"
@@ -100,8 +100,8 @@ final class BadMap<K,V> {
         if (entries.length == 0) {
             return null;
         } else {
-            int hash = Math.abs(k.hashCode());
-            int i = hash % entries.length;
+            int hash = k.hashCode();
+            int i = Math.abs(hash % entries.length);
             Entry e = entries[i];
             if (e == null)
                 return null;
