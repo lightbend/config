@@ -290,7 +290,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         }
 
         List<AbstractConfigValue> reversed = new ArrayList<AbstractConfigValue>();
-        reversed.addAll(stack);
+        reversed.addAll(stack); // TODO
         Collections.reverse(reversed);
 
         int i = 0;
