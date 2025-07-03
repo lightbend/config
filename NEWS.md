@@ -1,3 +1,9 @@
+# 1.4.4: July 3, 2025
+
+- build: bump actions to get sbt ([#818](https://github.com/lightbend/config/pull/818)) thanks to [@johanandren]((https://github.com/johanandren))
+- build: second try for sbt back in CI job ([#820](https://github.com/lightbend/config/pull/820)) thanks to [@johanandren]((https://github.com/johanandren))
+- fix: Incorrect abs of hashes in BadMap ([#817](https://github.com/lightbend/config/pull/817)) thanks to [@johanandren]((https://github.com/johanandren))
+
 # 1.4.3: October 17, 2023
 
 - Optionally hide rendered environment variables ([#798](/../../pull/798))
