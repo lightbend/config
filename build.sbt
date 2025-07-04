@@ -26,7 +26,7 @@ ThisBuild / licenses                := List("Apache-2.0" -> url("https://www.apa
 ThisBuild / homepage                := Option(url("https://github.com/lightbend/config"))
 ThisBuild / pomIncludeRepository    := { _ => false }
 ThisBuild / publishTo               := {
-  val nexus = "https://oss.sonatype.org/"
+  val nexus = "https://ossrh-staging-api.central.sonatype.com/"
   if ((ThisBuild / isSnapshot).value) Option("Sonatype OSS Snapshots" at nexus + "content/repositories/snapshots")
   else Option("Sonatype OSS Staging" at nexus + "service/local/staging/deploy/maven2")
 }
