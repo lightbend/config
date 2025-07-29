@@ -669,8 +669,7 @@ public interface Config extends ConfigMergeable {
      * Gets a value as a size in bytes (parses special strings like "128M"). If
      * the value is already a number, then it's left alone; if it's a string,
      * it's parsed understanding unit suffixes such as "128K", as documented in
-     * the <a
-     * href="https://github.com/lightbend/config/blob/main/HOCON.md">the
+     * <a href="https://github.com/lightbend/config/blob/main/HOCON.md">the
      * spec</a>.
      *
      * @param path
@@ -689,8 +688,7 @@ public interface Config extends ConfigMergeable {
      * Gets a value as an amount of memory (parses special strings like "128M"). If
      * the value is already a number, then it's left alone; if it's a string,
      * it's parsed understanding unit suffixes such as "128K", as documented in
-     * the <a
-     * href="https://github.com/lightbend/config/blob/main/HOCON.md">the
+     * <a href="https://github.com/lightbend/config/blob/main/HOCON.md">the
      * spec</a>.
      *
      * @since 1.3.0
@@ -710,9 +708,8 @@ public interface Config extends ConfigMergeable {
     /**
      * Get value as a duration in milliseconds. If the value is already a
      * number, then it's left alone; if it's a string, it's parsed understanding
-     * units suffixes like "10m" or "5ns" as documented in the <a
-     * href="https://github.com/lightbend/config/blob/main/HOCON.md">the
-     * spec</a>.
+     * units suffixes like "10m" or "5ns" as documented in
+     * <a href="https://github.com/lightbend/config/blob/main/HOCON.md">the spec</a>.
      *
      * @deprecated  As of release 1.1, replaced by {@link #getDuration(String, TimeUnit)}
      *
@@ -753,9 +750,8 @@ public interface Config extends ConfigMergeable {
      * {@link java.util.concurrent.TimeUnit TimeUnit}. If the value is already a
      * number, then it's taken as milliseconds and then converted to the
      * requested TimeUnit; if it's a string, it's parsed understanding units
-     * suffixes like "10m" or "5ns" as documented in the <a
-     * href="https://github.com/lightbend/config/blob/main/HOCON.md">the
-     * spec</a>.
+     * suffixes like "10m" or "5ns" as documented in
+     * <a href="https://github.com/lightbend/config/blob/main/HOCON.md">the spec</a>.
      * 
      * @since 1.2.0
      * 
@@ -777,9 +773,9 @@ public interface Config extends ConfigMergeable {
      * Gets a value as a java.time.Duration. If the value is
      * already a number, then it's taken as milliseconds; if it's
      * a string, it's parsed understanding units suffixes like
-     * "10m" or "5ns" as documented in the <a
-     * href="https://github.com/lightbend/config/blob/main/HOCON.md">the
-     * spec</a>. This method never returns null.
+     * "10m" or "5ns" as documented in
+     * <a href="https://github.com/lightbend/config/blob/main/HOCON.md">the spec</a>.
+     * This method never returns null.
      *
      * @since 1.3.0
      *
@@ -799,9 +795,9 @@ public interface Config extends ConfigMergeable {
      * Gets a value as a java.time.Period. If the value is
      * already a number, then it's taken as days; if it's
      * a string, it's parsed understanding units suffixes like
-     * "10d" or "5w" as documented in the <a
-     * href="https://github.com/lightbend/config/blob/main/HOCON.md">the
-     * spec</a>. This method never returns null.
+     * "10d" or "5w" as documented in
+     * <a href="https://github.com/lightbend/config/blob/main/HOCON.md">the spec</a>.
+     * This method never returns null.
      *
      * @since 1.3.0
      *
@@ -819,7 +815,7 @@ public interface Config extends ConfigMergeable {
 
     /**
      * Gets a value as a java.time.temporal.TemporalAmount.
-     * This method will first try get get the value as a java.time.Duration, and if unsuccessful,
+     * This method will first try to get the value as a java.time.Duration, and if unsuccessful,
      * then as a java.time.Period.
      * This means that values like "5m" will be parsed as 5 minutes rather than 5 months
      * @param path path expression
