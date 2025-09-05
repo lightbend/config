@@ -921,7 +921,8 @@ format.
 
 #### Rust port
 
-  * https://github.com/mockersf/hocon.rs
+  * https://github.com/mockersf/hocon.rs (unmaintained)
+  * https://github.com/mikai233/hocon-rs
 
 #### Go port
 
