@@ -68,7 +68,7 @@ final class BadMap<K,V> {
     }
 
     private static <K,V> void store(Entry[] entries, int hash, K k, V v) {
-        int i = hash % entries.length;
+        int i = Math.abs(hash % entries.length);
         Entry old = entries[i];  // old may be null
         entries[i] = new Entry(hash, k, v, old);
     }
