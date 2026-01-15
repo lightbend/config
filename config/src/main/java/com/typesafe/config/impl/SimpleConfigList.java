@@ -231,7 +231,7 @@ final class SimpleConfigList extends AbstractConfigValue implements ConfigList, 
                 }
                 indent(sb, indent + 1, options);
 
-                v.render(sb, indent + 1, atRoot, options);
+                v.render(sb, indent + 1, false, options);
                 sb.append(",");
                 if (options.getFormatted())
                     sb.append('\n');

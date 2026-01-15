@@ -986,4 +986,23 @@ class ConfigValueTest extends TestUtils {
         val rendered = config.root.render(ConfigRenderOptions.concise())
         assertEquals("""{"0":"a","1":"b","2":"c","3":"d","10":"e","20":"g","30":"h","999999999999999999999999999999999999999999999":0,"20a":"f"}""", rendered)
     }
+
+    @Test
+    def renderList(): Unit = {
+        val config = parseConfig("""root=[{foo=bar}, {baz=qux}]""")
+        val rendered = config.getValue("root").render(ConfigRenderOptions.concise().setFormatted(true).setJson(false))
+        assertEquals(
+            """[
+              |    {
+              |        foo=bar
+              |    },
+              |    {
+              |        baz=qux
+              |    }
+              |]"""
+              .stripMargin
+              .replaceAll("\r", ""), // Remove Windows line endings
+            rendered
+        )
+    }
 }
