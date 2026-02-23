@@ -4,16 +4,20 @@
 package com.typesafe.config.impl
 
 import java.math.BigInteger
-import java.time.temporal.{ ChronoUnit, TemporalUnit }
-
+import java.time.temporal.{ChronoUnit, TemporalUnit}
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config._
-import java.util.concurrent.TimeUnit
 
+import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
-import java.util.concurrent.TimeUnit.{ DAYS, HOURS, MICROSECONDS, MILLISECONDS, MINUTES, NANOSECONDS, SECONDS }
+
+import java.util
+import java.util
+import java.util
+import java.util
+import java.util.concurrent.TimeUnit.{DAYS, HOURS, MICROSECONDS, MILLISECONDS, MINUTES, NANOSECONDS, SECONDS}
 
 class ConfigTest extends TestUtils {
 
@@ -1234,6 +1238,57 @@ class ConfigTest extends TestUtils {
                |        # env variables
                |        "C"
                |    ]""".stripMargin))
+    }
+
+    @Test
+    def envVariableListExpansion(): Unit = {
+        val config = ConfigFactory.load("env-variables")
+
+        val myList = config.getStringList("myList")
+        assertEquals("basic  environment variable list expansion", 3, myList.size())
+        assertEquals("a", myList.get(0))
+        assertEquals("b", myList.get(1))
+        assertEquals("c", myList.get(2))
+
+        val myOptionalList = config.getStringList("myOptionalList")
+        assertEquals("optional environment variable list expansion", 3, myOptionalList.size())
+        assertEquals("a", myOptionalList.get(0))
+
+        assertFalse("optional environment variable list expansion (undefined)", config.hasPath("myOptionalUndefinedList"))
+
+        val numList = config.getIntList("numList")
+        assertEquals("environment variable list conversion", 3, numList.size())
+        assertEquals(1, numList.get(0).intValue())
+        assertEquals(2, numList.get(1).intValue())
+        assertEquals(3, numList.get(2).intValue())
+    }
+
+    @Test
+    def envVariableListExpansionAppend(): Unit = {
+        val config = ConfigFactory.load("env-variables")
+
+        // list: ["x", "y"] ${?MY_LIST[]}
+        val prepended = config.getStringList("prependedList")
+        assertEquals("prepend static values before env var list", util.Arrays.asList("x", "y", "a", "b", "c"), prepended)
+
+        // list: ${?MY_LIST[]} ["x", "y"]
+        val appended = config.getStringList("appendedList")
+        assertEquals("append static values after env var list", util.Arrays.asList("a", "b", "c", "x", "y"), appended)
+
+        // myList = ["x"]; myList = ${?myList} ${?MY_LIST[]}
+        val selfAppended = config.getStringList("selfAppendedList")
+        assertEquals("self-referential append", util.Arrays.asList("x", "a", "b", "c"), selfAppended)
+
+        val appendedUndefined = config.getStringList("appendedUndefined")
+        assertEquals("appending undefined optional list leaves original intact", util.Arrays.asList("x", "y"), appendedUndefined)
+    }
+
+    @Test
+    def envVariableListExpansionRequiredUndefined(): Unit = {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            ConfigFactory.parseString("foo = ${UNDEFINED_LIST[]}").resolve()
+        }
+        assertTrue(e.getMessage.contains("UNDEFINED_LIST"))
     }
 
     @Test

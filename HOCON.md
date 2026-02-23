@@ -26,13 +26,14 @@
       - [Self-Referential Substitutions](#self-referential-substitutions)
       - [The `+=` field separator](#the--field-separator)
       - [Examples of Self-Referential Substitutions](#examples-of-self-referential-substitutions)
+      - [List values from environment variables](#list-values-from-environment-variables)
     - [Includes](#includes)
-      - [Include syntax](#include-syntax)
-      - [Include semantics: merging](#include-semantics-merging)
-      - [Include semantics: substitution](#include-semantics-substitution)
-      - [Include semantics: missing files and required files](#include-semantics-missing-files-and-required-files)
-      - [Include semantics: file formats and extensions](#include-semantics-file-formats-and-extensions)
-      - [Include semantics: locating resources](#include-semantics-locating-resources)
+     - [Include syntax](#include-syntax)
+     - [Include semantics: merging](#include-semantics-merging)
+     - [Include semantics: substitution](#include-semantics-substitution)
+     - [Include semantics: missing files and required files](#include-semantics-missing-files-and-required-files)
+     - [Include semantics: file formats and extensions](#include-semantics-file-formats-and-extensions)
+     - [Include semantics: locating resources](#include-semantics-locating-resources)
     - [Conversion of numerically-indexed objects to arrays](#conversion-of-numerically-indexed-objects-to-arrays)
   - [MIME Type](#mime-type)
   - [API Recommendations](#api-recommendations)
@@ -887,6 +888,33 @@ retained). Memoization should be keyed by the substitution
 rather than by the path inside the `${}` expression, because
 substitutions may be resolved differently depending on their
 position in the file.
+
+
+#### List values from environment variables
+
+Environment variables are inherently single string values, but
+sometimes it's useful to populate a list-valued configuration
+setting from the environment. The `[]` suffix on a substitution
+enables this:
+
+    my-list = ${MY_LIST[]}
+
+This is only supported for environment variables and not system properties or path expressions
+
+When a substitution with the `[]` suffix is resolved via
+environment variable fallback, the implementation will look up
+`MY_LIST_0`, `MY_LIST_1`, `MY_LIST_2`, and so on (incrementing
+the index) until an environment variable is not found. The
+collected values form a list.
+
+- If no element is found (i.e. `MY_LIST_0` is not set), a
+  required substitution `${MY_LIST[]}` is an error, while an
+  optional substitution `${?MY_LIST[]}` is treated as undefined
+  (the key is removed from the config).
+- Each element value is a string, as with all environment
+  variables. Automatic type conversion applies when the
+  application requests another type (e.g. `getIntList()`).
+- The separator between the base name and the index is `_`.
 
 ### Includes
 

@@ -29,10 +29,25 @@ final class ConfigNodeSimpleValue extends AbstractConfigNodeValue {
             return new ConfigString.Unquoted(token.origin(), Tokens.getUnquotedText(token));
         else if (Tokens.isSubstitution(token)) {
             List<Token> expression = Tokens.getSubstitutionPathExpression(token);
-            Path path = PathParser.parsePathExpression(expression.iterator(), token.origin());
             boolean optional = Tokens.getSubstitutionOptional(token);
 
-            return new ConfigReference(token.origin(), new SubstitutionExpression(path, optional));
+            // Detect and strip trailing [] for list expansion syntax.
+            // Inside a substitution, [] is tokenized as OPEN_SQUARE + CLOSE_SQUARE.
+            boolean listExpansion = false;
+            List<Token> pathExpression = expression;
+            int size = expression.size();
+            if (size >= 2) {
+                Token secondLast = expression.get(size - 2);
+                Token last = expression.get(size - 1);
+                if (secondLast == Tokens.OPEN_SQUARE && last == Tokens.CLOSE_SQUARE) {
+                    listExpansion = true;
+                    pathExpression = expression.subList(0, size - 2);
+                }
+            }
+
+            Path path = PathParser.parsePathExpression(pathExpression.iterator(), token.origin());
+
+            return new ConfigReference(token.origin(), new SubstitutionExpression(path, optional, listExpansion));
         }
         throw new ConfigException.BugOrBroken("ConfigNodeSimpleValue did not contain a valid value token");
     }

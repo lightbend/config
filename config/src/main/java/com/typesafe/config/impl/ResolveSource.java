@@ -1,5 +1,8 @@
 package com.typesafe.config.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.impl.AbstractConfigValue.NotPossibleToResolve;
 
@@ -110,9 +113,19 @@ final class ResolveSource {
             }
 
             if (result.result.value == null && result.result.context.options().getUseSystemEnvironment()) {
-                if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(result.result.context.depth(), unprefixed + " - looking up in system environment");
-                result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context, unprefixed);
+                if (subst.listExpansion()) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(result.result.context.depth(), unprefixed + " - looking up list expansion in system environment");
+                    AbstractConfigValue listValue = expandEnvVarList(ConfigImpl.envVariablesAsConfigObject(), unprefixed, context);
+                    if (listValue != null) {
+                        result = new ResultWithPath(ResolveResult.make(result.result.context, listValue),
+                                new Node<Container>(ConfigImpl.envVariablesAsConfigObject()));
+                    }
+                } else {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(result.result.context.depth(), unprefixed + " - looking up in system environment");
+                    result = findInObject(ConfigImpl.envVariablesAsConfigObject(), context, unprefixed);
+                }
             }
         }
 
@@ -120,6 +133,30 @@ final class ResolveSource {
             ConfigImpl.trace(result.result.context.depth(), "resolved to " + result);
 
         return result;
+    }
+
+    private static AbstractConfigValue expandEnvVarList(AbstractConfigObject envObj, Path basePath, ResolveContext context) {
+        // Build the base env var name from the path (e.g. path "MY_LIST" -> "MY_LIST")
+        String baseName = basePath.render();
+        SimpleConfigOrigin origin = SimpleConfigOrigin.newSimple("env list expansion of " + baseName);
+
+        // look for _N environment variables until there is no next value
+        List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
+        for (int i = 0; ; i++) {
+            String key = baseName + "_" + i;
+            Path elementPath = new Path(key);
+            AbstractConfigValue v = findInObject(envObj, elementPath).value;
+            if (v == null) {
+                break;
+            }
+            values.add(v);
+        }
+
+        if (values.isEmpty()) {
+            return null;
+        }
+
+        return new SimpleConfigList(origin, values);
     }
 
     ResolveSource pushParent(Container parent) {

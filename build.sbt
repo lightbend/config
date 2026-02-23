@@ -77,7 +77,13 @@ lazy val configLib =  Project("config", file("config"))
       "CONFIG_FORCE_akka_event__handler__dispatcher_max__pool__size" -> "10",
       "SECRET_A" -> "A", // ConfigTest.renderShowEnvVariableValues
       "SECRET_B" -> "B", // ConfigTest.renderShowEnvVariableValues
-      "SECRET_C" -> "C" // ConfigTest.renderShowEnvVariableValues
+      "SECRET_C" -> "C", // ConfigTest.renderShowEnvVariableValues
+      "MY_LIST_0" -> "a", // ConfigTest.envVariableListExpansion
+      "MY_LIST_1" -> "b", // ConfigTest.envVariableListExpansion
+      "MY_LIST_2" -> "c", // ConfigTest.envVariableListExpansion
+      "NUM_LIST_0" -> "1", // ConfigTest.envVariableListExpansion
+      "NUM_LIST_1" -> "2", // ConfigTest.envVariableListExpansion
+      "NUM_LIST_2" -> "3" // ConfigTest.envVariableListExpansion
     ),
 
     OsgiKeys.exportPackage                 := Seq("com.typesafe.config", "com.typesafe.config.impl"),

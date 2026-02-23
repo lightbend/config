@@ -698,7 +698,22 @@ Using java properties you specify the exact position:
 
     -Ditems.0="a" -Ditems.1="b"
 
-as well as with environment variables:
+It is also possible to use environment variables to  define a list using the special `[]` suffix to the
+environment variable name:
+
+    path = [ "a" ]
+    path = ${?OPTIONAL_A[]}
+
+with the values set as individual environment values using the name and an index suffix:
+
+    OPTIONAL_A_1="a"
+    OPTIONAL_A_2="b"
+
+the index must be gap free, as soon as the next index is not found, the collection of values stops.
+
+This only works for environment variables, not java properties or relative paths.
+
+Finally, it is also possible to use the CONFIG_FORCE feature:
 
     export CONFIG_FORCE_items_0=a
     export CONFIG_FORCE_items_1=b
