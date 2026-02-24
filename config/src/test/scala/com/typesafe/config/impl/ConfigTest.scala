@@ -5,19 +5,15 @@ package com.typesafe.config.impl
 
 import java.math.BigInteger
 import java.time.temporal.{ChronoUnit, TemporalUnit}
+import java.util
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.{DAYS, HOURS, MICROSECONDS, MILLISECONDS, MINUTES, NANOSECONDS, SECONDS}
 import org.junit.Assert._
 import org.junit._
 import com.typesafe.config._
 
-import java.util.concurrent.TimeUnit
 import scala.collection.JavaConverters._
 import com.typesafe.config.ConfigResolveOptions
-
-import java.util
-import java.util
-import java.util
-import java.util
-import java.util.concurrent.TimeUnit.{DAYS, HOURS, MICROSECONDS, MILLISECONDS, MINUTES, NANOSECONDS, SECONDS}
 
 class ConfigTest extends TestUtils {
 
@@ -1227,6 +1223,16 @@ class ConfigTest extends TestUtils {
                |        # env variables
                |        "<env variable>"
                |    ]""".stripMargin))
+      assertTrue(rendered1.contains(
+        """|    "myList" : [
+           |        # env variables
+           |        "<env variable>",
+           |        # env variables
+           |        "<env variable>",
+           |        # env variables
+           |        "<env variable>"
+           |    ]""".stripMargin
+      ))
 
         val showRenderOpt = ConfigRenderOptions.defaults()
         val rendered2 = config.root().render(showRenderOpt)
