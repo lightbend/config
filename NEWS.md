@@ -1,3 +1,15 @@
+# 1.4.6: February 24, 2026
+
+- Support for list substitution from environment variables ([#833](https://github.com/lightbend/config/pull/833)) thanks to [@johanandren](https://github.com/johanandren)
+- Render list elements as non-root always by ([#832](https://github.com/lightbend/config/pull/832)) thanks to [@valepakh](https://github.com/valepakh)
+
+# 1.4.5: September 11, 2025
+
+ - docs: add alternative Rust HOCON implementation ([#825](https://github.com/lightbend/config/pull/825)) thanks to [@mikai233](https://github.com/mikai233)
+ - Fix minor typos in API docs ([#823](https://github.com/lightbend/config/pull/823)) thanks to [@lashchenko](https://github.com/lashchenko)
+ - update HOCON Playground link ([#810](https://github.com/lightbend/config/pull/810)) thanks to [@TehBrian](https://github.com/TehBrian)
+ - fix: Negative hash again ([#826](https://github.com/lightbend/config/pull/826)) thanks to [@johanandren](https://github.com/johanandren)
+
 # 1.4.4: July 3, 2025
 
 - build: bump actions to get sbt ([#818](https://github.com/lightbend/config/pull/818)) thanks to [@johanandren]((https://github.com/johanandren))
