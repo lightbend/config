@@ -82,6 +82,7 @@ to merge it in.
     - [Puppet module](#puppet-module)
     - [Python port](#python-port)
     - [C++ port](#c-port)
+    - [TypeScript port](#typescript-port)
     - [JavaScript port](#javascript-port)
     - [C# port](#c-port-1)
     - [Go port](#go-port)
@@ -926,6 +927,10 @@ format.
 
    * https://github.com/puppetlabs/cpp-hocon
 
+#### TypeScript port
+
+  * https://github.com/o3co/ts.hocon
+
 #### JavaScript port
 
   * https://github.com/yellowblood/hocon-js (missing features, under development)
@@ -938,10 +943,12 @@ format.
 
   * https://github.com/mockersf/hocon.rs (unmaintained)
   * https://github.com/mikai233/hocon-rs
+  * https://github.com/o3co/rs.hocon
 
 #### Go port
 
   * https://github.com/gurkankaymak/hocon
+  * https://github.com/o3co/go.hocon
  
 #### Erlang port
   * https://github.com/emqx/hocon
