@@ -134,9 +134,9 @@ Report bugs to the GitHub issue tracker. Send patches as pull
 requests on GitHub.
 
 Before we can accept pull requests, you will need to agree to the
-Typesafe Contributor License Agreement online, using your GitHub
+Akka Contributor License Agreement online, using your GitHub
 account - it takes 30 seconds.  You can do this at
-https://www.lightbend.com/contribute/cla
+https://contribute.akka.io/contribute/cla
 
 Please see
 [CONTRIBUTING](https://github.com/lightbend/config/blob/main/CONTRIBUTING.md)
