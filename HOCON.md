@@ -1608,7 +1608,7 @@ is straightforward; ie just make sure you define all your vars with the required
 Windows is more confusing. Windows environment variables names may contain a
 mix of upper and lowercase characters, eg "Path", however Windows does not
 allow one to define multiple instances of the same name but differing in case.
-Whilst accessing env vars in Windows is case insensitive, accessing env vars in
+Whilst accessing env vars in Windows is case-insensitive, accessing env vars in
 HOCON is case sensitive.
 So if you know that you HOCON needs "PATH" then you must ensure that
 the variable is defined as "PATH" rather than some other name such as
