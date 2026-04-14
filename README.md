@@ -827,7 +827,7 @@ that use Java 8 types will need to be removed.
 The three file formats each have advantages.
 
  - Java `.properties`:
-   - Java standard, built in to JVM
+   - Java standard, built into JVM
    - Supported by many tools such as IDEs
  - JSON:
    - easy to generate programmatically

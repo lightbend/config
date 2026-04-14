@@ -262,7 +262,7 @@ final class ConfigDelayedMergeObject extends AbstractConfigObject implements Unm
                 AbstractConfigValue v = objectLayer.attemptPeekWithPartialResolve(key);
                 if (v != null) {
                     if (v.ignoresFallbacks()) {
-                        // we know we won't need to merge anything in to this
+                        // we know we won't need to merge anything into this
                         // value
                         return v;
                     } else {

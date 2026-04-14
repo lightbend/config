@@ -66,7 +66,7 @@ class ComplexApp {
 
         // Here's an illustration that simple-lib will get upset if we pass it
         // a bad config. In this case, we'll fail to merge the reference
-        // config in to complex-app.simple-lib-context, so simple-lib will
+        // config into complex-app.simple-lib-context, so simple-lib will
         // point out that some settings are missing.
         try {
             demoConfigInSimpleLib(config2.getConfig("complex-app.simple-lib-context"));
