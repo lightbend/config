@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
-/* FIXME the way the subclasses of Token are private with static isFoo and accessors is kind of ridiculous. */
+/* FIXME the way subclasses of Token are private with static isFoo and accessors is kind of ridiculous. */
 final class Tokens {
     static private class Value extends Token {
 
