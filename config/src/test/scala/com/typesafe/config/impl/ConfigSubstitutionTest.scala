@@ -1277,4 +1277,31 @@ class ConfigSubstitutionTest extends TestUtils {
         val resolved2 = resolve(obj2)
         assertEquals(parseObject("{ x : 42, y : 42 }"), resolved2.getConfig("a").root)
     }
+
+    // Reproduces https://github.com/lightbend/config/issues/838
+    // A substitution hidden by a value that could not be merged with it should
+    // never be evaluated. This works when the hiding value is written directly,
+    // but not when it arrives via another substitution that resolves to an object.
+    @Test
+    def substitutionHiddenByObjectFromSubstitutionIsNotEvaluated() {
+        // Sanity: the direct-literal case works as the spec describes.
+        val direct = parseObject("""
+            p: { a : ${y} }
+            p: { a : 42 }
+            p: { a : { x : 1 } }
+        """)
+        val resolvedDirect = resolve(direct)
+        assertEquals(parseObject("""{ a : { x : 1 } }"""), resolvedDirect.getConfig("p").root)
+
+        // The middle hiding value is supplied via a substitution to an object.
+        // Per spec intent, ${y} should still never be evaluated.
+        val viaSub = parseObject("""
+            p: { a : ${y} }
+            p: ${x}
+            p: { a : { x : 1 } }
+            x: { a : 42 }
+        """)
+        val resolvedViaSub = resolve(viaSub)
+        assertEquals(parseObject("""{ a : { x : 1 } }"""), resolvedViaSub.getConfig("p").root)
+    }
 }

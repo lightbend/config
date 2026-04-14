@@ -6,7 +6,9 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
@@ -120,6 +122,29 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                             "will resolve end against the original source with parent pushed");
 
                 sourceForEnd = source.pushParent(replaceable);
+
+                // Per the HOCON spec, a substitution hidden by a value that
+                // cannot be merged with it is never evaluated. When merging
+                // objects field-by-field the merged object may already contain,
+                // at some keys, values that ignore fallbacks (e.g. a resolved
+                // non-object shadowing a substitution below). Any substitution
+                // at those same keys in a lower-priority object on the stack
+                // would be discarded by the subsequent merge anyway, so we
+                // prune those keys before resolving to avoid evaluating
+                // substitutions that cannot contribute to the result.
+                if (merged instanceof AbstractConfigObject && end instanceof AbstractConfigObject
+                        && !(end instanceof Unmergeable)) {
+                    AbstractConfigObject prunedEnd = pruneShadowedKeys(
+                            (AbstractConfigObject) end, (AbstractConfigObject) merged);
+                    if (prunedEnd == null) {
+                        if (ConfigImpl.traceSubstitutionsEnabled())
+                            ConfigImpl.trace(newContext.depth(),
+                                    "all keys in end are shadowed by merged, skipping");
+                        count += 1;
+                        continue;
+                    }
+                    end = prunedEnd;
+                }
             }
 
             if (ConfigImpl.traceSubstitutionsEnabled()) {
@@ -150,6 +175,38 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         }
 
         return ResolveResult.make(newContext, merged);
+    }
+
+    // Returns a copy of 'end' with keys removed when 'merged' already has a
+    // value at that key which ignores fallbacks. Returns null if every key in
+    // 'end' is shadowed. Returns 'end' unchanged if no pruning applies or if
+    // we cannot safely inspect merged (e.g. unresolved CDMO).
+    private static AbstractConfigObject pruneShadowedKeys(AbstractConfigObject end,
+            AbstractConfigObject merged) {
+        if (!(end instanceof SimpleConfigObject))
+            return end;
+        SimpleConfigObject simple = (SimpleConfigObject) end;
+        Map<String, AbstractConfigValue> kept = new HashMap<String, AbstractConfigValue>();
+        boolean pruned = false;
+        for (String key : simple.keySet()) {
+            AbstractConfigValue mergedValue;
+            try {
+                mergedValue = merged.attemptPeekWithPartialResolve(key);
+            } catch (ConfigException.NotResolved e) {
+                return end;
+            }
+            if (mergedValue != null && mergedValue.ignoresFallbacks()) {
+                pruned = true;
+            } else {
+                kept.put(key, simple.attemptPeekWithPartialResolve(key));
+            }
+        }
+        if (!pruned)
+            return end;
+        if (kept.isEmpty())
+            return null;
+        return new SimpleConfigObject(end.origin(), kept,
+                ResolveStatus.fromValues(kept.values()), false);
     }
 
     @Override
