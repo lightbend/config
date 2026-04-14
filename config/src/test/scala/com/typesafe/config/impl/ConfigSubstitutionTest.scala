@@ -769,7 +769,7 @@ class ConfigSubstitutionTest extends TestUtils {
     }
 
     private val substEnvVarObject = {
-        // prefix the names of keys with "key_" to allow us to embed a case sensitive env var name
+        // prefix the names of keys with "key_" to allow us to embed a case-sensitive env var name
         // in the key that wont therefore risk a naming collision with env vars themselves
         parseObject("""
 {
