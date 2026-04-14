@@ -941,7 +941,7 @@ class PublicApiTest extends TestUtils {
         assertEquals("config.file is not set", null, System.getProperty("config.file"))
         val old = System.getProperty("config.resource")
         try {
-            System.setProperty("config.resource", "donotexists.conf")
+            System.setProperty("config.resource", "nonexistent.conf")
             intercept[ConfigException.IO] {
                 ConfigFactory.load()
             }
@@ -964,7 +964,7 @@ class PublicApiTest extends TestUtils {
         assertEquals("config.resource is not set", null, System.getProperty("config.resource"))
         val old = System.getProperty("config.file")
         try {
-            System.setProperty("config.file", "donotexists.conf")
+            System.setProperty("config.file", "nonexistent.conf")
             intercept[ConfigException.IO] {
                 ConfigFactory.load()
             }

@@ -779,7 +779,7 @@ class ConfParserTest extends TestUtils {
         val missing = ConfigParseOptions.defaults().setAllowMissing(true)
 
         val ex = intercept[Exception] {
-            ConfigFactory.parseString("include required(classpath( \"nonexistant\") )", missing)
+            ConfigFactory.parseString("include required(classpath( \"nonexistent\") )", missing)
         }
 
         val actual = ex.getMessage
