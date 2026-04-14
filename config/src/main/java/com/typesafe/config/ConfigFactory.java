@@ -1109,7 +1109,7 @@ public final class ConfigFactory {
 
     /**
      * Like {@link #parseApplicationReplacement()} but allows you to specify a class loader
-     * ti yse rather than the current context class loader.
+     * rather than using the current context class loader.
      *
      * @since 1.4.1
      *
