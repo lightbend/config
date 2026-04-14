@@ -638,7 +638,7 @@ class PublicApiTest extends TestUtils {
         System.setProperty("config.strategy", classOf[TestStrategy].getCanonicalName)
 
         try {
-            val incovationsBeforeTest = TestStrategy.getIncovations()
+            val invocationsBeforeTest = TestStrategy.getInvocations()
             val loaderA1 = new TestClassLoader(this.getClass().getClassLoader(),
                 Map("reference.conf" -> resourceFile("a_1.conf").toURI.toURL()))
 
@@ -647,7 +647,7 @@ class PublicApiTest extends TestUtils {
             }
             ConfigFactory.load()
             assertEquals(1, configA1.getInt("a"))
-            assertEquals(2, TestStrategy.getIncovations() - incovationsBeforeTest)
+            assertEquals(2, TestStrategy.getInvocations() - invocationsBeforeTest)
         } finally {
             System.clearProperty("config.strategy")
         }
@@ -1185,6 +1185,6 @@ class TestStrategy extends DefaultConfigLoadingStrategy {
 
 object TestStrategy {
     private var invocations = 0
-    def getIncovations() = invocations
+    def getInvocations() = invocations
     def increment() = invocations += 1
 }
