@@ -38,10 +38,10 @@ public final class ConfigValueFactory {
      * 
      * <p>
      * The originDescription will be used to set the origin() field on the
-     * ConfigValue. It should normally be the name of the file the values came
-     * from, or something short describing the value such as "default settings".
-     * The originDescription is prefixed to error messages so users can tell
-     * where problematic values are coming from.
+     * ConfigValue. It should normally be the name of the file from which the
+     * values came, or something short describing the value such as "default
+     * settings". The originDescription is prefixed to error messages so users
+     * can tell where problematic values are coming from.
      * 
      * <p>
      * Supplying the result of ConfigValue.unwrapped() to this function is
