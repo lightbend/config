@@ -753,7 +753,7 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(List("0", "1"), resolved.getList("a").unwrapped().asScala)
     }
 
-    // this is a weird test, it used to test fallback to system props which made more sense.
+    // this is a weird test, it used to test falling back to system props which made more sense.
     // Now it just tests that if you override with system props, you can use system props
     // in substitutions.
     @Test
