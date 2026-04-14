@@ -468,7 +468,7 @@ class ConfParserTest extends TestUtils {
                 """)
         assertComments(Seq(" AfterSepOwnLine"), conf10, "foo")
 
-        // comments comments everywhere
+        // comments, comments everywhere
         val conf11 = parseConfig("""
                 {# Before
                 foo
