@@ -6,7 +6,7 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,10 +85,8 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         AbstractConfigValue merged = null;
         for (AbstractConfigValue end : stack) {
             // Per the HOCON spec, a substitution hidden by a value that
-            // cannot be merged with it is never evaluated. Once the
-            // accumulated merged value ignores fallbacks, nothing below it
-            // in the stack can contribute, so skip it to avoid evaluating
-            // substitutions that cannot affect the result.
+            // cannot be merged with it is never evaluated. If merged already
+            // ignores fallbacks, nothing below can contribute, so stop.
             if (merged != null && merged.ignoresFallbacks()) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
                     ConfigImpl.trace(newContext.depth(),
@@ -135,17 +133,11 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
                 sourceForEnd = source.pushParent(replaceable);
 
-                // Per the HOCON spec, a substitution hidden by a value that
-                // cannot be merged with it is never evaluated. When merging
-                // objects field-by-field the merged object may already contain,
-                // at some keys, values that ignore fallbacks (e.g. a resolved
-                // non-object shadowing a substitution below). Any substitution
-                // at those same keys in a lower-priority object on the stack
-                // would be discarded by the subsequent merge anyway, so we
-                // prune those keys before resolving to avoid evaluating
-                // substitutions that cannot contribute to the result.
-                if (merged instanceof AbstractConfigObject && end instanceof AbstractConfigObject
-                        && !(end instanceof Unmergeable)) {
+                // Same spec rule as the short-circuit above, applied per-key:
+                // keys in the lower-priority 'end' object that are already
+                // shadowed in 'merged' by a value ignoring fallbacks would be
+                // discarded by the subsequent merge, so don't resolve them.
+                if (merged instanceof AbstractConfigObject && end instanceof AbstractConfigObject) {
                     AbstractConfigObject prunedEnd = pruneShadowedKeys(
                             (AbstractConfigObject) end, (AbstractConfigObject) merged);
                     if (prunedEnd == null) {
@@ -198,7 +190,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         if (!(end instanceof SimpleConfigObject))
             return end;
         SimpleConfigObject simple = (SimpleConfigObject) end;
-        Map<String, AbstractConfigValue> kept = new HashMap<String, AbstractConfigValue>();
+        Map<String, AbstractConfigValue> kept = new LinkedHashMap<String, AbstractConfigValue>();
         boolean pruned = false;
         for (String key : simple.keySet()) {
             AbstractConfigValue mergedValue;
