@@ -840,7 +840,7 @@ because the self reference has to "look back" to an undefined `a`:
 
     a = ${?a}foo
 
-In general, in resolving a substitution the implementation must:
+In general, in resolving a substitution, the implementation must:
 
  - lazy-evaluate the substitution target so there's no
    "circularity by side effect"
