@@ -30,10 +30,10 @@ class UtilTest extends TestUtils {
 
         val s = " \u00A0 \n  " + supplementaryChars + "  \n  \u00A0 "
         val asciiTrimmed = s.trim()
-        val unitrimmed = ConfigImplUtil.unicodeTrim(s)
+        val uniTrimmed = ConfigImplUtil.unicodeTrim(s)
 
-        assertFalse(asciiTrimmed.equals(unitrimmed))
-        assertEquals(supplementaryChars, unitrimmed)
+        assertFalse(asciiTrimmed.equals(uniTrimmed))
+        assertEquals(supplementaryChars, uniTrimmed)
     }
 
     @Test
