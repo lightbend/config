@@ -84,6 +84,18 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         int count = 0;
         AbstractConfigValue merged = null;
         for (AbstractConfigValue end : stack) {
+            // Per the HOCON spec, a substitution hidden by a value that
+            // cannot be merged with it is never evaluated. Once the
+            // accumulated merged value ignores fallbacks, nothing below it
+            // in the stack can contribute, so skip it to avoid evaluating
+            // substitutions that cannot affect the result.
+            if (merged != null && merged.ignoresFallbacks()) {
+                if (ConfigImpl.traceSubstitutionsEnabled())
+                    ConfigImpl.trace(newContext.depth(),
+                            "merged ignores fallbacks, skipping remaining stack");
+                break;
+            }
+
             // the end value may or may not be resolved already
 
             ResolveSource sourceForEnd;

@@ -1304,4 +1304,43 @@ class ConfigSubstitutionTest extends TestUtils {
         val resolvedViaSub = resolve(viaSub)
         assertEquals(parseObject("""{ a : { x : 1 } }"""), resolvedViaSub.getConfig("p").root)
     }
+
+    // Spec (HOCON.md): "If a substitution is hidden by a value that could not
+    // be merged with it (by a non-object value) then it is never evaluated and
+    // no error will be reported." The direct top-level case from the spec.
+    @Test
+    def substitutionHiddenByLiteralNonObjectIsNotEvaluated() {
+        val obj = parseObject("""
+            foo: ${does-not-exist}
+            foo: 42
+        """)
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("foo"))
+    }
+
+    // Variant of #838: an object containing a substitution is hidden by a
+    // literal non-object. The object cannot merge with 42, so the enclosed
+    // substitution must not be evaluated.
+    @Test
+    def substitutionInsideObjectHiddenByLiteralNonObjectIsNotEvaluated() {
+        val obj = parseObject("""
+            p: { a : ${does-not-exist} }
+            p: 42
+        """)
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("p"))
+    }
+
+    // Variant of #838: an object containing a substitution is hidden by a
+    // substitution that resolves to a non-object. Same spec intent applies.
+    @Test
+    def substitutionInsideObjectHiddenByNonObjectFromSubstitutionIsNotEvaluated() {
+        val obj = parseObject("""
+            p: { a : ${does-not-exist} }
+            p: ${z}
+            z: 42
+        """)
+        val resolved = resolve(obj)
+        assertEquals(42, resolved.getInt("p"))
+    }
 }
