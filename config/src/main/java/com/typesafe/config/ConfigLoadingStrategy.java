@@ -5,7 +5,7 @@ package com.typesafe.config;
  * calls {@link ConfigFactory#load}.
  *
  * Usually you don't have to implement this interface but it may be required
- * when you fixing a improperly implemented library with unavailable source code.
+ * when you fix an improperly implemented library with unavailable source code.
  *
  * You have to define VM property {@code config.strategy} to replace default strategy with your own.
  */
