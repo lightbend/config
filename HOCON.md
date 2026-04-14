@@ -1614,7 +1614,7 @@ So if you know that you HOCON needs "PATH" then you must ensure that
 the variable is defined as "PATH" rather than some other name such as
 "Path" or "path".
 However, Windows does not allow us to change the case of an existing env var; we can't
-simply redefine the var with an upper case name.
+simply redefine the var with an uppercase name.
 The only way to ensure that your environment variables have the desired case
 is to first undefine all the env vars that you will depend on then redefine
 them with the required case.
