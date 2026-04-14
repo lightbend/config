@@ -1335,7 +1335,7 @@ class ConfigTest extends TestUtils {
         val unresolved = ConfigFactory.parseString("a = ${foo}, b = ${bar}, c { x = ${m}, y = ${n}, z = foo${m}bar }, alwaysResolveable=${alwaysValue}, alwaysValue=42")
         assertFalse("config with substitutions starts as not resolved", unresolved.isResolved)
 
-        // resolve() by default throws with unresolveable substs
+        // resolve() by default throws with unresolveable substitutions
         intercept[ConfigException.UnresolvedSubstitution] {
             unresolved.resolve(ConfigResolveOptions.defaults())
         }
