@@ -388,7 +388,7 @@ For purposes of concatenation, "array" also means "substitution
 that resolves to an array" and "object" also means "substitution
 that resolves to an object."
 
-Within an field value or array element, if only non-newline
+Within a field value or array element, if only non-newline
 whitespace separates the end of a first array or object or
 substitution from the start of a second array or object or
 substitution, the two values are concatenated. Newlines may occur
