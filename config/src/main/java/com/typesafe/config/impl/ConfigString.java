@@ -86,6 +86,8 @@ abstract class ConfigString extends AbstractConfigValue implements Serializable 
             String rendered;
             if (options.getJson())
                 rendered = ConfigImplUtil.renderJsonString(value);
+            else if (!wasQuoted())
+                rendered = value;
             else
                 rendered = ConfigImplUtil.renderStringUnquotedIfPossible(value);
             sb.append(rendered);

@@ -8,8 +8,10 @@ import org.junit._
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigResolveOptions
+import com.typesafe.config.ConfigRenderOptions
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigParseOptions
 import scala.collection.JavaConverters._
 
 class ConcatenationTest extends TestUtils {
@@ -486,6 +488,32 @@ class ConcatenationTest extends TestUtils {
     def concatSubstitutionsThatAreListsWithSpace() {
         val conf = parseConfig("""foo = [1], bar = [2], x = ${foo} ${bar}""").resolve()
         assertEquals(List(1, 2), conf.getIntList("x").asScala)
+    }
+
+    // https://github.com/lightbend/config/issues/829
+    @Test
+    def renderArrayConcatenationRoundTrip() {
+        val renderOptions = ConfigRenderOptions.defaults
+            .setJson(false)
+            .setOriginComments(false)
+            .setComments(true)
+            .setFormatted(true)
+        val parseOptions = ConfigParseOptions.defaults.setAllowMissing(true)
+
+        val original = """ex1 = [1, 2]
+                         |except = ${ex1} ${ex1}
+                         |""".stripMargin
+        val rendered = ConfigFactory
+            .parseString(original, parseOptions)
+            .root
+            .render(renderOptions)
+
+        // the rendered config should be parseable and resolvable
+        val resolved = ConfigFactory
+            .parseString(rendered, parseOptions.setAllowMissing(false))
+            .resolve()
+
+        assertEquals(List(1, 2, 1, 2), resolved.getIntList("except").asScala.toList)
     }
 
     // but quoted whitespace should be an error
