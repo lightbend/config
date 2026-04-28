@@ -1,3 +1,8 @@
+# 1.4.7: April 28, 2026
+
+- fix: rendering of substituted list with space by [@johanandren](https://github.com/johanandren) ([#841](https://github.com/lightbend/config/pull/841))
+- fix: Don't evaluate substitutions hidden by values from resolved objects by [@johanandren](https://github.com/johanandren) ([#839](https://github.com/lightbend/config/pull/839))
+
 # 1.4.6: February 24, 2026
 
 - Support for list substitution from environment variables ([#833](https://github.com/lightbend/config/pull/833)) thanks to [@johanandren](https://github.com/johanandren)
