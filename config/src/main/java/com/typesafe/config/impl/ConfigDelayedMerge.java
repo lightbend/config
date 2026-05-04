@@ -6,9 +6,7 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
@@ -134,20 +132,19 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                 sourceForEnd = source.pushParent(replaceable);
 
                 // Same spec rule as the short-circuit above, applied per-key:
-                // keys in the lower-priority 'end' object that are already
-                // shadowed in 'merged' by a value ignoring fallbacks would be
-                // discarded by the subsequent merge, so don't resolve them.
-                if (merged instanceof AbstractConfigObject && end instanceof AbstractConfigObject) {
-                    AbstractConfigObject prunedEnd = pruneShadowedKeys(
-                            (AbstractConfigObject) end, (AbstractConfigObject) merged);
-                    if (prunedEnd == null) {
-                        if (ConfigImpl.traceSubstitutionsEnabled())
-                            ConfigImpl.trace(newContext.depth(),
-                                    "all keys in end are shadowed by merged, skipping");
-                        count += 1;
-                        continue;
-                    }
-                    end = prunedEnd;
+                // if every key in the lower-priority 'end' object is already
+                // shadowed in 'merged' by a value ignoring fallbacks, the whole
+                // 'end' would be discarded by the subsequent merge. Skip
+                // resolving it. (We only skip the whole entry — substituting a
+                // partial copy of 'end' would change identity and break parent
+                // chain walks during inner substitution resolution.)
+                if (merged instanceof AbstractConfigObject && end instanceof SimpleConfigObject
+                        && allKeysShadowed((SimpleConfigObject) end, (AbstractConfigObject) merged)) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(newContext.depth(),
+                                "all keys in end are shadowed by merged, skipping");
+                    count += 1;
+                    continue;
                 }
             }
 
@@ -181,36 +178,22 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         return ResolveResult.make(newContext, merged);
     }
 
-    // Returns a copy of 'end' with keys removed when 'merged' already has a
-    // value at that key which ignores fallbacks. Returns null if every key in
-    // 'end' is shadowed. Returns 'end' unchanged if no pruning applies or if
-    // we cannot safely inspect merged (e.g. unresolved CDMO).
-    private static AbstractConfigObject pruneShadowedKeys(AbstractConfigObject end,
-            AbstractConfigObject merged) {
-        if (!(end instanceof SimpleConfigObject))
-            return end;
-        SimpleConfigObject simple = (SimpleConfigObject) end;
-        Map<String, AbstractConfigValue> kept = new LinkedHashMap<String, AbstractConfigValue>();
-        boolean pruned = false;
-        for (String key : simple.keySet()) {
+    // True when every key in 'end' is shadowed by a value in 'merged' that
+    // ignores fallbacks (so the subsequent merge would drop the whole 'end').
+    private static boolean allKeysShadowed(SimpleConfigObject end, AbstractConfigObject merged) {
+        if (end.isEmpty())
+            return false;
+        for (String key : end.keySet()) {
             AbstractConfigValue mergedValue;
             try {
                 mergedValue = merged.attemptPeekWithPartialResolve(key);
             } catch (ConfigException.NotResolved e) {
-                return end;
+                return false;
             }
-            if (mergedValue != null && mergedValue.ignoresFallbacks()) {
-                pruned = true;
-            } else {
-                kept.put(key, simple.attemptPeekWithPartialResolve(key));
-            }
+            if (mergedValue == null || !mergedValue.ignoresFallbacks())
+                return false;
         }
-        if (!pruned)
-            return end;
-        if (kept.isEmpty())
-            return null;
-        return new SimpleConfigObject(end.origin(), kept,
-                ResolveStatus.fromValues(kept.values()), false);
+        return true;
     }
 
     @Override

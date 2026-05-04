@@ -1343,4 +1343,37 @@ class ConfigSubstitutionTest extends TestUtils {
         val resolved = resolve(obj)
         assertEquals(42, resolved.getInt("p"))
     }
+
+    // Regression: when a delayed-merge object's stack contains a SimpleConfigObject
+    // whose keys are partially shadowed by a higher-priority entry, pruning
+    // produces a SimpleConfigObject containing only the kept keys. If a kept key
+    // holds a nested ConfigDelayedMerge with an unmergeable element, resolving
+    // that inner CDM walks up the parent chain and reaches the outer CDMO, which
+    // still has the original (unpruned) entry in its stack — leading to
+    // ConfigException.BugOrBroken("tried to replace ... which is not in [...]").
+    @Test
+    def partiallyShadowedObjectWithInnerDelayedMergeResolves() {
+        // ${m} between the two `p:` definitions forces `p` into a
+        // ConfigDelayedMergeObject (the merge cannot happen at parse time).
+        // The lower-priority entry (defined first) has keys a, b, c. The
+        // higher-priority entry (defined last) shadows a and b but does not
+        // define c, so pruning would yield {c: ...}. The kept c is itself a
+        // ConfigDelayedMerge {x: [${?u}, "default"]} containing an optional
+        // substitution, whose resolution walks back through the path to the
+        // outer CDMO.
+        val obj = parseObject("""
+            p: {
+              a: "low"
+              b: "low"
+              c: { x: "default", x: ${?u} }
+            }
+            p: ${m}
+            p: { a: "high", b: "high" }
+            m: {}
+        """)
+        val resolved = resolve(obj)
+        assertEquals("high", resolved.getString("p.a"))
+        assertEquals("high", resolved.getString("p.b"))
+        assertEquals("default", resolved.getString("p.c.x"))
+    }
 }
