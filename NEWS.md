@@ -1,3 +1,14 @@
+# 1.4.8: May 5, 2026
+
+- fix: BugOrBroken - partially-shadowed object has nested delayed merge, fix for regression introduced in 1.4.7, ([#846](https://github.com/lightbend/config/pull/846)) thanks to [@johanandren](https://github.com/johanandren)
+
+# 1.4.7: April 28, 2026
+
+- fix: rendering of substituted list with space ([#841](https://github.com/lightbend/config/pull/841)) thanks to [@johanandren](https://github.com/johanandren)
+- fix: Don't evaluate substitutions hidden by values from resolved objects ([#839](https://github.com/lightbend/config/pull/839)) thanks to [@johanandren](https://github.com/johanandren)
+- build: CI improvements ([#843](https://github.com/lightbend/config/pull/843)) thanks to [@jsoref](https://github.com/jsoref)
+- docs: spelling improvements by ([#840](https://github.com/lightbend/config/pull/840)) thanks to [@jsoref](https://github.com/jsoref)
+
 # 1.4.6: February 24, 2026
 
 - Support for list substitution from environment variables ([#833](https://github.com/lightbend/config/pull/833)) thanks to [@johanandren](https://github.com/johanandren)
