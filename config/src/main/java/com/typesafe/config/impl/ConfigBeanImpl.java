@@ -85,12 +85,12 @@ public class ConfigBeanImpl {
             // find every issue, but it should find common ones).
             List<ConfigException.ValidationProblem> problems = new ArrayList<ConfigException.ValidationProblem>();
             if (!allowUnknownConfigKeys) {
-                for (Map.Entry<String, String> originalName : originalNames.entrySet()) {
-                    String camelName = originalName.getKey();
+                for (Map.Entry<String, String> nameEntry : originalNames.entrySet()) {
+                    String camelName = nameEntry.getKey();
                     if (!beanPropNames.contains(camelName)) {
                         AbstractConfigValue configValue = configProps.get(camelName);
                         problems.add(new ConfigException.ValidationProblem(
-                                Path.newKey(originalName.getValue()).render(),
+                                Path.newKey(nameEntry.getValue()).render(),
                                 configValue.origin(),
                                 "Unknown config setting"));
                     }
