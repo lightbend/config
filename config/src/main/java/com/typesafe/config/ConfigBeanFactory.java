@@ -39,11 +39,52 @@ public class ConfigBeanFactory {
      * @throws ConfigException.BadBean
      *     If something is wrong with the JavaBean
      * @throws ConfigException.ValidationFailed
-     *     If the config doesn't conform to the bean's implied schema
+     *     If the config doesn't conform to the bean's implied schema. Unknown
+     *     config keys are ignored.
      * @throws ConfigException
      *     Can throw the same exceptions as the getters on <code>Config</code>
      */
     public static <T> T create(Config config, Class<T> clazz) {
-        return ConfigBeanImpl.createInternal(config, clazz);
+        return ConfigBeanImpl.createInternal(config, clazz, true);
+    }
+
+    /**
+     * Creates an instance of a class, initializing its fields from a {@link Config}.
+     *
+     * Example usage:
+     *
+     * <pre>
+     * Config configSource = ConfigFactory.load().getConfig("foo");
+     * FooConfig config = ConfigBeanFactory.create(configSource, FooConfig.class, false);
+     * </pre>
+     *
+     * The Java class should follow JavaBean conventions. Field types
+     * can be any of the types you can normally get from a {@link
+     * Config}, including <code>java.time.Duration</code> or {@link
+     * ConfigMemorySize}. Fields may also be another JavaBean-style
+     * class.
+     *
+     * Fields are mapped to config by converting the config key to
+     * camel case.  So the key <code>foo-bar</code> becomes JavaBean
+     * setter <code>setFooBar</code>.
+     *
+     * @since 1.4.9
+     *
+     * @param config source of config information
+     * @param clazz class to be instantiated
+     * @param allowUnknownConfigKeys if false, throw a validation error when
+     *     the config has keys that do not map to bean properties
+     * @param <T> the type of the class to be instantiated
+     * @return an instance of the class populated with data from the config
+     * @throws ConfigException.BadBean
+     *     If something is wrong with the JavaBean
+     * @throws ConfigException.ValidationFailed
+     *     If the config doesn't conform to the bean's implied schema, including
+     *     unknown config keys when <code>allowUnknownConfigKeys</code> is false
+     * @throws ConfigException
+     *     Can throw the same exceptions as the getters on <code>Config</code>
+     */
+    public static <T> T create(Config config, Class<T> clazz, boolean allowUnknownConfigKeys) {
+        return ConfigBeanImpl.createInternal(config, clazz, allowUnknownConfigKeys);
     }
 }
