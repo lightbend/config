@@ -66,6 +66,20 @@ final class ConfigNodeField extends AbstractConfigNode {
         return null;
     }
 
+    protected int newlineCountBeforeValue() {
+        int newlineCount = 0;
+        for (AbstractConfigNode child : children) {
+            if (child instanceof AbstractConfigNodeValue)
+                return newlineCount;
+
+            if (child instanceof ConfigNodeSingleToken
+                    && Tokens.isNewline(((ConfigNodeSingleToken) child).token())) {
+                newlineCount++;
+            }
+        }
+        return newlineCount;
+    }
+
     protected List<String> comments() {
         List<String> comments = new ArrayList<String>();
         for (AbstractConfigNode child : children) {
