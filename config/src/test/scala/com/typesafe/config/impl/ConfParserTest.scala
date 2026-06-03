@@ -894,6 +894,42 @@ class ConfParserTest extends TestUtils {
     }
 
     @Test
+    def valuesAfterMultilineStringHaveCorrectOriginLine() {
+        val tripleQuote = "\"\"\""
+        val conf = parseConfig(Seq(
+            "transformations {",
+            "  trim-xml-leading-whitespace = " + tripleQuote,
+            "    stringTransformation {",
+            "        println(\"Original message: '$it'\")",
+            "        it.trimStart { it.isWhitespace() || it == '\\uFEFF' }.also { println(\"Trimmed leading whitespace: '${it}'\") }",
+            "    }",
+            "  " + tripleQuote,
+            "}",
+            "",
+            "pipelines {",
+            "  my-pipeline {",
+            "    from {",
+            "      type = GENERATOR",
+            "      count = 1",
+            "      message = \"foo\"",
+            "    }",
+            "    error-strategy = SHUTDOWN",
+            "    processing {",
+            "      transformation = trim-xml-leading-whitespace",
+            "      xml-to-json = { attribute-prefix = \"@\" }",
+            "    }",
+            "    to {",
+            "      type = LOGGER",
+            "    }",
+            "  }",
+            "}"
+        ).mkString("\n"))
+
+        assertEquals(19, conf.getValue("pipelines.my-pipeline.processing.transformation").origin().lineNumber())
+        assertEquals(20, conf.getObject("pipelines.my-pipeline.processing.xml-to-json").origin().lineNumber())
+    }
+
+    @Test
     def acceptMultiPeriodNumericPath() {
         val conf1 = ConfigFactory.parseString("0.1.2.3=foobar1")
         assertEquals("foobar1", conf1.getString("0.1.2.3"))
