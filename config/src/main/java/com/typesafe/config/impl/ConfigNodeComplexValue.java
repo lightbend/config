@@ -3,17 +3,29 @@
  */
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigOrigin;
+
 import java.util.*;
 
 abstract class ConfigNodeComplexValue extends AbstractConfigNodeValue {
     final protected ArrayList<AbstractConfigNode> children;
+    final private ConfigOrigin origin;
 
     ConfigNodeComplexValue(Collection<AbstractConfigNode> children) {
+        this(children, null);
+    }
+
+    ConfigNodeComplexValue(Collection<AbstractConfigNode> children, ConfigOrigin origin) {
         this.children = new ArrayList<AbstractConfigNode>(children);
+        this.origin = origin;
     }
 
     final public Collection<AbstractConfigNode> children() {
         return children;
+    }
+
+    final public ConfigOrigin origin() {
+        return origin;
     }
 
     @Override

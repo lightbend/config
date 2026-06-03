@@ -76,6 +76,14 @@ final class ConfigParser {
             return ((SimpleConfigOrigin) baseOrigin).withLineNumber(lineNumber);
         }
 
+        private SimpleConfigOrigin nodeOrigin(ConfigNodeComplexValue n) {
+            ConfigOrigin origin = n.origin();
+            if (origin != null)
+                return (SimpleConfigOrigin) origin;
+            else
+                return lineOrigin();
+        }
+
         private ConfigException parseError(String message) {
             return parseError(message, null);
         }
@@ -220,7 +228,7 @@ final class ConfigParser {
 
         private AbstractConfigObject parseObject(ConfigNodeObject n) {
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
-            SimpleConfigOrigin objectOrigin = lineOrigin();
+            SimpleConfigOrigin objectOrigin = nodeOrigin(n);
             boolean lastWasNewline = false;
 
             ArrayList<AbstractConfigNode> nodes = new ArrayList<AbstractConfigNode>(n.children());
@@ -357,7 +365,7 @@ final class ConfigParser {
         private SimpleConfigList parseArray(ConfigNodeArray n) {
             arrayCount += 1;
 
-            SimpleConfigOrigin arrayOrigin = lineOrigin();
+            SimpleConfigOrigin arrayOrigin = nodeOrigin(n);
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
 
             boolean lastWasNewLine = false;
