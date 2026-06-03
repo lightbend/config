@@ -76,6 +76,9 @@ final class ConfigParser {
             return ((SimpleConfigOrigin) baseOrigin).withLineNumber(lineNumber);
         }
 
+        // prefer origin captured at tokenize time (should be correct even when
+        // following a multiline string); falls back to the line counter for 
+        // nodes built without origin.
         private SimpleConfigOrigin nodeOrigin(ConfigNodeComplexValue n) {
             ConfigOrigin origin = n.origin();
             if (origin != null)
