@@ -917,6 +917,7 @@ class ConfParserTest extends TestUtils {
             "    processing {",
             "      transformation = trim-xml-leading-whitespace",
             "      xml-to-json = { attribute-prefix = \"@\" }",
+            "      xml-to-json-list = [ { attribute-prefix = \"@\" } ]",
             "    }",
             "    to {",
             "      type = LOGGER",
@@ -927,6 +928,7 @@ class ConfParserTest extends TestUtils {
 
         assertEquals(19, conf.getValue("pipelines.my-pipeline.processing.transformation").origin().lineNumber())
         assertEquals(20, conf.getObject("pipelines.my-pipeline.processing.xml-to-json").origin().lineNumber())
+        assertEquals(21, conf.getList("pipelines.my-pipeline.processing.xml-to-json-list").origin().lineNumber())
     }
 
     @Test
