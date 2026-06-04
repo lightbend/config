@@ -1,3 +1,9 @@
+# 1.4.9: June 3, 2026
+
+- fix: origin line numbers after newline separators ([#850](https://github.com/lightbend/config/pull/850)) thanks to [@mattheworford](https://github.com/mattheworford)
+- feat: opt-in unknown key validation for ConfigBeanFactory ([#851](https://github.com/lightbend/config/pull/851)) thanks to [@mattheworford](https://github.com/mattheworford)
+- fix: wrong line number for objects after multiline string ([#853](https://github.com/lightbend/config/pull/853)) thanks to [@mattheworford](https://github.com/mattheworford)
+
 # 1.4.8: May 5, 2026
 
 - fix: BugOrBroken - partially-shadowed object has nested delayed merge, fix for regression introduced in 1.4.7, ([#846](https://github.com/lightbend/config/pull/846)) thanks to [@johanandren](https://github.com/johanandren)
