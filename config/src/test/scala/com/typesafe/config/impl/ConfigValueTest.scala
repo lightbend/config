@@ -491,6 +491,8 @@ class ConfigValueTest extends TestUtils {
         unsupported { m.put("hello", intValue(42)) }
         unsupported { m.putAll(Collections.emptyMap[String, AbstractConfigValue]()) }
         unsupported { m.remove("a") }
+        unsupported { m.keySet().remove("a") }
+        unsupported { m.keySet().clear() }
     }
 
     @Test
