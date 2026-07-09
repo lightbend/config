@@ -6,16 +6,7 @@ package com.typesafe.config.impl;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
@@ -420,7 +411,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     }
 
     // this is only Serializable to chill out a findbugs warning
-    static final private class RenderComparator implements java.util.Comparator<String>, Serializable {
+    static private class RenderComparator implements java.util.Comparator<String>, Serializable {
         private static final long serialVersionUID = 1L;
 
         private static boolean isAllDigits(String s) {
@@ -460,6 +451,30 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         }
     }
 
+    private class KeepOriginRenderComparator extends RenderComparator {
+        private SimpleConfigOrigin getOriginFor(String key) {
+            return value.get(key).origin();
+        }
+        private final RenderComparator delegate = new RenderComparator();
+        @Override
+        public int compare(String a, String b) {
+            SimpleConfigOrigin aOrigin = getOriginFor(a);
+            SimpleConfigOrigin bOrigin = getOriginFor(b);
+
+            String aFilename = Objects.toString(aOrigin.filename(), "");
+            String bFilename = Objects.toString(bOrigin.filename(), "");
+            int compareFiles = aFilename.compareTo(bFilename);
+            if (compareFiles == 0) {
+                int compareLines = Integer.compare(aOrigin.lineNumber(), bOrigin.lineNumber());
+                if (compareLines == 0)
+                    return delegate.compare(a, b);
+                else return compareLines;
+            } else
+                return compareFiles;
+        }
+    }
+
+
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         if (isEmpty()) {
@@ -480,7 +495,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
             int separatorCount = 0;
             String[] keys = keySet().toArray(new String[size()]);
-            Arrays.sort(keys, new RenderComparator());
+            Comparator<String> ordering = options.getKeepOriginOrder() ? new KeepOriginRenderComparator() : new RenderComparator();
+            Arrays.sort(keys, ordering);
             for (String k : keys) {
                 AbstractConfigValue v;
                 v = value.get(k);

@@ -322,7 +322,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
         if (options.getFormatted()) {
             int remaining = indent;
             while (remaining > 0) {
-                sb.append("    ");
+                sb.append(options.getDoubleIndent() ? "    " : "  ");
                 --remaining;
             }
         }
@@ -349,7 +349,7 @@ abstract class AbstractConfigValue implements ConfigValue, MergeableValue {
                     if (options.getFormatted())
                         sb.append(' ');
                 } else {
-                    sb.append("=");
+                    sb.append(options.getDoubleColonAssign() ? ":" : "=");
                 }
             }
         }
