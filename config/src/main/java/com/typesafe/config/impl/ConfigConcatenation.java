@@ -287,6 +287,9 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
         for (AbstractConfigValue p : pieces) {
+            if (isIgnoredWhitespace(p)) {
+                continue;
+            }
             p.render(sb, indent, atRoot, options);
         }
     }
