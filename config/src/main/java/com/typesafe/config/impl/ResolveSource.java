@@ -167,20 +167,7 @@ final class ResolveSource {
             ConfigImpl.trace("pushing parent " + parent + " ==root " + (parent == root) + " onto " + this);
 
         if (pathFromRoot == null) {
-            if (parent == root) {
-                return new ResolveSource(root, new Node<Container>(parent));
-            } else {
-                if (ConfigImpl.traceSubstitutionsEnabled()) {
-                    // this hasDescendant check is super-expensive so it's a
-                    // trace message rather than an assertion
-                    if (root.hasDescendant((AbstractConfigValue) parent))
-                        ConfigImpl.trace("***** BUG ***** tried to push parent " + parent
-                                + " without having a path to it in " + this);
-                }
-                // ignore parents if we aren't proceeding from the
-                // root
-                return this;
-            }
+            return new ResolveSource(root, new Node<Container>(parent));
         } else {
             Container parentParent = pathFromRoot.head();
             if (ConfigImpl.traceSubstitutionsEnabled()) {
@@ -250,9 +237,14 @@ final class ResolveSource {
             }
             // if we end up nuking the root object itself, we replace it with an
             // empty root
-            if (newPath != null)
-                return new ResolveSource((AbstractConfigObject) newPath.last(), newPath);
-            else
+            if (newPath != null) {
+                // resolveWith() uses a substitution root that is not the config
+                // object being resolved; keep that lookup root while updating
+                // the parent chain for delayed-merge self-reference semantics.
+                AbstractConfigObject lookupRoot = pathFromRoot.last() == root ? (AbstractConfigObject) newPath.last()
+                        : root;
+                return new ResolveSource(lookupRoot, newPath);
+            } else
                 return new ResolveSource(SimpleConfigObject.empty());
         } else {
             if (old == root) {
