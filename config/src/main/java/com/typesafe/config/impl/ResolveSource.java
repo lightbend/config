@@ -167,7 +167,20 @@ final class ResolveSource {
             ConfigImpl.trace("pushing parent " + parent + " ==root " + (parent == root) + " onto " + this);
 
         if (pathFromRoot == null) {
-            return new ResolveSource(root, new Node<Container>(parent));
+            if (parent == root) {
+                return new ResolveSource(root, new Node<Container>(parent));
+            } else {
+                if (ConfigImpl.traceSubstitutionsEnabled()) {
+                    // this hasDescendant check is super-expensive so it's a
+                    // trace message rather than an assertion
+                    if (root.hasDescendant((AbstractConfigValue) parent))
+                        ConfigImpl.trace("***** BUG ***** tried to push parent " + parent
+                                + " without having a path to it in " + this);
+                }
+                // ignore parents if we aren't proceeding from the
+                // root
+                return this;
+            }
         } else {
             Container parentParent = pathFromRoot.head();
             if (ConfigImpl.traceSubstitutionsEnabled()) {
@@ -267,14 +280,19 @@ final class ResolveSource {
             Container parent = pathFromRoot.head();
             AbstractConfigValue newParent = parent.replaceChild(old, replacement);
             return replaceCurrentParent(parent, (newParent instanceof Container) ? (Container) newParent : null);
-        } else {
-            if (old == root && replacement instanceof Container) {
+        } else if (old == root) {
+            if (replacement instanceof Container) {
                 return new ResolveSource(rootMustBeObj((Container) replacement));
             } else {
                 throw new ConfigException.BugOrBroken("replace in parent not possible " + old + " with " + replacement
                         + " in " + this);
-                // return this;
             }
+        } else {
+            // pathFromRoot is null so we aren't proceeding from the root (see
+            // pushParent); resolveWith() resolves a value that isn't a descendant
+            // of the substitution root, so root can't contain "old" and there's
+            // nothing to replace.
+            return this;
         }
     }
 

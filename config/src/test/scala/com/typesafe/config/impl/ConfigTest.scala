@@ -1389,7 +1389,7 @@ class ConfigTest extends TestUtils {
 
     // https://github.com/lightbend/config/issues/855
     @Test
-    def resolveWithDelayedMergeOverloadedValue(): Unit = {
+    def resolveWithDuplicateKeyAndSubstitution(): Unit = {
         val unresolved = ConfigFactory.parseString("""{ "one": "first", "one": ${variable}}""")
         val source = ConfigFactory.parseString("""{ "variable": "second"}""")
         val resolved = unresolved.resolveWith(source)
