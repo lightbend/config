@@ -1387,6 +1387,15 @@ class ConfigTest extends TestUtils {
         assertEquals(43, resolved.getInt("foo"))
     }
 
+    // https://github.com/lightbend/config/issues/855
+    @Test
+    def resolveWithDuplicateKeyAndSubstitution(): Unit = {
+        val unresolved = ConfigFactory.parseString("""{ "one": "first", "one": ${variable}}""")
+        val source = ConfigFactory.parseString("""{ "variable": "second"}""")
+        val resolved = unresolved.resolveWith(source)
+        assertEquals("second", resolved.getString("one"))
+    }
+
     /**
      * A resolver that replaces paths that start with a particular prefix with
      * strings where that prefix has been replaced with another prefix.
