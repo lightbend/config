@@ -367,8 +367,16 @@ final class Tokenizer {
                     // force floating point representation
                     return Tokens.newDouble(lineOrigin, Double.parseDouble(s), s);
                 } else {
-                    // this should throw if the integer is too large for Long
-                    return Tokens.newLong(lineOrigin, Long.parseLong(s), s);
+                    try {
+                        return Tokens.newLong(lineOrigin, Long.parseLong(s), s);
+                    } catch (NumberFormatException e) {
+                        // Preserve numeric type within the existing finite double range.
+                        // Beyond it, retain the legacy unquoted-string fallback below.
+                        double number = Double.parseDouble(s);
+                        if (Double.isInfinite(number) || Double.isNaN(number))
+                            throw e;
+                        return Tokens.newDouble(lineOrigin, number, s);
+                    }
                 }
             } catch (NumberFormatException e) {
                 // not a number after all, see if it's an unquoted string.
