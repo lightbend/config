@@ -72,26 +72,37 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
         AbstractConfigValue v;
         try {
             ResolveSource.ResultWithPath resultWithPath = source.lookupSubst(newContext, expr, prefixLength);
-            newContext = resultWithPath.result.context;
+            boolean retryRoot = prefixLength > 0;
+            while (true) {
+                newContext = resultWithPath.result.context;
 
-            if (resultWithPath.result.value != null) {
-                if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(newContext.depth(), "recursively resolving " + resultWithPath
-                            + " which was the resolution of " + expr + " against " + source);
+                if (resultWithPath.result.value != null) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(newContext.depth(), "recursively resolving " + resultWithPath
+                                + " which was the resolution of " + expr + " against " + source);
 
-                ResolveSource recursiveResolveSource = (new ResolveSource(
-                        (AbstractConfigObject) resultWithPath.pathFromRoot.last(), resultWithPath.pathFromRoot));
+                    ResolveSource recursiveResolveSource = (new ResolveSource(
+                            (AbstractConfigObject) resultWithPath.pathFromRoot.last(), resultWithPath.pathFromRoot));
 
-                if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(newContext.depth(), "will recursively resolve against " + recursiveResolveSource);
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(newContext.depth(), "will recursively resolve against " + recursiveResolveSource);
 
-                ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(resultWithPath.result.value,
-                        recursiveResolveSource);
-                v = result.value;
-                newContext = result.context;
-            } else {
-                ConfigValue fallback = context.options().getResolver().lookup(expr.path().render());
-                v = (AbstractConfigValue) fallback;
+                    ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(resultWithPath.result.value,
+                            recursiveResolveSource);
+                    v = result.value;
+                    newContext = result.context;
+                } else {
+                    ConfigValue fallback = context.options().getResolver().lookup(expr.path().render());
+                    v = (AbstractConfigValue) fallback;
+                }
+                // A selected optional leaf can disappear after lookup. Retry once
+                // at the including root, retaining this expression for resolver
+                // callbacks, cycle detection and unresolved-reference reporting.
+                if (v != null || !retryRoot || resultWithPath.result.value == null)
+                    break;
+                retryRoot = false;
+                resultWithPath = source.lookupSubst(newContext,
+                        expr.changePath(expr.path().subPath(prefixLength)), 0);
             }
         } catch (NotPossibleToResolve e) {
             if (ConfigImpl.traceSubstitutionsEnabled())
