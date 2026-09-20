@@ -94,6 +94,15 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
             // the end value may or may not be resolved already
 
+            // A known non-object fallback is only a merge barrier once a
+            // higher layer exists. Its contents (for example a list containing
+            // substitutions) are hidden and need not be resolved.
+            if (merged != null && !(end instanceof Unmergeable)
+                    && !(end instanceof AbstractConfigObject)) {
+                merged = merged.withFallback(end);
+                break;
+            }
+
             ResolveSource sourceForEnd;
 
             if (end instanceof ReplaceableMergeStack)
