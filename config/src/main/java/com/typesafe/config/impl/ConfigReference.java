@@ -72,37 +72,22 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
         AbstractConfigValue v;
         try {
             ResolveSource.ResultWithPath resultWithPath = source.lookupSubst(newContext, expr, prefixLength);
-            boolean retryRoot = prefixLength > 0;
-            while (true) {
+            newContext = resultWithPath.result.context;
+            ResolveResult<? extends AbstractConfigValue> result = resolveLookup(newContext, source, resultWithPath);
+            newContext = result.context;
+            v = result.value;
+
+            // HOCON.md "Include semantics: substitution": in an included file, a substitution is looked up
+            // relative to the included file's root first, then relative to the including root. An undefined
+            // ${?x} leaves its field unset, so when the value found in the included file resolves to nothing,
+            // the including root still applies. The resolver, cycle detection and error messages keep
+            // seeing this expression.
+            if (v == null && prefixLength > 0 && foundInIncludedFile(resultWithPath)) {
+                resultWithPath = source.lookupSubst(newContext, expr.changePath(expr.path().subPath(prefixLength)), 0);
                 newContext = resultWithPath.result.context;
-
-                if (resultWithPath.result.value != null) {
-                    if (ConfigImpl.traceSubstitutionsEnabled())
-                        ConfigImpl.trace(newContext.depth(), "recursively resolving " + resultWithPath
-                                + " which was the resolution of " + expr + " against " + source);
-
-                    ResolveSource recursiveResolveSource = (new ResolveSource(
-                            (AbstractConfigObject) resultWithPath.pathFromRoot.last(), resultWithPath.pathFromRoot));
-
-                    if (ConfigImpl.traceSubstitutionsEnabled())
-                        ConfigImpl.trace(newContext.depth(), "will recursively resolve against " + recursiveResolveSource);
-
-                    ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(resultWithPath.result.value,
-                            recursiveResolveSource);
-                    v = result.value;
-                    newContext = result.context;
-                } else {
-                    ConfigValue fallback = context.options().getResolver().lookup(expr.path().render());
-                    v = (AbstractConfigValue) fallback;
-                }
-                // A selected optional leaf can disappear after lookup. Retry once
-                // at the including root, retaining this expression for resolver
-                // callbacks, cycle detection and unresolved-reference reporting.
-                if (v != null || !retryRoot || resultWithPath.result.value == null)
-                    break;
-                retryRoot = false;
-                resultWithPath = source.lookupSubst(newContext,
-                        expr.changePath(expr.path().subPath(prefixLength)), 0);
+                result = resolveLookup(newContext, source, resultWithPath);
+                newContext = result.context;
+                v = result.value;
             }
         } catch (NotPossibleToResolve e) {
             if (ConfigImpl.traceSubstitutionsEnabled())
@@ -133,6 +118,40 @@ final class ConfigReference extends AbstractConfigValue implements Unmergeable {
                 v = ((SimpleConfigObject) v).deferPendingIgnoredFallbacks(this, expr.path()).withFallbacksNotIgnored();
             return ResolveResult.make(newContext.removeCycleMarker(this), v);
         }
+    }
+
+    // Resolves the value a lookup found, against the object it was found in;
+    // if the lookup found nothing, asks the resolver instead.
+    private ResolveResult<? extends AbstractConfigValue> resolveLookup(ResolveContext context, ResolveSource source,
+            ResolveSource.ResultWithPath resultWithPath) throws NotPossibleToResolve {
+        if (resultWithPath.result.value != null) {
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), "recursively resolving " + resultWithPath
+                        + " which was the resolution of " + expr + " against " + source);
+
+            ResolveSource recursiveResolveSource = (new ResolveSource(
+                    (AbstractConfigObject) resultWithPath.pathFromRoot.last(), resultWithPath.pathFromRoot));
+
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), "will recursively resolve against " + recursiveResolveSource);
+
+            return context.resolve(resultWithPath.result.value, recursiveResolveSource);
+        } else {
+            ConfigValue fallback = context.options().getResolver().lookup(expr.path().render());
+            return ResolveResult.make(context, (AbstractConfigValue) fallback);
+        }
+    }
+
+    // True if the lookup found a value at the full (prefixed) path, i.e. inside
+    // the included file, rather than at the including root or in the environment:
+    // the chain of parents of a hit has one object per path element.
+    private boolean foundInIncludedFile(ResolveSource.ResultWithPath resultWithPath) {
+        if (resultWithPath.result.value == null)
+            return false;
+        int depth = 0;
+        for (ResolveSource.Node<Container> n = resultWithPath.pathFromRoot; n != null; n = n.tail())
+            depth += 1;
+        return depth == expr.path().length();
     }
 
     // The same kind of reference to another path: the prefix is kept, so a

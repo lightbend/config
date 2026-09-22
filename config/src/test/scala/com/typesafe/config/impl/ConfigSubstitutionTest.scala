@@ -678,6 +678,77 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals("in parent", resolved.getString("a.bar"))
     }
 
+    // "child" stands in for a file included at "common" inside "root"
+    private def withIncluded(child: String, root: String) =
+        parseObject(root).withValue("common", parseObject(child).relativized(new Path("common")))
+
+    @Test
+    def useRootWhenRelativizedOptionalIsUndefined() {
+        // x.y is looked up in the child first, but ${?MISSING} leaves it unset,
+        // so the root's x.y applies
+        val resolved = resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${x.y}", "x.y=0"))
+
+        assertEquals(0, resolved.getInt("common.a"))
+    }
+
+    @Test
+    def useRootForOptionalRefWhenRelativizedOptionalIsUndefined() {
+        val resolved = resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${?x.y}", "x.y=0"))
+
+        assertEquals(0, resolved.getInt("common.a"))
+    }
+
+    @Test
+    def relativizedOptionalIsUndefinedAndRootLacksIt() {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${x.y}", ""))
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("${common.x.y}"))
+
+        val resolved = resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${?x.y}", ""))
+        assertFalse(resolved.hasPath("common.a"))
+    }
+
+    @Test
+    def relativizedOptionalIsUndefinedAndRootOptionalIsUndefined() {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${x.y}", "x.y=${?ALSO_MISSING}"))
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("${common.x.y}"))
+    }
+
+    @Test
+    def cycleThroughRootWhenRelativizedOptionalIsUndefined() {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${x.y}", "x.y=${common.a}"))
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
+    }
+
+    @Test
+    def fallbackToEnvThroughRootWhenRelativizedOptionalIsUndefined() {
+        // SECRET_A is set for tests in build.sbt; the env lookup happens as
+        // part of the lookup relative to the root
+        val resolved = resolve(withIncluded("SECRET_A=${?MISSING}\na=${SECRET_A}", ""))
+
+        assertEquals("A", resolved.getString("common.a"))
+    }
+
+    // Whether the root's x.y applied used to depend on the order in which
+    // keys were resolved, which an unrelated observer key could change.
+    private def resolveWithObserver(observer: String) =
+        resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${x.y}", "x.y=0\n" + observer + "=${?common.x}"))
+
+    @Test
+    def useRootWhenRelativizedOptionalIsUndefinedWithObserverO24bbd() {
+        assertEquals(0, resolveWithObserver("o24bbd").getInt("common.a"))
+    }
+
+    @Test
+    def useRootWhenRelativizedOptionalIsUndefinedWithObserverZzz() {
+        assertEquals(0, resolveWithObserver("zzz").getInt("common.a"))
+    }
+
     private val substComplexObject = {
         parseObject("""
 {
