@@ -94,9 +94,12 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
             // the end value may or may not be resolved already
 
-            // A known non-object fallback is only a merge barrier once a
-            // higher layer exists. Its contents (for example a list containing
-            // substitutions) are hidden and need not be resolved.
+            // Per the HOCON spec, "If a substitution is hidden by a value that
+            // could not be merged with it (by a non-object value) then it is
+            // never evaluated". A non-object end below an already merged value
+            // is hidden by it, so substitutions inside it (e.g. [${MISSING}])
+            // are never evaluated. Merge it unresolved: it only makes merged
+            // ignore fallbacks, so nothing below it is merged either.
             if (merged != null && !(end instanceof Unmergeable)
                     && !(end instanceof AbstractConfigObject)) {
                 merged = merged.withFallback(end);

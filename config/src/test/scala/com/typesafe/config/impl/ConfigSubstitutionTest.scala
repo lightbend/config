@@ -1345,6 +1345,158 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(42, resolved.getInt("p"))
     }
 
+    // A list is a non-object value, so a list hidden by an object that
+    // arrives via a substitution is never evaluated either.
+    @Test
+    def listHiddenByObjectFromSubstitutionIsNotEvaluated() {
+        val obj = parseObject("""
+            wrapper: [${MISSING}]
+            replacement: {}
+            wrapper: ${replacement}
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{}"), resolved.getConfig("wrapper").root)
+    }
+
+    @Test
+    def listHiddenByObjectWithContentFromSubstitutionIsNotEvaluated() {
+        val obj = parseObject("""
+            w: [${MISSING}]
+            r: { x : 1 }
+            w: ${r}
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ x : 1 }"), resolved.getConfig("w").root)
+    }
+
+    @Test
+    def listAtDeeperPathHiddenByObjectFromSubstitutionIsNotEvaluated() {
+        val obj = parseObject("""
+            a.b.w: [${MISSING}]
+            r: { x : 1 }
+            a.b.w: ${r}
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ x : 1 }"), resolved.getConfig("a.b.w").root)
+    }
+
+    @Test
+    def listHiddenByObjectFromSubstitutionChainIsNotEvaluated() {
+        val obj = parseObject("""
+            w: [${MISSING}]
+            r1: ${r2}
+            r2: { x : 1 }
+            w: ${r1}
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ x : 1 }"), resolved.getConfig("w").root)
+    }
+
+    @Test
+    def listHiddenByObjectConcatenationIsNotEvaluated() {
+        val obj = parseObject("""
+            w: [${MISSING}]
+            r: { x : 1 }
+            w: ${r} { y : 2 }
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ x : 1, y : 2 }"), resolved.getConfig("w").root)
+    }
+
+    @Test
+    def listHiddenByObjectFromOptionalSubstitutionIsNotEvaluated() {
+        val obj = parseObject("""
+            w: [${MISSING}]
+            r: { x : 1 }
+            w: ${?r}
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ x : 1 }"), resolved.getConfig("w").root)
+    }
+
+    // The hidden self-reference is never evaluated, so it is not a cycle.
+    @Test
+    def selfReferentialListHiddenByObjectFromSubstitutionIsNotEvaluated() {
+        val obj = parseObject("""
+            w: [${w}]
+            r: { x : 1 }
+            w: ${r}
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ x : 1 }"), resolved.getConfig("w").root)
+    }
+
+    // Whether the hidden list was evaluated used to depend on the order in
+    // which keys were resolved, so check observers sorting before and after w.
+    @Test
+    def listHiddenByObjectFromSubstitutionIsNotEvaluatedWhateverTheKeyOrder() {
+        for (observer <- Seq("o24bbd", "zzz")) {
+            val obj = parseObject(s"""
+                w: [$${MISSING}]
+                r: { x : 1 }
+                w: $${r}
+                $observer: $${w.x}
+            """)
+            val resolved = resolve(obj)
+            assertEquals(observer, 1, resolved.getInt("w.x"))
+            assertEquals(observer, 1, resolved.getInt(observer))
+        }
+    }
+
+    // A missing optional substitution leaves nothing above the list, so the
+    // list is the value and its substitution must be evaluated.
+    @Test
+    def listExposedByMissingOptionalSubstitutionIsEvaluated() {
+        val obj = parseObject("""
+            w: [${MISSING}]
+            w: ${?nope}
+        """)
+        intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+    }
+
+    @Test
+    def listAppendedToIsEvaluated() {
+        val obj = parseObject("""
+            w: [${MISSING}]
+            w += 1
+        """)
+        intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+    }
+
+    // Only hidden values that are not unmergeable are skipped. A string
+    // concatenation containing a substitution is unmergeable until resolved,
+    // so it is still evaluated even when hidden.
+    @Test
+    def hiddenStringConcatenationIsStillEvaluated() {
+        val obj = parseObject("""
+            w: "s"${MISSING}
+            r: { x : 1 }
+            w: ${r}
+        """)
+        intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(obj)
+        }
+    }
+
+    @Test
+    def partiallyResolvedHiddenListResolvesLikeOneShot() {
+        val conf = ConfigFactory.parseString("""
+            w: [${MISSING}]
+            w: ${r}
+            o: ${w.x}
+        """)
+        val completion = ConfigFactory.parseString("r: { x : 1 }")
+        val options = ConfigResolveOptions.defaults().setAllowUnresolved(true)
+        val partial = conf.resolve(options).resolve(options)
+        assertEquals(conf.withFallback(completion).resolve().root,
+            partial.withFallback(completion).resolve().root)
+        assertEquals(1, partial.withFallback(completion).resolve().getInt("o"))
+    }
+
     // Regression: when a delayed-merge object's stack contains a SimpleConfigObject
     // whose keys are partially shadowed by a higher-priority entry, pruning
     // produces a SimpleConfigObject containing only the kept keys. If a kept key
