@@ -10,12 +10,13 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigResolveOptions
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
+import com.typesafe.config.ConfigValueFactory
 import scala.collection.JavaConverters._
 
 class ConfigSubstitutionTest extends TestUtils {
 
-    private def resolveWithoutFallbacks(v: AbstractConfigObject) = {
-        val options = ConfigResolveOptions.noSystem()
+    private def resolveWithoutFallbacks(v: AbstractConfigObject,
+        options: ConfigResolveOptions = ConfigResolveOptions.noSystem()) = {
         ResolveContext.resolve(v, v, options).asInstanceOf[AbstractConfigObject].toConfig
     }
     private def resolveWithoutFallbacks(s: AbstractConfigValue, root: AbstractConfigObject) = {
@@ -1375,5 +1376,241 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals("high", resolved.getString("p.a"))
         assertEquals("high", resolved.getString("p.b"))
         assertEquals("default", resolved.getString("p.c.x"))
+    }
+
+    // A null (or non-object) earlier in a key's history makes that key's object
+    // ignore fallbacks. That is a merge instruction for that key only: ${ref}
+    // copies the final value, so the receiving key still merges with its own
+    // earlier values.
+
+    // A root key that iterates before "a" in the root HashMap (String.hashCode is
+    // stable). With ${a...} under this key, the lookup resolves "a" restricted to
+    // the looked-up child before "a" is resolved in full.
+    private val observerBeforeA = "o24bbd"
+    // A root key that iterates after "a", so "a" is resolved in full first.
+    private val observerAfterA = "zzz"
+
+    // The key-order tests depend on HashMap iteration order, and adding keys to
+    // their configs can change it. Check the order still holds, so such a test
+    // cannot pass without going through the restricted lookup.
+    private def assertIteratesBefore(conf: AbstractConfigObject, first: String, second: String) {
+        val keys = conf.keySet.asScala.toSeq
+        assertTrue(s"$first must iterate before $second in $keys", keys.indexOf(first) < keys.indexOf(second))
+    }
+
+    private val allowUnresolved = ConfigResolveOptions.noSystem().setAllowUnresolved(true)
+
+    // Resolves partially twice, then completes with a fallback, as layered configs do.
+    private def resolveInTwoPasses(source: String, completion: String) =
+        resolveWithoutFallbacks(parseObject(source), allowUnresolved).resolve(allowUnresolved)
+            .withFallback(parseConfig(completion)).resolve(ConfigResolveOptions.noSystem())
+
+    @Test
+    def substitutedObjectDoesNotCarrySourceNull() {
+        assertEquals(parseObject("v={x=1}, r={x=1}, a={helper=0, x=1}"),
+            resolveWithoutFallbacks(parseObject("v={x=1}\nr=null\nr=${v}\na={helper=0}\na=${r}")).root)
+    }
+
+    @Test
+    def sourceKeyStillDropsItsOwnEarlierValue() {
+        assertEquals(parseObject("v={x=1}, r={x=1}, a={helper=0, x=1}"),
+            resolveWithoutFallbacks(parseObject("v={x=1}\nr={old=2}\nr=null\nr=${v}\na={helper=0}\na=${r}")).root)
+    }
+
+    @Test
+    def receiverOwnNullStillWinsOverSubstitutedObject() {
+        assertEquals(parseObject("v={x=1}, r={x=1}, a={x=1}"),
+            resolveWithoutFallbacks(parseObject("v={x=1}\nr=null\nr=${v}\na={helper=0}\na=null\na=${r}")).root)
+    }
+
+    @Test
+    def nestedSourceNullDoesNotReachReceiver() {
+        assertEquals(parseObject("v={nested={x=1}}, a={nested={helper=0, x=1}}"),
+            resolveWithoutFallbacks(parseObject(
+                "v={nested={old=2},nested=null,nested={x=1}}\na={nested={helper=0}}\na=${v}")).root)
+    }
+
+    @Test
+    def substitutedObjectWithinSameObject() {
+        assertEquals(parseObject("a={v={x=1}, r={x=1}, x=1}"),
+            resolveWithoutFallbacks(parseObject("a={v={x=1},r=null,r=${a.v}}\na=${a.r}")).root)
+        assertEquals(parseObject("a={v={x=1}, r={x=1}, x=1}"),
+            resolveWithoutFallbacks(parseObject("a={v={x=1},r=null,r=${a.v}}\na=${?MISSING}${a.r}")).root)
+    }
+
+    @Test
+    def earlierReceiverValueIsNowMergedAndEvaluated() {
+        // Behaviour change: on older versions the substituted object ignored
+        // fallbacks, so a's earlier value was never evaluated and this resolved
+        // to a={y=1}. Now the two objects merge, and ${missing} is evaluated.
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolveWithoutFallbacks(parseObject("r=null\nr={y=1}\na={x=${missing}}\na=${r}"))
+        }
+        assertTrue("wrong exception: " + e.getMessage, e.getMessage.contains("${missing}"))
+    }
+
+    @Test
+    def lookupResolvedBeforeReceiverSeesMergedValue() {
+        // The restricted resolve of "a" must not treat the source key's null in
+        // v.nested as a's own and drop {helper=0}.
+        val source = "v={nested=null,nested=${payload},sibling=${payload}}\npayload={x=1}\n" +
+            "a={nested={helper=0}}\na=${v}\n"
+        assertIteratesBefore(parseObject(source + observerBeforeA + "=${a.nested}"), observerBeforeA, "a")
+        for (observer <- Seq(observerBeforeA, observerAfterA)) {
+            val resolved = resolveWithoutFallbacks(parseObject(source + observer + "=${a.nested}"))
+            assertEquals(parseObject("{helper=0, x=1}"), resolved.getObject("a.nested"))
+            assertEquals(parseObject("{helper=0, x=1}"), resolved.getObject(observer))
+        }
+    }
+
+    @Test
+    def lookupOfMergeWithObjectOnTopSeesMergedValue() {
+        // v.c is a delayed merge whose top value is an object; the null is further
+        // down its stack, and must still not drop {h=0} from a.c.nested.
+        val source = "v={c={nested=null,nested=${p}},c=${q}}\np={x=1}\nq={y=2}\na={c={nested={h=0}}}\na=${v}\n"
+        assertIteratesBefore(parseObject(source + observerBeforeA + "=${a.c}"), observerBeforeA, "a")
+        for (observer <- Seq(observerBeforeA, observerAfterA)) {
+            val resolved = resolveWithoutFallbacks(parseObject(source + observer + "=${a.c}"))
+            assertEquals(parseObject("{nested={h=0, x=1}, y=2}"), resolved.getObject("a.c"))
+            assertEquals(parseObject("{nested={h=0, x=1}, y=2}"), resolved.getObject(observer))
+        }
+    }
+
+    @Test
+    def lookupThroughResolveWithSeesMergedValue() {
+        // resolveWith only looks paths up in the source, it never resolves it in full
+        val lib = parseConfig("v={nested=null,nested=${p}}\np={x=1}\na={nested={h=0}}\na=${v}")
+        val app = parseConfig("app=${a.nested}").resolveWith(lib, ConfigResolveOptions.noSystem())
+        assertEquals(parseObject("{h=0, x=1}"), app.getObject("app"))
+    }
+
+    @Test
+    def lookupDoesNotResolveSiblingsOfSubstitutedObject() {
+        // back=${app} only resolves against the config being resolved, not against lib;
+        // the lookup of a.nested must not try to resolve it
+        val lib = parseConfig("v={nested=null,nested=${p},back=${app}}\np={x=1}\na={nested={h=0}}\na=${v}")
+        val app = parseConfig("app=${a.nested}").resolveWith(lib, ConfigResolveOptions.noSystem())
+        assertEquals(parseObject("{h=0, x=1}"), app.getObject("app"))
+        // v.back -> observer -> a.nested is not a cycle as long as only v.nested is needed for a.nested
+        val source = parseObject("v={nested=null,nested=${p},back=${" + observerBeforeA + "}}\np={x=1}\n" +
+            "a={nested={h=0}}\na=${v}\n" + observerBeforeA + "=${a.nested}")
+        assertIteratesBefore(source, observerBeforeA, "a")
+        assertEquals(parseObject("{h=0, x=1}"), resolveWithoutFallbacks(source).getObject("v.back"))
+    }
+
+    @Test
+    def lookupThroughAnotherReceiverIsNotACycle() {
+        // v.nested points at b.q, and b=${a} goes back through a; this is not a cycle
+        val source = parseObject("v={nested=null,nested=${b.q}}\na={nested={h=0},q={x=1}}\na=${v}\n" +
+            "b=${a}\n" + observerBeforeA + "=${b.nested}")
+        assertIteratesBefore(source, observerBeforeA, "a")
+        assertEquals(parseObject("{h=0, x=1}"), resolveWithoutFallbacks(source).getObject(observerBeforeA))
+    }
+
+    @Test
+    def lookupOfReceiverSiblingSeesMergedValue() {
+        // a lookup of a.s resolves a restricted to s; the pending nested must not drop h=0
+        val source = "v={nested=null,nested=${p}}\np={x=1}\na={nested={h=0},s=${a.nested}}\na=${v}\n"
+        assertIteratesBefore(parseObject(source + observerBeforeA + "=${a.s}"), observerBeforeA, "a")
+        for (observer <- Seq(observerBeforeA, observerAfterA)) {
+            val resolved = resolveWithoutFallbacks(parseObject(source + observer + "=${a.s}"))
+            assertEquals(parseObject("{h=0, x=1}"), resolved.getObject("a.s"))
+            assertEquals(parseObject("{h=0, x=1}"), resolved.getObject(observer))
+        }
+    }
+
+    @Test
+    def partialResolveKeepsReceiverFallbacksForNestedNull() {
+        val source = "v={nested=null,nested=${pending}}\na={nested={helper=0}}\na=${v}\n" +
+            observerBeforeA + "=${a.nested}"
+        assertIteratesBefore(parseObject(source), observerBeforeA, "a")
+        val complete = resolveInTwoPasses(source, "pending={x=1}")
+        assertEquals(parseObject("{helper=0, x=1}"), complete.getObject("a.nested"))
+        assertEquals(parseObject("{helper=0, x=1}"), complete.getObject(observerBeforeA))
+    }
+
+    @Test
+    def partialResolveKeepsReceiverFallbacksForTopLevelNull() {
+        val partial = resolveWithoutFallbacks(parseObject("v=null\nv={x=${pending}}\na={helper=0}\na=${v}"),
+            allowUnresolved)
+        assertFalse(partial.isResolved)
+        val complete = partial.withFallback(parseConfig("pending=1")).resolve(ConfigResolveOptions.noSystem())
+        assertEquals(parseObject("{helper=0, x=1}"), complete.getObject("a"))
+    }
+
+    @Test
+    def partialResolveKeepsReceiverFallbacksForNullBelowObjectInStack() {
+        // v's top value ${pendingTop} is an object, so v itself does not ignore
+        // fallbacks; the null is further down its stack
+        val complete = resolveInTwoPasses(
+            "v={nested=null,nested=${pending}}\nv=${pendingTop}\na={nested={helper=0}}\na=${v}",
+            "pending={x=1}, pendingTop={y=2}")
+        assertEquals(parseObject("{nested={helper=0, x=1}, y=2}"), complete.getObject("a"))
+    }
+
+    @Test
+    def partialResolveKeepsReceiverFallbacksForNullBelowConcatenationInStack() {
+        val complete = resolveInTwoPasses(
+            "v={nested=null,nested=${pending}}\nv=${pendingTop}{z=3}\na={nested={helper=0}}\na=${v}",
+            "pending={x=1}, pendingTop={y=2}")
+        assertEquals(parseObject("{nested={helper=0, x=1}, y=2, z=3}"), complete.getObject("a"))
+    }
+
+    @Test
+    def partialResolveKeepsReceiverFallbacksForResolvedNullInStack() {
+        val complete = resolveInTwoPasses(
+            "v={nested=null,nested={x=1}}\nv=${pendingTop}\na={nested={helper=0}}\na=${v}",
+            "pendingTop={y=2}")
+        assertEquals(parseObject("{nested={helper=0, x=1}, y=2}"), complete.getObject("a"))
+    }
+
+    @Test
+    def partialResolveKeepsReceiverFallbacksForNullInChildMerge() {
+        val complete = resolveInTwoPasses(
+            "v={c={nested=null,nested=${pending}},c=${pendingTop}}\na={c={nested={helper=0}}}\na=${v}",
+            "pending={x=1}, pendingTop={y=2}")
+        assertEquals(parseObject("{c={nested={helper=0, x=1}, y=2}}"), complete.getObject("a"))
+    }
+
+    @Test
+    def partialResolveOfOrdinaryObjectStillSubstitutes() {
+        val partial = resolveWithoutFallbacks(parseObject("v={known=3,unknown=${pending}}\na=${v}"), allowUnresolved)
+        assertEquals(3, partial.getInt("a.known"))
+    }
+
+    @Test
+    def resolvedConfigMergesWithLaterFallback() {
+        // Behaviour change: a never had a null of its own, so a fallback added
+        // after resolve merges into it
+        val resolved = resolveWithoutFallbacks(parseObject("r=null\nr={x=1}\na=${r}"))
+        assertEquals(parseObject("{helper=0, x=1}"), resolved.withFallback(parseConfig("a={helper=0}")).getObject("a"))
+    }
+
+    private def pair(shared: SimpleConfigObject): SimpleConfigObject =
+        ConfigValueFactory.fromMap(Map("left" -> shared, "right" -> shared).asJava).asInstanceOf[SimpleConfigObject]
+
+    @Test
+    def clearingIgnoredFallbacksKeepsSharedSubtreesShared() {
+        val leaf = parseConfig("leaf=null\nleaf={value=1}").getObject("leaf").asInstanceOf[SimpleConfigObject]
+        assertTrue(leaf.ignoresFallbacks)
+        val cleared = pair(pair(leaf)).withFallbacksNotIgnored()
+        assertSame(cleared.get("left"), cleared.get("right"))
+        val inner = cleared.get("left").asInstanceOf[SimpleConfigObject]
+        assertSame(inner.get("left"), inner.get("right"))
+        val clearedLeaf = inner.get("left").asInstanceOf[SimpleConfigObject]
+        assertFalse(clearedLeaf.ignoresFallbacks)
+        assertEquals(1, clearedLeaf.toConfig.getInt("value"))
+        assertTrue("source object is not modified", leaf.ignoresFallbacks)
+    }
+
+    @Test
+    def clearingIgnoredFallbacksVisitsSharedSubtreesOnce() {
+        // 2^40 paths but 40 distinct objects: without the identity memo this never finishes
+        var shared = pair(parseConfig("leaf=null\nleaf={value=1}").getObject("leaf").asInstanceOf[SimpleConfigObject])
+        for (_ <- 1 to 40)
+            shared = pair(shared)
+        val cleared = shared.withFallbacksNotIgnored()
+        assertNotSame(shared, cleared)
+        assertSame(cleared, cleared.withFallbacksNotIgnored())
     }
 }
