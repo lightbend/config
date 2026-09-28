@@ -90,6 +90,98 @@ class ConcatenationTest extends TestUtils {
                 e.getMessage.contains("[1,2]"))
     }
 
+    private def assertNoStringConcatWithCollection(conf: String, collection: String, text: String) {
+        val e = intercept[ConfigException.WrongType] {
+            parseConfig(conf).resolve()
+        }
+        assertTrue("wrong exception: " + e.getMessage,
+            e.getMessage.contains("Cannot concatenate") &&
+                e.getMessage.contains(collection) &&
+                e.getMessage.contains(text))
+    }
+
+    @Test
+    def noStringDirectlyAfterArray() {
+        assertNoStringConcatWithCollection(""" a : [1]suffix """, "[1]", "suffix")
+    }
+
+    @Test
+    def noStringAfterArray() {
+        assertNoStringConcatWithCollection(""" a : [1] suffix """, "[1]", "suffix")
+    }
+
+    @Test
+    def noStringAfterObject() {
+        assertNoStringConcatWithCollection(""" a : { b : 1 }x """, """{"b":1}""", "x")
+    }
+
+    @Test
+    def noStringBetweenArrays() {
+        assertNoStringConcatWithCollection(""" list = [0, 1] | [2,3] """, "[0,1]", "|")
+    }
+
+    @Test
+    def noWordsBetweenArrays() {
+        assertNoStringConcatWithCollection(""" list = [0]  bar baz [1,2,3] """, "[0]", "bar")
+    }
+
+    @Test
+    def noWordsAndSymbolsBetweenArrays() {
+        assertNoStringConcatWithCollection(""" list = [0] abc [bar, baz] ||| xyz [1,2,3] """, "[0]", "abc")
+    }
+
+    @Test
+    def noStringSubstitutionAfterArray() {
+        assertNoStringConcatWithCollection(""" x = foo, a : [1] ${x} """, "[1]", "foo")
+    }
+
+    // The tokenizer drops whitespace next to a literal [ ] or { }; whitespace
+    // between two substitutions is kept as an unquoted string, so these tests
+    // put it there to reach the concatenation.
+
+    @Test
+    def whitespaceBetweenSubstitutedArrays() {
+        val conf = parseConfig("x = [1], y = [2], a : ${x} \t ${y}").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a").asScala)
+    }
+
+    @Test
+    def nonBreakingSpaceBetweenSubstitutedArrays() {
+        val conf = parseConfig("x = [1], y = [2], a : ${x}\u00A0${y}").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a").asScala)
+    }
+
+    @Test
+    def byteOrderMarkBetweenSubstitutedArrays() {
+        val conf = parseConfig("x = [1], y = [2], a : ${x}\uFEFF${y}").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("a").asScala)
+    }
+
+    @Test
+    def nonBreakingSpaceBetweenSubstitutedObjects() {
+        val conf = parseConfig("x = { b : 1 }, y = { c : 2 }, a : ${x}\u00A0${y}").resolve()
+        assertEquals(1, conf.getInt("a.b"))
+        assertEquals(2, conf.getInt("a.c"))
+    }
+
+    @Test
+    def zeroWidthSpaceBetweenSubstitutedArraysIsText() {
+        // U+200B is a format character, not whitespace in HOCON, so it is text
+        assertNoStringConcatWithCollection("x = [1], y = [2], a : ${x}\u200B${y}", "[1]", "\u200B")
+    }
+
+    @Test
+    def missingOptionalSubstitutionAfterArray() {
+        val conf = parseConfig(""" a : [1] ${?absent} """).resolve()
+        assertEquals(Seq(1), conf.getIntList("a").asScala)
+    }
+
+    @Test
+    def commentAfterArray() {
+        val conf = parseConfig("a : [1] # comment").resolve()
+        assertEquals(Seq(1), conf.getIntList("a").asScala)
+    }
+
     @Test
     def noObjectsSubstitutedInStringConcat() {
         val e = intercept[ConfigException.WrongType] {
