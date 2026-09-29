@@ -82,30 +82,30 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         int count = 0;
         AbstractConfigValue merged = null;
         for (AbstractConfigValue end : stack) {
-            // Per the HOCON spec, a substitution hidden by a value that
-            // cannot be merged with it is never evaluated. If merged already
-            // ignores fallbacks, nothing below can contribute, so stop.
-            if (merged != null && merged.ignoresFallbacks()) {
-                if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(newContext.depth(),
-                            "merged ignores fallbacks, skipping remaining stack");
-                break;
+            if (merged != null) {
+                // Per the HOCON spec, a substitution hidden by a value that
+                // cannot be merged with it is never evaluated. If merged already
+                // ignores fallbacks, nothing below can contribute, so stop.
+                if (merged.ignoresFallbacks()) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(newContext.depth(),
+                                "merged ignores fallbacks, skipping remaining stack");
+                    break;
+                }
+
+                // Extends that rule to what a hidden value contains: a non-object
+                // (e.g. [${MISSING}]) below merged only stops the merge, so its
+                // substitutions are never evaluated either.
+                if (!(end instanceof Unmergeable) && !(end instanceof AbstractConfigObject)) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(newContext.depth(),
+                                "non-object " + end + " is hidden by merged, merging it unresolved and stopping");
+                    merged = merged.withFallback(end);
+                    break;
+                }
             }
 
             // the end value may or may not be resolved already
-
-            // Per the HOCON spec, "If a substitution is hidden by a value that
-            // could not be merged with it (by a non-object value) then it is
-            // never evaluated". A non-object end below an already merged value
-            // is hidden by it, so substitutions inside it (e.g. [${MISSING}])
-            // are never evaluated. Merge it unresolved: it only makes merged
-            // ignore fallbacks, so nothing below it is merged either.
-            if (merged != null && !(end instanceof Unmergeable)
-                    && !(end instanceof AbstractConfigObject)) {
-                merged = merged.withFallback(end);
-                break;
-            }
-
             ResolveSource sourceForEnd;
 
             if (end instanceof ReplaceableMergeStack)

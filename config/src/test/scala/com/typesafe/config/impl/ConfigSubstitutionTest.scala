@@ -1345,21 +1345,10 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(42, resolved.getInt("p"))
     }
 
-    // A list is a non-object value, so a list hidden by an object that
+    // #865: a list is a non-object value, so a list hidden by an object that
     // arrives via a substitution is never evaluated either.
     @Test
     def listHiddenByObjectFromSubstitutionIsNotEvaluated() {
-        val obj = parseObject("""
-            wrapper: [${MISSING}]
-            replacement: {}
-            wrapper: ${replacement}
-        """)
-        val resolved = resolve(obj)
-        assertEquals(parseObject("{}"), resolved.getConfig("wrapper").root)
-    }
-
-    @Test
-    def listHiddenByObjectWithContentFromSubstitutionIsNotEvaluated() {
         val obj = parseObject("""
             w: [${MISSING}]
             r: { x : 1 }
@@ -1426,21 +1415,47 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(parseObject("{ x : 1 }"), resolved.getConfig("w").root)
     }
 
-    // Whether the hidden list was evaluated used to depend on the order in
-    // which keys were resolved, so check observers sorting before and after w.
+    // Whether the hidden list was evaluated used to depend on the order in which
+    // keys were resolved. Objects iterate in HashMap order, so check that the
+    // observers land before and after w.
     @Test
     def listHiddenByObjectFromSubstitutionIsNotEvaluatedWhateverTheKeyOrder() {
-        for (observer <- Seq("o24bbd", "zzz")) {
+        for ((observer, before) <- Seq("o24bbd" -> true, "zzz" -> false)) {
             val obj = parseObject(s"""
                 w: [$${MISSING}]
                 r: { x : 1 }
                 w: $${r}
                 $observer: $${w.x}
             """)
+            if (before) assertIteratesBefore(obj, observer, "w") else assertIteratesBefore(obj, "w", observer)
             val resolved = resolve(obj)
             assertEquals(observer, 1, resolved.getInt("w.x"))
             assertEquals(observer, 1, resolved.getInt(observer))
         }
+    }
+
+    // The object on top is a literal, so the stack is a ConfigDelayedMergeObject
+    @Test
+    def listHiddenByObjectLiteralWithSubstitutionIsNotEvaluated() {
+        val obj = parseObject("""
+            w: [${MISSING}]
+            b: 1
+            w: { a : ${b} }
+        """)
+        val resolved = resolve(obj)
+        assertEquals(parseObject("{ a : 1 }"), resolved.getConfig("w").root)
+    }
+
+    // The list hides {a=1} below it, so that is not merged either
+    @Test
+    def objectBelowHiddenListIsNotMerged() {
+        val source = "w: { a : 1 }\nw: [${MISSING}]\nr: { x : 2 }\nw: ${r}"
+        assertEquals(parseObject("{ x : 2 }"), resolve(parseObject(source)).getConfig("w").root)
+
+        val options = ConfigResolveOptions.defaults().setAllowUnresolved(true)
+        val partial = ConfigFactory.parseString(source.replace("r: { x : 2 }", "")).resolve(options)
+        val completed = partial.withFallback(ConfigFactory.parseString("r: { x : 2 }")).resolve()
+        assertEquals(parseObject("{ x : 2 }"), completed.getConfig("w").root)
     }
 
     // A missing optional substitution leaves nothing above the list, so the
@@ -1491,6 +1506,7 @@ class ConfigSubstitutionTest extends TestUtils {
         """)
         val completion = ConfigFactory.parseString("r: { x : 1 }")
         val options = ConfigResolveOptions.defaults().setAllowUnresolved(true)
+        // resolving the partial result again must not change it
         val partial = conf.resolve(options).resolve(options)
         assertEquals(conf.withFallback(completion).resolve().root,
             partial.withFallback(completion).resolve().root)
