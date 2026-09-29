@@ -8,6 +8,7 @@ import org.junit._
 import com.typesafe.config.ConfigValue
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigResolveOptions
+import com.typesafe.config.ConfigResolver
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigValueFactory
@@ -734,19 +735,78 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals("A", resolved.getString("common.a"))
     }
 
-    // Whether the root's x.y applied used to depend on the order in which
-    // keys were resolved, which an unrelated observer key could change.
-    private def resolveWithObserver(observer: String) =
-        resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${x.y}", "x.y=0\n" + observer + "=${?common.x}"))
-
-    @Test
-    def useRootWhenRelativizedOptionalIsUndefinedWithObserverO24bbd() {
-        assertEquals(0, resolveWithObserver("o24bbd").getInt("common.a"))
+    // Whether the root's x.y applies used to depend on the order in which keys
+    // are resolved, which an unrelated observer key could change. Objects iterate
+    // in HashMap order, so the observer keys are checked to land on either side of
+    // "common"; the first one is a control that also passes without the retry.
+    private def resolveWithObserver(observer: String, before: Boolean) = {
+        val v = withIncluded("x.y=${?MISSING}\na=${x.y}", "x.y=0\n" + observer + "=${?common.x}")
+        if (before)
+            assertIteratesBefore(v, observer, "common")
+        else
+            assertIteratesBefore(v, "common", observer)
+        resolveWithoutFallbacks(v)
     }
 
     @Test
-    def useRootWhenRelativizedOptionalIsUndefinedWithObserverZzz() {
-        assertEquals(0, resolveWithObserver("zzz").getInt("common.a"))
+    def useRootWhenRelativizedOptionalIsUndefinedAndObserverResolvesFirst() {
+        assertEquals(0, resolveWithObserver("o24bbd", before = true).getInt("common.a"))
+    }
+
+    @Test
+    def useRootWhenRelativizedOptionalIsUndefinedAndObserverResolvesLast() {
+        assertEquals(0, resolveWithObserver("zzz", before = false).getInt("common.a"))
+    }
+
+    @Test
+    def useRootWhenRelativizedOptionalIsUndefinedInConcatenation() {
+        val resolved = resolveWithoutFallbacks(withIncluded("x.y=${?MISSING}\na=${x.y}\" suffix\"", "x.y=0"))
+        assertEquals("0 suffix", resolved.getString("common.a"))
+    }
+
+    @Test
+    def useRootWhenRelativizedValueIsConcatenationOfUndefinedOptionals() {
+        val resolved = resolveWithoutFallbacks(withIncluded("x.y=${?M}${?N}\na=${x.y}", "x.y=0"))
+        assertEquals(0, resolved.getInt("common.a"))
+    }
+
+    @Test
+    def relativizedOptionalIsUndefinedWithAllowUnresolved() {
+        val options = ConfigResolveOptions.noSystem().setAllowUnresolved(true)
+        val v = withIncluded("x.y=${?MISSING}\na=${x.y}", "")
+        val resolved = ResolveContext.resolve(v, v, options).asInstanceOf[AbstractConfigObject]
+
+        assertTrue(resolved.get("common").asInstanceOf[AbstractConfigObject].get("a").isInstanceOf[ConfigReference])
+    }
+
+    @Test
+    def useResolverWhenRelativizedOptionalIsUndefinedAndRootLacksIt() {
+        val resolver = new ConfigResolver {
+            override def lookup(path: String): ConfigValue = if (path == "common.x.y") ConfigValueFactory.fromAnyRef("resolved") else null
+            override def withFallback(f: ConfigResolver): ConfigResolver = this
+        }
+        val options = ConfigResolveOptions.noSystem().appendResolver(resolver)
+        val v = withIncluded("x.y=${?MISSING}\na=${x.y}", "")
+        val resolved = ResolveContext.resolve(v, v, options).asInstanceOf[AbstractConfigObject]
+
+        assertEquals("resolved", resolved.toConfig.getString("common.a"))
+    }
+
+    @Test
+    def useEnvListWhenRelativizedOptionalIsUndefined() {
+        // MY_LIST_0 to MY_LIST_2 are set for tests in build.sbt
+        val resolved = resolve(withIncluded("MY_LIST=${?MISSING}\na=${MY_LIST[]}", ""))
+        assertEquals(java.util.Arrays.asList("a", "b", "c"), resolved.getStringList("common.a"))
+    }
+
+    // x.y is undefined only because the optional in it ran into a cycle; that must
+    // fail whichever key of the cycle resolves first, not fall back to the root.
+    @Test
+    def cycleThroughRelativizedOptionalFailsWhicheverKeyResolvesFirst() {
+        for (k <- Seq("a", "h")) {
+            val v = withIncluded("x.y=${?" + k + "}\n" + k + "=${x.y}", "x.y=0")
+            intercept[ConfigException.UnresolvedSubstitution] { resolveWithoutFallbacks(v) }
+        }
     }
 
     private val substComplexObject = {
