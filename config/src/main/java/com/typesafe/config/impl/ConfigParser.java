@@ -17,6 +17,10 @@ import java.util.Map;
 import com.typesafe.config.*;
 
 final class ConfigParser {
+    // Bound recursive object/array parsing before it exhausts the JVM stack.
+    // The root collection counts, including a brace-free HOCON root.
+    static final int MAX_NESTING_DEPTH = 100;
+
     static AbstractConfigValue parse(ConfigNodeRoot document,
                                      ConfigOrigin origin, ConfigParseOptions options,
                                      ConfigIncludeContext includeContext) {
@@ -38,6 +42,14 @@ final class ConfigParser {
         // generate a reference to a list element" problem, and once we fix that
         // problem we should be able to get rid of this variable.
         int arrayCount;
+
+        private int nestingDepth;
+
+        private void enterNested() {
+            if (nestingDepth >= ConfigParser.MAX_NESTING_DEPTH)
+                throw parseError("too much nesting: more than " + ConfigParser.MAX_NESTING_DEPTH + " levels");
+            nestingDepth++;
+        }
 
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin, ConfigNodeRoot document,
                 FullIncluder includer, ConfigIncludeContext includeContext) {
@@ -111,9 +123,19 @@ final class ConfigParser {
             if (n instanceof ConfigNodeSimpleValue) {
                 v = ((ConfigNodeSimpleValue) n).value();
             } else if (n instanceof ConfigNodeObject) {
-                v = parseObject((ConfigNodeObject)n);
+                enterNested();
+                try {
+                    v = parseObject((ConfigNodeObject)n);
+                } finally {
+                    nestingDepth--;
+                }
             } else if (n instanceof ConfigNodeArray) {
-                v = parseArray((ConfigNodeArray)n);
+                enterNested();
+                try {
+                    v = parseArray((ConfigNodeArray)n);
+                } finally {
+                    nestingDepth--;
+                }
             } else if (n instanceof ConfigNodeConcatenation) {
                 v = parseConcatenation((ConfigNodeConcatenation)n);
             } else {

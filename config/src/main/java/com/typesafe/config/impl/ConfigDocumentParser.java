@@ -31,6 +31,14 @@ final class ConfigDocumentParser {
         // someone may think this is .properties format.
         int equalsCount;
 
+        private int nestingDepth;
+
+        private void enterNested() {
+            if (nestingDepth >= ConfigParser.MAX_NESTING_DEPTH)
+                throw parseError("too much nesting: more than " + ConfigParser.MAX_NESTING_DEPTH + " levels");
+            nestingDepth++;
+        }
+
         ParseContext(ConfigSyntax flavor, ConfigOrigin origin, Iterator<Token> tokens) {
             lineNumber = 1;
             buffer = new Stack<Token>();
@@ -244,9 +252,19 @@ final class ConfigDocumentParser {
             if (Tokens.isValue(t) || Tokens.isUnquotedText(t) || Tokens.isSubstitution(t)) {
                 v = new ConfigNodeSimpleValue(t);
             } else if (t == Tokens.OPEN_CURLY) {
-                v = parseObject(true);
+                enterNested();
+                try {
+                    v = parseObject(true);
+                } finally {
+                    nestingDepth--;
+                }
             } else if (t== Tokens.OPEN_SQUARE) {
-                v = parseArray();
+                enterNested();
+                try {
+                    v = parseArray();
+                } finally {
+                    nestingDepth--;
+                }
             } else {
                 throw parseError(addQuoteSuggestion(t.toString(),
                         "Expecting a value but got wrong token: " + t));
@@ -647,7 +665,12 @@ final class ConfigDocumentParser {
                     // of it, so put it back.
                     putBack(t);
                     missingCurly = true;
-                    result = parseObject(false);
+                    enterNested();
+                    try {
+                        result = parseObject(false);
+                    } finally {
+                        nestingDepth--;
+                    }
                 }
             }
             // Need to pull the children out of the resulting node so we can keep leading
