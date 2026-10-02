@@ -1156,6 +1156,28 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def renderListCommentsRemainsStable() {
+        val options = ConfigRenderOptions.defaults().setJson(false).setOriginComments(false)
+        // text after '#' in the input -> comment line in the rendered output
+        for ((comment, renderedComment) <- Seq(
+            ("list comment", "# list comment"),
+            (" list comment", "# list comment"),
+            ("  list comment", "#  list comment"),
+            ("", "# "),
+            (" ", "# "),
+            ("\tlist comment", "# \tlist comment"))) {
+            val expected = "a=[\n    " + renderedComment + "\n    1,\n    2\n]\n"
+            var config = ConfigFactory.parseString("a = [\n  1, #" + comment + "\n  2\n]")
+            for (cycle <- 1 to 5) {
+                val rendered = config.root().render(options)
+                assertEquals("comment=" + comment + ", cycle=" + cycle, expected, rendered)
+                config = ConfigFactory.parseString(rendered)
+                assertEquals(Seq(1, 2), config.getIntList("a").asScala.toSeq)
+            }
+        }
+    }
+
+    @Test
     def renderRoundTrip() {
         val allBooleans = true :: false :: Nil
         val optionsCombos = {
