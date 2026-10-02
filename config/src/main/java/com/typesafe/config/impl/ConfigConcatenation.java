@@ -81,6 +81,22 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
         return Collections.singleton(this);
     }
 
+    // Substitutions and objects may still form an object concatenation. Lists
+    // and literal text cannot; only unquoted whitespace is dropped by join().
+    boolean cannotBecomeAnObject() {
+        for (AbstractConfigValue piece : pieces) {
+            if (piece instanceof SimpleConfigList)
+                return true;
+            if (piece instanceof ConfigString) {
+                if (!isIgnoredWhitespace(piece))
+                    return true;
+            } else if (!(piece instanceof Unmergeable) && !(piece instanceof AbstractConfigObject)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static boolean isIgnoredWhitespace(AbstractConfigValue value) {
         if (!(value instanceof ConfigString))
             return false;
