@@ -5,7 +5,9 @@ package com.typesafe.config.impl;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.math.BigDecimal;
 
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigValueType;
 
@@ -42,6 +44,29 @@ final class ConfigDouble extends ConfigNumber implements Serializable {
     @Override
     protected long longValue() {
         return (long) value;
+    }
+
+    // A Java double-to-long cast saturates on overflow and turns NaN into zero.
+    @Override
+    long longValueRangeChecked(String path) {
+        if (Double.isNaN(value) || value >= 0x1.0p63 || value < -0x1.0p63
+                || belowMinimumBeforeRounding()) {
+            throw new ConfigException.WrongType(origin(), path, "64-bit integer",
+                    "out-of-range value " + value);
+        }
+        return (long) value;
+    }
+
+    private boolean belowMinimumBeforeRounding() {
+        if (value == -0x1.0p63 && originalText != null) {
+            try {
+                return new BigDecimal(originalText).compareTo(BigDecimal.valueOf(Long.MIN_VALUE)) < 0;
+            } catch (NumberFormatException e) {
+                // Double.parseDouble also accepts non-decimal spellings.
+                return false;
+            }
+        }
+        return false;
     }
 
     @Override
