@@ -517,6 +517,7 @@ abstract trait TestUtils {
         "[ 10e3e3 ]", // two exponents. this should parse to a number plus string "e3"
         "[ 1-e3 ]", // malformed number should end up as a string instead
         "[ 1.0.0 ]", // two decimals, should end up as a string
+        ParseTest(true, "[ -.33 ]"), // no digit before the decimal point, a string like .33; lift accepts it
         "[ 1.0. ]") // trailing decimal should end up as a string
 
     protected val invalidJson = validConfInvalidJson ++ invalidJsonInvalidConf;

@@ -6,7 +6,19 @@ package com.typesafe.config.impl;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigObject;
@@ -22,6 +34,11 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     final private Map<String, AbstractConfigValue> value;
     final private boolean resolved;
     final private boolean ignoresFallbacks;
+    // An object "ignores fallbacks" when a null or a non-object came before it
+    // in its key's merge history. That is a merge instruction for that key only;
+    // a substitution copies the final value without it (see ConfigReference).
+    // True if this object or any value below it ignores fallbacks.
+    final private boolean hasIgnoredFallback;
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value, ResolveStatus status,
@@ -33,15 +50,43 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         this.value = value;
         this.resolved = status == ResolveStatus.RESOLVED;
         this.ignoresFallbacks = ignoresFallbacks;
+        boolean childUnresolved = false;
+        boolean carries = ignoresFallbacks;
+        for (AbstractConfigValue v : value.values()) {
+            if (v.resolveStatus() == ResolveStatus.UNRESOLVED)
+                childUnresolved = true;
+            if (!carries && carriesIgnoredFallback(v))
+                carries = true;
+        }
+        this.hasIgnoredFallback = carries;
 
         // Kind of an expensive debug check. Comment out?
-        if (status != ResolveStatus.fromValues(value.values()))
+        if (status != ResolveStatus.fromBoolean(!childUnresolved))
             throw new ConfigException.BugOrBroken("Wrong resolved status on " + this);
     }
 
     SimpleConfigObject(ConfigOrigin origin,
             Map<String, AbstractConfigValue> value) {
         this(origin, value, ResolveStatus.fromValues(value.values()), false /* ignoresFallbacks */);
+    }
+
+    // True if v or a value inside it ignores fallbacks. Scalars always ignore
+    // fallbacks, so only objects and pending values count. A pending merge
+    // counts if it ignores fallbacks itself or if a value in its stack does,
+    // e.g. { nested = null, nested = ${p} } below an object from ${q}.
+    static boolean carriesIgnoredFallback(AbstractConfigValue v) {
+        if (v instanceof SimpleConfigObject)
+            return ((SimpleConfigObject) v).hasIgnoredFallback;
+        if (!(v instanceof Unmergeable))
+            return false;
+        if (v.ignoresFallbacks())
+            return true;
+        // references and concatenations list only themselves
+        for (AbstractConfigValue unmerged : ((Unmergeable) v).unmergedValues()) {
+            if (unmerged != v && carriesIgnoredFallback(unmerged))
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -183,6 +228,62 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
             return this;
         else
             return newCopy(resolveStatus(), origin(), true /* ignoresFallbacks */);
+    }
+
+    // A restricted resolve (a lookup resolves only the path it needs) or a
+    // partial one can leave pending merges below this object that carry
+    // ignored fallbacks. Merged into the receiving key as they are, they would drop
+    // the receiver's own values for that key, and a lookup would memoize that.
+    // Replace each with a reference to the same path in the source instead;
+    // it resolves later like any other reference, and the substituted value
+    // then no longer ignores fallbacks.
+    //
+    // The replacement is root-relative, like the reference it comes from. The
+    // value it replaces may have been found through a source in which a delayed
+    // merge was replaced by its remainder (a self-referential key such as
+    // a = ${a} {...}), so the replacement can lead back to that key; the outer
+    // reference's cycle marker is what keeps that from looping.
+    SimpleConfigObject deferPendingIgnoredFallbacks(final ConfigReference reference, final Path path) {
+        if (resolved || !hasIgnoredFallback)
+            return this;
+        return modify(new NoExceptionsModifier() {
+            @Override
+            AbstractConfigValue modifyChild(String key, AbstractConfigValue child) {
+                if (!carriesIgnoredFallback(child))
+                    return child;
+                Path childPath = Path.newKey(key).prepend(path);
+                if (child instanceof SimpleConfigObject)
+                    return ((SimpleConfigObject) child).deferPendingIgnoredFallbacks(reference, childPath);
+                return reference.withPath(childPath, child.origin());
+            }
+        });
+    }
+
+    // This subtree with every object's ignored fallbacks cleared.
+    SimpleConfigObject withFallbacksNotIgnored() {
+        if (!hasIgnoredFallback)
+            return this;
+        // Shared subtrees stay shared and are copied once.
+        return withFallbacksNotIgnored(new IdentityHashMap<SimpleConfigObject, SimpleConfigObject>());
+    }
+
+    private SimpleConfigObject withFallbacksNotIgnored(final Map<SimpleConfigObject, SimpleConfigObject> memo) {
+        if (!hasIgnoredFallback)
+            return this;
+        SimpleConfigObject cached = memo.get(this);
+        if (cached != null)
+            return cached;
+        SimpleConfigObject copy = modify(new NoExceptionsModifier() {
+            @Override
+            AbstractConfigValue modifyChild(String key, AbstractConfigValue child) {
+                return child instanceof SimpleConfigObject
+                        ? ((SimpleConfigObject) child).withFallbacksNotIgnored(memo) : child;
+            }
+        });
+        SimpleConfigObject result = copy.ignoresFallbacks()
+                ? copy.newCopy(copy.resolveStatus(), copy.origin(), false) : copy;
+        memo.put(this, result);
+        return result;
     }
 
     @Override

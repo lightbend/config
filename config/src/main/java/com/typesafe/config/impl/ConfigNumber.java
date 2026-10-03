@@ -46,8 +46,12 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
     protected abstract double doubleValue();
 
     private boolean isWhole() {
-        long asLong = longValue();
-        return asLong == doubleValue();
+        return !(this instanceof ConfigDouble) || fitsLong(doubleValue());
+    }
+
+    private static boolean fitsLong(double number) {
+        // Long.MAX_VALUE rounds up to 2^63 when converted to double.
+        return number >= -0x1.0p63 && number < 0x1.0p63 && (long) number == number;
     }
 
     @Override
@@ -96,7 +100,7 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
     static ConfigNumber newNumber(ConfigOrigin origin, double number,
             String originalText) {
         long asLong = (long) number;
-        if (asLong == number) {
+        if (fitsLong(number)) {
             return newNumber(origin, asLong, originalText);
         } else {
             return new ConfigDouble(origin, number, originalText);

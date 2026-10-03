@@ -76,6 +76,17 @@ final class ConfigParser {
             return ((SimpleConfigOrigin) baseOrigin).withLineNumber(lineNumber);
         }
 
+        // prefer origin captured at tokenize time (should be correct even when
+        // following a multiline string); falls back to the line counter for 
+        // nodes built without origin.
+        private SimpleConfigOrigin nodeOrigin(ConfigNodeComplexValue n) {
+            ConfigOrigin origin = n.origin();
+            if (origin != null)
+                return (SimpleConfigOrigin) origin;
+            else
+                return lineOrigin();
+        }
+
         private ConfigException parseError(String message) {
             return parseError(message, null);
         }
@@ -118,6 +129,10 @@ final class ConfigParser {
                 throw new ConfigException.BugOrBroken("Bug in config parser: unbalanced array count");
 
             return v;
+        }
+
+        private void advanceLineNumberBeforeValue(ConfigNodeField field) {
+            lineNumber += field.newlineCountBeforeValue();
         }
 
         private static AbstractConfigObject createValueUnderPath(Path path,
@@ -216,7 +231,7 @@ final class ConfigParser {
 
         private AbstractConfigObject parseObject(ConfigNodeObject n) {
             Map<String, AbstractConfigValue> values = new HashMap<String, AbstractConfigValue>();
-            SimpleConfigOrigin objectOrigin = lineOrigin();
+            SimpleConfigOrigin objectOrigin = nodeOrigin(n);
             boolean lastWasNewline = false;
 
             ArrayList<AbstractConfigNode> nodes = new ArrayList<AbstractConfigNode>(n.children());
@@ -237,13 +252,14 @@ final class ConfigParser {
                     parseInclude(values, (ConfigNodeInclude)node);
                     lastWasNewline = false;
                 } else if (node instanceof ConfigNodeField) {
+                    ConfigNodeField field = (ConfigNodeField) node;
                     lastWasNewline = false;
-                    Path path = ((ConfigNodeField) node).path().value();
-                    comments.addAll(((ConfigNodeField) node).comments());
+                    Path path = field.path().value();
+                    comments.addAll(field.comments());
 
                     // path must be on-stack while we parse the value
                     pathStack.push(path);
-                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
+                    if (field.separator() == Tokens.PLUS_EQUALS) {
                         // we really should make this work, but for now throwing
                         // an exception is better than producing an incorrect
                         // result. See
@@ -262,12 +278,13 @@ final class ConfigParser {
                     AbstractConfigNodeValue valueNode;
                     AbstractConfigValue newValue;
 
-                    valueNode = ((ConfigNodeField) node).value();
+                    valueNode = field.value();
+                    advanceLineNumberBeforeValue(field);
 
                     // comments from the key token go to the value token
                     newValue = parseValue(valueNode, comments);
 
-                    if (((ConfigNodeField) node).separator() == Tokens.PLUS_EQUALS) {
+                    if (field.separator() == Tokens.PLUS_EQUALS) {
                         arrayCount -= 1;
 
                         List<AbstractConfigValue> concat = new ArrayList<AbstractConfigValue>(2);
@@ -351,7 +368,7 @@ final class ConfigParser {
         private SimpleConfigList parseArray(ConfigNodeArray n) {
             arrayCount += 1;
 
-            SimpleConfigOrigin arrayOrigin = lineOrigin();
+            SimpleConfigOrigin arrayOrigin = nodeOrigin(n);
             List<AbstractConfigValue> values = new ArrayList<AbstractConfigValue>();
 
             boolean lastWasNewLine = false;

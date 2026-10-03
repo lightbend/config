@@ -839,6 +839,15 @@ class ConfigTest extends TestUtils {
     }
 
     @Test
+    def negativeNumberWithoutIntegerPartIsString() {
+        // like .33, -.33 is not a JSON number, but still converts to a number on request
+        val conf = parseConfig("a = -.33")
+        assertEquals(ConfigValueType.STRING, conf.getValue("a").valueType())
+        assertEquals("-.33", conf.getString("a"))
+        assertEquals(-0.33, conf.getDouble("a"), 1e-6)
+    }
+
+    @Test
     def test01MergingOtherFormats() {
         val conf = ConfigFactory.load("test01")
 
@@ -1143,6 +1152,28 @@ class ConfigTest extends TestUtils {
             assertEquals(10, conf04.getInt("akka.event-handler-dispatcher.max-pool-size"))
         } finally {
             System.clearProperty("config.override_with_env_vars")
+        }
+    }
+
+    @Test
+    def renderListCommentsRemainsStable() {
+        val options = ConfigRenderOptions.defaults().setJson(false).setOriginComments(false)
+        // text after '#' in the input -> comment line in the rendered output
+        for ((comment, renderedComment) <- Seq(
+            ("list comment", "# list comment"),
+            (" list comment", "# list comment"),
+            ("  list comment", "#  list comment"),
+            ("", "# "),
+            (" ", "# "),
+            ("\tlist comment", "# \tlist comment"))) {
+            val expected = "a=[\n    " + renderedComment + "\n    1,\n    2\n]\n"
+            var config = ConfigFactory.parseString("a = [\n  1, #" + comment + "\n  2\n]")
+            for (cycle <- 1 to 5) {
+                val rendered = config.root().render(options)
+                assertEquals("comment=" + comment + ", cycle=" + cycle, expected, rendered)
+                config = ConfigFactory.parseString(rendered)
+                assertEquals(Seq(1, 2), config.getIntList("a").asScala.toSeq)
+            }
         }
     }
 

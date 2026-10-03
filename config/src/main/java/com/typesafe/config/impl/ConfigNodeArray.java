@@ -1,5 +1,7 @@
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigOrigin;
+
 import java.util.Collection;
 
 final class ConfigNodeArray extends ConfigNodeComplexValue {
@@ -7,8 +9,12 @@ final class ConfigNodeArray extends ConfigNodeComplexValue {
         super(children);
     }
 
+    ConfigNodeArray(Collection<AbstractConfigNode> children, ConfigOrigin origin) {
+        super(children, origin);
+    }
+
     @Override
     protected ConfigNodeArray newNode(Collection<AbstractConfigNode> nodes) {
-        return new ConfigNodeArray(nodes);
+        return new ConfigNodeArray(nodes, origin());
     }
 }

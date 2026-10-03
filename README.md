@@ -1,6 +1,5 @@
 # Configuration library for JVM languages.
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.typesafe/config)
 [![Build Status](https://github.com/lightbend/config/actions/workflows/ci.yml/badge.svg)](https://github.com/lightbend/config/actions/workflows/ci.yml)
 
 ## Overview
@@ -485,7 +484,9 @@ config matches the bean's implied schema. Bean fields can be
 primitive types, typed lists such as `List<Integer>`,
 `java.time.Duration`, `ConfigMemorySize`, or even a raw `Config`,
 `ConfigObject`, or `ConfigValue` (if you'd like to deal with a
-particular value manually).
+particular value manually). By default, config keys that do not map
+to a bean property are ignored. To reject unknown keys, use the
+`ConfigBeanFactory.create(config, MyBean.class, false)` overload.
 
 ## Using HOCON, the JSON Superset
 

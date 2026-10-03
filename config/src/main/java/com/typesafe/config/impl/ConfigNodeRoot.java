@@ -11,7 +11,7 @@ final class ConfigNodeRoot extends ConfigNodeComplexValue {
     final private ConfigOrigin origin;
 
     ConfigNodeRoot(Collection<AbstractConfigNode> children, ConfigOrigin origin) {
-        super(children);
+        super(children, origin);
         this.origin = origin;
     }
 

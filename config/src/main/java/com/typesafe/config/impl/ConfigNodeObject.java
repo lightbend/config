@@ -1,5 +1,6 @@
 package com.typesafe.config.impl;
 
+import com.typesafe.config.ConfigOrigin;
 import com.typesafe.config.ConfigSyntax;
 
 import java.util.ArrayList;
@@ -10,9 +11,13 @@ final class ConfigNodeObject extends ConfigNodeComplexValue {
         super(children);
     }
 
+    ConfigNodeObject(Collection<AbstractConfigNode> children, ConfigOrigin origin) {
+        super(children, origin);
+    }
+
     @Override
     protected ConfigNodeObject newNode(Collection<AbstractConfigNode> nodes) {
-        return new ConfigNodeObject(nodes);
+        return new ConfigNodeObject(nodes, origin());
     }
 
     public boolean hasValue(Path desiredPath) {

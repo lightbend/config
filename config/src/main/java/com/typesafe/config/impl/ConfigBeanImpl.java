@@ -40,7 +40,7 @@ public class ConfigBeanImpl {
      * @param clazz class of the bean
      * @return the bean instance
      */
-    public static <T> T createInternal(Config config, Class<T> clazz) {
+    public static <T> T createInternal(Config config, Class<T> clazz, boolean allowUnknownConfigKeys) {
         if (((SimpleConfig)config).root().resolveStatus() != ResolveStatus.RESOLVED)
             throw new ConfigException.NotResolved(
                     "need to Config#resolve() a config before using it to initialize a bean, see the API docs for Config#resolve()");
@@ -76,10 +76,26 @@ public class ConfigBeanImpl {
                 }
                 beanProps.add(beanProp);
             }
+            Set<String> beanPropNames = new HashSet<String>();
+            for (PropertyDescriptor beanProp : beanProps) {
+                beanPropNames.add(beanProp.getName());
+            }
 
             // Try to throw all validation issues at once (this does not comprehensively
             // find every issue, but it should find common ones).
             List<ConfigException.ValidationProblem> problems = new ArrayList<ConfigException.ValidationProblem>();
+            if (!allowUnknownConfigKeys) {
+                for (Map.Entry<String, String> nameEntry : originalNames.entrySet()) {
+                    String camelName = nameEntry.getKey();
+                    if (!beanPropNames.contains(camelName)) {
+                        AbstractConfigValue configValue = configProps.get(camelName);
+                        problems.add(new ConfigException.ValidationProblem(
+                                Path.newKey(nameEntry.getValue()).render(),
+                                configValue.origin(),
+                                "Unknown config setting"));
+                    }
+                }
+            }
             for (PropertyDescriptor beanProp : beanProps) {
                 Method setter = beanProp.getWriteMethod();
                 Class<?> parameterClass = setter.getParameterTypes()[0];
@@ -121,7 +137,8 @@ public class ConfigBeanImpl {
                     // Otherwise, raise a {@link Missing} exception right here
                     throw new ConfigException.Missing(beanProp.getName());
                 }
-                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName);
+                Object unwrapped = getValue(clazz, parameterType, parameterClass, config, configPropName,
+                        allowUnknownConfigKeys);
                 setter.invoke(bean, unwrapped);
             }
             return bean;
@@ -145,7 +162,7 @@ public class ConfigBeanImpl {
     // types plus you can always use Object, ConfigValue, Config,
     // ConfigObject, etc.  as an escape hatch.
     private static Object getValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
-            String configPropName) {
+            String configPropName, boolean allowUnknownConfigKeys) {
         if (parameterClass == Boolean.class || parameterClass == boolean.class) {
             return config.getBoolean(configPropName);
         } else if (parameterClass == Integer.class || parameterClass == int.class) {
@@ -163,9 +180,11 @@ public class ConfigBeanImpl {
         } else if (parameterClass == Object.class) {
             return config.getAnyRef(configPropName);
         } else if (parameterClass == List.class) {
-            return getListValue(beanClass, parameterType, parameterClass, config, configPropName);
+            return getListValue(beanClass, parameterType, parameterClass, config, configPropName,
+                    allowUnknownConfigKeys);
         } else if (parameterClass == Set.class) {
-            return getSetValue(beanClass, parameterType, parameterClass, config, configPropName);
+            return getSetValue(beanClass, parameterType, parameterClass, config, configPropName,
+                    allowUnknownConfigKeys);
         } else if (parameterClass == Map.class) {
             // we could do better here, but right now we don't.
             Type[] typeArgs = ((ParameterizedType)parameterType).getActualTypeArguments();
@@ -186,17 +205,20 @@ public class ConfigBeanImpl {
             Enum enumValue = config.getEnum((Class<Enum>) parameterClass, configPropName);
             return enumValue;
         } else if (hasAtLeastOneBeanProperty(parameterClass)) {
-            return createInternal(config.getConfig(configPropName), parameterClass);
+            return createInternal(config.getConfig(configPropName), parameterClass, allowUnknownConfigKeys);
         } else {
             throw new ConfigException.BadBean("Bean property " + configPropName + " of class " + beanClass.getName() + " has unsupported type " + parameterType);
         }
     }
 
-    private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
-        return new HashSet((List) getListValue(beanClass, parameterType, parameterClass, config, configPropName));
+    private static Object getSetValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
+            String configPropName, boolean allowUnknownConfigKeys) {
+        return new HashSet((List) getListValue(beanClass, parameterType, parameterClass, config, configPropName,
+                allowUnknownConfigKeys));
     }
 
-    private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config, String configPropName) {
+    private static Object getListValue(Class<?> beanClass, Type parameterType, Class<?> parameterClass, Config config,
+            String configPropName, boolean allowUnknownConfigKeys) {
         Type elementType = ((ParameterizedType)parameterType).getActualTypeArguments()[0];
 
         if (elementType == Boolean.class) {
@@ -229,7 +251,7 @@ public class ConfigBeanImpl {
             List<Object> beanList = new ArrayList<Object>();
             List<? extends Config> configList = config.getConfigList(configPropName);
             for (Config listMember : configList) {
-                beanList.add(createInternal(listMember, (Class<?>) elementType));
+                beanList.add(createInternal(listMember, (Class<?>) elementType, allowUnknownConfigKeys));
             }
             return beanList;
         } else {

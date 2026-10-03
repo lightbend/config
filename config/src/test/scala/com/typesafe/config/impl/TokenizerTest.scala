@@ -268,6 +268,11 @@ class TokenizerTest extends TestUtils {
     }
 
     @Test
+    def tokenizeNegativeNumberWithoutIntegerPartAsUnquotedText(): Unit = {
+        tokenizerTest(List(tokenUnquoted("-.33")), "-.33")
+    }
+
+    @Test
     def commentsHandledInVariousContexts() {
         tokenizerTest(List(tokenString("//bar")), "\"//bar\"")
         tokenizerTest(List(tokenString("#bar")), "\"#bar\"")

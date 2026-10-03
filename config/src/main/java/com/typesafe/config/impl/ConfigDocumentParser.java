@@ -418,6 +418,7 @@ final class ConfigDocumentParser {
             boolean afterComma = false;
             Path lastPath = null;
             boolean lastInsideEquals = false;
+            ConfigOrigin objectOrigin = baseOrigin.withLineNumber(lineNumber);
             ArrayList<AbstractConfigNode> objectNodes = new ArrayList<AbstractConfigNode>();
             ArrayList<AbstractConfigNode> keyValueNodes;
             HashMap<String, Boolean> keys  = new HashMap<String, Boolean>();
@@ -539,11 +540,12 @@ final class ConfigDocumentParser {
                 }
             }
 
-            return new ConfigNodeObject(objectNodes);
+            return new ConfigNodeObject(objectNodes, objectOrigin);
         }
 
         private ConfigNodeComplexValue parseArray() {
             ArrayList<AbstractConfigNode> children = new ArrayList<AbstractConfigNode>();
+            ConfigOrigin arrayOrigin = baseOrigin.withLineNumber(lineNumber);
             children.add(new ConfigNodeSingleToken(Tokens.OPEN_SQUARE));
             // invoked just after the OPEN_SQUARE
             Token t;
@@ -557,7 +559,7 @@ final class ConfigDocumentParser {
                 // special-case the first element
                 if (t == Tokens.CLOSE_SQUARE) {
                     children.add(new ConfigNodeSingleToken(t));
-                    return new ConfigNodeArray(children);
+                    return new ConfigNodeArray(children, arrayOrigin);
                 } else if (Tokens.isValue(t) || t == Tokens.OPEN_CURLY
                         || t == Tokens.OPEN_SQUARE || Tokens.isUnquotedText(t)
                         || Tokens.isSubstitution(t)) {
@@ -581,7 +583,7 @@ final class ConfigDocumentParser {
                     t = nextTokenCollectingWhitespace(children);
                     if (t == Tokens.CLOSE_SQUARE) {
                         children.add(new ConfigNodeSingleToken(t));
-                        return new ConfigNodeArray(children);
+                        return new ConfigNodeArray(children, arrayOrigin);
                     } else {
                         throw parseError("List should have ended with ] or had a comma, instead had token: "
                                 + t

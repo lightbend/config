@@ -108,6 +108,29 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def preservesPositiveLongBoundary() {
+        val config = ConfigFactory.parseString("""
+            high = 9223372036854775808.0
+            inside = 9223372036854774784.0
+            low = -9223372036854775808.0
+            max = 9223372036854775807
+        """)
+        assertTrue("2^63 must not saturate to Long.MAX_VALUE", config.getNumber("high").isInstanceOf[java.lang.Double])
+        assertEquals(9223372036854775808.0, config.getDouble("high"), 0.0)
+        assertEquals(9223372036854774784L, config.getLong("inside"))
+        assertEquals(Long.MinValue, config.getLong("low"))
+        assertFalse(config.getValue("high").equals(config.getValue("max")))
+        assertFalse(config.getValue("max").equals(config.getValue("high")))
+        assertEquals(ConfigValueFactory.fromAnyRef(Long.MaxValue), config.getValue("max"))
+
+        val one = ConfigValueFactory.fromAnyRef(1.0)
+        val integer = ConfigValueFactory.fromAnyRef(1)
+        assertEquals(one, integer)
+        assertEquals(integer, one)
+        assertEquals(one.hashCode, integer.hashCode)
+    }
+
+    @Test
     def configDoubleSerializable() {
         val expectedSerialization = "" +
             "ACED0005_s_r00_._c_o_m_._t_y_p_e_s_a_f_e_._c_o_n_f_i_g_._i_m_p_l_._S_e_r_i_a_l_i" +
