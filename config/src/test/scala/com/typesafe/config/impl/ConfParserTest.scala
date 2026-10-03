@@ -374,6 +374,49 @@ class ConfParserTest extends TestUtils {
         assertEquals(comments, v.origin().comments().asScala.toSeq)
     }
 
+    @Test def fieldCommentOnAppendSurvivesResolve(): Unit = {
+        for (prefix <- Seq("", "a=[1]\n")) {
+            val resolved = ConfigFactory.parseString(prefix + "# two\na += 2").resolve()
+            val list = resolved.getList("a")
+            assertComments(Seq(" two"), resolved, "a")
+            assertComments(Seq(), resolved, "a", list.size() - 1)
+        }
+    }
+
+    @Test def appendedElementKeepsSourceLocation(): Unit = {
+        val options = ConfigParseOptions.defaults().setOriginDescription("append source")
+        val resolved = ConfigFactory.parseString("a=[]\n# two\na += 2", options).resolve()
+        val element = resolved.getList("a").get(0)
+        assertEquals("append source", element.origin().description().split(":")(0))
+        assertEquals(3, element.origin().lineNumber())
+        assertEquals(ConfigValueType.NUMBER, element.valueType())
+        assertEquals(2, element.unwrapped())
+    }
+
+    @Test def appendedObjectChildCommentIsPreserved(): Unit = {
+        val resolved = ConfigFactory.parseString("# two\na += {\n # child\n x=1\n}").resolve()
+        val element = resolved.getObjectList("a").get(0)
+        assertComments(Seq(), resolved, "a", 0)
+        assertEquals(Seq(" child"), element.get("x").origin().comments().asScala.toSeq)
+        assertComments(Seq(" two"), resolved, "a")
+    }
+
+    @Test def trailingAppendCommentStaysOnField(): Unit = {
+        val parsed = ConfigFactory.parseString("a += 2 # c")
+        assertEquals(Seq(" c"), parsed.root().get("a").origin().comments().asScala.toSeq)
+        val resolved = parsed.resolve()
+        assertComments(Seq(), resolved, "a", 0)
+        assertEquals(Seq(2), resolved.getIntList("a").asScala.toSeq)
+    }
+
+    @Test def dottedAppendCommentStaysOnLeafField(): Unit = {
+        val resolved = ConfigFactory.parseString("# two\nx.a += 2").resolve()
+        assertComments(Seq(" two"), resolved, "x.a")
+        assertComments(Seq(), resolved, "x.a", 0)
+        assertComments(Seq(), resolved, "x")
+        assertEquals(Seq(2), resolved.getIntList("x.a").asScala.toSeq)
+    }
+
     @Test
     def trackCommentsForSingleField() {
         // no comments
