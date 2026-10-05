@@ -517,6 +517,24 @@ class ConfigValueTest extends TestUtils {
     }
 
     @Test
+    def configObjectValuesContainsDuplicates() {
+        // values() must behave like a normal Map#values() collection: one
+        // element per entry, even when several entries have equal() values
+        // (ConfigValue equality intentionally ignores the key/origin, so a
+        // naive Set-based implementation would silently drop entries here).
+        val m: ConfigObject = new SimpleConfigObject(fakeOrigin(),
+            configMap("a" -> 1, "b" -> 1, "c" -> 2))
+
+        assertEquals(3, m.size())
+        assertEquals(3, m.values().size())
+        assertEquals(m.entrySet().size(), m.values().size())
+
+        val expected = List(intValue(1), intValue(1), intValue(2))
+        assertEquals(expected.sortBy(_.unwrapped().toString),
+            m.values().asScala.toList.sortBy(_.unwrapped().toString))
+    }
+
+    @Test
     def configListImplementsList() {
         val scalaSeq = Seq[AbstractConfigValue](stringValue("a"), stringValue("b"), stringValue("c"))
         val l: ConfigList = new SimpleConfigList(fakeOrigin(),
