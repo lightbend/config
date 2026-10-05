@@ -1683,4 +1683,35 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(Seq(0, 1), resolved.getIntList("c.x.y").asScala.toSeq)
     }
 
+
+    // Issue #586: mixin fields can refer to paths within the same object.
+    @Test
+    def resolveSelfReferenceThroughMixinConcatenation() {
+        val resolved = resolve(parseObject("""
+mixin { hello = world }
+a = ${mixin} { ext { x = 12 }, y = ${a.ext.x} }
+"""))
+        assertEquals(12, resolved.getInt("a.ext.x"))
+        assertEquals(12, resolved.getInt("a.y"))
+        assertEquals("world", resolved.getString("a.hello"))
+    }
+
+    @Test
+    def resolveMixinFieldThroughMixinConcatenation() {
+        val resolved = resolve(parseObject("""
+mixin { hello = world }
+a = ${mixin} { ext { x = 12 }, y = ${a.hello} }
+"""))
+        assertEquals("world", resolved.getString("a.y"))
+    }
+
+    @Test
+    def selfReferentialListConcatenationThroughSingleDefinition() {
+        // the same look-back as in the merge-piece case, with the merge
+        // written as one value concatenation instead of two definitions of c
+        val resolved = resolve(parseObject(
+            """d { x = [] }, e { z = 5 }, c : ${d}${e} { x : ${c.x}[1, 2], w : ${e.z} }"""))
+        assertEquals(Seq(1, 2), resolved.getList("c.x").asScala.map(_.unwrapped()))
+        assertEquals(5, resolved.getInt("c.w"))
+    }
 }
