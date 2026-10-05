@@ -27,8 +27,14 @@ final class ResolveContext {
 
     final private Set<AbstractConfigValue> cycleMarkers;
 
+    // the delayed merge stack piece currently being resolved, or null. A
+    // self-referential field directly inside the piece is dropped in favor of
+    // earlier pieces when a lookup re-enters it while the piece resolves.
+    final private AbstractConfigValue mergeStackPiece;
+
     ResolveContext(ResolveMemos memos, ConfigResolveOptions options, Path restrictToChild,
-            List<AbstractConfigValue> resolveStack, Set<AbstractConfigValue> cycleMarkers) {
+            List<AbstractConfigValue> resolveStack, Set<AbstractConfigValue> cycleMarkers,
+            AbstractConfigValue mergeStackPiece) {
         this.memos = memos;
         this.options = options;
         this.restrictToChild = restrictToChild;
@@ -38,6 +44,7 @@ final class ResolveContext {
         // up shared between multiple ResolveContext.
         this.resolveStack = resolveStack;
         this.cycleMarkers = cycleMarkers;
+        this.mergeStackPiece = mergeStackPiece;
     }
 
     private static Set<AbstractConfigValue> newCycleMarkers() {
@@ -47,7 +54,8 @@ final class ResolveContext {
     ResolveContext(ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
-        this(new ResolveMemos(), options, restrictToChild, new ArrayList<AbstractConfigValue>(), newCycleMarkers());
+        this(new ResolveMemos(), options, restrictToChild, new ArrayList<AbstractConfigValue>(), newCycleMarkers(),
+                null);
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace(depth(), "ResolveContext restrict to child " + restrictToChild);
     }
@@ -60,7 +68,7 @@ final class ResolveContext {
         Set<AbstractConfigValue> copy = newCycleMarkers();
         copy.addAll(cycleMarkers);
         copy.add(value);
-        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy);
+        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy, mergeStackPiece);
     }
 
     ResolveContext removeCycleMarker(AbstractConfigValue value) {
@@ -70,12 +78,12 @@ final class ResolveContext {
         Set<AbstractConfigValue> copy = newCycleMarkers();
         copy.addAll(cycleMarkers);
         copy.remove(value);
-        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy);
+        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy, mergeStackPiece);
     }
 
     private ResolveContext memoize(MemoKey key, AbstractConfigValue value) {
         ResolveMemos changed = memos.put(key, value);
-        return new ResolveContext(changed, options, restrictToChild, resolveStack, cycleMarkers);
+        return new ResolveContext(changed, options, restrictToChild, resolveStack, cycleMarkers, mergeStackPiece);
     }
 
     ConfigResolveOptions options() {
@@ -95,11 +103,33 @@ final class ResolveContext {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(memos, options, restrictTo, resolveStack, cycleMarkers);
+            return new ResolveContext(memos, options, restrictTo, resolveStack, cycleMarkers, mergeStackPiece);
     }
 
     ResolveContext unrestricted() {
         return restrict(null);
+    }
+
+    ResolveContext withMergeStackPiece(AbstractConfigValue mergeStackPiece) {
+        if (mergeStackPiece == this.mergeStackPiece)
+            return this;
+        else
+            return new ResolveContext(memos, options, restrictToChild, resolveStack, cycleMarkers, mergeStackPiece);
+    }
+
+    AbstractConfigValue mergeStackPiece() {
+        return mergeStackPiece;
+    }
+
+    // identity check whether the value is already being resolved somewhere
+    // else on the resolve stack; the current resolution itself is always on
+    // top of the stack, so it is not counted
+    boolean isResolvingElsewhere(AbstractConfigValue value) {
+        for (int i = 0; i < resolveStack.size() - 1; i++) {
+            if (resolveStack.get(i) == value)
+                return true;
+        }
+        return false;
     }
 
     String traceString() {
@@ -121,7 +151,7 @@ final class ResolveContext {
             ConfigImpl.trace(depth(), "pushing trace " + value);
         List<AbstractConfigValue> copy = new ArrayList<AbstractConfigValue>(resolveStack);
         copy.add(value);
-        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers);
+        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers, mergeStackPiece);
     }
 
     ResolveContext popTrace() {
@@ -129,7 +159,7 @@ final class ResolveContext {
         AbstractConfigValue old = copy.remove(resolveStack.size() - 1);
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace(depth() - 1, "popped trace " + old);
-        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers);
+        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers, mergeStackPiece);
     }
 
     int depth() {
@@ -189,6 +219,12 @@ final class ResolveContext {
 
             ResolveContext withMemo = result.context;
 
+            // a resolution re-entered while the same value is still being
+            // resolved further out depends on that in-flight state (for
+            // example a self-referential field looking back inside a merge
+            // stack), so its result must not be cached
+            boolean reentering = isResolvingElsewhere(original);
+
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
                 // if the resolved object is fully resolved by resolving
                 // only the restrictToChildOrNull, then it can be cached
@@ -197,7 +233,8 @@ final class ResolveContext {
                 if (ConfigImpl.traceSubstitutionsEnabled())
                     ConfigImpl.trace(depth(), "caching " + fullKey + " result " + resolved);
 
-                withMemo = withMemo.memoize(fullKey, resolved);
+                if (!reentering)
+                    withMemo = withMemo.memoize(fullKey, resolved);
             } else {
                 // if we have an unresolved object then either we did a
                 // partial resolve restricted to a certain child, or we are
@@ -210,12 +247,14 @@ final class ResolveContext {
                     if (ConfigImpl.traceSubstitutionsEnabled())
                         ConfigImpl.trace(depth(), "caching " + restrictedKey + " result " + resolved);
 
-                    withMemo = withMemo.memoize(restrictedKey, resolved);
+                    if (!reentering)
+                        withMemo = withMemo.memoize(restrictedKey, resolved);
                 } else if (options().getAllowUnresolved()) {
                     if (ConfigImpl.traceSubstitutionsEnabled())
                         ConfigImpl.trace(depth(), "caching " + fullKey + " result " + resolved);
 
-                    withMemo = withMemo.memoize(fullKey, resolved);
+                    if (!reentering)
+                        withMemo = withMemo.memoize(fullKey, resolved);
                 } else {
                     throw new ConfigException.BugOrBroken(
                             "resolveSubstitutions() did not give us a resolved object");

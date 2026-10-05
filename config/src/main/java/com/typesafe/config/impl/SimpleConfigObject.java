@@ -435,15 +435,26 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         }
     }
 
+    // HOCON.md: a self-referential field has a substitution, or a value
+    // concatenation containing a substitution, as its value
+    private static boolean potentiallySelfReferential(AbstractConfigValue v) {
+        return v instanceof ConfigReference || v instanceof ConfigConcatenation;
+    }
+
     private static final class ResolveModifier implements Modifier {
 
         final Path originalRestrict;
+        // true when the object being modified is the delayed merge stack
+        // piece marked on the context; only then may an in-flight leaf child
+        // be dropped in favor of earlier pieces of the merge
+        final boolean dropInFlightChildren;
         ResolveContext context;
         final ResolveSource source;
 
-        ResolveModifier(ResolveContext context, ResolveSource source) {
+        ResolveModifier(ResolveContext context, ResolveSource source, boolean dropInFlightChildren) {
             this.context = context;
             this.source = source;
+            this.dropInFlightChildren = dropInFlightChildren;
             originalRestrict = context.restrictToChild();
         }
 
@@ -458,7 +469,20 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                         context = result.context.unrestricted().restrict(originalRestrict);
                         return result.value;
                     } else {
-                        // we don't want to resolve the leaf child.
+                        // we don't want to resolve the leaf child. But when
+                        // modifying a piece of a merge stack, a leaf that is
+                        // still being resolved further out is a
+                        // self-referential field: drop it, so the substitution
+                        // looks back at the earlier pieces of the merge rather
+                        // than seeing its own still-unresolved value again.
+                        // HOCON.md: only a field whose value is a substitution
+                        // or a value concatenation containing one is
+                        // self-referential; an object or array with a
+                        // substitution inside it is an unbreakable cycle.
+                        if (dropInFlightChildren && potentiallySelfReferential(v)
+                                && context.isResolvingElsewhere(v)) {
+                            return null;
+                        }
                         return v;
                     }
                 } else {
@@ -484,7 +508,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         final ResolveSource sourceWithParent = source.pushParent(this);
 
         try {
-            ResolveModifier modifier = new ResolveModifier(context, sourceWithParent);
+            ResolveModifier modifier = new ResolveModifier(context, sourceWithParent,
+                    context.mergeStackPiece() == this);
 
             AbstractConfigValue value = modifyMayThrow(modifier);
             return ResolveResult.make(modifier.context, value).asObjectResult();
