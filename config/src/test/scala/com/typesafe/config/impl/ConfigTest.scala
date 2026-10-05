@@ -1437,6 +1437,42 @@ class ConfigTest extends TestUtils {
         assertEquals(43, resolved.getInt("foo"))
     }
 
+    // https://github.com/lightbend/config/issues/855
+    // resolveWith() resolves the config against a root that does not contain
+    // it, so a delayed merge (a duplicate key with a substitution) has no
+    // parent chain to replace itself within while being resolved.
+    @Test
+    def resolveWithOverloadedKeyAndSubstitution(): Unit = {
+        val unresolved = ConfigFactory.parseString("""{ "one": "first", "one": ${variable} }""")
+        val source = ConfigFactory.parseString("""{ "variable": "second" }""")
+        val resolved = unresolved.resolveWith(source)
+        assertEquals("second", resolved.getString("one"))
+    }
+
+    // https://github.com/lightbend/config/issues/332
+    // Overriding a value with an optional substitution, then resolving with a
+    // source that does not define it, must keep the overridden value.
+    @Test
+    def resolveWithUndefinedOverriding(): Unit = {
+        val unresolved = ConfigFactory.parseString("foo = 42, foo = ${?a}")
+        val source = ConfigFactory.parseString("b = 14")
+        val resolved = unresolved.resolveWith(source)
+        assertEquals(42, resolved.getInt("foo"))
+    }
+
+    // https://github.com/lightbend/config/issues/664
+    // A merged node holding a substitution at the top level, partially
+    // resolved with allowUnresolved, must survive a following resolve().
+    @Test
+    def resolveWithAllowUnresolvedMergedNodeThenResolve(): Unit = {
+        val conf = ConfigFactory.parseString("b:234,a:${b}")
+        val fallback = ConfigFactory.parseString("a:123")
+        val resolved = conf.withFallback(fallback)
+            .resolveWith(ConfigFactory.empty(), ConfigResolveOptions.defaults().setAllowUnresolved(true))
+            .resolve()
+        assertEquals(234, resolved.getInt("a"))
+    }
+
     /**
      * A resolver that replaces paths that start with a particular prefix with
      * strings where that prefix has been replaced with another prefix.
