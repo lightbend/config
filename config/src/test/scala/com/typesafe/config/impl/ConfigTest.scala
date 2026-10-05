@@ -1177,6 +1177,25 @@ class ConfigTest extends TestUtils {
         }
     }
 
+    @Test def renderAppendCommentsRemainsStable(): Unit = {
+        val options = ConfigRenderOptions.defaults().setJson(false).setOriginComments(false)
+        val inputs = Seq("# two\na += 2", "# two\na += { x = 1 }",
+            "a += 2 # c", "# two\nx.a += 2")
+        val configs = inputs.map(ConfigFactory.parseString(_)) ++ Seq(
+            ConfigFactory.parseString("a=[]\n# two\na += 2").resolve(),
+            ConfigFactory.parseString("a=[1]\n# two\na += 2").resolve())
+        for (original <- configs) {
+            val expected = original.root().render(options)
+            var current = original
+            for (cycle <- 1 to 5) {
+                val rendered = current.root().render(options)
+                assertEquals("render in cycle " + cycle, expected, rendered)
+                current = ConfigFactory.parseString(rendered)
+                assertEquals(original.resolve().root().unwrapped(), current.resolve().root().unwrapped())
+            }
+        }
+    }
+
     @Test
     def renderRoundTrip() {
         val allBooleans = true :: false :: Nil

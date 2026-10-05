@@ -290,8 +290,10 @@ final class ConfigParser {
                         List<AbstractConfigValue> concat = new ArrayList<AbstractConfigValue>(2);
                         AbstractConfigValue previousRef = new ConfigReference(newValue.origin(),
                                 new SubstitutionExpression(fullCurrentPath(), true /* optional */));
+                        // comments belong to the field, keep them off the synthetic element so they are not rendered twice
+                        AbstractConfigValue element = newValue.withOrigin(newValue.origin().withComments(null));
                         AbstractConfigValue list = new SimpleConfigList(newValue.origin(),
-                                Collections.singletonList(newValue));
+                                Collections.singletonList(element));
                         concat.add(previousRef);
                         concat.add(list);
                         newValue = ConfigConcatenation.concatenate(concat);

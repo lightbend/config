@@ -16,6 +16,27 @@ import scala.collection.JavaConverters._
 
 class ConcatenationTest extends TestUtils {
 
+    @Test def loneAppendCommentIsRenderedOnce(): Unit = {
+        val options = ConfigRenderOptions.defaults().setJson(false).setOriginComments(false)
+        assertEquals("# two\na=${?a}[\n    2\n]\n",
+            ConfigFactory.parseString("# two\na += 2").root().render(options))
+    }
+
+    @Test def objectAppendCommentIsRenderedOnce(): Unit = {
+        val options = ConfigRenderOptions.defaults().setJson(false).setOriginComments(false)
+        assertEquals("# two\na=${?a}[\n    {\n        x=1\n    }\n]\n",
+            ConfigFactory.parseString("# two\na += { x = 1 }").root().render(options))
+    }
+
+    @Test def appendAfterDefinitionCommentIsRenderedOnceAfterResolve(): Unit = {
+        val options = ConfigRenderOptions.defaults().setJson(false).setOriginComments(false)
+        for ((input, expected) <- Seq(
+            ("a=[]\n# two\na += 2", "# two\na=[\n    2\n]\n"),
+            ("a=[1]\n# two\na += 2", "# two\na=[\n    1,\n    2\n]\n"))) {
+            assertEquals(expected, ConfigFactory.parseString(input).resolve().root().render(options))
+        }
+    }
+
     @Test
     def noSubstitutionsStringConcat() {
         val conf = parseConfig(""" a :  true "xyz" 123 foo  """).resolve()
