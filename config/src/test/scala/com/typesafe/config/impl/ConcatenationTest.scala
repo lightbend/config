@@ -494,6 +494,61 @@ class ConcatenationTest extends TestUtils {
         assertTrue(e.getMessage.contains("limitation"))
     }
 
+    // from https://github.com/lightbend/config/issues/375
+    @Test
+    def plusEqualsToInheritedListInObjectConcatenation() {
+        val conf = parseConfig("""x = {}
+y = ${x} { l = [1, 2] }
+y.l += 3""").resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("y.l").asScala.toList)
+    }
+
+    // from https://github.com/lightbend/config/issues/608
+    @Test
+    def plusEqualsInheritedFromSubstitutionConcatenation() {
+        val conf = parseConfig("""x { arr = [one] }
+top: ${x} { arr += four }""").resolve()
+        assertEquals(Seq("one", "four"), conf.getStringList("top.arr").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsObjectElementInheritedViaConcatenation() {
+        val conf = parseConfig("""x { objs = [{a = 1}] }
+top: ${x} { objs += {a = 2} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getObjectList("top.objs").asScala.toList.map(_.toConfig.getInt("a")))
+    }
+
+    @Test
+    def plusEqualsInheritedNestedDeeperThanOne() {
+        val conf = parseConfig("""x { a { b { c = [1] } } }
+top: ${x} { a { b { c += 2 } } }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.a.b.c").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsChainedInheritedConcatenations() {
+        val conf = parseConfig("""x { l = [1] }
+y: ${x} { l += 2 }
+z: ${y} { l += 3 }""").resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("z.l").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsMultipleTimesViaSeparateDefinitions() {
+        val conf = parseConfig("""x { l = [1] }
+top: ${x}
+top { l += 2, l += 3 }""").resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("top.l").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsToConcatenatedValueFromFallbackFile() {
+        val conf = ConfigFactory.parseString("top.arr += four")
+            .withFallback(parseConfig("""x { arr = [one] }
+top: ${x}""")).resolve()
+        assertEquals(Seq("one", "four"), conf.getStringList("top.arr").asScala.toList)
+    }
+
     // from https://github.com/lightbend/config/issues/177
     @Test
     def arrayConcatenationInDoubleNestedDelayedMerge() {
