@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.typesafe.config.Config;
@@ -42,6 +43,9 @@ import com.typesafe.config.ConfigValueType;
 final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Pattern SIGNED_INTEGER_PATTERN = Pattern.compile("[+-]?[0-9]+");
+    private static final Pattern UNSIGNED_INTEGER_PATTERN = Pattern.compile("[0-9]+");
 
     final private AbstractConfigObject object;
 
@@ -778,7 +782,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             // if the string is purely digits, parse as an integer to avoid
             // possible precision loss;
             // otherwise as a double.
-            if (numberString.matches("[+-]?[0-9]+")) {
+            if (SIGNED_INTEGER_PATTERN.matcher(numberString).matches()) {
                 return units.toNanos(Long.parseLong(numberString));
             } else {
                 long nanosInUnit = units.toNanos(1);
@@ -904,7 +908,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
             BigInteger result;
             // if the string is purely digits, parse as an integer to avoid
             // possible precision loss; otherwise as a double.
-            if (numberString.matches("[0-9]+")) {
+            if (UNSIGNED_INTEGER_PATTERN.matcher(numberString).matches()) {
                 result = units.bytes.multiply(new BigInteger(numberString));
             } else {
                 BigDecimal resultDecimal = (new BigDecimal(units.bytes)).multiply(new BigDecimal(numberString));
