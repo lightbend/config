@@ -696,7 +696,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     @Override
     public Set<String> keySet() {
-        return value.keySet();
+        return Collections.unmodifiableSet(value.keySet());
     }
 
     @Override
