@@ -756,4 +756,26 @@ top: ${x}""")).resolve()
         assertEquals(7, front.get(0).asInstanceOf[AbstractConfigObject].toConfig.getInt("foo"))
         assertEquals(2, front.get(1).unwrapped())
     }
+
+    // += hides the earlier definition, but it still evaluates it: an
+    // undefined required substitution there is an error, not an empty list
+    @Test
+    def plusEqualsOverUndefinedRequiredSubstitutionStillFails() {
+        for (hocon <- Seq("c : ${b}\nc += 1", "c : ${b}\nc : ${?c} [1]")) {
+            val e = intercept[ConfigException.UnresolvedSubstitution] {
+                parseConfig(hocon).resolve()
+            }
+            assertTrue(e.getMessage, e.getMessage.contains("${b}"))
+        }
+    }
+
+    // only a += self-reference looks back at what its definition overrides,
+    // a hand-written ${?d} that refers to an enclosing object keeps its
+    // behaviour
+    @Test
+    def optionalReferenceToEnclosingObjectInConcatenationIsUnchanged() {
+        val conf = parseConfig("""b = { b = { c = [4] } }
+d = ${?b} { d : [4]${?d} }""").resolve()
+        assertEquals(Seq(4), conf.getIntList("d.d").asScala.toList)
+    }
 }
