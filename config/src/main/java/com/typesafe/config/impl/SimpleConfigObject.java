@@ -729,7 +729,7 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     @Override
     public Collection<ConfigValue> values() {
-        return new HashSet<ConfigValue>(value.values());
+        return new ArrayList<ConfigValue>(value.values());
     }
 
     final private static String EMPTY_NAME = "empty config";
