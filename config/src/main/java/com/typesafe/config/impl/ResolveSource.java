@@ -250,9 +250,14 @@ final class ResolveSource {
             }
             // if we end up nuking the root object itself, we replace it with an
             // empty root
-            if (newPath != null)
-                return new ResolveSource((AbstractConfigObject) newPath.last(), newPath);
-            else
+            if (newPath != null) {
+                // resolveWith() uses a substitution root that is not the config
+                // object being resolved; keep that lookup root while updating
+                // the parent chain for delayed-merge self-reference semantics.
+                AbstractConfigObject lookupRoot = pathFromRoot.last() == root ? (AbstractConfigObject) newPath.last()
+                        : root;
+                return new ResolveSource(lookupRoot, newPath);
+            } else
                 return new ResolveSource(SimpleConfigObject.empty());
         } else {
             if (old == root) {
@@ -275,14 +280,19 @@ final class ResolveSource {
             Container parent = pathFromRoot.head();
             AbstractConfigValue newParent = parent.replaceChild(old, replacement);
             return replaceCurrentParent(parent, (newParent instanceof Container) ? (Container) newParent : null);
-        } else {
-            if (old == root && replacement instanceof Container) {
+        } else if (old == root) {
+            if (replacement instanceof Container) {
                 return new ResolveSource(rootMustBeObj((Container) replacement));
             } else {
                 throw new ConfigException.BugOrBroken("replace in parent not possible " + old + " with " + replacement
                         + " in " + this);
-                // return this;
             }
+        } else {
+            // pathFromRoot is null so we aren't proceeding from the root (see
+            // pushParent); resolveWith() resolves a value that isn't a descendant
+            // of the substitution root, so root can't contain "old" and there's
+            // nothing to replace.
+            return this;
         }
     }
 
