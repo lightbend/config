@@ -383,15 +383,18 @@ public class ConfigImpl {
     }
 
     private static class EnvVariablesOverridesHolder {
-        static volatile AbstractConfigObject envVariables = loadEnvVariablesOverrides();
+        // Load outside the class initializer so a malformed override does not
+        // permanently poison the holder with an initialization failure.
+        static volatile AbstractConfigObject envVariables;
     }
 
     static AbstractConfigObject envVariablesOverridesAsConfigObject() {
-        try {
-            return EnvVariablesOverridesHolder.envVariables;
-        } catch (ExceptionInInitializerError e) {
-            throw ConfigImplUtil.extractInitializerError(e);
+        AbstractConfigObject envVariables = EnvVariablesOverridesHolder.envVariables;
+        if (envVariables == null) {
+            envVariables = loadEnvVariablesOverrides();
+            EnvVariablesOverridesHolder.envVariables = envVariables;
         }
+        return envVariables;
     }
 
     public static Config envVariablesOverridesAsConfig() {
@@ -401,7 +404,9 @@ public class ConfigImpl {
     public static void reloadEnvVariablesOverridesConfig() {
         // ConfigFactory.invalidateCaches() relies on this having the side
         // effect that it drops all caches
-        EnvVariablesOverridesHolder.envVariables = loadEnvVariablesOverrides();
+        // Do not parse overrides until they are requested, especially when
+        // config.override_with_env_vars is disabled.
+        EnvVariablesOverridesHolder.envVariables = null;
     }
 
     public static Config defaultReference(final ClassLoader loader) {
