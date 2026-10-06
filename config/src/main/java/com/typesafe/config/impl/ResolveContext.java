@@ -223,7 +223,7 @@ final class ResolveContext {
             // resolved further out depends on that in-flight state (for
             // example a self-referential field looking back inside a merge
             // stack), so its result must not be cached
-            boolean reentering = isResolvingElsewhere(original);
+            boolean reentering = mergeStackPiece != null && isResolvingElsewhere(original);
 
             if (resolved == null || resolved.resolveStatus() == ResolveStatus.RESOLVED) {
                 // if the resolved object is fully resolved by resolving
