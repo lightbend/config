@@ -7,6 +7,7 @@ import java.io.ObjectStreamException;
 import java.io.Serializable;
 
 import com.typesafe.config.ConfigOrigin;
+import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueType;
 
 final class ConfigDouble extends ConfigNumber implements Serializable {
@@ -52,6 +53,17 @@ final class ConfigDouble extends ConfigNumber implements Serializable {
     @Override
     protected ConfigDouble newCopy(ConfigOrigin origin) {
         return new ConfigDouble(origin, value, originalText);
+    }
+
+    // JSON has no number spelling for non-finite values. Reparsing the quoted
+    // string changes its type to STRING, but preserves getDouble conversion.
+    @Override
+    protected void render(StringBuilder sb, int indent, boolean atRoot, ConfigRenderOptions options) {
+        if (!hideEnvVariableValue(options) && (Double.isNaN(value) || Double.isInfinite(value))) {
+            sb.append('"').append(Double.toString(value)).append('"');
+        } else {
+            super.render(sb, indent, atRoot, options);
+        }
     }
 
     // serialization all goes through SerializedConfigValue
