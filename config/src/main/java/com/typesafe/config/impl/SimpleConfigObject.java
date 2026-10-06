@@ -729,11 +729,6 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
 
     @Override
     public Collection<ConfigValue> values() {
-        // Per the Map contract, values() must contain one element per
-        // entry (duplicates included) so its size matches size(). A
-        // HashSet would dedup entries whose ConfigValues are equal()
-        // (origin is deliberately excluded from ConfigValue equality),
-        // silently dropping entries with equal-but-distinct-keyed values.
         return new ArrayList<ConfigValue>(value.values());
     }
 

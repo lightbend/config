@@ -518,10 +518,6 @@ class ConfigValueTest extends TestUtils {
 
     @Test
     def configObjectValuesContainsDuplicates() {
-        // values() must behave like a normal Map#values() collection: one
-        // element per entry, even when several entries have equal() values
-        // (ConfigValue equality intentionally ignores the key/origin, so a
-        // naive Set-based implementation would silently drop entries here).
         val m: ConfigObject = new SimpleConfigObject(fakeOrigin(),
             configMap("a" -> 1, "b" -> 1, "c" -> 2))
 
