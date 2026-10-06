@@ -6,7 +6,9 @@ package com.typesafe.config.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigOrigin;
@@ -311,7 +313,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
 
     @Override
     protected void render(StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
-        render(stack, sb, indent, atRoot, atKey, options);
+        render(stack, origin(), sb, indent, atRoot, atKey, options);
     }
 
     @Override
@@ -319,47 +321,74 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         render(sb, indent, atRoot, null, options);
     }
 
+    private static void appendComment(StringBuilder sb, String comment) {
+        // A comment after a compact entry must start on a new line, or the
+        // parser associates it with the preceding value.
+        if (sb.length() > 0 && sb.charAt(sb.length() - 1) == ',')
+            sb.append('\n');
+        sb.append('#');
+        // Parsed comments keep their leading space on subsequent renders.
+        if (!comment.startsWith(" "))
+            sb.append(' ');
+        sb.append(comment).append('\n');
+    }
+
     // static method also used by ConfigDelayedMergeObject.
-    static void render(List<AbstractConfigValue> stack, StringBuilder sb, int indent, boolean atRoot, String atKey,
-            ConfigRenderOptions options) {
+    static void render(List<AbstractConfigValue> stack, ConfigOrigin wrapperOrigin,
+            StringBuilder sb, int indent, boolean atRoot, String atKey, ConfigRenderOptions options) {
         boolean commentMerge = options.getComments();
-        if (commentMerge) {
+        // Under a key the repeated entries are parseable. A generated banner
+        // would become ordinary comments and accumulate on each round trip.
+        boolean banner = commentMerge && atKey == null;
+        if (banner) {
             sb.append("# unresolved merge of " + stack.size() + " values follows (\n");
-            if (atKey == null) {
-                indent(sb, indent, options);
-                sb.append("# this unresolved merge will not be parseable because it's at the root of the object\n");
-                indent(sb, indent, options);
-                sb.append("# the HOCON format has no way to list multiple root objects in a single file\n");
+            indent(sb, indent, options);
+            sb.append("# this unresolved merge will not be parseable because it's at the root of the object\n");
+            indent(sb, indent, options);
+            sb.append("# the HOCON format has no way to list multiple root objects in a single file\n");
+        }
+
+        // The caller has already indented the first line.
+        boolean indentPending = banner;
+        if (commentMerge && wrapperOrigin != null) {
+            Set<String> onEntries = new HashSet<String>();
+            for (AbstractConfigValue v : stack)
+                onEntries.addAll(v.origin().comments());
+            // The wrapper normally aggregates entry comments. Preserve only
+            // additional comments assigned to the merge itself via withOrigin.
+            for (String comment : wrapperOrigin.comments()) {
+                if (!onEntries.contains(comment)) {
+                    if (indentPending)
+                        indent(sb, indent, options);
+                    indentPending = true;
+                    appendComment(sb, comment);
+                }
             }
         }
 
-        List<AbstractConfigValue> reversed = new ArrayList<AbstractConfigValue>();
-        reversed.addAll(stack);
+        List<AbstractConfigValue> reversed = new ArrayList<AbstractConfigValue>(stack);
         Collections.reverse(reversed);
-
         int i = 0;
         for (AbstractConfigValue v : reversed) {
-            if (commentMerge) {
-                indent(sb, indent, options);
-                if (atKey != null) {
-                    sb.append("#     unmerged value " + i + " for key "
-                            + ConfigImplUtil.renderJsonString(atKey) + " from ");
-                } else {
-                    sb.append("#     unmerged value " + i + " from ");
-                }
-                i += 1;
-                sb.append(v.origin().description());
-                sb.append("\n");
-
-                for (String comment : v.origin().comments()) {
+            if (banner) {
+                if (indentPending)
                     indent(sb, indent, options);
-                    sb.append("# ");
-                    sb.append(comment);
-                    sb.append("\n");
+                indentPending = true;
+                sb.append("#     unmerged value " + i + " from ");
+                i += 1;
+                sb.append(v.origin().description()).append('\n');
+            }
+            if (commentMerge) {
+                for (String comment : v.origin().comments()) {
+                    if (indentPending)
+                        indent(sb, indent, options);
+                    indentPending = true;
+                    appendComment(sb, comment);
                 }
             }
-            indent(sb, indent, options);
-
+            if (indentPending)
+                indent(sb, indent, options);
+            indentPending = true;
             if (atKey != null) {
                 sb.append(ConfigImplUtil.renderJsonString(atKey));
                 if (options.getFormatted())
@@ -378,7 +407,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
             sb.setLength(sb.length() - 1); // also chop comma
             sb.append("\n"); // put a newline back
         }
-        if (commentMerge) {
+        if (banner) {
             indent(sb, indent, options);
             sb.append("# ) end of unresolved merge\n");
         }
