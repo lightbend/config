@@ -27,8 +27,12 @@ final class ResolveContext {
 
     final private Set<AbstractConfigValue> cycleMarkers;
 
+    // How many cycles an optional substitution has turned into "undefined" so
+    // far; only ever grows, so callers compare it before and after a resolve.
+    final private int swallowedCycles;
+
     ResolveContext(ResolveMemos memos, ConfigResolveOptions options, Path restrictToChild,
-            List<AbstractConfigValue> resolveStack, Set<AbstractConfigValue> cycleMarkers) {
+            List<AbstractConfigValue> resolveStack, Set<AbstractConfigValue> cycleMarkers, int swallowedCycles) {
         this.memos = memos;
         this.options = options;
         this.restrictToChild = restrictToChild;
@@ -38,6 +42,7 @@ final class ResolveContext {
         // up shared between multiple ResolveContext.
         this.resolveStack = resolveStack;
         this.cycleMarkers = cycleMarkers;
+        this.swallowedCycles = swallowedCycles;
     }
 
     private static Set<AbstractConfigValue> newCycleMarkers() {
@@ -47,7 +52,7 @@ final class ResolveContext {
     ResolveContext(ConfigResolveOptions options, Path restrictToChild) {
         // LinkedHashSet keeps the traversal order which is at least useful
         // in error messages if nothing else
-        this(new ResolveMemos(), options, restrictToChild, new ArrayList<AbstractConfigValue>(), newCycleMarkers());
+        this(new ResolveMemos(), options, restrictToChild, new ArrayList<AbstractConfigValue>(), newCycleMarkers(), 0);
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace(depth(), "ResolveContext restrict to child " + restrictToChild);
     }
@@ -60,7 +65,7 @@ final class ResolveContext {
         Set<AbstractConfigValue> copy = newCycleMarkers();
         copy.addAll(cycleMarkers);
         copy.add(value);
-        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy);
+        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy, swallowedCycles);
     }
 
     ResolveContext removeCycleMarker(AbstractConfigValue value) {
@@ -70,12 +75,20 @@ final class ResolveContext {
         Set<AbstractConfigValue> copy = newCycleMarkers();
         copy.addAll(cycleMarkers);
         copy.remove(value);
-        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy);
+        return new ResolveContext(memos, options, restrictToChild, resolveStack, copy, swallowedCycles);
+    }
+
+    int swallowedCycles() {
+        return swallowedCycles;
+    }
+
+    ResolveContext countSwallowedCycle() {
+        return new ResolveContext(memos, options, restrictToChild, resolveStack, cycleMarkers, swallowedCycles + 1);
     }
 
     private ResolveContext memoize(MemoKey key, AbstractConfigValue value) {
         ResolveMemos changed = memos.put(key, value);
-        return new ResolveContext(changed, options, restrictToChild, resolveStack, cycleMarkers);
+        return new ResolveContext(changed, options, restrictToChild, resolveStack, cycleMarkers, swallowedCycles);
     }
 
     ConfigResolveOptions options() {
@@ -95,7 +108,7 @@ final class ResolveContext {
         if (restrictTo == restrictToChild)
             return this;
         else
-            return new ResolveContext(memos, options, restrictTo, resolveStack, cycleMarkers);
+            return new ResolveContext(memos, options, restrictTo, resolveStack, cycleMarkers, swallowedCycles);
     }
 
     ResolveContext unrestricted() {
@@ -121,7 +134,7 @@ final class ResolveContext {
             ConfigImpl.trace(depth(), "pushing trace " + value);
         List<AbstractConfigValue> copy = new ArrayList<AbstractConfigValue>(resolveStack);
         copy.add(value);
-        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers);
+        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers, swallowedCycles);
     }
 
     ResolveContext popTrace() {
@@ -129,7 +142,7 @@ final class ResolveContext {
         AbstractConfigValue old = copy.remove(resolveStack.size() - 1);
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace(depth() - 1, "popped trace " + old);
-        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers);
+        return new ResolveContext(memos, options, restrictToChild, copy, cycleMarkers, swallowedCycles);
     }
 
     int depth() {

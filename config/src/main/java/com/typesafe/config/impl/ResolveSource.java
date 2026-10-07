@@ -90,14 +90,29 @@ final class ResolveSource {
     ResultWithPath lookupSubst(ResolveContext context, SubstitutionExpression subst,
             int prefixLength)
             throws NotPossibleToResolve {
+        return lookupSubst(context, subst, prefixLength, false);
+    }
+
+    // skipFullPath starts at the including root, for a retry after the value
+    // found at the full path resolved to nothing.
+    ResultWithPath lookupSubst(ResolveContext context, SubstitutionExpression subst,
+            int prefixLength, boolean skipFullPath)
+            throws NotPossibleToResolve {
         if (ConfigImpl.traceSubstitutionsEnabled())
             ConfigImpl.trace(context.depth(), "searching for " + subst);
 
-        if (ConfigImpl.traceSubstitutionsEnabled())
-            ConfigImpl.trace(context.depth(), subst + " - looking up relative to file it occurred in");
-        // First we look up the full path, which means relative to the
-        // included file if we were not a root file
-        ResultWithPath result = findInObject(root, context, subst.path());
+        ResultWithPath result;
+        if (skipFullPath) {
+            result = new ResultWithPath(ResolveResult.make(context, null), null);
+        } else {
+            if (ConfigImpl.traceSubstitutionsEnabled())
+                ConfigImpl.trace(context.depth(), subst + " - looking up relative to file it occurred in");
+            // First we look up the full path, which means relative to the
+            // included file if we were not a root file
+            result = findInObject(root, context, subst.path());
+            if (result.result.value != null)
+                result = result.atFullPath();
+        }
 
         if (result.result.value == null) {
             // Then we want to check relative to the root file. We don't
@@ -373,10 +388,23 @@ final class ResolveSource {
     static final class ResultWithPath {
         final ResolveResult<? extends AbstractConfigValue> result;
         final Node<Container> pathFromRoot;
+        // the value was found at the full path, inside the included file if
+        // there is one, rather than at the including root or in the environment
+        final boolean foundAtFullPath;
 
         ResultWithPath(ResolveResult<? extends AbstractConfigValue> result, Node<Container> pathFromRoot) {
+            this(result, pathFromRoot, false);
+        }
+
+        private ResultWithPath(ResolveResult<? extends AbstractConfigValue> result, Node<Container> pathFromRoot,
+                boolean foundAtFullPath) {
             this.result = result;
             this.pathFromRoot = pathFromRoot;
+            this.foundAtFullPath = foundAtFullPath;
+        }
+
+        ResultWithPath atFullPath() {
+            return new ResultWithPath(result, pathFromRoot, true);
         }
 
         @Override
