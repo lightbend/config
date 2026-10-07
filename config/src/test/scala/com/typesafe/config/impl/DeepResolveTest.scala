@@ -13,10 +13,12 @@ class DeepResolveTest {
     (1 to n).map(i => s"modules += m$i").mkString("\n")
 
   @Test def manyPlusEqualsLinesFailToResolveWithConfigException(): Unit = {
-    // 256 KiB overflows from about 100 lines (measured on JDK 8, 17, 24 and
-    // 25); 300 keeps a margin. Resolving += lines is quadratic, so a larger
-    // count makes the test as slow as the runner, not as deep.
-    val conf = ConfigFactory.parseString(plusEqualsLines(300))
+    // The JVM raises a request this small to its minimum stack size, which
+    // overflows from 40 to 100 lines on JDK 8, 17 and 25, cold or warmed up
+    // (a 256 KiB stack needed over 1000 lines once the JIT had compiled the
+    // resolver). 500 keeps a margin; resolving += lines is quadratic, so a
+    // larger count makes the test as slow as the runner, not as deep.
+    val conf = ConfigFactory.parseString(plusEqualsLines(500))
     val failure = new java.util.concurrent.atomic.AtomicReference[Throwable]()
     val thread = new Thread(
       null,
@@ -29,7 +31,7 @@ class DeepResolveTest {
           }
       },
       "deep-config-resolve",
-      256 * 1024L
+      64 * 1024L
     )
     thread.setDaemon(true)
     thread.start()
