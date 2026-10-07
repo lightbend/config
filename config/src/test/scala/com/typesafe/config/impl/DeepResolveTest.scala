@@ -13,7 +13,10 @@ class DeepResolveTest {
     (1 to n).map(i => s"modules += m$i").mkString("\n")
 
   @Test def manyPlusEqualsLinesFailToResolveWithConfigException(): Unit = {
-    val conf = ConfigFactory.parseString(plusEqualsLines(2000))
+    // 256 KiB overflows from about 100 lines (measured on JDK 8, 17, 24 and
+    // 25); 300 keeps a margin. Resolving += lines is quadratic, so a larger
+    // count makes the test as slow as the runner, not as deep.
+    val conf = ConfigFactory.parseString(plusEqualsLines(300))
     val failure = new java.util.concurrent.atomic.AtomicReference[Throwable]()
     val thread = new Thread(
       null,
