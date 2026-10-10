@@ -494,6 +494,61 @@ class ConcatenationTest extends TestUtils {
         assertTrue(e.getMessage.contains("limitation"))
     }
 
+    // from https://github.com/lightbend/config/issues/375
+    @Test
+    def plusEqualsToInheritedListInObjectConcatenation() {
+        val conf = parseConfig("""x = {}
+y = ${x} { l = [1, 2] }
+y.l += 3""").resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("y.l").asScala.toList)
+    }
+
+    // from https://github.com/lightbend/config/issues/608
+    @Test
+    def plusEqualsInheritedFromSubstitutionConcatenation() {
+        val conf = parseConfig("""x { arr = [one] }
+top: ${x} { arr += four }""").resolve()
+        assertEquals(Seq("one", "four"), conf.getStringList("top.arr").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsObjectElementInheritedViaConcatenation() {
+        val conf = parseConfig("""x { objs = [{a = 1}] }
+top: ${x} { objs += {a = 2} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getObjectList("top.objs").asScala.toList.map(_.toConfig.getInt("a")))
+    }
+
+    @Test
+    def plusEqualsInheritedNestedDeeperThanOne() {
+        val conf = parseConfig("""x { a { b { c = [1] } } }
+top: ${x} { a { b { c += 2 } } }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.a.b.c").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsChainedInheritedConcatenations() {
+        val conf = parseConfig("""x { l = [1] }
+y: ${x} { l += 2 }
+z: ${y} { l += 3 }""").resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("z.l").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsMultipleTimesViaSeparateDefinitions() {
+        val conf = parseConfig("""x { l = [1] }
+top: ${x}
+top { l += 2, l += 3 }""").resolve()
+        assertEquals(Seq(1, 2, 3), conf.getIntList("top.l").asScala.toList)
+    }
+
+    @Test
+    def plusEqualsToConcatenatedValueFromFallbackFile() {
+        val conf = ConfigFactory.parseString("top.arr += four")
+            .withFallback(parseConfig("""x { arr = [one] }
+top: ${x}""")).resolve()
+        assertEquals(Seq("one", "four"), conf.getStringList("top.arr").asScala.toList)
+    }
+
     // from https://github.com/lightbend/config/issues/177
     @Test
     def arrayConcatenationInDoubleNestedDelayedMerge() {
@@ -656,4 +711,104 @@ class ConcatenationTest extends TestUtils {
             parseConfig("""foo = [1], bar = [2], x = ${foo}"  "${bar}""").resolve()
         }
     }
+
+    // https://github.com/lightbend/config/issues/751
+    // A delayed merge (a duplicate key whose later value is a substitution)
+    // inside a list that is a piece of a value concatenation used to throw
+    // BugOrBroken "SimpleConfigObject.replaceChild did not find ...": the
+    // concatenation was not on the substitution source's parent chain, so the
+    // resolver walked past it and could not find the list in the parent.
+    @Test
+    def delayedMergeInConcatenatedListPiece(): Unit = {
+        val conf = parseConfig("""
+            |tail = [ 2 ]
+            |front = [
+            |  {
+            |    foo = 1
+            |    foo = ${?bar}
+            |  }
+            |] ${tail}
+            |""".stripMargin).resolve()
+
+        val front = conf.getList("front")
+        assertEquals(2, front.size())
+        assertEquals(1, front.get(0).asInstanceOf[AbstractConfigObject].toConfig.getInt("foo"))
+        assertEquals(2, front.get(1).unwrapped())
+    }
+
+    // Same shape as delayedMergeInConcatenatedListPiece, but the substitution
+    // is strict and defined, so it takes part in the delayed merge.
+    @Test
+    def definedSubstitutionInConcatenatedListPiece(): Unit = {
+        val conf = parseConfig("""
+            |bar = 7
+            |tail = [ 2 ]
+            |front = [
+            |  {
+            |    foo = 1
+            |    foo = ${bar}
+            |  }
+            |] ${tail}
+            |""".stripMargin).resolve()
+
+        val front = conf.getList("front")
+        assertEquals(2, front.size())
+        assertEquals(7, front.get(0).asInstanceOf[AbstractConfigObject].toConfig.getInt("foo"))
+        assertEquals(2, front.get(1).unwrapped())
+    }
+
+    // += hides the earlier definition, but it still evaluates it: an
+    // undefined required substitution there is an error, not an empty list
+    @Test
+    def plusEqualsOverUndefinedRequiredSubstitutionStillFails() {
+        for (hocon <- Seq("c : ${b}\nc += 1", "c : ${b}\nc : ${?c} [1]")) {
+            val e = intercept[ConfigException.UnresolvedSubstitution] {
+                parseConfig(hocon).resolve()
+            }
+            assertTrue(e.getMessage, e.getMessage.contains("${b}"))
+        }
+    }
+
+    // only a += self-reference looks back at what its definition overrides,
+    // a hand-written ${?d} that refers to an enclosing object keeps its
+    // behaviour
+    @Test
+    def optionalReferenceToEnclosingObjectInConcatenationIsUnchanged() {
+        val conf = parseConfig("""b = { b = { c = [4] } }
+d = ${?b} { d : [4]${?d} }""").resolve()
+        assertEquals(Seq(4), conf.getIntList("d.d").asScala.toList)
+    }
+
+    @Test
+    def reviewPlusEqualsMustKeepSiblingLookupsForward(): Unit = {
+        val conf = parseConfig("""x { arr = [1], n = 1 }, top = ${x} { arr += 2, n = 2, seen = ${top.n} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.arr").asScala.toSeq)
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsMustKeepNewSiblingLookup(): Unit = {
+        val conf = parseConfig("""x { arr = [1] }, top = ${x} { arr += 2, n = 2, seen = ${top.n} }""").resolve()
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsMustKeepOptionalSiblingLookup(): Unit = {
+        val conf = parseConfig("""x { arr = [1] }, top = ${x} { arr += 2, n = 2, seen = ${?top.n} }""").resolve()
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsMustKeepDynamicSiblingInMerge(): Unit = {
+        val conf = parseConfig("""two = 2, x { arr = [1], n = 1 }, top = ${x}, top { arr += 2, n = ${two}, seen = ${top.n} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.arr").asScala.toSeq)
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsElementMustSeeFinalSibling(): Unit = {
+        val conf = parseConfig("""x { arr = [1], n = 1 }, top = ${x} { n = 2, arr += ${top.n} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.arr").asScala.toSeq)
+    }
+
 }
