@@ -778,4 +778,37 @@ top: ${x}""")).resolve()
 d = ${?b} { d : [4]${?d} }""").resolve()
         assertEquals(Seq(4), conf.getIntList("d.d").asScala.toList)
     }
+
+    @Test
+    def reviewPlusEqualsMustKeepSiblingLookupsForward(): Unit = {
+        val conf = parseConfig("""x { arr = [1], n = 1 }, top = ${x} { arr += 2, n = 2, seen = ${top.n} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.arr").asScala.toSeq)
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsMustKeepNewSiblingLookup(): Unit = {
+        val conf = parseConfig("""x { arr = [1] }, top = ${x} { arr += 2, n = 2, seen = ${top.n} }""").resolve()
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsMustKeepOptionalSiblingLookup(): Unit = {
+        val conf = parseConfig("""x { arr = [1] }, top = ${x} { arr += 2, n = 2, seen = ${?top.n} }""").resolve()
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsMustKeepDynamicSiblingInMerge(): Unit = {
+        val conf = parseConfig("""two = 2, x { arr = [1], n = 1 }, top = ${x}, top { arr += 2, n = ${two}, seen = ${top.n} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.arr").asScala.toSeq)
+        assertEquals(2, conf.getInt("top.seen"))
+    }
+
+    @Test
+    def reviewPlusEqualsElementMustSeeFinalSibling(): Unit = {
+        val conf = parseConfig("""x { arr = [1], n = 1 }, top = ${x} { n = 2, arr += ${top.n} }""").resolve()
+        assertEquals(Seq(1, 2), conf.getIntList("top.arr").asScala.toSeq)
+    }
+
 }
