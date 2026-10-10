@@ -444,9 +444,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
     private static final class ResolveModifier implements Modifier {
 
         final Path originalRestrict;
-        // true when the object being modified is the delayed merge stack
-        // piece marked on the context; only then may an in-flight leaf child
-        // be dropped in favor of earlier pieces of the merge
+        // Allow a self-referential leaf to look back within a merge piece,
+        // including when nested in one of its object fields.
         final boolean dropInFlightChildren;
         ResolveContext context;
         final ResolveSource source;
@@ -469,16 +468,8 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                         context = result.context.unrestricted().restrict(originalRestrict);
                         return result.value;
                     } else {
-                        // we don't want to resolve the leaf child. But when
-                        // modifying a piece of a merge stack, a leaf that is
-                        // still being resolved further out is a
-                        // self-referential field: drop it, so the substitution
-                        // looks back at the earlier pieces of the merge rather
-                        // than seeing its own still-unresolved value again.
-                        // HOCON.md: only a field whose value is a substitution
-                        // or a value concatenation containing one is
-                        // self-referential; an object or array with a
-                        // substitution inside it is an unbreakable cycle.
+                        // Drop an in-flight self-referential leaf to look back through the merge.
+                        // Object and array cycles remain unbreakable under HOCON.md.
                         if (dropInFlightChildren && potentiallySelfReferential(v)
                                 && context.isResolvingElsewhere(v)) {
                             return null;
@@ -508,8 +499,12 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
         final ResolveSource sourceWithParent = source.pushParent(this);
 
         try {
-            ResolveModifier modifier = new ResolveModifier(context, sourceWithParent,
-                    context.mergeStackPiece() == this);
+            boolean inMergeStackPiece = context.mergeStackPiece() == this;
+            for (ResolveSource.Node<Container> node = sourceWithParent.pathFromRoot;
+                    !inMergeStackPiece && node != null; node = node.tail()) {
+                inMergeStackPiece = node.head() == context.mergeStackPiece();
+            }
+            ResolveModifier modifier = new ResolveModifier(context, sourceWithParent, inMergeStackPiece);
 
             AbstractConfigValue value = modifyMayThrow(modifier);
             return ResolveResult.make(modifier.context, value).asObjectResult();
