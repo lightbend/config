@@ -1671,4 +1671,16 @@ class ConfigSubstitutionTest extends TestUtils {
         assertNotSame(shared, cleared)
         assertSame(cleared, cleared.withFallbacksNotIgnored())
     }
+    @Test
+    def reviewNestedSelfReferenceThroughMerge(): Unit = {
+        val resolved = resolve(parseObject("""d { x { y = [0] } }, c = ${d}, c { x { y = ${c.x.y}[1] } }"""))
+        assertEquals(Seq(0, 1), resolved.getIntList("c.x.y").asScala.toSeq)
+    }
+
+    @Test
+    def reviewNestedOptionalSelfReferenceThroughMerge(): Unit = {
+        val resolved = resolve(parseObject("""d { x { y = [0] } }, c = ${d}, c { x { y = ${?c.x.y}[1] } }"""))
+        assertEquals(Seq(0, 1), resolved.getIntList("c.x.y").asScala.toSeq)
+    }
+
 }
