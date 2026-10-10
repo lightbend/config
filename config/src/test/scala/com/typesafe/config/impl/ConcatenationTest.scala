@@ -656,4 +656,49 @@ class ConcatenationTest extends TestUtils {
             parseConfig("""foo = [1], bar = [2], x = ${foo}"  "${bar}""").resolve()
         }
     }
+
+    // https://github.com/lightbend/config/issues/751
+    // A delayed merge (a duplicate key whose later value is a substitution)
+    // inside a list that is a piece of a value concatenation used to throw
+    // BugOrBroken "SimpleConfigObject.replaceChild did not find ...": the
+    // concatenation was not on the substitution source's parent chain, so the
+    // resolver walked past it and could not find the list in the parent.
+    @Test
+    def delayedMergeInConcatenatedListPiece(): Unit = {
+        val conf = parseConfig("""
+            |tail = [ 2 ]
+            |front = [
+            |  {
+            |    foo = 1
+            |    foo = ${?bar}
+            |  }
+            |] ${tail}
+            |""".stripMargin).resolve()
+
+        val front = conf.getList("front")
+        assertEquals(2, front.size())
+        assertEquals(1, front.get(0).asInstanceOf[AbstractConfigObject].toConfig.getInt("foo"))
+        assertEquals(2, front.get(1).unwrapped())
+    }
+
+    // Same shape as delayedMergeInConcatenatedListPiece, but the substitution
+    // is strict and defined, so it takes part in the delayed merge.
+    @Test
+    def definedSubstitutionInConcatenatedListPiece(): Unit = {
+        val conf = parseConfig("""
+            |bar = 7
+            |tail = [ 2 ]
+            |front = [
+            |  {
+            |    foo = 1
+            |    foo = ${bar}
+            |  }
+            |] ${tail}
+            |""".stripMargin).resolve()
+
+        val front = conf.getList("front")
+        assertEquals(2, front.size())
+        assertEquals(7, front.get(0).asInstanceOf[AbstractConfigObject].toConfig.getInt("foo"))
+        assertEquals(2, front.get(1).unwrapped())
+    }
 }

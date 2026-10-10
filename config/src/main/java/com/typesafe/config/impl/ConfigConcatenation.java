@@ -193,10 +193,12 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             }
         }
 
-        // Right now there's no reason to pushParent here because the
-        // content of ConfigConcatenation should not need to replaceChild,
-        // but if it did we'd have to do this.
-        ResolveSource sourceWithParent = source; // .pushParent(this);
+        // Pieces can contain containers with unresolved substitutions (e.g. a
+        // delayed merge inside a list), and resolving those replaces them via
+        // ResolveSource.replaceWithinCurrentParent(); for the replacement to
+        // walk back up to the root, this concatenation must be on the parent
+        // chain.
+        ResolveSource sourceWithParent = source.pushParent(this);
         ResolveContext newContext = context;
 
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
