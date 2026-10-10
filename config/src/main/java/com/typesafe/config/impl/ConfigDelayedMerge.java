@@ -81,6 +81,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         ResolveContext newContext = context;
         int count = 0;
         AbstractConfigValue merged = null;
+        AbstractConfigValue wasMergeStackPiece = context.mergeStackPiece();
         for (AbstractConfigValue end : stack) {
             // Per the HOCON spec, a substitution hidden by a value that
             // cannot be merged with it is never evaluated. If merged already
@@ -146,6 +147,11 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                     count += 1;
                     continue;
                 }
+
+                // mark the piece so self-referential fields directly inside
+                // it are dropped (looking back at the pieces below) when a
+                // lookup re-enters them while this piece is still resolving
+                newContext = newContext.withMergeStackPiece(end);
             }
 
             if (ConfigImpl.traceSubstitutionsEnabled()) {
@@ -157,7 +163,7 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
                         + " against " + sourceForEnd + " endWasRemoved=" + (source != sourceForEnd));
             ResolveResult<? extends AbstractConfigValue> result = newContext.resolve(end, sourceForEnd);
             AbstractConfigValue resolvedEnd = result.value;
-            newContext = result.context;
+            newContext = result.context.withMergeStackPiece(wasMergeStackPiece);
 
             if (resolvedEnd != null) {
                 if (merged == null) {

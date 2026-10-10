@@ -275,14 +275,17 @@ final class ResolveSource {
             Container parent = pathFromRoot.head();
             AbstractConfigValue newParent = parent.replaceChild(old, replacement);
             return replaceCurrentParent(parent, (newParent instanceof Container) ? (Container) newParent : null);
-        } else {
-            if (old == root && replacement instanceof Container) {
+        } else if (old == root) {
+            if (replacement instanceof Container) {
                 return new ResolveSource(rootMustBeObj((Container) replacement));
             } else {
                 throw new ConfigException.BugOrBroken("replace in parent not possible " + old + " with " + replacement
                         + " in " + this);
-                // return this;
             }
+        } else {
+            // An external lookup root has no parent chain to replace within.
+            // Keep substitutions looking up in that root, as resolveWith() requires.
+            return this;
         }
     }
 
