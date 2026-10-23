@@ -1181,6 +1181,10 @@ specified, the included items are NOT interpreted relative to the
 including items. Relative-to-including-file paths only work with
 the heuristic `include "foo.conf"`. This may change in the future.
 
+The string inside `url()` is always an absolute URL, with a scheme
+([RFC 3986, section 4.3](https://www.rfc-editor.org/rfc/rfc3986#section-4.3));
+`url("foo.conf")` is an error, with or without `required()`.
+
 ### Conversion of numerically-indexed objects to arrays
 
 In some file formats and contexts, such as Java properties files,
