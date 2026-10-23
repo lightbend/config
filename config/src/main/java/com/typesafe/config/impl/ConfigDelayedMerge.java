@@ -82,18 +82,30 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         int count = 0;
         AbstractConfigValue merged = null;
         for (AbstractConfigValue end : stack) {
-            // Per the HOCON spec, a substitution hidden by a value that
-            // cannot be merged with it is never evaluated. If merged already
-            // ignores fallbacks, nothing below can contribute, so stop.
-            if (merged != null && merged.ignoresFallbacks()) {
-                if (ConfigImpl.traceSubstitutionsEnabled())
-                    ConfigImpl.trace(newContext.depth(),
-                            "merged ignores fallbacks, skipping remaining stack");
-                break;
+            if (merged != null) {
+                // Per the HOCON spec, a substitution hidden by a value that
+                // cannot be merged with it is never evaluated. If merged already
+                // ignores fallbacks, nothing below can contribute, so stop.
+                if (merged.ignoresFallbacks()) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(newContext.depth(),
+                                "merged ignores fallbacks, skipping remaining stack");
+                    break;
+                }
+
+                // Extends that rule to what a hidden value contains: a non-object
+                // (e.g. [${MISSING}]) below merged only stops the merge, so its
+                // substitutions are never evaluated either.
+                if (!(end instanceof Unmergeable) && !(end instanceof AbstractConfigObject)) {
+                    if (ConfigImpl.traceSubstitutionsEnabled())
+                        ConfigImpl.trace(newContext.depth(),
+                                "non-object " + end + " is hidden by merged, merging it unresolved and stopping");
+                    merged = merged.withFallback(end);
+                    break;
+                }
             }
 
             // the end value may or may not be resolved already
-
             ResolveSource sourceForEnd;
 
             if (end instanceof ReplaceableMergeStack)
