@@ -922,6 +922,11 @@ format.
 #### Python port
 
    * pyhocon https://github.com/chimpler/pyhocon
+   * zig-hocon https://github.com/lejmr/zig-hocon/tree/main/python
+
+#### C port
+
+   * https://github.com/lejmr/zig-hocon/tree/main/c
 
 #### C++ port
 
@@ -946,6 +951,10 @@ format.
  
 #### Erlang port
   * https://github.com/emqx/hocon
+
+#### Zig port
+
+  * https://github.com/lejmr/zig-hocon
 
 #### Linting tool
 
