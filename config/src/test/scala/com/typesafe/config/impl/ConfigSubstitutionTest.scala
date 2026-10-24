@@ -318,6 +318,64 @@ class ConfigSubstitutionTest extends TestUtils {
         assertEquals(42, resolved.getInt("a.cycle"))
     }
 
+    // issue #728: a self-referential list concatenation in a field of an
+    // object merged over a ${d} substitution must look back at the earlier
+    // definition of the field instead of reporting a cycle
+    @Test
+    def selfReferentialListConcatenationThroughMerge() {
+        val resolved = resolve(parseObject("""d { x = [] }, c : ${d}, c { x : ${c.x}[1, 2] }"""))
+        assertEquals(Seq(1, 2), resolved.getList("c.x").asScala.map(_.unwrapped()))
+    }
+
+    @Test
+    def selfReferentialListConcatenationThroughMergeSingleElement() {
+        val resolved = resolve(parseObject("""d { x = [] }, c : ${d}, c { x : ${c.x}[1] }"""))
+        assertEquals(Seq(1), resolved.getList("c.x").asScala.map(_.unwrapped()))
+    }
+
+    @Test
+    def substitutionThroughMergeStillLooksForward() {
+        // a sibling field of a merge piece refers to a key the piece itself
+        // defines; it must keep seeing the piece's final value
+        val resolved = resolve(parseObject("""d { x = 1 }, c : ${d}, c { x = 2, y = ${c.x} }"""))
+        assertEquals(2, resolved.getInt("c.y"))
+    }
+
+    @Test
+    def throwOnSelfReferentialCycleInsideObject() {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(parseObject("""a { b = ${a.c}, c = ${a.b} }"""))
+        }
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
+    }
+
+    @Test
+    def throwOnTrivialRootCycle() {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(parseObject("""a = ${a}"""))
+        }
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage.contains("${a}"))
+    }
+
+    @Test
+    def throwOnSelfReferentialArrayInsideMergePiece() {
+        // an array with a substitution inside it is never self-referential,
+        // even when the field it is on was merged over a substitution
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(parseObject("""d { x = [1] }, c : ${d}, c { x = [${c.x}, 2] }"""))
+        }
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
+    }
+
+    @Test
+    def throwOnSelfReferentialObjectInsideMergePiece() {
+        val e = intercept[ConfigException.UnresolvedSubstitution] {
+            resolve(parseObject("""d { x = 1 }, c : ${d}, c { x = { i = ${c.x} } }"""))
+        }
+        assertTrue("Wrong exception: " + e.getMessage, e.getMessage.contains("cycle"))
+    }
+
     @Test
     def ignoreHiddenUndefinedSubst() {
         // if a substitution is overridden then it shouldn't matter that it's undefined
@@ -1612,5 +1670,48 @@ class ConfigSubstitutionTest extends TestUtils {
         val cleared = shared.withFallbacksNotIgnored()
         assertNotSame(shared, cleared)
         assertSame(cleared, cleared.withFallbacksNotIgnored())
+    }
+    @Test
+    def reviewNestedSelfReferenceThroughMerge(): Unit = {
+        val resolved = resolve(parseObject("""d { x { y = [0] } }, c = ${d}, c { x { y = ${c.x.y}[1] } }"""))
+        assertEquals(Seq(0, 1), resolved.getIntList("c.x.y").asScala.toSeq)
+    }
+
+    @Test
+    def reviewNestedOptionalSelfReferenceThroughMerge(): Unit = {
+        val resolved = resolve(parseObject("""d { x { y = [0] } }, c = ${d}, c { x { y = ${?c.x.y}[1] } }"""))
+        assertEquals(Seq(0, 1), resolved.getIntList("c.x.y").asScala.toSeq)
+    }
+
+
+    // Issue #586: mixin fields can refer to paths within the same object.
+    @Test
+    def resolveSelfReferenceThroughMixinConcatenation() {
+        val resolved = resolve(parseObject("""
+mixin { hello = world }
+a = ${mixin} { ext { x = 12 }, y = ${a.ext.x} }
+"""))
+        assertEquals(12, resolved.getInt("a.ext.x"))
+        assertEquals(12, resolved.getInt("a.y"))
+        assertEquals("world", resolved.getString("a.hello"))
+    }
+
+    @Test
+    def resolveMixinFieldThroughMixinConcatenation() {
+        val resolved = resolve(parseObject("""
+mixin { hello = world }
+a = ${mixin} { ext { x = 12 }, y = ${a.hello} }
+"""))
+        assertEquals("world", resolved.getString("a.y"))
+    }
+
+    @Test
+    def selfReferentialListConcatenationThroughSingleDefinition() {
+        // the same look-back as in the merge-piece case, with the merge
+        // written as one value concatenation instead of two definitions of c
+        val resolved = resolve(parseObject(
+            """d { x = [] }, e { z = 5 }, c : ${d}${e} { x : ${c.x}[1, 2], w : ${e.z} }"""))
+        assertEquals(Seq(1, 2), resolved.getList("c.x").asScala.map(_.unwrapped()))
+        assertEquals(5, resolved.getInt("c.w"))
     }
 }
