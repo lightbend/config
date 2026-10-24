@@ -193,21 +193,22 @@ final class ConfigConcatenation extends AbstractConfigValue implements Unmergeab
             }
         }
 
-        // Right now there's no reason to pushParent here because the
-        // content of ConfigConcatenation should not need to replaceChild,
-        // but if it did we'd have to do this.
-        ResolveSource sourceWithParent = source; // .pushParent(this);
+        // Track the concatenation so delayed merges in its pieces can replace their parents.
+        ResolveSource sourceWithParent = source.pushParent(this);
         ResolveContext newContext = context;
 
         List<AbstractConfigValue> resolved = new ArrayList<AbstractConfigValue>(pieces.size());
+        AbstractConfigValue wasMergeStackPiece = context.mergeStackPiece();
         for (AbstractConfigValue p : pieces) {
-            // to concat into a string we have to do a full resolve,
-            // so unrestrict the context, then put restriction back afterward
-            Path restriction = newContext.restrictToChild();
-            ResolveResult<? extends AbstractConfigValue> result = newContext.unrestricted()
+            // Preserve the restriction so object lookups do not resolve unrelated fields.
+            if (p instanceof SimpleConfigObject) {
+                // Mark object pieces so self-referential fields can look back.
+                newContext = newContext.withMergeStackPiece(p);
+            }
+            ResolveResult<? extends AbstractConfigValue> result = newContext
                     .resolve(p, sourceWithParent);
             AbstractConfigValue r = result.value;
-            newContext = result.context.restrict(restriction);
+            newContext = result.context.withMergeStackPiece(wasMergeStackPiece);
             if (ConfigImpl.traceSubstitutionsEnabled())
                 ConfigImpl.trace(context.depth(), "resolved concat piece to " + r);
             if (r == null) {
