@@ -955,6 +955,10 @@ format.
 
    * https://hocon-playground.tehbrian.dev
 
+## Conformance suite
+
+   * https://github.com/lejmr/zig-hocon/tree/main/conformance
+
 # Maintenance notes
 
 ## License
