@@ -379,7 +379,7 @@ public class ConfigImpl {
             }
         }
 
-        return PropertiesParser.fromStringMap(newSimpleOrigin("env variables overrides"), result);
+        return PropertiesParser.fromStringMap(newEnvVariable("env variables overrides"), result);
     }
 
     private static class EnvVariablesOverridesHolder {
