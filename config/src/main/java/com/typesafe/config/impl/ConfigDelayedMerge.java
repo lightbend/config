@@ -84,8 +84,11 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         for (AbstractConfigValue end : stack) {
             // Per the HOCON spec, a substitution hidden by a value that
             // cannot be merged with it is never evaluated. If merged already
-            // ignores fallbacks, nothing below can contribute, so stop.
-            if (merged != null && merged.ignoresFallbacks()) {
+            // ignores fallbacks, nothing below can contribute, so stop. A value
+            // that cannot become an object also hides the rest while partially
+            // resolved; its own references to the values below were resolved
+            // before it became merged.
+            if (merged != null && (merged.ignoresFallbacks() || cannotBecomeAnObject(merged))) {
                 if (ConfigImpl.traceSubstitutionsEnabled())
                     ConfigImpl.trace(newContext.depth(),
                             "merged ignores fallbacks, skipping remaining stack");
@@ -176,6 +179,12 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
         }
 
         return ResolveResult.make(newContext, merged);
+    }
+
+    private static boolean cannotBecomeAnObject(AbstractConfigValue value) {
+        return value instanceof SimpleConfigList
+                || (value instanceof ConfigConcatenation
+                        && ((ConfigConcatenation) value).cannotBecomeAnObject());
     }
 
     // True when every key in 'end' is shadowed by a value in 'merged' that
