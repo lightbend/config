@@ -237,6 +237,11 @@ final class ResolveContext {
             // ConfigReference was supposed to catch NotPossibleToResolve
             throw new ConfigException.BugOrBroken(
                     "NotPossibleToResolve was thrown from an outermost resolve", e);
+        } catch (StackOverflowError e) {
+            // Catch only after recursive resolve frames have unwound, so there
+            // is stack space to construct the exception and retain its cause.
+            throw new ConfigException.Parse(value.origin(),
+                    "config too large to resolve (stack overflow)", e);
         }
     }
 }
