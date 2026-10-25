@@ -41,6 +41,10 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
         return (int) l;
     }
 
+    long longValueRangeChecked(String path) {
+        return longValue();
+    }
+
     protected abstract long longValue();
 
     protected abstract double doubleValue();
@@ -100,7 +104,9 @@ abstract class ConfigNumber extends AbstractConfigValue implements Serializable 
     static ConfigNumber newNumber(ConfigOrigin origin, double number,
             String originalText) {
         long asLong = (long) number;
-        if (fitsLong(number)) {
+        // Keep the lower boundary as a double so its original text can be checked
+        // for a decimal value that rounded up from below Long.MIN_VALUE.
+        if (fitsLong(number) && number > -0x1.0p63) {
             return newNumber(origin, asLong, originalText);
         } else {
             return new ConfigDouble(origin, number, originalText);

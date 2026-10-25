@@ -242,7 +242,7 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
 
     @Override
     public long getLong(String path) {
-        return getNumber(path).longValue();
+        return getConfigNumber(path).longValueRangeChecked(path);
     }
 
     @Override
@@ -423,9 +423,9 @@ final class SimpleConfig implements Config, MergeableValue, Serializable {
     @Override
     public List<Long> getLongList(String path) {
         List<Long> l = new ArrayList<Long>();
-        List<Number> numbers = getNumberList(path);
-        for (Number n : numbers) {
-            l.add(n.longValue());
+        List<ConfigNumber> numbers = getHomogeneousWrappedList(path, ConfigValueType.NUMBER);
+        for (ConfigNumber n : numbers) {
+            l.add(n.longValueRangeChecked(path));
         }
         return l;
     }
