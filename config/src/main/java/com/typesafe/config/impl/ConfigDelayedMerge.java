@@ -360,14 +360,9 @@ final class ConfigDelayedMerge extends AbstractConfigValue implements Unmergeabl
             }
             indent(sb, indent, options);
 
-            if (atKey != null) {
-                sb.append(ConfigImplUtil.renderJsonString(atKey));
-                if (options.getFormatted())
-                    sb.append(" : ");
-                else
-                    sb.append(":");
-            }
-            v.render(sb, indent, atRoot, options);
+            // Repeated merge entries follow the same key and separator rules
+            // as ordinary fields, including HOCON's object shorthand.
+            v.render(sb, indent, atRoot, atKey, options);
             sb.append(",");
             if (options.getFormatted())
                 sb.append('\n');
