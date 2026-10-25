@@ -586,7 +586,9 @@ final class SimpleConfigObject extends AbstractConfigObject implements Serializa
                         sb.append("\n");
                     }
                 }
-                if (options.getComments()) {
+                // Delayed merges print comments alongside their individual entries.
+                if (options.getComments() && !(v instanceof ConfigDelayedMerge)
+                        && !(v instanceof ConfigDelayedMergeObject)) {
                     for (String comment : v.origin().comments()) {
                         indent(sb, innerIndent, options);
                         sb.append("#");
