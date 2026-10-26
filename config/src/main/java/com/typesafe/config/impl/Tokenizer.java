@@ -433,12 +433,15 @@ final class Tokenizer {
                 }
                 String digits = new String(a);
                 sbOrig.append(a);
-                try {
-                    sb.appendCodePoint(Integer.parseInt(digits, 16));
-                } catch (NumberFormatException e) {
-                    throw problem(digits, String.format(
-                            "Malformed hex digits after \\u escape in string: '%s'", digits), e);
+                for (int i = 0; i < 4; ++i) {
+                    char c = a[i];
+                    boolean hex = (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')
+                            || (c >= 'A' && c <= 'F');
+                    if (!hex)
+                        throw problem(digits, String.format(
+                                "Malformed hex digits after \\u escape in string: '%s'", digits));
                 }
+                sb.appendCodePoint(Integer.parseInt(digits, 16));
             }
                 break;
             default:
