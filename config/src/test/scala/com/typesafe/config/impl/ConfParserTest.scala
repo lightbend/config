@@ -10,7 +10,7 @@ import java.io.{ File, StringReader }
 import com.typesafe.config._
 
 import scala.collection.JavaConverters._
-import java.net.URL
+import java.net.{ MalformedURLException, URL }
 import java.util.Properties
 
 class ConfParserTest extends TestUtils {
@@ -348,6 +348,50 @@ class ConfParserTest extends TestUtils {
         lineNumberTest(6, "a : \"\"\"foo\nbar\nbaz\n\"\"\"\n\n}")
         //   end in the middle of triple-quoted string
         lineNumberTest(5, "a : \"\"\"foo\n\n\nbar\n")
+    }
+
+    @Test
+    def includeErrorLinesAfterMultilineStrings() {
+        val multiline = "\"\"\"one\n two\n three\n\"\"\""
+        val include = "include url(\"!!!\")"
+        val cases = Seq(
+            ("a=" + multiline + "\n" + include, 5),
+            (("a=" + multiline + "\n" + include).replace("\n", "\r\n"), 5),
+            ("a=" + multiline + " " + multiline + "\n" + include, 8),
+            ("a=[" + multiline + "]\n" + include, 5),
+            ("a={b=" + multiline + "}\n" + include, 5),
+            (multiline + "=1\n" + include, 5),
+            ("a=" + multiline + ", " + include, 4))
+
+        for ((text, line) <- cases) {
+            val e = intercept[ConfigException.Parse] {
+                ConfigFactory.parseString(text)
+            }
+            assertEquals(text, line, e.origin().lineNumber())
+            assertTrue(e.getMessage, e.getMessage.contains("invalid URL"))
+            assertTrue(e.getCause.isInstanceOf[MalformedURLException])
+        }
+    }
+
+    @Test
+    def appendErrorLineAfterMultilineStringInList() {
+        val text = "a=[\n {\n x=\"\"\"one\n two\n three\n\"\"\"\n y+=1\n }\n]"
+        val e = intercept[ConfigException.Parse] {
+            ConfigFactory.parseString(text)
+        }
+        assertEquals(7, e.origin().lineNumber())
+        assertTrue(e.getMessage, e.getMessage.contains("+= does not work nested inside a list"))
+    }
+
+    @Test
+    def includeErrorLinesWithEscapedNewlines() {
+        for (text <- Seq("a=\"one\\ntwo\"", "a=\"one\\u000atwo\"", "a=1")) {
+            val e = intercept[ConfigException.Parse] {
+                ConfigFactory.parseString(text + "\ninclude url(\"!!!\")")
+            }
+            assertEquals(text, 2, e.origin().lineNumber())
+            assertTrue(e.getMessage, e.getMessage.contains("invalid URL"))
+        }
     }
 
     @Test
