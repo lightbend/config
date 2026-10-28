@@ -87,12 +87,20 @@ final class ConfigParser {
                 return lineOrigin();
         }
 
-        private ConfigException parseError(String message) {
-            return parseError(message, null);
+        private ConfigException parseError(AbstractConfigNode node, String message) {
+            return parseError(node, message, null);
         }
 
-        private ConfigException parseError(String message, Throwable cause) {
-            return new ConfigException.Parse(lineOrigin(), message, cause);
+        private ConfigException parseError(AbstractConfigNode node, String message, Throwable cause) {
+            ConfigOrigin origin = lineOrigin();
+            // The line counter misses newlines inside quoted tokens.
+            for (Token token : node.tokens()) {
+                if (token.lineNumber() >= 0) {
+                    origin = token.origin();
+                    break;
+                }
+            }
+            return new ConfigException.Parse(origin, message, cause);
         }
 
         private Path fullCurrentPath() {
@@ -117,7 +125,7 @@ final class ConfigParser {
             } else if (n instanceof ConfigNodeConcatenation) {
                 v = parseConcatenation((ConfigNodeConcatenation)n);
             } else {
-                throw parseError("Expecting a value but got wrong node type: " + n.getClass());
+                throw parseError(n, "Expecting a value but got wrong node type: " + n.getClass());
             }
 
             if (comments != null && !comments.isEmpty()) {
@@ -182,7 +190,7 @@ final class ConfigParser {
                     try {
                         url = new URL(n.name());
                     } catch (MalformedURLException e) {
-                        throw parseError("include url() specifies an invalid URL: " + n.name(), e);
+                        throw parseError(n, "include url() specifies an invalid URL: " + n.name(), e);
                     }
                     obj = (AbstractConfigObject) includer.includeURL(cic, url);
                     break;
@@ -209,7 +217,7 @@ final class ConfigParser {
             // exception is better than producing an incorrect result.
             // See https://github.com/lightbend/config/issues/160
             if (arrayCount > 0 && obj.resolveStatus() != ResolveStatus.RESOLVED)
-                throw parseError("Due to current limitations of the config parser, when an include statement is nested inside a list value, "
+                throw parseError(n, "Due to current limitations of the config parser, when an include statement is nested inside a list value, "
                         + "${} substitutions inside the included file cannot be resolved correctly. Either move the include outside of the list value or "
                         + "remove the ${} statements from the included file.");
 
@@ -265,7 +273,7 @@ final class ConfigParser {
                         // result. See
                         // https://github.com/lightbend/config/issues/160
                         if (arrayCount > 0)
-                            throw parseError("Due to current limitations of the config parser, += does not work nested inside a list. "
+                            throw parseError(field, "Due to current limitations of the config parser, += does not work nested inside a list. "
                                     + "+= expands to a ${} substitution and the path in ${} cannot currently refer to list elements. "
                                     + "You might be able to move the += outside of the list and then refer to it from inside the list with ${}.");
 
@@ -338,7 +346,7 @@ final class ConfigParser {
                             // could become an object).
 
                             if (flavor == ConfigSyntax.JSON) {
-                                throw parseError("JSON does not allow duplicate fields: '"
+                                throw parseError(field, "JSON does not allow duplicate fields: '"
                                     + key
                                     + "' was already seen at "
                                     + existing.origin().description());
